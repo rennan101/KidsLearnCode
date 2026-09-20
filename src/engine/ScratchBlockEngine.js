@@ -6,11 +6,11 @@
  */
 
 export const BLOCK_CATEGORIES = {
-  variables: { id: 'variables', name: 'Materiais & Variáveis', color: '#f59e0b', darkColor: '#d97706' },
+  variables: { id: 'variables', name: 'Materiais', color: '#f59e0b', darkColor: '#d97706' },
   actions: { id: 'actions', name: 'Ações de Criação', color: '#3b82f6', darkColor: '#2563eb' },
-  conditions: { id: 'conditions', name: 'Condições (Se / Se Não)', color: '#10b981', darkColor: '#059669' },
-  loops: { id: 'loops', name: 'Repetição (Para / Loops)', color: '#8b5cf6', darkColor: '#7c3aed' },
-  functions: { id: 'functions', name: 'Funções & Métodos', color: '#ec4899', darkColor: '#db2777' }
+  conditions: { id: 'conditions', name: 'Se / Senão', color: '#10b981', darkColor: '#059669' },
+  loops: { id: 'loops', name: 'Repetir (Loops)', color: '#8b5cf6', darkColor: '#7c3aed' },
+  functions: { id: 'functions', name: 'Minhas Regras', color: '#ec4899', darkColor: '#db2777' }
 };
 
 export class ScratchBlockEngine {
@@ -35,7 +35,7 @@ export class ScratchBlockEngine {
         id: 'var_material',
         category: 'variables',
         type: 'statement',
-        label: 'definir material = [VAL]',
+        label: 'Material = [VAL]',
         defaultValues: { VAL: 'carvalho' },
         options: { VAL: ['carvalho', 'pinheiro', 'madeira_macica', 'ferro_puro', 'veio_mineral', 'terra_dourada'] },
         toLua: (b) => `local material = "${b.values.VAL || 'carvalho'}"`
@@ -44,7 +44,7 @@ export class ScratchBlockEngine {
         id: 'var_custom',
         category: 'variables',
         type: 'statement',
-        label: 'definir [NAME] = [VAL]',
+        label: 'Definir [NAME] = [VAL]',
         defaultValues: { NAME: 'item', VAL: '10' },
         toLua: (b) => {
           const v = b.values.VAL || '0';
@@ -58,7 +58,7 @@ export class ScratchBlockEngine {
         id: 'act_fabricar_movel',
         category: 'actions',
         type: 'statement',
-        label: 'fabricar_movel([ITEM], material)',
+        label: 'Criar Móvel: [ITEM]',
         defaultValues: { ITEM: 'prop_chair_wood' },
         options: { ITEM: ['prop_chair_wood', 'prop_table_crafting', 'prop_bed_straw', 'prop_bed_canopy', 'prop_tent_adventurer', 'prop_house_cottage'] },
         toLua: (b) => `fabricar_movel("${b.values.ITEM || 'prop_chair_wood'}", material)`
@@ -67,7 +67,7 @@ export class ScratchBlockEngine {
         id: 'act_fabricar_mesa',
         category: 'actions',
         type: 'statement',
-        label: 'fabricar_mesa(tampo, [PERNAS])',
+        label: 'Montar Mesa com [PERNAS] Pernas',
         defaultValues: { PERNAS: '4' },
         toLua: (b) => `fabricar_mesa(tampo, ${b.values.PERNAS || 4})`
       },
@@ -75,7 +75,7 @@ export class ScratchBlockEngine {
         id: 'act_forjar_ferramenta',
         category: 'actions',
         type: 'statement',
-        label: 'forjar_ferramenta([TOOL], material)',
+        label: 'Forjar Ferramenta: [TOOL]',
         defaultValues: { TOOL: 'tool_shovel_iron' },
         options: { TOOL: ['tool_shovel_iron', 'tool_axe_woodcutter', 'tool_pickaxe_miner', 'tool_watering_can', 'tool_fishing_rod', 'tool_bug_net'] },
         toLua: (b) => `forjar_ferramenta("${b.values.TOOL || 'tool_shovel_iron'}", material)`
@@ -84,7 +84,7 @@ export class ScratchBlockEngine {
         id: 'act_materializar_rocha',
         category: 'actions',
         type: 'statement',
-        label: 'materializar_rocha([ROCHA], tipo_rocha)',
+        label: 'Criar Rocha Mineral: [ROCHA]',
         defaultValues: { ROCHA: 'nature_rock_boulder' },
         toLua: (b) => `materializar_rocha("${b.values.ROCHA || 'nature_rock_boulder'}", tipo_rocha)`
       },
@@ -92,7 +92,7 @@ export class ScratchBlockEngine {
         id: 'act_plantar_arbusto',
         category: 'actions',
         type: 'statement',
-        label: 'plantar_arbusto([ARBUSTO])',
+        label: 'Plantar na Ilha: [ARBUSTO]',
         defaultValues: { ARBUSTO: 'nature_berry_bush' },
         options: { ARBUSTO: ['nature_berry_bush', 'nature_oak_tree', 'nature_pine_tree'] },
         toLua: (b) => `plantar_arbusto("${b.values.ARBUSTO || 'nature_berry_bush'}")`
@@ -101,7 +101,7 @@ export class ScratchBlockEngine {
         id: 'act_fincar_cerca',
         category: 'actions',
         type: 'statement',
-        label: 'fincar_cerca("struct_fence_wood_segment", [POS])',
+        label: 'Colocar Cerca na Posição [POS]',
         defaultValues: { POS: 'i' },
         toLua: (b) => `fincar_cerca("struct_fence_wood_segment", ${b.values.POS || 'i'})`
       },
@@ -109,7 +109,7 @@ export class ScratchBlockEngine {
         id: 'act_montar_portao',
         category: 'actions',
         type: 'statement',
-        label: 'montar_portao("struct_fence_wood_gate")',
+        label: 'Montar Portão de Madeira',
         defaultValues: {},
         toLua: () => `montar_portao("struct_fence_wood_gate")`
       },
@@ -117,7 +117,7 @@ export class ScratchBlockEngine {
         id: 'act_assentar_piso',
         category: 'actions',
         type: 'statement',
-        label: 'assentar_piso([PISO], solo)',
+        label: 'Assentar Piso: [PISO]',
         defaultValues: { PISO: 'tile_ground_dirt_track' },
         options: { PISO: ['tile_ground_dirt_track', 'tile_ground_cobblestone', 'tile_ground_wood_planks', 'tile_ground_flower_grass', 'tile_ground_sand_beach', 'tile_ground_stone_mosaic'] },
         toLua: (b) => `assentar_piso("${b.values.PISO || 'tile_ground_dirt_track'}", solo)`
@@ -126,7 +126,7 @@ export class ScratchBlockEngine {
         id: 'act_acender_poste',
         category: 'actions',
         type: 'statement',
-        label: 'acender_poste("struct_lantern_post")',
+        label: 'Acender Poste de Luz',
         defaultValues: {},
         toLua: () => `acender_poste("struct_lantern_post")`
       },
@@ -134,7 +134,7 @@ export class ScratchBlockEngine {
         id: 'act_canalizar',
         category: 'actions',
         type: 'statement',
-        label: 'canalizar([VAL])',
+        label: 'Canalizar Poder [VAL]',
         defaultValues: { VAL: 'energia_astral' },
         toLua: (b) => `canalizar(${b.values.VAL || 'energia_astral'})`
       },
@@ -142,7 +142,7 @@ export class ScratchBlockEngine {
         id: 'act_tecer_ninho',
         category: 'actions',
         type: 'statement',
-        label: 'tecer_ninho_aquecido("prop_dragon_incubator")',
+        label: 'Tecer Ninho de Dragão',
         defaultValues: {},
         toLua: () => `tecer_ninho_aquecido("prop_dragon_incubator")`
       },
@@ -150,7 +150,7 @@ export class ScratchBlockEngine {
         id: 'act_entalhar_apito',
         category: 'actions',
         type: 'statement',
-        label: 'entalhar_apito("dragon_whistle_call", [FREQ])',
+        label: 'Entalhar Apito (Tom [FREQ])',
         defaultValues: { FREQ: 'frequencia' },
         toLua: (b) => `entalhar_apito("dragon_whistle_call", ${b.values.FREQ || '440'})`
       },
@@ -160,7 +160,7 @@ export class ScratchBlockEngine {
         id: 'cond_if_simple',
         category: 'conditions',
         type: 'container',
-        label: 'se [COND] entao',
+        label: 'Se [COND] Então:',
         defaultValues: { COND: 'ferro >= 5' },
         children: [],
         toLua: (b, engine) => {
@@ -172,7 +172,7 @@ export class ScratchBlockEngine {
         id: 'cond_if_else',
         category: 'conditions',
         type: 'container_else',
-        label: 'se [COND] entao ... senao',
+        label: 'Se [COND] Então: ... Senão:',
         defaultValues: { COND: 'palha >= 5' },
         children: [],
         elseChildren: [],
@@ -188,7 +188,7 @@ export class ScratchBlockEngine {
         id: 'loop_for',
         category: 'loops',
         type: 'container',
-        label: 'para i = 1, [COUNT] faca',
+        label: 'Repetir [COUNT] Vezes:',
         defaultValues: { COUNT: '4' },
         children: [],
         toLua: (b, engine) => {
@@ -202,19 +202,19 @@ export class ScratchBlockEngine {
         id: 'func_define',
         category: 'functions',
         type: 'container',
-        label: 'funcao [NAME]([PARAM])',
+        label: 'Criar Regra: [NAME]([PARAM])',
         defaultValues: { NAME: 'construir_casa', PARAM: 'estilo' },
         children: [],
         toLua: (b, engine) => {
           const inner = engine.transpileBlockList(b.children || [], '  ');
-          return `funcao ${b.values.NAME || 'minha_funcao'}(${b.values.PARAM || ''})\n${inner || '  -- corpo da funcao\n'}fim`;
+          return `funcao ${b.values.NAME || 'minha_funcao'}(${b.values.PARAM || ''})\n${inner || '  -- corpo da regra\n'}fim`;
         }
       },
       {
         id: 'func_call',
         category: 'functions',
         type: 'statement',
-        label: 'chamar [NAME]([ARG])',
+        label: 'Usar Regra [NAME]([ARG])',
         defaultValues: { NAME: 'construir_casa', ARG: '"enxaimel"' },
         toLua: (b) => `${b.values.NAME || 'minha_funcao'}(${b.values.ARG || ''})`
       }

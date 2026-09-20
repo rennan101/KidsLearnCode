@@ -2114,6 +2114,29 @@ class RPGApplication {
     });
   }
 
+  getItemSvgIcon(iconKey) {
+    const iconMap = {
+      wood: `<svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6c0-1.66 3.58-3 8-3s8 1.34 8 3v12c0 1.66-3.58 3-8 3s-8-1.34-8-3V6z"/><ellipse cx="12" cy="6" rx="8" ry="3"/></svg>`,
+      stone: `<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 14 7 5 17 5 21 14 16 20 8 20 3 14"/></svg>`,
+      iron_ore: `<svg viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 2 18 2 22 8 12 22 2 8 6 2"/></svg>`,
+      coin: `<svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9h6a1.5 1.5 0 0 1 0 3H9a1.5 1.5 0 0 0 0 3h6"/></svg>`,
+      seed: `<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12A10 10 0 0 1 12 2z"/><path d="M12 2c0 5.52 4.48 10 10 10"/></svg>`,
+      fish: `<svg viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 12c-4-4-10-4-14 0 4 4 10 4 14 0z"/><polygon points="18 12 22 7 22 17 18 12"/><circle cx="7" cy="12" r="1"/></svg>`,
+      flower: `<svg viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="5" r="3"/><circle cx="19" cy="12" r="3"/><circle cx="12" cy="19" r="3"/><circle cx="5" cy="12" r="3"/></svg>`,
+      furniture: `<svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 11v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"/><path d="M5 18v2M19 18v2"/></svg>`,
+      structure: `<svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>`,
+      tile: `<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
+      tool_axe: `<svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-4 4-6-6 4-4z"/><path d="M5 21l9-9"/></svg>`,
+      tool_pickaxe: `<svg viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+      tool_rod: `<svg viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20L20 4M20 4v8M20 12c0 2-2 4-4 4"/></svg>`,
+      tool_watering_can: `<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h12v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9z"/><path d="M16 14l5-3v-2l-5 3M8 6h4v4H8z"/></svg>`,
+      egg_solar: `<svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="13" rx="7" ry="9"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>`,
+      egg_frost: `<svg viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="13" rx="7" ry="9"/><path d="M12 6l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z"/></svg>`,
+      package: `<svg viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3M12 12v5M8 12h8"/></svg>`
+    };
+    return iconMap[iconKey] || iconMap.package;
+  }
+
   setupCraftingUI() {
     const craftingModal = document.getElementById('crafting-modal');
     const closeBtn = document.getElementById('btn-close-crafting');
@@ -2131,27 +2154,62 @@ class RPGApplication {
       const recipes = this.craftingSystem.getRecipes();
       recipes.forEach((rec) => {
         const item = document.createElement('div');
-        item.className = 'craft-recipe-item';
+        item.className = 'ac-diy-recipe-card';
+        const iconSvg = this.getItemSvgIcon(rec.iconKey || this.inventorySystem.inferIconKey(rec.id));
+
         item.innerHTML = `
-          <div class="recipe-info">
-            <span class="recipe-icon">${rec.icon}</span>
-            <div class="recipe-details">
-              <h4>${rec.name} (${rec.apCost} AP)</h4>
-              <p>${rec.description}</p>
+          <div class="ac-diy-recipe-header">
+            <div class="ac-diy-recipe-icon">${iconSvg}</div>
+            <div>
+              <div class="ac-diy-recipe-title">${rec.name}</div>
+              <span style="font-size: 0.72rem; color: #f59e0b; font-weight: 700;">Custo: ${rec.apCost} AP</span>
             </div>
           </div>
-          <button class="craft-btn" data-id="${rec.id}">Fabricar 🔨</button>
+          <div class="ac-diy-recipe-desc">${rec.description}</div>
+          <div class="ac-diy-recipe-actions">
+            <button class="ac-btn-diy-blocks" data-id="${rec.id}">
+              <svg class="ui-icon" style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Montar Blocos</span>
+            </button>
+            <button class="ac-btn-diy-quick" data-id="${rec.id}">
+              <span>Criar Rápido</span>
+            </button>
+          </div>
         `;
 
-        item.querySelector('.craft-btn')?.addEventListener('click', () => {
+        // "Montar com Blocos" -> Opens Scratch studio configured for this recipe
+        item.querySelector('.ac-btn-diy-blocks')?.addEventListener('click', () => {
+          craftingModal.style.display = 'none';
+          const codingModal = document.getElementById('coding-modal') || document.getElementById('coding-studio-modal');
+          if (codingModal && this.scratchEngine) {
+            const starterCode = `-- Criando ${rec.name}\nfabricar_movel("${rec.assetId}", "carvalho")`;
+            this.scratchEngine.loadLessonBlocks(null, starterCode);
+            const titleEl = document.getElementById('coding-studio-title');
+            if (titleEl) titleEl.innerText = `Bancada DIY: ${rec.name}`;
+            const unlockBadge = document.getElementById('lesson-unlock-target');
+            if (unlockBadge) unlockBadge.innerText = `Receita: ${rec.name}`;
+            const rewardBadge = document.getElementById('lesson-reward-badge');
+            if (rewardBadge) rewardBadge.innerText = `Salva na Bolsa`;
+            const lessonDesc = document.getElementById('lesson-desc');
+            if (lessonDesc) lessonDesc.innerText = `Monte as peças de quebra-cabeça na bancada DIY para fabricar ${rec.name} e guardar na sua Bolsa.`;
+            codingModal.style.display = 'flex';
+          }
+        });
+
+        // "Criar Rápido"
+        item.querySelector('.ac-btn-diy-quick')?.addEventListener('click', () => {
           const res = this.craftingSystem.craftItem(rec.id, this.player, () => {
-            this.showToast(`💨 ${rec.name} fabricado na bancada!`);
+            this.inventorySystem.addItem(rec.assetId, 1, { name: rec.name });
+            this.player.spawnCraftPoof();
+            this.showToast(`${rec.name} fabricado e guardado na sua Bolsa!`);
           });
           if (res.success) {
-            this.showToast(res.message);
+            this.inventorySystem.addItem(rec.assetId, 1, { name: rec.name });
+            this.player.spawnCraftPoof();
+            this.showToast(`${rec.name} guardado na sua Bolsa!`);
             craftingModal.style.display = 'none';
           } else {
-            this.showToast(`⚠️ ${res.reason}`);
+            this.showToast(res.reason || 'Materiais insuficientes!');
           }
         });
 
@@ -2294,7 +2352,7 @@ class RPGApplication {
 
     // Shortcut 'P' in Play Mode to open Hero Selection
     window.addEventListener('keydown', (e) => {
-      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+      if (e.target && e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (this.mode === 'play' && (e.key === 'p' || e.key === 'P')) {
         const isVisible = modal.style.display !== 'none';
         if (isVisible) {
@@ -2316,28 +2374,100 @@ class RPGApplication {
     const closeBtn = document.getElementById('btn-close-backpack');
     const quickBackpackBtn = document.getElementById('btn-open-backpack');
     const tabsContainer = document.getElementById('backpack-tabs');
+    const pocketGrid = document.getElementById('backpack-items-grid');
+    const detailIcon = document.getElementById('pocket-detail-icon');
+    const detailName = document.getElementById('pocket-detail-name');
+    const detailDesc = document.getElementById('pocket-detail-desc');
+    const detailActions = document.getElementById('pocket-detail-actions');
+    const btnPlace = document.getElementById('btn-pocket-place');
+    const walletGold = document.getElementById('pocket-wallet-gold');
+    const walletXp = document.getElementById('pocket-wallet-xp');
 
+    let selectedItem = null;
     let currentTab = 'items';
 
     const renderItemsTab = () => {
-      const grid = document.getElementById('backpack-items-grid');
-      if (!grid) return;
-      grid.innerHTML = '';
-      const items = this.inventorySystem.getItems();
+      if (!pocketGrid) return;
+      pocketGrid.innerHTML = '';
 
-      items.forEach(item => {
-        const slot = document.createElement('div');
-        slot.className = 'backpack-slot';
-        slot.title = item.desc;
-        slot.innerHTML = `
-          <span class="backpack-slot-count">x${item.count}</span>
-          <span class="backpack-slot-icon">${item.icon}</span>
-          <span class="backpack-slot-name">${item.name}</span>
-          <span class="backpack-slot-category">${item.category}</span>
-        `;
-        grid.appendChild(slot);
+      const slots = this.inventorySystem.getPocketSlots(20);
+
+      slots.forEach((item, slotIndex) => {
+        const slotEl = document.createElement('div');
+        slotEl.className = `ac-pocket-slot ${item ? 'filled' : 'empty'} ${selectedItem?.id === item?.id && item ? 'selected' : ''}`;
+        slotEl.dataset.slot = slotIndex;
+
+        if (item) {
+          const iconSvg = this.getItemSvgIcon(item.iconKey || this.inventorySystem.inferIconKey(item.id));
+          slotEl.innerHTML = `
+            <div class="ac-pocket-slot-icon">${iconSvg}</div>
+            ${item.count > 1 ? `<span class="ac-pocket-slot-badge">x${item.count}</span>` : ''}
+          `;
+          slotEl.title = `${item.name} (x${item.count})`;
+
+          slotEl.addEventListener('click', () => {
+            selectedItem = item;
+            renderItemsTab();
+            updateDetailPanel(item);
+          });
+        } else {
+          slotEl.title = `Bolso Vazio ${slotIndex + 1}`;
+          slotEl.addEventListener('click', () => {
+            selectedItem = null;
+            renderItemsTab();
+            updateDetailPanel(null);
+          });
+        }
+
+        pocketGrid.appendChild(slotEl);
       });
+
+      // Update Wallet
+      const goldItem = this.inventorySystem.items.find(i => i.id === 'gold_coin');
+      if (walletGold) walletGold.innerText = goldItem ? `${goldItem.count}` : '0';
+      if (walletXp) walletXp.innerText = `Nv. 1 (100 XP)`;
     };
+
+    const updateDetailPanel = (item) => {
+      if (!item) {
+        if (detailName) detailName.innerText = 'Selecione um item';
+        if (detailDesc) detailDesc.innerText = 'Clique em um dos 20 bolsos para ver detalhes e ações.';
+        if (detailIcon) detailIcon.innerHTML = `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
+        if (detailActions) detailActions.style.display = 'none';
+        return;
+      }
+
+      const iconSvg = this.getItemSvgIcon(item.iconKey || this.inventorySystem.inferIconKey(item.id));
+      if (detailIcon) detailIcon.innerHTML = iconSvg;
+      if (detailName) detailName.innerText = `${item.name} (x${item.count})`;
+      if (detailDesc) detailDesc.innerText = item.desc || 'Item coletado ou fabricado na ilha.';
+      if (detailActions) detailActions.style.display = 'flex';
+    };
+
+    // "Colocar no Chão" Action
+    btnPlace?.addEventListener('click', () => {
+      if (!selectedItem) return;
+      const dirDeltas = { north: { dx: 0, dy: -1 }, south: { dx: 0, dy: 1 }, west: { dx: -1, dy: 0 }, east: { dx: 1, dy: 0 } };
+      const delta = dirDeltas[this.player.direction] || { dx: 0, dy: 1 };
+      const pTx = Math.floor((this.player.x + 32) / 64);
+      const pTy = Math.floor((this.player.y + 32) / 64);
+      const targetX = pTx + delta.dx;
+      const targetY = pTy + delta.dy;
+
+      // Deduct 1 from inventory
+      const itemName = selectedItem.name;
+      this.inventorySystem.removeItem(selectedItem.id, 1);
+      this.tileMap.setTile('solid', targetX, targetY, 'crate');
+      this.player.spawnCraftPoof();
+      this.triggerAutoSave();
+      this.showToast(`${itemName} colocado no chão da ilha!`);
+
+      if (selectedItem.count <= 0) {
+        selectedItem = null;
+      }
+      renderItemsTab();
+      updateDetailPanel(selectedItem);
+    });
 
     const renderToolsTab = () => {
       const list = document.getElementById('backpack-tools-list');
@@ -2350,27 +2480,18 @@ class RPGApplication {
         const isEquipped = equipped?.id === tool.id;
         const card = document.createElement('div');
         card.className = 'tool-card';
-        const pct = Math.round((tool.durability / tool.maxDurability) * 100);
+        const iconSvg = this.getItemSvgIcon(tool.iconKey || tool.id);
 
         card.innerHTML = `
-          <div class="tool-info">
-            <span class="tool-icon">${tool.icon}</span>
+          <div class="tool-info" style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 40px; height: 40px; color: #38bdf8; display: flex; align-items: center; justify-content: center;">${iconSvg}</div>
             <div class="tool-details">
-              <h4>${tool.name} ${isEquipped ? '<span style="font-size: 0.72rem; color: #10b981;">[Equipado]</span>' : ''}</h4>
-              <p>${tool.desc} • Poder: ${tool.power}x</p>
+              <h4 style="color: #f8fafc; font-size: 0.9rem;">${tool.name} ${isEquipped ? '<span style="font-size: 0.72rem; color: #10b981; font-weight: 700;">[Equipado]</span>' : ''}</h4>
+              <p style="color: #94a3b8; font-size: 0.75rem;">${tool.desc} • Poder: ${tool.power}x</p>
             </div>
           </div>
-          <div class="durability-bar-wrapper">
-            <div class="durability-label">
-              <span>Durabilidade</span>
-              <span>${tool.durability}/${tool.maxDurability}</span>
-            </div>
-            <div class="durability-bar">
-              <div class="durability-fill" style="width: ${pct}%"></div>
-            </div>
-          </div>
-          <button class="btn-equip-tool ${isEquipped ? 'equipped' : ''}" data-id="${tool.id}">
-            ${isEquipped ? 'Equipado ✅' : 'Equipar 🛠️'}
+          <button class="btn-equip-tool ${isEquipped ? 'equipped' : ''}" data-id="${tool.id}" style="background: ${isEquipped ? '#059669' : '#1e293b'}; color: #fff; border: 1px solid #334155; padding: 6px 14px; border-radius: 14px; font-weight: 700; cursor: pointer;">
+            ${isEquipped ? 'Equipado' : 'Equipar'}
           </button>
         `;
 
@@ -2378,7 +2499,7 @@ class RPGApplication {
           if (!isEquipped) {
             this.inventorySystem.equipTool(tool.id);
             this.player.spawnCraftPoof();
-            this.showToast(`🛠️ ${tool.name} equipado com sucesso!`);
+            this.showToast(`${tool.name} equipado com sucesso!`);
             renderToolsTab();
           }
         });
@@ -2396,8 +2517,8 @@ class RPGApplication {
       if (eggs.length === 0) {
         list.innerHTML = `
           <div style="text-align: center; padding: 30px; color: #94a3b8;">
-            <p style="font-size: 2rem; margin-bottom: 8px;">🪹</p>
-            <p>Seu ninho está vazio no momento. Explore a Ilha Lua e use 'E' perto de ninhos selvagens para coletar novos ovos de dragão!</p>
+            <svg class="ui-icon" style="width: 40px; height: 40px; margin-bottom: 8px; color: #64748b;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="13" rx="7" ry="9"/></svg>
+            <p>Seu ninho está vazio. Explore a Ilha Lua e use 'E' perto de ninhos selvagens para coletar novos ovos de dragão!</p>
           </div>
         `;
         return;
@@ -2407,26 +2528,18 @@ class RPGApplication {
         const card = document.createElement('div');
         card.className = 'egg-card';
         const pct = Math.round((egg.warmth / egg.maxWarmth) * 100);
+        const iconSvg = this.getItemSvgIcon(egg.iconKey || 'egg_solar');
 
         card.innerHTML = `
-          <div class="egg-info">
-            <span class="egg-icon">${egg.icon}</span>
+          <div class="egg-info" style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 40px; height: 40px; color: #f59e0b; display: flex; align-items: center; justify-content: center;">${iconSvg}</div>
             <div class="egg-details">
-              <h4>${egg.name}</h4>
-              <p>${egg.desc}</p>
+              <h4 style="color: #f8fafc; font-size: 0.9rem;">${egg.name}</h4>
+              <p style="color: #94a3b8; font-size: 0.75rem;">${egg.desc}</p>
             </div>
           </div>
-          <div class="warmth-bar-wrapper">
-            <div class="warmth-label">
-              <span>Incubação / Calor</span>
-              <span>${pct}%</span>
-            </div>
-            <div class="warmth-bar">
-              <div class="warmth-fill" style="width: ${pct}%"></div>
-            </div>
-          </div>
-          <button class="btn-warm-egg" data-id="${egg.id}">
-            🔥 Aquecer (+25%)
+          <button class="btn-warm-egg" data-id="${egg.id}" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; border: none; padding: 6px 14px; border-radius: 14px; font-weight: 800; cursor: pointer;">
+            Aquecer (+25%)
           </button>
         `;
 
@@ -2437,11 +2550,11 @@ class RPGApplication {
               this.dragonManager.adoptHatchedDragon(egg.speciesId);
               this.inventorySystem.removeEgg(egg.id);
               this.player.spawnCraftPoof();
-              this.showToast(`🥚✨ O ${egg.name} chocou! Um novo dragão se juntou ao seu grupo!`);
+              this.showToast(`O ${egg.name} chocou! Um novo dragão se juntou ao seu grupo!`);
               renderEggsTab();
             } else {
               this.player.spawnCraftPoof();
-              this.showToast(`🔥 Você aqueceu o ${egg.name}! Calor: ${res.warmth}%`);
+              this.showToast(`Você aqueceu o ${egg.name}! Calor: ${res.warmth}%`);
               renderEggsTab();
             }
           }
@@ -2516,7 +2629,7 @@ class RPGApplication {
       const contents = ['items', 'tools', 'eggs', 'dragons'];
       contents.forEach(name => {
         const el = document.getElementById(`tab-content-${name}`);
-        if (el) el.style.display = (name === tabName) ? 'block' : 'none';
+        if (el) el.style.display = (name === tabName) ? (name === 'items' ? 'flex' : 'block') : 'none';
       });
 
       if (tabName === 'items') renderItemsTab();

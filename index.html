@@ -592,50 +592,54 @@
     </div>
   </div>
 
-  <!-- Crafting & Workbench Modal -->
-  <div class="crafting-modal" id="crafting-modal" style="display: none;">
-    <div class="crafting-card">
-      <div class="crafting-header">
+  <!-- Crafting & Workbench Modal (Bancada de Trabalho DIY ACNH) -->
+  <div class="crafting-modal ac-crafting-modal" id="crafting-modal" style="display: none;">
+    <div class="crafting-card ac-diy-card" style="width: 780px; max-width: 95vw; height: 80vh; display: flex; flex-direction: column;">
+      <div class="crafting-header ac-header-mint">
         <div class="crafting-title">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
           </svg>
-          <span>Bancada de Criação (Workbench)</span>
+          <span>Bancada de Criação DIY da Ilha</span>
         </div>
         <button id="btn-close-crafting" class="modal-close-btn" title="Fechar">✕</button>
       </div>
-      <div class="crafting-body">
-        <div class="crafting-recipe-list" id="crafting-recipe-list">
+      <div class="ac-diy-subbar">
+        <span>Escolha uma receita desbloqueada para fabricar e guardar na sua Bolsa</span>
+      </div>
+      <div class="crafting-body ac-diy-body">
+        <div class="crafting-recipe-list ac-recipe-grid" id="crafting-recipe-list">
           <!-- Populated by CraftingSystem -->
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Unified Multi-Tab Backpack Modal (Recursos, Ferramentas, Ovos & Dragões) -->
+  <!-- Unified Animal Crossing Pocket Backpack Modal (20 Circular Pockets & Wallet) -->
   <div class="crafting-modal backpack-modal" id="backpack-modal" style="display: none;">
-    <div class="crafting-card backpack-card" style="width: 760px; max-width: 95vw; height: 80vh; display: flex; flex-direction: column;">
-      <div class="crafting-header">
+    <div class="crafting-card ac-pocket-card" style="width: 780px; max-width: 95vw; height: 82vh; display: flex; flex-direction: column;">
+      <!-- ACNH Mint Header -->
+      <div class="crafting-header ac-header-mint">
         <div class="crafting-title">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 20h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3V4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"></path>
             <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
             <path d="M10 12h4"></path>
           </svg>
-          <span>Mochila de Aventura da Ilha</span>
+          <span>Bolsa de Aventuras da Ilha</span>
         </div>
         <button id="btn-close-backpack" class="modal-close-btn" title="Fechar">✕</button>
       </div>
 
-      <!-- Backpack Tab Navigation -->
-      <div class="backpack-tabs" id="backpack-tabs">
+      <!-- Backpack Tab Navigation (Pills) -->
+      <div class="backpack-tabs ac-pocket-tabs" id="backpack-tabs">
         <button class="backpack-tab active" data-tab="items">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
             <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
             <line x1="12" y1="22.08" x2="12" y2="12"></line>
           </svg>
-          <span>Recursos & Itens</span>
+          <span>Bolsa (Itens)</span>
         </button>
         <button class="backpack-tab" data-tab="tools">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -647,39 +651,84 @@
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <ellipse cx="12" cy="13" rx="7" ry="9"></ellipse>
           </svg>
-          <span>Ovos & Ninho</span>
+          <span>Ovos de Dragão</span>
         </button>
         <button class="backpack-tab" data-tab="dragons">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
           </svg>
-          <span>Dragões (Party)</span>
+          <span>Meus Dragões</span>
         </button>
       </div>
 
-      <!-- Tab 1: Resources & Items Content -->
-      <div class="backpack-tab-content active" id="tab-content-items">
-        <div class="backpack-grid" id="backpack-items-grid">
-          <!-- Populated dynamically by InventorySystem -->
+      <!-- Tab 1: Animal Crossing 20 Pockets Grid + Detail Panel -->
+      <div class="backpack-tab-content active" id="tab-content-items" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+        <div class="ac-pocket-layout">
+          <!-- 20 Circular Pocket Slots -->
+          <div class="ac-pocket-grid-wrapper">
+            <div class="ac-pocket-grid" id="backpack-items-grid">
+              <!-- Rendered dynamically by main.js -->
+            </div>
+          </div>
+
+          <!-- Item Details & Action Card -->
+          <div class="ac-pocket-detail-card" id="pocket-detail-card">
+            <div class="ac-pocket-detail-icon" id="pocket-detail-icon">
+              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              </svg>
+            </div>
+            <div class="ac-pocket-detail-text">
+              <h4 id="pocket-detail-name">Selecione um item</h4>
+              <p id="pocket-detail-desc">Clique em um dos 20 bolsos para ver detalhes e ações.</p>
+            </div>
+            <div class="ac-pocket-actions" id="pocket-detail-actions" style="display: none;">
+              <button class="ac-pocket-action-btn btn-place-world" id="btn-pocket-place">
+                <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 5v14M5 12h14"></path>
+                </svg>
+                <span>Colocar no Chão</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACNH Wallet Bar (Bells & Island Points) -->
+        <div class="ac-wallet-bar">
+          <div class="ac-wallet-pill">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 7v10M9 9h6a1.5 1.5 0 0 1 0 3H9a1.5 1.5 0 0 0 0 3h6"></path>
+            </svg>
+            <span class="ac-wallet-label">Moedas:</span>
+            <span class="ac-wallet-val" id="pocket-wallet-gold">150</span>
+          </div>
+          <div class="ac-wallet-pill">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <span class="ac-wallet-label">Nível da Ilha:</span>
+            <span class="ac-wallet-val" id="pocket-wallet-xp">Nv. 1 (100 XP)</span>
+          </div>
         </div>
       </div>
 
       <!-- Tab 2: Tools Content -->
-      <div class="backpack-tab-content" id="tab-content-tools" style="display: none;">
+      <div class="backpack-tab-content" id="tab-content-tools" style="display: none; flex: 1;">
         <div class="tools-list" id="backpack-tools-list">
           <!-- Populated dynamically by InventorySystem -->
         </div>
       </div>
 
       <!-- Tab 3: Eggs & Incubation Content -->
-      <div class="backpack-tab-content" id="tab-content-eggs" style="display: none;">
+      <div class="backpack-tab-content" id="tab-content-eggs" style="display: none; flex: 1;">
         <div class="eggs-list" id="backpack-eggs-list">
           <!-- Populated dynamically by InventorySystem -->
         </div>
       </div>
 
       <!-- Tab 4: Dragons & Mounts Content -->
-      <div class="backpack-tab-content" id="tab-content-dragons" style="display: none;">
+      <div class="backpack-tab-content" id="tab-content-dragons" style="display: none; flex: 1;">
         <div class="dragon-body" id="backpack-dragons-list" style="overflow-y: auto; flex: 1;">
           <!-- Populated dynamically by DragonManager -->
         </div>
@@ -709,18 +758,18 @@
     </div>
   </div>
 
-  <!-- Educational Scratch Puzzle Blocks & Lua Coding Studio Modal -->
+  <!-- Educational Scratch Puzzle Blocks & Lua Coding Studio Modal (ACNH DIY Block Studio) -->
   <div class="crafting-modal" id="coding-modal" style="display: none;">
     <div class="crafting-card scratch-studio-card" style="width: 960px; max-width: 96vw; height: 88vh; display: flex; flex-direction: column;">
       <!-- Header -->
-      <div class="crafting-header">
+      <div class="crafting-header ac-header-mint">
         <div class="crafting-title">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
             <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
             <line x1="12" y1="22.08" x2="12" y2="12"></line>
           </svg>
-          <span id="coding-studio-title">Estúdio de Blocos & Criação Lua</span>
+          <span id="coding-studio-title">Bancada de Montagem DIY com Blocos</span>
         </div>
         <button id="btn-close-coding" class="modal-close-btn" title="Fechar">✕</button>
       </div>
@@ -733,7 +782,7 @@
             <select id="select-lua-lesson" class="scratch-lesson-select">
               <!-- Populated by main.js -->
             </select>
-            <span id="lesson-unlock-target" class="scratch-unlock-badge">Desbloqueio: Cadeira de Madeira</span>
+            <span id="lesson-unlock-target" class="scratch-unlock-badge">Criação: Cadeira de Madeira</span>
             <span id="lesson-reward-badge" class="scratch-reward-badge">+100 XP / +50 Moedas</span>
           </div>
           <p id="lesson-desc" class="scratch-lesson-desc"></p>
@@ -741,12 +790,12 @@
 
         <!-- Category Tabs -->
         <div class="scratch-category-tabs">
-          <button class="scratch-cat-btn active" data-category="all">Todos os Blocos</button>
+          <button class="scratch-cat-btn active" data-category="all">Todas as Peças</button>
           <button class="scratch-cat-btn cat-variables" data-category="variables">Materiais</button>
           <button class="scratch-cat-btn cat-actions" data-category="actions">Ações</button>
-          <button class="scratch-cat-btn cat-conditions" data-category="conditions">Condições</button>
-          <button class="scratch-cat-btn cat-loops" data-category="loops">Loops</button>
-          <button class="scratch-cat-btn cat-functions" data-category="functions">Funções</button>
+          <button class="scratch-cat-btn cat-conditions" data-category="conditions">Se / Senão</button>
+          <button class="scratch-cat-btn cat-loops" data-category="loops">Repetição</button>
+          <button class="scratch-cat-btn cat-functions" data-category="functions">Regras</button>
         </div>
 
         <!-- Main 3-Column Studio Area -->
@@ -775,23 +824,23 @@
           <!-- 3. Right Lua Preview & Console -->
           <div class="scratch-code-col">
             <div class="scratch-col-header">
-              <span>Código Lua Gerado</span>
+              <span>Grimório de Criação</span>
             </div>
             <textarea id="lua-code-editor" class="scratch-lua-textarea" readonly spellcheck="false"></textarea>
             <div id="lua-console-output" class="scratch-console-output">
-              > Estúdio pronto. Conecte as peças e clique em "Executar Montagem".
+              > Conecte as peças de quebra-cabeça e clique em "Montar & Criar Item".
             </div>
           </div>
         </div>
 
         <!-- Action Footer -->
         <div class="scratch-footer-bar">
-          <button id="btn-reset-lua" class="scratch-btn-secondary">Restaurar Desafio</button>
+          <button id="btn-reset-lua" class="scratch-btn-secondary">Restaurar Peças</button>
           <button id="btn-run-lua" class="scratch-btn-primary">
             <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
-            <span>Executar Montagem & Fabricar</span>
+            <span>Montar & Criar Item</span>
           </button>
         </div>
       </div>

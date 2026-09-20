@@ -1,34 +1,37 @@
 /**
- * InventorySystem - Sistema Unificado de Mochila com Sessões (Bag A, Ferramentas, Ovos e Dragões)
+ * InventorySystem - Sistema de Bolsa e Bolsos estilo Animal Crossing (20 Slots)
+ * Totalmente livre de emojis, utilizando metadados de ícones vetoriais SVG e controle de bolsos.
  */
 
 export class InventorySystem {
   constructor() {
-    // Session 1: Items & Resources
+    this.maxSlots = 20;
+
+    // Sessão 1: Itens e Recursos da Bolsa (ACNH 20 Pockets)
     this.items = [
-      { id: 'wood', name: 'Madeira Maciça', icon: '🪵', count: 24, category: 'resource', desc: 'Madeira nobre colhida dos pinheiros e carvalhos da ilha.' },
-      { id: 'stone', name: 'Pedra Polida', icon: '🪨', count: 18, category: 'resource', desc: 'Pedras resistentes para construção e forja.' },
-      { id: 'iron_ore', name: 'Minério de Ferro', icon: '⛏️', count: 12, category: 'resource', desc: 'Ferro puro para ferramentas e armaduras.' },
-      { id: 'gold_coin', name: 'Moedas de Ouro', icon: '🪙', count: 150, category: 'currency', desc: 'A moeda oficial de comércio na Ilha Lua.' },
-      { id: 'pumpkin_seed', name: 'Semente de Abóbora', icon: '🎃', count: 5, category: 'seed', desc: 'Sementes prontas para plantio na terra arada.' },
-      { id: 'sea_bass', name: 'Robalo Prateado', icon: '🐟', count: 3, category: 'fish', desc: 'Peixe fresco pescado nos recifes de corais.' },
-      { id: 'magic_flower', name: 'Flor Astral', icon: '🌸', count: 8, category: 'nature', desc: 'Flor medicinal rara que floresce sob a luz da lua.' }
+      { id: 'wood', name: 'Madeira Maciça', iconKey: 'wood', count: 24, category: 'resource', desc: 'Madeira nobre colhida dos pinheiros e carvalhos da ilha.' },
+      { id: 'stone', name: 'Pedra Polida', iconKey: 'stone', count: 18, category: 'resource', desc: 'Pedras resistentes para construção e forja.' },
+      { id: 'iron_ore', name: 'Minério de Ferro', iconKey: 'iron_ore', count: 12, category: 'resource', desc: 'Ferro puro para ferramentas e armaduras.' },
+      { id: 'gold_coin', name: 'Moedas da Ilha', iconKey: 'coin', count: 150, category: 'currency', desc: 'A moeda oficial (Bells) de comércio na Ilha Lua.' },
+      { id: 'pumpkin_seed', name: 'Semente de Abóbora', iconKey: 'seed', count: 5, category: 'seed', desc: 'Sementes prontas para plantio na terra arada.' },
+      { id: 'sea_bass', name: 'Robalo Prateado', iconKey: 'fish', count: 3, category: 'fish', desc: 'Peixe fresco pescado nos recifes de corais.' },
+      { id: 'magic_flower', name: 'Flor Astral', iconKey: 'flower', count: 8, category: 'nature', desc: 'Flor medicinal rara que floresce sob a luz da lua.' }
     ];
 
-    // Session 2: Tools (Durability & Equipped Status)
+    // Sessão 2: Ferramentas (Durabilidade & Equipadas)
     this.tools = [
-      { id: 'tool_axe', name: 'Machado de Ferro', icon: '🪓', type: 'axe', durability: 100, maxDurability: 100, power: 1.5, desc: 'Corta árvores e troncos para coletar madeira.' },
-      { id: 'tool_pickaxe', name: 'Picareta Mágica', icon: '⛏️', type: 'pickaxe', durability: 95, maxDurability: 100, power: 2.0, desc: 'Quebra rochas e extrai minérios de ferro e ouro.' },
-      { id: 'tool_rod', name: 'Vara de Pesca de Bambu', icon: '🎣', type: 'rod', durability: 100, maxDurability: 100, power: 1.2, desc: 'Pesca peixes raros e tesouros nas águas da ilha.' },
-      { id: 'tool_watering_can', name: 'Regador Real', icon: '🪴', type: 'watering', durability: 100, maxDurability: 100, power: 1.0, desc: 'Rega canteiros e acelera o crescimento de plantações.' }
+      { id: 'tool_axe', name: 'Machado de Ferro', iconKey: 'tool_axe', type: 'axe', durability: 100, maxDurability: 100, power: 1.5, desc: 'Corta árvores e troncos para coletar madeira.' },
+      { id: 'tool_pickaxe', name: 'Picareta Mágica', iconKey: 'tool_pickaxe', type: 'pickaxe', durability: 95, maxDurability: 100, power: 2.0, desc: 'Quebra rochas e extrai minérios de ferro e ouro.' },
+      { id: 'tool_rod', name: 'Vara de Bambu', iconKey: 'tool_rod', type: 'rod', durability: 100, maxDurability: 100, power: 1.2, desc: 'Pesca peixes raros e tesouros nas águas da ilha.' },
+      { id: 'tool_watering_can', name: 'Regador de Cobre', iconKey: 'tool_watering_can', type: 'watering', durability: 100, maxDurability: 100, power: 1.0, desc: 'Rega canteiros e acelera o crescimento de plantações.' }
     ];
 
     this.equippedToolId = 'tool_pickaxe';
 
-    // Session 3: Dragon Eggs & Incubators
+    // Sessão 3: Ovos de Dragão & Incubação
     this.eggs = [
-      { id: 'egg_solar_01', name: 'Ovo Solar da Aurora', icon: '🥚☀️', speciesId: 'dragon_fly_solar', warmth: 60, maxWarmth: 100, desc: 'Ovo quente e radiante. Pronto para incubação com carinho.' },
-      { id: 'egg_frost_01', name: 'Ovo Glacial dos Icebergs', icon: '🥚❄️', speciesId: 'dragon_water_frost', warmth: 30, maxWarmth: 100, desc: 'Ovo cristalino que emite vapor gelado suave.' }
+      { id: 'egg_solar_01', name: 'Ovo Solar da Aurora', iconKey: 'egg_solar', speciesId: 'dragon_fly_solar', warmth: 60, maxWarmth: 100, desc: 'Ovo quente e radiante. Pronto para incubação com carinho.' },
+      { id: 'egg_frost_01', name: 'Ovo Glacial dos Icebergs', iconKey: 'egg_frost', speciesId: 'dragon_water_frost', warmth: 30, maxWarmth: 100, desc: 'Ovo cristalino que emite vapor gelado suave.' }
     ];
 
     this.listeners = [];
@@ -36,6 +39,14 @@ export class InventorySystem {
 
   getItems() {
     return this.items;
+  }
+
+  getPocketSlots(totalSlots = 20) {
+    const slots = [];
+    for (let i = 0; i < totalSlots; i++) {
+      slots.push(this.items[i] || null);
+    }
+    return slots;
   }
 
   getTools() {
@@ -65,17 +76,35 @@ export class InventorySystem {
     if (item) {
       item.count += count;
     } else {
+      if (this.items.length >= this.maxSlots) {
+        return { success: false, reason: 'Sua bolsa está cheia!' };
+      }
       this.items.push({
         id: itemId,
         name: metadata.name || itemId,
-        icon: metadata.icon || '📦',
+        iconKey: metadata.iconKey || this.inferIconKey(itemId),
         count,
         category: metadata.category || 'misc',
-        desc: metadata.desc || 'Item coletado na ilha.'
+        desc: metadata.desc || 'Item fabricado ou coletado na ilha.'
       });
     }
     this.notify();
-    return true;
+    return { success: true, item: this.items.find(i => i.id === itemId) };
+  }
+
+  inferIconKey(itemId) {
+    if (itemId.startsWith('tool_')) return itemId;
+    if (itemId.startsWith('prop_chair') || itemId.startsWith('prop_table') || itemId.startsWith('prop_bed') || itemId.startsWith('prop_tent') || itemId.startsWith('prop_house')) return 'furniture';
+    if (itemId.startsWith('struct_fence') || itemId.startsWith('struct_bridge') || itemId.startsWith('struct_gate') || itemId.startsWith('struct_lantern') || itemId.startsWith('struct_well')) return 'structure';
+    if (itemId.startsWith('tile_ground')) return 'tile';
+    if (itemId.startsWith('egg_') || itemId.startsWith('dragon_egg')) return 'egg_solar';
+    if (itemId.includes('seed')) return 'seed';
+    if (itemId.includes('fish') || itemId.includes('bass')) return 'fish';
+    if (itemId.includes('flower')) return 'flower';
+    if (itemId.includes('wood')) return 'wood';
+    if (itemId.includes('ore') || itemId.includes('iron')) return 'iron_ore';
+    if (itemId.includes('stone') || itemId.includes('rock')) return 'stone';
+    return 'package';
   }
 
   removeItem(itemId, count = 1) {
@@ -127,3 +156,4 @@ export class InventorySystem {
     this.listeners.forEach(fn => fn(this));
   }
 }
+
