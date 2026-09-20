@@ -1,0 +1,40 @@
+{
+  "id": "char_wolf_hunter_m",
+  "name": "Lobo Caçador (Ragnar)",
+  "type": "playable_hero",
+  "species": "wolf",
+  "gender": "male",
+  "archetype": "hunter",
+  "passiveAbility": {
+    "id": "wild_scent",
+    "name": "Faro Selvagem",
+    "description": "Revela pegadas brilhantes para ovos de dragão e minérios a 15 tiles de distância."
+  },
+  "movement": {
+    "type": "4-way",
+    "directions": ["south", "east", "north", "west"]
+  },
+  "spritesheet": {
+    "src": "assets/characters/char_wolf_hunter_m/spritesheet_transparent.png",
+    "portrait": "assets/characters/char_wolf_hunter_m/portrait.jpg",
+    "framesDir": "assets/characters/char_wolf_hunter_m/frames",
+    "grid": {
+      "columns": 8,
+      "rows": 4,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    "rowsByDirection": {
+      "south": 0,
+      "east": 1,
+      "north": 2,
+      "west": 3
+    },
+    "actions": {
+      "idle": { "cols": [0, 1], "fps": 4 },
+      "walk": { "cols": [2, 3, 4], "fps": 8 },
+      "run": { "cols": [5, 6], "fps": 12 },
+      "craft": { "cols": [7], "fps": 6 }
+    }
+  }
+}

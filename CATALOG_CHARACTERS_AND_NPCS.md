@@ -61,12 +61,15 @@ flowchart TD
 * **Prompt Base Style Tag (incorporado em todos os prompts):**  
   `Animal Crossing New Horizons aesthetic, cute anthropomorphic animal character, Sea of Stars high 3/4 top-down orthographic angle, 2.5D vector illustration with smooth 3D clay lighting, ambient occlusion, vibrant pastel fantasy palette, clean lines, isolated on transparent background, full body view`
 
-### 🎭 Estados e Animações dos Personagens Jogáveis (8 Direções)
-1. **`Idle` (8 direções):** Respiração suave com leve balanço de orelhas/penas.
-2. **`Walk` (8 direções):** Passo firme e cadenciado de exploração (64px por tile).
-3. **`Run / Sprint [Tecla Shift]` (8 direções):** Corrida veloz (+60% velocidade), postura inclinada aerodinâmica e pequenas nuvens fofas de poeira nos pés.
-4. **`Craft / Build / Cast` (8 direções):** Animação de fabricação com martelo na bancada, rega de plantas ou conjuração mágica dos blocos Lua com brilho dourado nas mãos.
-5. **`Mount Riding` (8 direções):** Pose sentada adaptada para encaixe milimétrico nos *sockets* de montaria dos dragões.
+### 🎭 Estrutura Padrão do Spritesheet Oficial (3 Linhas x 8 Frames)
+* **Formato do Spritesheet:** Exatamente **3 linhas horizontais de 8 frames (24 frames no total)** organizadas em grade contínua.
+* **Fundo:** **Branco 100% puro e sólido (`#FFFFFF`) sem linhas de grade, sem caixas, sem bordas, sem molduras**.
+* **Linhas de Animação:**
+  1. **Linha 1 (8 frames):** `Idle` (respiração suave e postura relaxada).
+  2. **Linha 2 (8 frames):** `Walk` (ciclo completo de caminhada em 8 frames).
+  3. **Linha 3 (8 frames):** `Craft` (personagem em pé alegre, movimentando os braços para cima e para baixo em frente ao peito sem segurar objetos — estilo Animal Crossing).
+* **Movimentação:** 4 Direções cardinais (Sul/Frente, Leste/Direita, Norte/Costas, Oeste/Esquerda). *(A mecânica de corrida a pé foi removida, substituída pela velocidade das montarias de dragões).*
+* **Corte e Transparência:** Tratamento manual e recorte realizado diretamente pelo criador/desenvolvedor.
 
 ---
 

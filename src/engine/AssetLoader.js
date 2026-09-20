@@ -2219,7 +2219,15 @@ export class AssetLoader {
 
     const urlsToLoad = [];
 
-    // Geralt Idle & Running
+    // Preload Wolf Hunter Hero frames (8 cols x 4 rows)
+    for (let r = 0; r < 4; r++) {
+      for (let c = 0; c < 8; c++) {
+        urlsToLoad.push(`assets/characters/char_wolf_hunter_m/frames/wolf_hunter_r${r}_c${c}.png`);
+      }
+    }
+    urlsToLoad.push(`assets/characters/char_wolf_hunter_m/portrait.jpg`);
+
+    // Geralt Legacy Idle & Running (fallback)
     for (const dir of this.directions) {
       urlsToLoad.push(`Geralt/Idle/rotations/${dir}.png`);
       urlsToLoad.push(`Geralt/running/rotations/${dir}.png`);
