@@ -17,3 +17,10 @@ scratch/
 *.log
 *.tmp
 .system_generated/
+
+# Environment Secrets & Local Configs
+.env
+.env.local
+.env.*.local
+.vercel
+

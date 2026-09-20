@@ -1,26 +1,40 @@
 {
   "version": 2,
   "name": "universo-kidslearncode-rpg",
-  "builds": [
+  "headers": [
     {
-      "src": "**/*",
-      "use": "@vercel/static"
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+      ]
+    },
+    {
+      "source": "/(assets|RPG-overworld-tileset|Geralt)/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
     }
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
       "src": "/assets/(.*)",
-      "headers": { "cache-control": "s-maxage=31536000, immutable" },
       "dest": "/assets/$1"
     },
     {
       "src": "/RPG-overworld-tileset/(.*)",
-      "headers": { "cache-control": "s-maxage=31536000, immutable" },
       "dest": "/RPG-overworld-tileset/$1"
     },
     {
       "src": "/Geralt/(.*)",
-      "headers": { "cache-control": "s-maxage=31536000, immutable" },
       "dest": "/Geralt/$1"
     },
     {

@@ -14,6 +14,8 @@ import { CharacterRegistry, PLAYABLE_HEROES } from './engine/CharacterRegistry.j
 import { InventorySystem } from './engine/InventorySystem.js';
 import { StorageManager } from './engine/StorageManager.js';
 import { SupabaseClient } from './engine/SupabaseClient.js';
+import { securityManager } from './engine/SecurityManager.js';
+
 
 class RPGApplication {
   constructor() {
@@ -77,6 +79,9 @@ class RPGApplication {
       this.setupQuickMountButton();
       this.setupNetworkDisconnectionMonitor();
       this.bindDOMEvents();
+
+      // Ativa proteções de segurança, anti-scrape e bloqueio de download de assets
+      securityManager.init();
 
       // Initialize IndexedDB Storage Engine & Supabase Cloud
       await this.storageManager.init();
@@ -1182,6 +1187,27 @@ class RPGApplication {
         }
       }
 
+      if (!data) {
+        // Se nenhum save local ou nuvem existir, restaura o mapa oficial padrão construído pelo usuário
+        try {
+          const resp = await fetch('src/data/defaultWorldMap.json');
+          if (resp.ok) {
+            const defaultMap = await resp.json();
+            data = {
+              id: 'active_save',
+              map: defaultMap,
+              player: defaultMap.spawnPoint ? { x: defaultMap.spawnPoint.x, y: defaultMap.spawnPoint.y, scale: 1.0 } : { x: 2048, y: 0, scale: 1.0 },
+              activeHero: 'char_wolf_hunter_m',
+              savedAt: Date.now()
+            };
+            await this.storageManager.saveGame(data);
+            console.log('[Game] Mapa original base defaultWorldMap.json restaurado com sucesso no IndexedDB.');
+          }
+        } catch (fetchErr) {
+          console.warn('[Game] Falha ao carregar defaultWorldMap.json:', fetchErr);
+        }
+      }
+
       if (data) {
         // 1. Restaurar TileMap
         const mapPayload = data.map ? data.map : data;
@@ -1282,10 +1308,6 @@ class RPGApplication {
     const userNameEl = document.getElementById('auth-user-name');
     const userEmailEl = document.getElementById('auth-user-email');
 
-    const customUrlInput = document.getElementById('custom-supabase-url');
-    const customKeyInput = document.getElementById('custom-supabase-key');
-    const saveConfigBtn = document.getElementById('btn-save-supabase-config');
-
     let mode = 'login'; // 'login' or 'signup'
 
     const refreshAuthUI = () => {
@@ -1312,9 +1334,6 @@ class RPGApplication {
       if (signoutBtn) {
         signoutBtn.style.display = isGuest ? 'none' : 'block';
       }
-
-      if (customUrlInput) customUrlInput.value = this.supabaseClient.url || '';
-      if (customKeyInput) customKeyInput.value = this.supabaseClient.anonKey || '';
     };
 
     refreshAuthUI();
@@ -1368,10 +1387,16 @@ class RPGApplication {
       submitBtn.innerText = mode === 'signup' ? '✨ Criar Conta' : '🔑 Entrar';
 
       if (res.success) {
-        this.showToast(`🎉 Bem-vindo, ${res.user.user_metadata?.nickname || res.user.email}!`);
-        refreshAuthUI();
-        await this.loadGameFromStorage();
-        modal.style.display = 'none';
+        if (res.requiresConfirmation) {
+          this.showToast(`📩 ${res.message}`, 6000);
+          refreshAuthUI();
+          modal.style.display = 'none';
+        } else {
+          this.showToast(`🎉 Bem-vindo, ${res.user.user_metadata?.nickname || res.user.email}!`);
+          refreshAuthUI();
+          await this.loadGameFromStorage();
+          modal.style.display = 'none';
+        }
       } else {
         this.showToast(`⚠️ ${res.error || 'Falha ao autenticar.'}`);
       }
@@ -1388,23 +1413,6 @@ class RPGApplication {
       await this.supabaseClient.signOut();
       refreshAuthUI();
       this.showToast('Desconectado da conta.');
-    });
-
-    saveConfigBtn?.addEventListener('click', async () => {
-      const url = customUrlInput.value.trim();
-      const key = customKeyInput.value.trim();
-      if (!url || !key) {
-        this.showToast('⚠️ Informe a URL e a Anon Key do Supabase.');
-        return;
-      }
-
-      const res = await this.supabaseClient.setCredentials(url, key);
-      if (res.success) {
-        this.showToast('✅ Supabase conectado com sucesso!');
-        refreshAuthUI();
-      } else {
-        this.showToast('⚠️ Falha ao conectar ao projeto Supabase.');
-      }
     });
   }
 

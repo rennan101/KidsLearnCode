@@ -2594,3 +2594,36 @@ canvas#game-canvas {
   box-shadow: 0 0 6px #38bdf8;
 }
 
+/* ==========================================================================
+   Asset Protection, Anti-Scrape & Anti-Download Safeguards
+   ========================================================================== */
+img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-portrait, .asset-item {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -moz-user-drag: none !important;
+  -o-user-drag: none !important;
+  user-drag: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+/* Protective transparent overlay on interactive asset previews */
+.protected-asset-frame {
+  position: relative;
+  display: inline-block;
+  user-select: none;
+}
+
+.protected-asset-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  pointer-events: none;
+  z-index: 2;
+}
+
+
