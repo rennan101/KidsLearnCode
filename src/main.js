@@ -15,6 +15,7 @@ import { InventorySystem } from './engine/InventorySystem.js';
 import { StorageManager } from './engine/StorageManager.js';
 import { SupabaseClient } from './engine/SupabaseClient.js';
 import { securityManager } from './engine/SecurityManager.js';
+import { ScratchBlockEngine } from './engine/ScratchBlockEngine.js';
 
 
 class RPGApplication {
@@ -34,6 +35,7 @@ class RPGApplication {
     this.dragonManager = new DragonManager();
     this.inventorySystem = new InventorySystem();
     this.blocklySystem = new BlocklyLuaSystem();
+    this.scratchEngine = new ScratchBlockEngine();
     this.multiplayerClient = new MultiplayerClient();
 
     this.assetLoader = new AssetLoader();
@@ -1937,7 +1939,7 @@ class RPGApplication {
     if (!npc) return;
     this.dialogueSystem.openNpcConversation(npc, this.blocklySystem, {
       onOpenLesson: (lessonId) => {
-        const codingModal = document.getElementById('coding-studio-modal');
+        const codingModal = document.getElementById('coding-modal') || document.getElementById('coding-studio-modal');
         const lessonSelect = document.getElementById('select-lua-lesson');
         if (codingModal && this.blocklySystem) {
           this.blocklySystem.setLesson(lessonId);
@@ -1948,14 +1950,19 @@ class RPGApplication {
           const lesson = this.blocklySystem.getCurrentLesson();
           const lessonDesc = document.getElementById('lesson-desc');
           const rewardBadge = document.getElementById('lesson-reward-badge');
+          const unlockBadge = document.getElementById('lesson-unlock-target');
           const codeEditor = document.getElementById('lua-code-editor');
           const consoleOut = document.getElementById('lua-console-output');
 
           if (lessonDesc) lessonDesc.innerText = `${lesson.mentor} (${lesson.mentorRole}): ${lesson.description}`;
           if (rewardBadge) rewardBadge.innerText = `+${lesson.rewardXP} XP / +${lesson.rewardGold} Moedas`;
+          if (unlockBadge) unlockBadge.innerText = `Desbloqueio: ${lesson.unlockedAssetName || 'Item Especial'}`;
           if (codeEditor) codeEditor.value = lesson.starterLua;
+          if (this.scratchEngine) {
+            this.scratchEngine.loadLessonBlocks(lesson.blocks, lesson.starterLua);
+          }
           if (consoleOut) {
-            consoleOut.innerHTML = `> Lição carregada: <strong>${lesson.title}</strong> (${lesson.concept})\n> Objeto a Desbloquear: <strong>${lesson.unlockedAssetName}</strong>\n> Edite o código ou clique nos Blocos e depois em 'Executar Código'.`;
+            consoleOut.innerHTML = `> Lição carregada: <strong>${lesson.title}</strong> (${lesson.concept})\n> Objeto a Desbloquear: <strong>${lesson.unlockedAssetName}</strong>\n> Arraste os blocos na área central e clique em 'Executar Montagem & Fabricar'.`;
           }
           codingModal.style.display = 'flex';
         }
@@ -1971,7 +1978,7 @@ class RPGApplication {
   handleAccessFeature(featureId, npcData) {
     switch (featureId) {
       case 'feature_lua_terminal': {
-        const codingModal = document.getElementById('coding-studio-modal');
+        const codingModal = document.getElementById('coding-modal') || document.getElementById('coding-studio-modal');
         if (codingModal) codingModal.style.display = 'flex';
         break;
       }
@@ -2518,17 +2525,46 @@ class RPGApplication {
   }
 
   setupCodingStudioUI() {
-    const modal = document.getElementById('coding-modal');
+    const modal = document.getElementById('coding-modal') || document.getElementById('coding-studio-modal');
     const closeBtn = document.getElementById('btn-close-coding');
     const lessonSelect = document.getElementById('select-lua-lesson');
     const lessonDesc = document.getElementById('lesson-desc');
     const rewardBadge = document.getElementById('lesson-reward-badge');
+    const unlockBadge = document.getElementById('lesson-unlock-target');
     const codeEditor = document.getElementById('lua-code-editor');
     const consoleOut = document.getElementById('lua-console-output');
     const btnRun = document.getElementById('btn-run-lua');
     const btnReset = document.getElementById('btn-reset-lua');
+    const btnClearWorkspace = document.getElementById('btn-clear-workspace');
+    const paletteEl = document.getElementById('scratch-palette');
+    const workspaceEl = document.getElementById('scratch-workspace');
 
     if (!modal || !lessonSelect || !codeEditor) return;
+
+    if (this.scratchEngine) {
+      if (paletteEl) this.scratchEngine.setPaletteContainer(paletteEl);
+      if (workspaceEl) this.scratchEngine.setWorkspaceContainer(workspaceEl);
+      if (codeEditor) this.scratchEngine.setCodeOutputContainer(codeEditor);
+    }
+
+    // Category buttons filter
+    document.querySelectorAll('.scratch-cat-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.scratch-cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const cat = btn.dataset.category || 'all';
+        if (this.scratchEngine) {
+          this.scratchEngine.setFilterCategory(cat);
+        }
+      });
+    });
+
+    // Clear Workspace Button
+    btnClearWorkspace?.addEventListener('click', () => {
+      if (this.scratchEngine) {
+        this.scratchEngine.clearWorkspace();
+      }
+    });
 
     closeBtn?.addEventListener('click', () => {
       modal.style.display = 'none';
@@ -2551,9 +2587,13 @@ class RPGApplication {
 
       if (lessonDesc) lessonDesc.innerText = `${lesson.mentor} (${lesson.mentorRole}): ${lesson.description}`;
       if (rewardBadge) rewardBadge.innerText = `+${lesson.rewardXP} XP / +${lesson.rewardGold} Moedas`;
+      if (unlockBadge) unlockBadge.innerText = `Desbloqueio: ${lesson.unlockedAssetName || 'Item Especial'}`;
       if (codeEditor) codeEditor.value = lesson.starterLua;
+      if (this.scratchEngine) {
+        this.scratchEngine.loadLessonBlocks(lesson.blocks, lesson.starterLua);
+      }
       if (consoleOut) {
-        consoleOut.innerHTML = `> Lição carregada: <strong>${lesson.title}</strong> (${lesson.concept})\n> Edite o código ou clique nos Blocos e depois em 'Executar Código'.`;
+        consoleOut.innerHTML = `> Lição carregada: <strong>${lesson.title}</strong> (${lesson.concept})\n> Objeto a Desbloquear: <strong>${lesson.unlockedAssetName}</strong>\n> Arraste os blocos ou edite os valores e clique em 'Executar Montagem & Fabricar'.`;
       }
     };
 
@@ -2564,27 +2604,13 @@ class RPGApplication {
       loadLesson(parseInt(e.target.value, 10));
     });
 
-    // Block button insertion
-    document.querySelectorAll('.block-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const insertText = btn.dataset.insert;
-        if (insertText && codeEditor) {
-          const start = codeEditor.selectionStart;
-          const end = codeEditor.selectionEnd;
-          const text = codeEditor.value;
-          codeEditor.value = text.substring(0, start) + '\n' + insertText + '\n' + text.substring(end);
-          codeEditor.focus();
-        }
-      });
-    });
-
     // Run code & execute physical Map Grid spawning (Step 2)
     btnRun?.addEventListener('click', () => {
       const code = codeEditor.value;
       const res = this.blocklySystem.runScript(code);
 
       if (consoleOut) {
-        let outHtml = `> Executando script Lua...\n`;
+        let outHtml = `> Executando montagem e script Lua...\n`;
         if (res.logs && res.logs.length > 0) {
           outHtml += res.logs.map(l => `> [LOG] ${l}`).join('\n') + '\n';
         }
@@ -2656,12 +2682,15 @@ class RPGApplication {
       }
     });
 
-    // Reset code
+    // Reset code & blocks
     btnReset?.addEventListener('click', () => {
       const lesson = this.blocklySystem.getCurrentLesson();
-      if (lesson && codeEditor) {
-        codeEditor.value = lesson.starterLua;
-        if (consoleOut) consoleOut.innerText = '> Código restaurado ao estado inicial da lição.';
+      if (lesson) {
+        if (codeEditor) codeEditor.value = lesson.starterLua;
+        if (this.scratchEngine) {
+          this.scratchEngine.loadLessonBlocks(lesson.blocks, lesson.starterLua);
+        }
+        if (consoleOut) consoleOut.innerText = '> Desafio restaurado ao estado inicial.';
       }
     });
 

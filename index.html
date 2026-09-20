@@ -709,62 +709,89 @@
     </div>
   </div>
 
-  <!-- Educational Blockly / Lua Coding Studio Modal (Sprint 6) -->
+  <!-- Educational Scratch Puzzle Blocks & Lua Coding Studio Modal -->
   <div class="crafting-modal" id="coding-modal" style="display: none;">
-    <div class="crafting-card" style="width: 780px; max-width: 95vw; height: 85vh;">
+    <div class="crafting-card scratch-studio-card" style="width: 960px; max-width: 96vw; height: 88vh; display: flex; flex-direction: column;">
+      <!-- Header -->
       <div class="crafting-header">
         <div class="crafting-title">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="16 18 22 12 16 6"></polyline>
-            <polyline points="8 6 2 12 8 18"></polyline>
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+            <line x1="12" y1="22.08" x2="12" y2="12"></line>
           </svg>
-          <span id="coding-studio-title">Estúdio de Código Lua (Dr. Arquimedes)</span>
+          <span id="coding-studio-title">Estúdio de Blocos & Criação Lua</span>
         </div>
         <button id="btn-close-coding" class="modal-close-btn" title="Fechar">✕</button>
       </div>
-      <div class="crafting-body" style="padding: 12px; gap: 12px; display: flex; flex-direction: column; height: 100%;">
-        <!-- Lesson Selector & Description Bar -->
-        <div style="background: #090c12; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 14px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <select id="select-lua-lesson" style="background: #1e293b; color: #fef08a; border: 1px solid #334155; padding: 4px 8px; border-radius: 6px; font-weight: 600;">
+
+      <!-- Studio Body -->
+      <div class="scratch-studio-body">
+        <!-- Mission & Unlock Bar -->
+        <div class="scratch-mission-bar">
+          <div class="scratch-mission-meta">
+            <select id="select-lua-lesson" class="scratch-lesson-select">
               <!-- Populated by main.js -->
             </select>
-            <span id="lesson-reward-badge" style="background: #047857; color: #a7f3d0; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px;">+100 XP</span>
+            <span id="lesson-unlock-target" class="scratch-unlock-badge">Desbloqueio: Cadeira de Madeira</span>
+            <span id="lesson-reward-badge" class="scratch-reward-badge">+100 XP / +50 Moedas</span>
           </div>
-          <p id="lesson-desc" style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4;"></p>
+          <p id="lesson-desc" class="scratch-lesson-desc"></p>
         </div>
 
-        <!-- Code Editor & Blocks Area -->
-        <div style="display: flex; gap: 10px; flex: 1; min-height: 0;">
-          <!-- Visual Blocks Palette -->
-          <div style="width: 220px; background: #090c12; border: 1px solid #1e293b; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto;">
-            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Blocos de Código</span>
-            <button class="block-btn" data-insert='local item = "bancada_madeira"'>Variável Item</button>
-            <button class="block-btn" data-insert='criar(item)'>Criar(item)</button>
-            <button class="block-btn" data-insert='se tem_item("chave_ouro") entao\n  abrir_portao()\nsenao\n  pedir_dica()\nfim'>Se / Senão</button>
-            <button class="block-btn" data-insert='para i = 1, 4 faca\n  plantar_arvore(i)\n  avancar()\nfim'>Laço Para (For)</button>
-            <button class="block-btn" data-insert='funcao chocar_ninho(tipo)\n  aquecer_ninho()\n  adotar(tipo)\nfim'>Declarar Função</button>
-            <button class="block-btn" data-insert='congelar_superficie()'>Congelar Superfície</button>
-            <button class="block-btn" data-insert='voo_livre()'>Voo Livre</button>
+        <!-- Category Tabs -->
+        <div class="scratch-category-tabs">
+          <button class="scratch-cat-btn active" data-category="all">Todos os Blocos</button>
+          <button class="scratch-cat-btn cat-variables" data-category="variables">Materiais</button>
+          <button class="scratch-cat-btn cat-actions" data-category="actions">Ações</button>
+          <button class="scratch-cat-btn cat-conditions" data-category="conditions">Condições</button>
+          <button class="scratch-cat-btn cat-loops" data-category="loops">Loops</button>
+          <button class="scratch-cat-btn cat-functions" data-category="functions">Funções</button>
+        </div>
+
+        <!-- Main 3-Column Studio Area -->
+        <div class="scratch-main-layout">
+          <!-- 1. Left Palette (Draggable Pieces) -->
+          <div class="scratch-palette-col">
+            <div class="scratch-col-header">
+              <span>Peças de Quebra-Cabeça</span>
+            </div>
+            <div id="scratch-palette" class="scratch-palette-items">
+              <!-- Rendered by ScratchBlockEngine -->
+            </div>
           </div>
 
-          <!-- Lua Code Textarea & Execution Console -->
-          <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
-            <textarea id="lua-code-editor" style="flex: 1; background: #050811; color: #38bdf8; border: 1px solid #1e293b; border-radius: 8px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; resize: none; outline: none; line-height: 1.5;"></textarea>
-            <div id="lua-console-output" style="height: 70px; background: #000; border: 1px solid #1e293b; border-radius: 6px; padding: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #a3e635; overflow-y: auto;">
-              > Console Lua pronto. Clique em 'Executar Código' para testar.
+          <!-- 2. Middle Workspace (Drop & Assembly Area) -->
+          <div class="scratch-workspace-col">
+            <div class="scratch-col-header">
+              <span>Área de Montagem (Arraste e Encaixe)</span>
+              <button id="btn-clear-workspace" class="scratch-mini-action-btn" title="Limpar todas as peças">Limpar</button>
+            </div>
+            <div id="scratch-workspace" class="scratch-workspace-dropzone">
+              <!-- Rendered by ScratchBlockEngine -->
+            </div>
+          </div>
+
+          <!-- 3. Right Lua Preview & Console -->
+          <div class="scratch-code-col">
+            <div class="scratch-col-header">
+              <span>Código Lua Gerado</span>
+            </div>
+            <textarea id="lua-code-editor" class="scratch-lua-textarea" readonly spellcheck="false"></textarea>
+            <div id="lua-console-output" class="scratch-console-output">
+              > Estúdio pronto. Conecte as peças e clique em "Executar Montagem".
             </div>
           </div>
         </div>
 
         <!-- Action Footer -->
-        <div style="display: flex; justify-content: flex-end; gap: 10px;">
-          <button id="btn-reset-lua" class="mount-btn" style="background: #334155; color: #cbd5e1;">Restaurar</button>
-          <button id="btn-run-lua" class="mount-btn" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; display: flex; align-items: center; gap: 6px;">
+        <div class="scratch-footer-bar">
+          <button id="btn-reset-lua" class="scratch-btn-secondary">Restaurar Desafio</button>
+          <button id="btn-run-lua" class="scratch-btn-primary">
             <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
-            <span>Executar Código Lua</span>
+            <span>Executar Montagem & Fabricar</span>
           </button>
         </div>
       </div>
