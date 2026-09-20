@@ -23,4 +23,10 @@ scratch/
 .env.local
 .env.*.local
 .vercel
+src/config/supabase.local.js
+*.local.js
+
+# Exported Map Dumps (Raw Exports)
+world-map-*.json
+
 

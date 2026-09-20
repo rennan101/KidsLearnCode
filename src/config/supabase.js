@@ -1,38 +1,29 @@
 /**
  * Supabase Configuration - KidsLearnCode MMORPG
- * - Proteção de credenciais contra web scraping estático
- * - Suporte a variáveis de ambiente (.env / Vercel Environment Variables)
- * - Reconstrução dinâmica em runtime
+ * - Arquivo público para o repositório GitHub
+ * - As credenciais reais são lidas de variáveis de ambiente (Vercel)
+ *   ou do arquivo local privado não rastreado (src/config/supabase.local.js)
  */
 
-// Helper de decodificação em runtime para proteger contra scanners estáticos
-const _d = (encoded) => {
-  try {
-    if (typeof atob === 'function') {
-      return atob(encoded);
-    }
-    return Buffer.from(encoded, 'base64').toString('utf-8');
-  } catch (_) {
-    return encoded;
+let localConfig = {};
+try {
+  // Carregamento dinâmico do arquivo local se existir no ambiente de dev
+  const localModule = await import('./supabase.local.js').catch(() => null);
+  if (localModule && localModule.LOCAL_SUPABASE_CONFIG) {
+    localConfig = localModule.LOCAL_SUPABASE_CONFIG;
   }
-};
-
-// Fragmentos codificados da infraestrutura
-const _K1 = 'aHR0cHM6Ly9vdXZrcXZnbnFlenN0Z2Fmbnl0by5zdXBhYmFzZS5jbw==';
-const _K2 = 'ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnBjM01pT2lKemRYQmFZbUZ6WlM1amJ5SXNJbkpsWmlJNklHOW1kbXQ1ZG1kdWNXVjZkM1JuWldGbWJubDBaMmNpTENKemIyeGZJamt2YVc1aGJuSnZZWEpsY2lJc0luUnBiMjVmWVdsMElqb3hOemc1T1RNd01qZ3dMQ0psZUhBaU9qSXhNRFUxTURZeU9EQXdMQ0prWVhSaGZHNWxZWEpsY2lJc0luUnBiMjVmWkdGMFpTSTZJbEUzT1RremTURTBOREV4TFRRMU9Ea3ROekpsWWkxaE1UWXhMV0l4TldSaU5qQTNPVGt6WWlJc0luTjFZaUk2TVRjNE9Ua3pNREkyTkMweE56ZzVPVE13TmpJMk5DMXphV2R1WVhSMWNtVXRZMjl1Wm1sbmRXTnZiaTF3Y21VdFlTNXlaVzV1WVc0eE1ERXVZMjl0SW4wLmtnRkFmZndBekVTUXdiMlNEajJ2djFITlBiVXZ4VkRqUFFKdWtnZWFTLU0=';
+} catch (_) {}
 
 export const SUPABASE_CONFIG = {
-  // 1. Prioriza variáveis de ambiente injetadas em build/deploy (Vercel)
-  // 2. Fallback para chave em runtime dinâmico
-  url: (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) 
-    || (typeof process !== 'undefined' && process.env?.SUPABASE_URL) 
-    || (typeof window !== 'undefined' && window.__ENV__?.SUPABASE_URL)
-    || _d(_K1),
+  url: (typeof process !== 'undefined' && (process.env?.VITE_SUPABASE_URL || process.env?.SUPABASE_URL))
+    || (typeof window !== 'undefined' && (window.__ENV__?.VITE_SUPABASE_URL || window.__ENV__?.SUPABASE_URL))
+    || localConfig.url
+    || '',
 
-  anonKey: (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_ANON_KEY) 
-    || (typeof process !== 'undefined' && process.env?.SUPABASE_ANON_KEY) 
-    || (typeof window !== 'undefined' && window.__ENV__?.SUPABASE_ANON_KEY)
-    || _d(_K2)
+  anonKey: (typeof process !== 'undefined' && (process.env?.VITE_SUPABASE_ANON_KEY || process.env?.SUPABASE_ANON_KEY))
+    || (typeof window !== 'undefined' && (window.__ENV__?.VITE_SUPABASE_ANON_KEY || window.__ENV__?.SUPABASE_ANON_KEY))
+    || localConfig.anonKey
+    || ''
 };
 
 export default SUPABASE_CONFIG;

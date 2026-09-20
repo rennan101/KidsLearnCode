@@ -4,7 +4,6 @@
  */
 
 export default async function handler(req, res) {
-  // Configura cabeçalhos de segurança CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -17,11 +16,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL || 'https://ouvkqvgnqezstgafnyto.supabase.co';
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
-  if (!supabaseKey) {
-    return res.status(500).json({ error: 'Supabase Server Key not configured' });
+  if (!supabaseUrl || !supabaseKey) {
+    return res.status(500).json({ error: 'Supabase Server Environment Variables not configured on host.' });
   }
 
   try {
