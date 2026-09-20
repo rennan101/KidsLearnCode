@@ -1579,6 +1579,7 @@ class RPGApplication {
         }
       }
     });
+  }
 }
 
 // Bootstrap application on page load
