@@ -68,6 +68,7 @@ flowchart TD
 * [[TileMap & Sparse Grid Engine]] — Estrutura de dados esparsa infinita indexada por coordenadas `x,y`.
 * [[Layer Hierarchy & Dynamic Stacking]] — Pilha de renderização reordenável (Chão, Decoração, Sólido, Personagens).
 * [[Mount & Modular Character Layering System]] — Sistema de sockets de montaria (posicionamento do herói sobre qualquer dragão).
+* [[Dialogue & Animal Crossing Speech Bubble System]] — Interface de diálogos com NPCs e chat flutuante empilhável (max 2) estilo Animal Crossing.
 * [[Collision Detection & AABB Math]] — Algoritmos de colisão com suporte a rotação 90°/180°/270° e deslizamento de cantos.
 * [[Camera & Infinite Viewport]] — Câmera com interpolação suave, zoom matricial e conversão Screen-to-World.
 * [[Circular & Expanded Tactical Minimap]] — Radar de bússola circular, mapa tático expandido.
@@ -84,6 +85,7 @@ flowchart TD
 
 ### 3. 🎨 [[00 - High Concept & Game Vision|Game Design & Lore]]
 * [[00 - High Concept & Game Vision]] — High Concept oficial: 2 Modos, Trilha de Missões Lua e Sistema de Dragões.
+* [[Lua Missions Script & Interactive Field Moves]] — Roteiro de missões pedagógicas de programação Lua e Field Moves de interação com cenário.
 * [[Catalog - Characters, NPCs & Generation Prompts]] — 8 Heróis jogáveis, Moradores NPCs, habilidades únicas e prompts de vetor 3D/Animal Crossing.
 * [[Catalog - Dragons, Species & Generation Prompts]] — Catálogo de dragões (voadores, terrestres, aquáticos e míticos) com atributos e prompts.
 * [[Catalog - Craftable Items, Tiles & Generation Prompts]] — Inventário completo de itens criáveis, IDs, descrições e prompts de IA.

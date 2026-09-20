@@ -61,6 +61,13 @@ flowchart TD
 * **Prompt Base Style Tag (incorporado em todos os prompts):**  
   `Animal Crossing New Horizons aesthetic, cute anthropomorphic animal character, Sea of Stars high 3/4 top-down orthographic angle, 2.5D vector illustration with smooth 3D clay lighting, ambient occlusion, vibrant pastel fantasy palette, clean lines, isolated on transparent background, full body view`
 
+### 🎭 Estados e Animações dos Personagens Jogáveis (8 Direções)
+1. **`Idle` (8 direções):** Respiração suave com leve balanço de orelhas/penas.
+2. **`Walk` (8 direções):** Passo firme e cadenciado de exploração (64px por tile).
+3. **`Run / Sprint [Tecla Shift]` (8 direções):** Corrida veloz (+60% velocidade), postura inclinada aerodinâmica e pequenas nuvens fofas de poeira nos pés.
+4. **`Craft / Build / Cast` (8 direções):** Animação de fabricação com martelo na bancada, rega de plantas ou conjuração mágica dos blocos Lua com brilho dourado nas mãos.
+5. **`Mount Riding` (8 direções):** Pose sentada adaptada para encaixe milimétrico nos *sockets* de montaria dos dragões.
+
 ---
 
 ## 2. 🐺 Personagens Jogáveis — 4 Classes x 2 Gêneros = 8 Heróis
