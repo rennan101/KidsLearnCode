@@ -13,6 +13,7 @@ import { MultiplayerClient } from './engine/MultiplayerClient.js';
 import { CharacterRegistry, PLAYABLE_HEROES } from './engine/CharacterRegistry.js';
 import { InventorySystem } from './engine/InventorySystem.js';
 import { StorageManager } from './engine/StorageManager.js';
+import { SupabaseClient } from './engine/SupabaseClient.js';
 
 class RPGApplication {
   constructor() {
@@ -20,8 +21,9 @@ class RPGApplication {
     this.ctx = this.canvas.getContext('2d');
     this.canvasWrapper = document.getElementById('canvas-wrapper');
 
-    // Persistence & Storage Engine (IndexedDB)
+    // Persistence & Storage Engine (IndexedDB & Supabase Cloud)
     this.storageManager = new StorageManager();
+    this.supabaseClient = new SupabaseClient();
 
     // Subsystems
     this.dayNightSystem = new DayNightSystem();
@@ -67,6 +69,7 @@ class RPGApplication {
       this.setupTileInspector();
       this.setupLayerManager();
       this.setupChatSystem();
+      this.setupAuthUI();
       this.setupHeroSelectionUI();
       this.setupBackpackUI();
       this.setupCraftingUI();
@@ -75,8 +78,10 @@ class RPGApplication {
       this.setupNetworkDisconnectionMonitor();
       this.bindDOMEvents();
 
-      // Initialize IndexedDB Storage Engine
+      // Initialize IndexedDB Storage Engine & Supabase Cloud
       await this.storageManager.init();
+      await this.supabaseClient.init();
+      this.multiplayerClient.attachSupabase(this.supabaseClient);
       await this.assetLoader.syncWithStorage(this.storageManager);
 
       // Preload all sprites and tiles
@@ -1122,9 +1127,16 @@ class RPGApplication {
 
       const res = await this.storageManager.saveGame(payload);
       if (res && res.success) {
-        this.updateSaveIndicator('saved', res.storage || 'IndexedDB');
+        const isCloudActive = this.supabaseClient && !this.supabaseClient.user?.isGuest;
+        const engineLabel = isCloudActive ? 'Nuvem + DB' : (res.storage || 'IndexedDB');
+        this.updateSaveIndicator('saved', engineLabel);
       } else {
         this.updateSaveIndicator('error');
+      }
+
+      // Sincroniza em segundo plano com a Nuvem Supabase (se autenticado)
+      if (this.supabaseClient && !this.supabaseClient.user?.isGuest) {
+        this.supabaseClient.saveCloudGame(payload);
       }
     } catch (err) {
       console.warn('Failed to auto-save to StorageManager:', err);
@@ -1159,7 +1171,16 @@ class RPGApplication {
 
   async loadGameFromStorage() {
     try {
-      const data = await this.storageManager.loadGame();
+      let data = await this.storageManager.loadGame();
+
+      // Se autenticado na nuvem, verifica se o save do Supabase é mais recente
+      if (this.supabaseClient && !this.supabaseClient.user?.isGuest) {
+        const cloudData = await this.supabaseClient.loadCloudGame();
+        if (cloudData && (!data || (cloudData.savedAt && cloudData.savedAt > (data.savedAt || 0)))) {
+          data = cloudData;
+          await this.storageManager.saveGame(cloudData);
+        }
+      }
 
       if (data) {
         // 1. Restaurar TileMap
@@ -1234,11 +1255,157 @@ class RPGApplication {
           }
         }
 
-        this.updateSaveIndicator('saved', this.storageManager.useFallback ? 'localStorage' : 'IndexedDB');
+        const isCloud = this.supabaseClient && !this.supabaseClient.user?.isGuest;
+        this.updateSaveIndicator('saved', isCloud ? 'Nuvem + DB' : (this.storageManager.useFallback ? 'localStorage' : 'IndexedDB'));
       }
     } catch (err) {
       console.warn('Failed to load game from StorageManager:', err);
     }
+  }
+
+  setupAuthUI() {
+    const modal = document.getElementById('auth-modal');
+    const triggerBtn = document.getElementById('btn-cloud-account');
+    const closeBtn = document.getElementById('btn-close-auth');
+    const labelEl = document.getElementById('cloud-account-label');
+
+    const tabLogin = document.getElementById('auth-tab-login');
+    const tabSignup = document.getElementById('auth-tab-signup');
+    const nicknameInput = document.getElementById('auth-nickname');
+    const emailInput = document.getElementById('auth-email');
+    const passwordInput = document.getElementById('auth-password');
+    const submitBtn = document.getElementById('btn-submit-auth');
+    const guestBtn = document.getElementById('btn-guest-auth');
+    const signoutBtn = document.getElementById('btn-signout-auth');
+
+    const statusBadge = document.getElementById('auth-badge-status');
+    const userNameEl = document.getElementById('auth-user-name');
+    const userEmailEl = document.getElementById('auth-user-email');
+
+    const customUrlInput = document.getElementById('custom-supabase-url');
+    const customKeyInput = document.getElementById('custom-supabase-key');
+    const saveConfigBtn = document.getElementById('btn-save-supabase-config');
+
+    let mode = 'login'; // 'login' or 'signup'
+
+    const refreshAuthUI = () => {
+      const user = this.supabaseClient.user;
+      const isGuest = user?.isGuest ?? true;
+
+      if (labelEl) {
+        labelEl.innerText = isGuest ? '☁️ Convidado' : `☁️ ${user.user_metadata?.nickname || user.email.split('@')[0]}`;
+      }
+
+      if (statusBadge) {
+        statusBadge.innerText = isGuest ? 'Modo Convidado' : 'Conta Conectada';
+        statusBadge.style.background = isGuest ? '#334155' : '#047857';
+      }
+
+      if (userNameEl) {
+        userNameEl.innerText = user?.user_metadata?.nickname || (isGuest ? (user?.nickname || 'Aventureiro Convidado') : user.email.split('@')[0]);
+      }
+
+      if (userEmailEl) {
+        userEmailEl.innerText = user?.email || 'guest@kidslearncode.local';
+      }
+
+      if (signoutBtn) {
+        signoutBtn.style.display = isGuest ? 'none' : 'block';
+      }
+
+      if (customUrlInput) customUrlInput.value = this.supabaseClient.url || '';
+      if (customKeyInput) customKeyInput.value = this.supabaseClient.anonKey || '';
+    };
+
+    refreshAuthUI();
+
+    triggerBtn?.addEventListener('click', () => {
+      refreshAuthUI();
+      modal.style.display = 'flex';
+    });
+
+    closeBtn?.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    tabLogin?.addEventListener('click', () => {
+      mode = 'login';
+      tabLogin.classList.add('active');
+      tabSignup.classList.remove('active');
+      if (nicknameInput) nicknameInput.style.display = 'none';
+      if (submitBtn) submitBtn.innerText = '🔑 Entrar';
+    });
+
+    tabSignup?.addEventListener('click', () => {
+      mode = 'signup';
+      tabSignup.classList.add('active');
+      tabLogin.classList.remove('active');
+      if (nicknameInput) nicknameInput.style.display = 'block';
+      if (submitBtn) submitBtn.innerText = '✨ Criar Conta';
+    });
+
+    submitBtn?.addEventListener('click', async () => {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+      const nickname = nicknameInput ? nicknameInput.value.trim() : 'Aventureiro';
+
+      if (!email || !password) {
+        this.showToast('⚠️ Preencha e-mail e senha.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Conectando...';
+
+      let res;
+      if (mode === 'signup') {
+        res = await this.supabaseClient.signUp(email, password, nickname);
+      } else {
+        res = await this.supabaseClient.signIn(email, password);
+      }
+
+      submitBtn.disabled = false;
+      submitBtn.innerText = mode === 'signup' ? '✨ Criar Conta' : '🔑 Entrar';
+
+      if (res.success) {
+        this.showToast(`🎉 Bem-vindo, ${res.user.user_metadata?.nickname || res.user.email}!`);
+        refreshAuthUI();
+        await this.loadGameFromStorage();
+        modal.style.display = 'none';
+      } else {
+        this.showToast(`⚠️ ${res.error || 'Falha ao autenticar.'}`);
+      }
+    });
+
+    guestBtn?.addEventListener('click', () => {
+      this.supabaseClient.signOut();
+      refreshAuthUI();
+      this.showToast('🎭 Jogando em modo Convidado (Local).');
+      modal.style.display = 'none';
+    });
+
+    signoutBtn?.addEventListener('click', async () => {
+      await this.supabaseClient.signOut();
+      refreshAuthUI();
+      this.showToast('Desconectado da conta.');
+    });
+
+    saveConfigBtn?.addEventListener('click', async () => {
+      const url = customUrlInput.value.trim();
+      const key = customKeyInput.value.trim();
+      if (!url || !key) {
+        this.showToast('⚠️ Informe a URL e a Anon Key do Supabase.');
+        return;
+      }
+
+      const res = await this.supabaseClient.setCredentials(url, key);
+      if (res.success) {
+        this.showToast('✅ Supabase conectado com sucesso!');
+        refreshAuthUI();
+      } else {
+        this.showToast('⚠️ Falha ao conectar ao projeto Supabase.');
+      }
+    });
   }
 
   exportMapJSON() {

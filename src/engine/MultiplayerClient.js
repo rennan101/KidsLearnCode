@@ -50,7 +50,49 @@ export class MultiplayerClient {
       }
     ];
 
+    this.supabaseClient = null;
     this.connect();
+  }
+
+  attachSupabase(supabaseClient) {
+    if (!supabaseClient) return;
+    this.supabaseClient = supabaseClient;
+
+    this.supabaseClient.setupRealtimeChannel(
+      (remotePlayer) => {
+        this.handleRemotePlayerUpdate(remotePlayer);
+      },
+      (chatMsg) => {
+        if (this.onChatReceived) {
+          this.onChatReceived(chatMsg);
+        }
+      }
+    );
+  }
+
+  handleRemotePlayerUpdate(p) {
+    if (!p || p.id === this.supabaseClient?.user?.id || p.id === this.playerId) return;
+
+    let existing = this.remotePlayers.get(p.id);
+    if (!existing) {
+      existing = {
+        ...p,
+        targetX: p.x,
+        targetY: p.y,
+        animTimer: 0
+      };
+      this.remotePlayers.set(p.id, existing);
+    } else {
+      existing.targetX = p.x;
+      existing.targetY = p.y;
+      existing.direction = p.direction;
+      existing.isMoving = p.isMoving;
+      existing.isSprinting = p.isSprinting;
+      existing.isMounted = p.isMounted;
+      existing.heroId = p.heroId;
+      existing.name = p.name;
+      existing.activeDragonId = p.activeDragonId;
+    }
   }
 
   connect() {
@@ -122,20 +164,24 @@ export class MultiplayerClient {
   }
 
   sendLocalPlayerUpdate(player, heroId, name = 'Aventureiro', activeDragonId = null) {
-    if (!this.isConnected || !this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    if (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({
+        type: 'PLAYER_UPDATE',
+        x: Math.round(player.x),
+        y: Math.round(player.y),
+        direction: player.direction,
+        isMoving: player.isMoving,
+        isSprinting: player.isSprinting,
+        isMounted: player.isMounted,
+        heroId: heroId || player.heroId,
+        name,
+        activeDragonId
+      }));
+    }
 
-    this.ws.send(JSON.stringify({
-      type: 'PLAYER_UPDATE',
-      x: Math.round(player.x),
-      y: Math.round(player.y),
-      direction: player.direction,
-      isMoving: player.isMoving,
-      isSprinting: player.isSprinting,
-      isMounted: player.isMounted,
-      heroId: heroId || player.heroId,
-      name,
-      activeDragonId
-    }));
+    if (this.supabaseClient) {
+      this.supabaseClient.broadcastPlayerPosition(player, heroId || player.heroId, name, activeDragonId);
+    }
   }
 
   sendChatMessage(text, player, senderName = 'Aventureiro') {
@@ -147,6 +193,10 @@ export class MultiplayerClient {
         x: player.x,
         y: player.y
       }));
+    }
+
+    if (this.supabaseClient) {
+      this.supabaseClient.broadcastChatMessage(text, player, senderName);
     }
   }
 

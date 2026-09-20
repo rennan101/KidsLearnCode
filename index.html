@@ -69,6 +69,11 @@
       <button id="btn-open-backpack" class="backpack-quick-btn" title="Abrir Mochila de Aventura [B]">
         <span>🎒 Mochila</span>
       </button>
+
+      <button id="btn-cloud-account" class="cloud-account-btn" title="Conta Supabase & Sincronização em Nuvem MMORPG">
+        <span class="cloud-dot online"></span>
+        <span id="cloud-account-label">☁️ Convidado</span>
+      </button>
     </div>
 
     <!-- Map Persistence, Collider Overlay & Quick Actions -->
@@ -743,6 +748,76 @@
       <button id="btn-retry-connection" class="retry-connection-btn">
         🔄 Tentar Reconectar
       </button>
+    </div>
+  </div>
+
+  <!-- Supabase Cloud Account & MMORPG Settings Modal -->
+  <div class="crafting-modal" id="auth-modal" style="display: none;">
+    <div class="crafting-card" style="width: 520px; max-width: 95vw;">
+      <div class="crafting-header">
+        <div class="crafting-title">
+          <span class="crafting-icon">☁️⚡</span>
+          <span>Conta Supabase & Nuvem MMORPG</span>
+        </div>
+        <button id="btn-close-auth" class="modal-close-btn">✕</button>
+      </div>
+
+      <div class="crafting-body" style="padding: 16px; display: flex; flex-direction: column; gap: 14px;">
+        <!-- Current Account Status Card -->
+        <div style="background: #090c12; border: 1px solid #1e293b; border-radius: 10px; padding: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">Status do Jogador</span>
+            <span id="auth-badge-status" style="background: #047857; color: #a7f3d0; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px;">Convidado Ativo</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="font-size: 1.8rem;">🧙‍♂️</div>
+            <div>
+              <div id="auth-user-name" style="font-weight: 700; color: #fef08a; font-size: 0.95rem;">Aventureiro</div>
+              <div id="auth-user-email" style="font-size: 0.75rem; color: #94a3b8; font-family: var(--font-mono);">guest@kidslearncode.local</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Login / Register Form -->
+        <div id="auth-form-container" style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; gap: 6px;">
+            <button type="button" id="auth-tab-login" class="backpack-tab active" style="flex: 1;">Entrar (Login)</button>
+            <button type="button" id="auth-tab-signup" class="backpack-tab" style="flex: 1;">Criar Conta</button>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <input type="text" id="auth-nickname" placeholder="Seu Apelido / Nickname no Jogo" style="display: none; background: #050811; color: #fff; border: 1px solid #1e293b; border-radius: 8px; padding: 10px; font-size: 0.85rem; outline: none;">
+            <input type="email" id="auth-email" placeholder="E-mail (ex: aventureiro@gmail.com)" style="background: #050811; color: #fff; border: 1px solid #1e293b; border-radius: 8px; padding: 10px; font-size: 0.85rem; outline: none;">
+            <input type="password" id="auth-password" placeholder="Senha de Acesso" style="background: #050811; color: #fff; border: 1px solid #1e293b; border-radius: 8px; padding: 10px; font-size: 0.85rem; outline: none;">
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-submit-auth" class="mount-btn" style="flex: 1; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; padding: 10px 0;">
+              🔑 Entrar
+            </button>
+            <button id="btn-guest-auth" class="mount-btn" style="background: #334155; color: #cbd5e1; padding: 10px 14px;">
+              🎭 Convidado
+            </button>
+            <button id="btn-signout-auth" class="mount-btn" style="display: none; background: #ef4444; color: #fff; padding: 10px 14px;">
+              Sair
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom Supabase Project Keys Accordion -->
+        <details style="background: #090c12; border: 1px solid #1e293b; border-radius: 8px; padding: 10px;">
+          <summary style="font-size: 0.75rem; color: #38bdf8; font-weight: 700; cursor: pointer;">
+            ⚙️ Conectar ao Seu Próprio Projeto Supabase (Opcional)
+          </summary>
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+            <input type="text" id="custom-supabase-url" placeholder="Supabase Project URL (ex: https://xyz.supabase.co)" style="background: #050811; color: #cbd5e1; border: 1px solid #1e293b; border-radius: 6px; padding: 8px; font-size: 0.75rem; font-family: var(--font-mono);">
+            <input type="password" id="custom-supabase-key" placeholder="Supabase Anon Public API Key" style="background: #050811; color: #cbd5e1; border: 1px solid #1e293b; border-radius: 6px; padding: 8px; font-size: 0.75rem; font-family: var(--font-mono);">
+            <button id="btn-save-supabase-config" class="mount-btn" style="background: #10b981; color: #fff; font-size: 0.75rem; padding: 6px 12px; align-self: flex-end;">
+              Salvar Conexão
+            </button>
+          </div>
+        </details>
+      </div>
     </div>
   </div>
 
