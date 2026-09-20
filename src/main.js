@@ -1397,6 +1397,8 @@ class RPGApplication {
       modal.style.display = 'flex';
     });
 
+    const submitBtnLabel = document.getElementById('btn-submit-auth-label');
+
     closeBtn?.addEventListener('click', () => {
       modal.style.display = 'none';
     });
@@ -1406,7 +1408,7 @@ class RPGApplication {
       tabLogin.classList.add('active');
       tabSignup.classList.remove('active');
       if (nicknameInput) nicknameInput.style.display = 'none';
-      if (submitBtn) submitBtn.innerText = '🔑 Entrar';
+      if (submitBtnLabel) submitBtnLabel.innerText = 'Entrar';
     });
 
     tabSignup?.addEventListener('click', () => {
@@ -1414,7 +1416,7 @@ class RPGApplication {
       tabSignup.classList.add('active');
       tabLogin.classList.remove('active');
       if (nicknameInput) nicknameInput.style.display = 'block';
-      if (submitBtn) submitBtn.innerText = '✨ Criar Conta';
+      if (submitBtnLabel) submitBtnLabel.innerText = 'Criar Conta';
     });
 
     submitBtn?.addEventListener('click', async () => {
@@ -1423,12 +1425,12 @@ class RPGApplication {
       const nickname = nicknameInput ? nicknameInput.value.trim() : 'Aventureiro';
 
       if (!email || !password) {
-        this.showToast('⚠️ Preencha e-mail e senha.');
+        this.showToast('Preencha e-mail e senha.');
         return;
       }
 
       submitBtn.disabled = true;
-      submitBtn.innerText = 'Conectando...';
+      if (submitBtnLabel) submitBtnLabel.innerText = 'Conectando...';
 
       let res;
       if (mode === 'signup') {
@@ -1438,28 +1440,28 @@ class RPGApplication {
       }
 
       submitBtn.disabled = false;
-      submitBtn.innerText = mode === 'signup' ? '✨ Criar Conta' : '🔑 Entrar';
+      if (submitBtnLabel) submitBtnLabel.innerText = mode === 'signup' ? 'Criar Conta' : 'Entrar';
 
       if (res.success) {
         if (res.requiresConfirmation) {
-          this.showToast(`📩 ${res.message}`, 6000);
+          this.showToast(res.message, 6000);
           refreshAuthUI();
           modal.style.display = 'none';
         } else {
-          this.showToast(`🎉 Bem-vindo, ${res.user.user_metadata?.nickname || res.user.email}!`);
+          this.showToast(`Bem-vindo, ${res.user.user_metadata?.nickname || res.user.email}!`);
           refreshAuthUI();
           await this.loadGameFromStorage();
           modal.style.display = 'none';
         }
       } else {
-        this.showToast(`⚠️ ${res.error || 'Falha ao autenticar.'}`);
+        this.showToast(res.error || 'Falha ao autenticar.');
       }
     });
 
     guestBtn?.addEventListener('click', () => {
       this.supabaseClient.signOut();
       refreshAuthUI();
-      this.showToast('🎭 Jogando em modo Convidado (Local).');
+      this.showToast('Modo Offline ativado.');
       modal.style.display = 'none';
     });
 
