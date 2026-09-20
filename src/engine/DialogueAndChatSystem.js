@@ -291,4 +291,85 @@ export class DialogueAndChatSystem {
     if (modalEl) modalEl.style.display = 'none';
     this.activeDialogue = null;
   }
+
+  // Open complete NPC conversation with quest branching and choices
+  openNpcConversation(npcData, blocklySystem, callbacks = {}) {
+    if (!npcData) return;
+    const isCompleted = blocklySystem?.isLessonCompleted(npcData.lessonId) || false;
+    const dialogues = npcData.dialogues || {};
+
+    const speakerMeta = {
+      name: `${npcData.name} - ${npcData.role}`,
+      portraitUrl: npcData.portrait || `assets/characters/${npcData.id}/portrait.jpg`,
+      pitch: 500
+    };
+
+    if (isCompleted) {
+      // Completed state conversation
+      const text = dialogues.repeat || `Obrigado por ajudar a nossa ilha! O recurso ${npcData.unlockedTitle || ''} está totalmente ativo!`;
+      const choices = [];
+
+      if (callbacks.onAccessFeature && npcData.unlockedFeature) {
+        choices.push({
+          label: `Acessar ${npcData.unlockedTitle || 'Recurso'}`,
+          action: () => callbacks.onAccessFeature(npcData.unlockedFeature, npcData)
+        });
+      }
+
+      if (callbacks.onOpenLesson && npcData.lessonId) {
+        choices.push({
+          label: 'Revisar Desafio no Grimório',
+          action: () => callbacks.onOpenLesson(npcData.lessonId)
+        });
+      }
+
+      choices.push({
+        label: 'Até logo!',
+        action: () => this.closeNPCDialogue()
+      });
+
+      this.startNPCDialogue(speakerMeta, text, choices);
+    } else {
+      // First time / quest state conversation
+      const text = `${dialogues.intro || ''}\n\n${dialogues.quest || ''}`;
+      const choices = [
+        {
+          label: 'Aceitar Desafio de Código',
+          action: () => {
+            if (callbacks.onOpenLesson && npcData.lessonId) {
+              callbacks.onOpenLesson(npcData.lessonId);
+            }
+          }
+        },
+        {
+          label: 'Pedir Dica',
+          action: () => {
+            const hintText = dialogues.hint || 'Pense na lógica passo a passo e execute no Grimório de Códigos!';
+            this.startNPCDialogue(speakerMeta, hintText, [
+              {
+                label: 'Aceitar Desafio de Código',
+                action: () => {
+                  if (callbacks.onOpenLesson && npcData.lessonId) {
+                    callbacks.onOpenLesson(npcData.lessonId);
+                  }
+                }
+              },
+              {
+                label: 'Entendido!',
+                action: () => this.closeNPCDialogue()
+              }
+            ]);
+          }
+        },
+        {
+          label: 'Agora não',
+          action: () => this.closeNPCDialogue()
+        }
+      ];
+
+      this.startNPCDialogue(speakerMeta, text, choices);
+    }
+  }
 }
+
+export default DialogueAndChatSystem;

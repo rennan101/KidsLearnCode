@@ -707,9 +707,16 @@ class RPGApplication {
           return;
         }
 
-        // Key E: Interact with Wild Nest or Trigger Active Dragon Field Move (Sprint 5)
+        // Key E: Interact with NPC, Wild Nest or Trigger Active Dragon Field Move (Sprint 5 & 6)
         if (e.key === 'e' || e.key === 'E') {
-          // Check proximity to wild nests
+          // 1. Check proximity to placed NPCs on TileMap ('characters' layer)
+          const nearbyNpc = this.findNearbyNPC(this.player.x, this.player.y, 90);
+          if (nearbyNpc) {
+            this.interactWithNPC(nearbyNpc);
+            return;
+          }
+
+          // 2. Check proximity to wild nests
           const nearbyNest = this.dragonManager.wildNests.find(n => {
             return Math.hypot(n.x - this.player.x, n.y - this.player.y) < 70;
           });
@@ -724,7 +731,7 @@ class RPGApplication {
             return;
           }
 
-          // Otherwise trigger active dragon Field Move
+          // 3. Otherwise trigger active dragon Field Move
           const fieldRes = this.dragonManager.triggerFieldMove(this.tileMap, this.player.x, this.player.y);
           if (fieldRes.success) {
             this.showToast(fieldRes.message);
@@ -1364,22 +1371,27 @@ class RPGApplication {
       }
     });
 
-    // 3. Atualiza label da conta Supabase (sem a palavra Convidado)
+    // 3. Atualiza botão de login / sair no header (sem exibir o nome do usuário após logar)
+    const cloudBtn = document.getElementById('btn-cloud-account');
+    const headerLogoutBtn = document.getElementById('btn-header-logout');
     const labelEl = document.getElementById('cloud-account-label');
-    if (labelEl) {
-      const user = this.supabaseClient?.user;
-      if (user && !user.isGuest) {
-        const name = user.user_metadata?.nickname || (user.email ? user.email.split('@')[0] : 'Conta');
-        labelEl.innerText = name;
-      } else {
-        labelEl.innerText = 'Entrar';
-      }
+    const user = this.supabaseClient?.user;
+    const isLogged = user && !user.isGuest;
+
+    if (isLogged) {
+      if (cloudBtn) cloudBtn.style.display = 'none';
+      if (headerLogoutBtn) headerLogoutBtn.style.display = 'inline-flex';
+    } else {
+      if (cloudBtn) cloudBtn.style.display = 'inline-flex';
+      if (labelEl) labelEl.innerText = 'Entrar';
+      if (headerLogoutBtn) headerLogoutBtn.style.display = 'none';
     }
   }
 
   setupAuthUI() {
     const modal = document.getElementById('auth-modal');
     const triggerBtn = document.getElementById('btn-cloud-account');
+    const headerLogoutBtn = document.getElementById('btn-header-logout');
     const closeBtn = document.getElementById('btn-close-auth');
     const labelEl = document.getElementById('cloud-account-label');
 
@@ -1427,6 +1439,12 @@ class RPGApplication {
     triggerBtn?.addEventListener('click', () => {
       refreshAuthUI();
       modal.style.display = 'flex';
+    });
+
+    headerLogoutBtn?.addEventListener('click', async () => {
+      await this.supabaseClient.signOut();
+      refreshAuthUI();
+      this.showToast('Você saiu da conta.');
     });
 
     const submitBtnLabel = document.getElementById('btn-submit-auth-label');
@@ -1851,6 +1869,145 @@ class RPGApplication {
     // 2. Animal Crossing Floating Speech Bubbles (Rendered in screen space)
     if (this.dialogueSystem) {
       this.dialogueSystem.render(this.ctx, this.camera);
+    }
+
+    // 3. Floating Interaction Prompt for Nearby NPCs (Play Mode)
+    if (this.mode === 'play') {
+      const nearbyNpc = this.findNearbyNPC(this.player.x, this.player.y, 90);
+      if (nearbyNpc) {
+        const screenPos = this.camera.worldToScreen(nearbyNpc.worldX + 32, nearbyNpc.worldY - 12);
+        this.ctx.save();
+        this.ctx.font = 'bold 12px "Outfit", sans-serif';
+        const promptText = `[E] Conversar com ${nearbyNpc.name.split(',')[0]}`;
+        const metrics = this.ctx.measureText(promptText);
+        const w = metrics.width + 24;
+        const h = 26;
+        const x = screenPos.x - w / 2;
+        const y = screenPos.y - h;
+
+        this.ctx.fillStyle = 'rgba(9, 12, 18, 0.88)';
+        this.ctx.strokeStyle = '#38bdf8';
+        this.ctx.lineWidth = 1.5;
+        this.ctx.beginPath();
+        this.ctx.roundRect(x, y, w, h, 13);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        this.ctx.fillStyle = '#f8fafc';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(promptText, screenPos.x, y + h / 2);
+        this.ctx.restore();
+      }
+    }
+  }
+
+  findNearbyNPC(worldX, worldY, radius = 90) {
+    const charLayer = this.tileMap?.layers?.characters;
+    if (!charLayer) return null;
+
+    let nearest = null;
+    let minDistance = radius;
+
+    for (const [key, tileId] of charLayer.entries()) {
+      if (typeof tileId === 'string' && tileId.startsWith('npc_')) {
+        const [tx, ty] = key.split(',').map(Number);
+        const npcWorldX = tx * 64 + 32;
+        const npcWorldY = ty * 64 + 32;
+        const dist = Math.hypot(npcWorldX - (worldX + 32), npcWorldY - (worldY + 32));
+        if (dist <= minDistance) {
+          minDistance = dist;
+          const npcData = CharacterRegistry.VILLAGE_NPCS.find(n => n.id === tileId);
+          if (npcData) {
+            nearest = {
+              ...npcData,
+              tx,
+              ty,
+              worldX: tx * 64,
+              worldY: ty * 64
+            };
+          }
+        }
+      }
+    }
+    return nearest;
+  }
+
+  interactWithNPC(npc) {
+    if (!npc) return;
+    this.dialogueSystem.openNpcConversation(npc, this.blocklySystem, {
+      onOpenLesson: (lessonId) => {
+        const codingModal = document.getElementById('coding-studio-modal');
+        const lessonSelect = document.getElementById('lesson-select');
+        if (codingModal && this.blocklySystem) {
+          this.blocklySystem.setLesson(lessonId);
+          if (lessonSelect) {
+            const idx = this.blocklySystem.lessons.findIndex(l => l.id === lessonId);
+            if (idx !== -1) lessonSelect.value = idx;
+          }
+          const lesson = this.blocklySystem.getCurrentLesson();
+          const lessonDesc = document.getElementById('lesson-desc');
+          const rewardBadge = document.getElementById('lesson-reward-badge');
+          const codeEditor = document.getElementById('lua-code-editor');
+          const consoleOut = document.getElementById('lua-console-output');
+
+          if (lessonDesc) lessonDesc.innerText = `${lesson.mentor} (${lesson.mentorRole}): ${lesson.description}`;
+          if (rewardBadge) rewardBadge.innerText = `+${lesson.rewardXP} XP / +${lesson.rewardGold} Moedas`;
+          if (codeEditor) codeEditor.value = lesson.starterLua;
+          if (consoleOut) {
+            consoleOut.innerHTML = `> Lição carregada: <strong>${lesson.title}</strong> (${lesson.concept})\n> Edite o código ou clique nos Blocos e depois em 'Executar Código'.`;
+          }
+          codingModal.style.display = 'flex';
+        }
+      },
+      onAccessFeature: (featureId, npcData) => {
+        this.handleAccessFeature(featureId, npcData);
+      }
+    });
+  }
+
+  handleAccessFeature(featureId, npcData) {
+    switch (featureId) {
+      case 'feature_lua_terminal': {
+        const codingModal = document.getElementById('coding-studio-modal');
+        if (codingModal) codingModal.style.display = 'flex';
+        break;
+      }
+      case 'feature_furniture_crafting':
+      case 'feature_tier2_forge': {
+        if (this.openCraftingModal) this.openCraftingModal();
+        break;
+      }
+      case 'feature_farming_system': {
+        if (this.openBackpackModal) this.openBackpackModal();
+        this.showToast('Agricultura Ativa: Use o Regador Real e Sementes nos canteiros da ilha!');
+        break;
+      }
+      case 'feature_fishing_minigame': {
+        this.inventorySystem.equipTool('tool_rod');
+        this.showToast('Vara de Pesca Pronta! Aproxime-se das margens ou recifes para pescar.');
+        break;
+      }
+      case 'feature_water_mount': {
+        this.showToast('Montaria Aquática: Pressione [R] sobre a água para surfar com seu dragão!');
+        break;
+      }
+      case 'feature_fast_travel_ferry': {
+        this.showToast('Balsa e Viagem Rápida: Travessia entre os portos autorizada!');
+        break;
+      }
+      case 'feature_color_dye_studio': {
+        this.showToast('Ateliê de Tinturas: Cores e personalização disponíveis.');
+        break;
+      }
+      case 'feature_mythic_flight': {
+        this.showToast('Voo Mítico dos Dragões: Elevação máxima autorizada sobre a Ilha Lua!');
+        break;
+      }
+      default: {
+        this.showToast(`Recurso ${npcData.unlockedTitle || featureId} pronto para uso!`);
+        break;
+      }
     }
   }
 
@@ -2381,7 +2538,7 @@ class RPGApplication {
         const opt = document.createElement('option');
         opt.value = idx;
         const isDone = this.blocklySystem.completedLessons.has(l.id);
-        opt.innerText = `${isDone ? '✅ ' : ''}${l.title}`;
+        opt.innerText = `${isDone ? '[Concluído] ' : ''}${l.title}`;
         lessonSelect.appendChild(opt);
       });
     };
@@ -2390,7 +2547,7 @@ class RPGApplication {
       const lesson = this.blocklySystem.setLesson(idx);
       if (!lesson) return;
 
-      if (lessonDesc) lessonDesc.innerText = `📜 ${lesson.mentor} (${lesson.mentorRole}): ${lesson.description}`;
+      if (lessonDesc) lessonDesc.innerText = `${lesson.mentor} (${lesson.mentorRole}): ${lesson.description}`;
       if (rewardBadge) rewardBadge.innerText = `+${lesson.rewardXP} XP / +${lesson.rewardGold} Moedas`;
       if (codeEditor) codeEditor.value = lesson.starterLua;
       if (consoleOut) {
@@ -2448,43 +2605,47 @@ class RPGApplication {
 
         if (res.logs && res.logs.length > 0) {
           for (const log of res.logs) {
-            if (log.startsWith('item_criado:bancada_madeira') || log.includes('bancada_madeira')) {
+            if (log.startsWith('movel_fabricado:')) {
               this.tileMap.setTile('solid', targetX, targetY, 'crate');
               this.inventorySystem.addItem('wood', 15);
               this.player.spawnCraftPoof();
               this.triggerAutoSave();
-              this.showToast('🪵 Bancada de Madeira materializada no mapa à sua frente!');
-            } else if (log.startsWith('arvore_plantada:')) {
-              const treeIdx = parseInt(log.split(':')[1] || '1', 10);
-              const treeX = pTx + (delta.dx !== 0 ? delta.dx * treeIdx : (treeIdx - 2));
-              const treeY = pTy + (delta.dy !== 0 ? delta.dy * treeIdx : 0);
-              const treeTile = treeIdx % 2 === 0 ? 'tree-pine' : 'tree-oak-large';
-              this.tileMap.setTile('solid', treeX, treeY, treeTile);
+              this.showToast('Bancada e Mesa de Madeira materializadas no mapa!');
+            } else if (log.startsWith('semente_plantada:')) {
+              const treeTile = 'flower-magic';
+              this.tileMap.setTile('decor', targetX, targetY, treeTile);
+              this.inventorySystem.addItem('pumpkin_seed', 5);
               this.player.spawnCraftPoof();
               this.triggerAutoSave();
-            } else if (log.startsWith('superficie_congelada')) {
-              for (let ox = -1; ox <= 1; ox++) {
-                for (let oy = -1; oy <= 1; oy++) {
-                  this.tileMap.setTile('ground', targetX + ox, targetY + oy, 'water-animated');
-                }
-              }
-              this.player.spawnCraftPoof();
-              this.triggerAutoSave();
-              this.showToast('❄️ Superfície congelada pelo poder do código!');
-            } else if (log.startsWith('item_forjado:picareta_magica')) {
+              this.showToast('Canteiro arado e sementes brotando!');
+            } else if (log.startsWith('barra_fundida:')) {
               this.inventorySystem.addItem('iron_ore', 5);
               this.inventorySystem.equipTool('tool_pickaxe');
               this.player.spawnCraftPoof();
-              this.showToast('⛏️ Picareta Mágica forjada e equipada na bigorna!');
-            } else if (log.startsWith('dragao_adotado:')) {
+              this.showToast('Picareta Mágica forjada e equipada na bigorna!');
+            } else if (log.startsWith('isca_equipada:')) {
+              this.inventorySystem.addItem('sea_bass', 3);
+              this.inventorySystem.equipTool('tool_rod');
+              this.player.spawnCraftPoof();
+              this.showToast('Isca glacial equipada na vara de pesca!');
+            } else if (log.startsWith('nado_iniciado:')) {
+              this.player.spawnCraftPoof();
+              this.showToast('Propulsão aquática sincronizada com sucesso!');
+            } else if (log.startsWith('viagem_iniciada:')) {
+              this.player.spawnCraftPoof();
+              this.showToast('Cálculo de rota de balsa concluído com precisão!');
+            } else if (log.startsWith('item_tingido:')) {
+              this.player.spawnCraftPoof();
+              this.showToast('Pigmentos esmeralda aplicados com sucesso!');
+            } else if (log.startsWith('voo_mitico_ativado')) {
               this.dragonManager.adoptHatchedDragon('dragon_fly_solar');
               this.player.spawnCraftPoof();
-              this.showToast('🐉 Dragão Solar adotado com sucesso via Função Lua!');
+              this.showToast('Voo Mítico desbloqueado pelo Mestre Casco!');
             }
           }
         }
       } else {
-        this.showToast(`⚠️ ${res.message}`, 4000);
+        this.showToast(res.message, 4000);
       }
     });
 

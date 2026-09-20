@@ -2594,6 +2594,27 @@ canvas#game-canvas {
   box-shadow: 0 0 6px #38bdf8;
 }
 
+.header-logout-btn {
+  background: #090c12;
+  border: 1px solid #dc2626;
+  color: #f87171;
+  padding: 6px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.header-logout-btn:hover {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #ef4444;
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.4);
+}
+
 /* ==========================================================================
    Asset Protection, Anti-Scrape & Anti-Download Safeguards
    ========================================================================== */
