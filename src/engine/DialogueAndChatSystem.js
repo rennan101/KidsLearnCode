@@ -62,7 +62,7 @@ export class DialogueAndChatSystem {
   }
 
   // Add speech bubble above character (player or NPC)
-  addSpeechBubble(entityId, text, worldPos) {
+  addSpeechBubble(entityId, text, worldPos = { x: 0, y: 0 }) {
     if (!this.speechBubbles.has(entityId)) {
       this.speechBubbles.set(entityId, []);
     }
@@ -72,10 +72,10 @@ export class DialogueAndChatSystem {
 
     const newBubble = {
       id: `bubble_${now}_${Math.random().toString(36).substr(2, 5)}`,
-      text: text.trim(),
+      text: (text || '').trim(),
       createdAt: now,
       expiresAt: now + this.bubbleDurationMs,
-      worldPos: { ...worldPos }
+      worldPos: worldPos ? { ...worldPos } : { x: 0, y: 0 }
     };
 
     queue.push(newBubble);
@@ -88,6 +88,11 @@ export class DialogueAndChatSystem {
     // Play AC squeak sound
     this.playACBlip(620);
     return newBubble;
+  }
+
+  // Compatibility alias for multiplayer bots and NPCs
+  addBubble(entityId, senderName, text, heroId) {
+    return this.addSpeechBubble(entityId, text);
   }
 
   update(worldPosMap = new Map()) {

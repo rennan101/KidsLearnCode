@@ -668,7 +668,7 @@ class RPGApplication {
       if (this.mode === 'play') {
         if (e.key === 'f' || e.key === 'F') {
           this.camera.follow(this.player.x + 32, this.player.y + 32, 1.0);
-          this.showToast('🎯 Câmera centralizada no Geralt [F]');
+          this.showToast('Câmera centralizada no Geralt [F]');
           return;
         }
 
@@ -684,7 +684,7 @@ class RPGApplication {
         if (e.key === '1') {
           const res = this.dragonManager.triggerTacticalDodge();
           if (res.success) {
-            this.showToast(`🛡️ Esquiva Tática! ${res.abilityName}`);
+            this.showToast(`Esquiva Tática! ${res.abilityName}`);
           } else if (res.reason) {
             this.showToast(res.reason);
           }
@@ -810,7 +810,7 @@ class RPGApplication {
       // Snap camera directly onto Geralt so playmode never starts on empty black space
       this.camera.follow(this.player.x + 32, this.player.y + 32, 1.0);
       this.updateAdminAndModeUI();
-      this.saveToLocalStorage(true);
+      this.saveGameToStorage(true);
     });
 
     btnEdit.addEventListener('click', () => {
@@ -837,7 +837,7 @@ class RPGApplication {
       // Center camera immediately on Geralt in Editor Mode so player is 100% visible and centered
       this.editorController.focusPlayer();
       this.updateAdminAndModeUI();
-      this.saveToLocalStorage(true);
+      this.saveGameToStorage(true);
     });
 
     // Toggle Colliders Overlay
@@ -846,7 +846,7 @@ class RPGApplication {
       btnToggleColliders.classList.toggle('active', this.editorController.showColliders);
       const toolColBtn = document.getElementById('tool-collider');
       if (toolColBtn) toolColBtn.classList.toggle('active', this.editorController.showColliders);
-      this.showToast(this.editorController.showColliders ? '🛡️ Colisores visíveis no mapa!' : '👁️ Colisores ocultados!');
+      this.showToast(this.editorController.showColliders ? 'Colisores visíveis no mapa!' : 'Colisores ocultados!');
     });
 
     // Drawer toggle button
@@ -878,7 +878,7 @@ class RPGApplication {
             this.editorController.showColliders = !this.editorController.showColliders;
             btn.classList.toggle('active', this.editorController.showColliders);
             if (btnToggleColliders) btnToggleColliders.classList.toggle('active', this.editorController.showColliders);
-            this.showToast(this.editorController.showColliders ? '🛡️ Colisores visíveis no mapa!' : '👁️ Colisores ocultados!');
+            this.showToast(this.editorController.showColliders ? 'Colisores visíveis no mapa!' : 'Colisores ocultados!');
             
             if (this.editorController.showColliders) {
               this.editorController.setTool('collider');
@@ -901,7 +901,7 @@ class RPGApplication {
       }
       if (e.detail?.showColliders !== undefined) {
         if (btnToggleColliders) btnToggleColliders.classList.toggle('active', e.detail.showColliders);
-        this.showToast(e.detail.showColliders ? '🛡️ Colisores visíveis no mapa!' : '👁️ Colisores ocultados!');
+        this.showToast(e.detail.showColliders ? 'Colisores visíveis no mapa!' : 'Colisores ocultados!');
       }
     });
 
@@ -909,7 +909,7 @@ class RPGApplication {
     const btnRotate = document.getElementById('tool-rotate');
     btnRotate?.addEventListener('click', () => {
       const newRot = this.editorController.rotateActiveAsset();
-      this.showToast(`🔄 Rotação do pincel: ${newRot}°`);
+      this.showToast(`Rotação do pincel: ${newRot}°`);
     });
 
     // Flip / Mirror Tool Button
@@ -980,8 +980,8 @@ class RPGApplication {
         this.editorController.tileMap = this.tileMap;
         this.minimap.tileMap = this.tileMap;
         this.editorController.undoManager.tileMap = this.tileMap;
-        this.saveToLocalStorage(true);
-        this.showToast('🗑️ Mapa limpo com sucesso!');
+        this.saveGameToStorage(true);
+        this.showToast('Mapa limpo com sucesso!');
       }
     });
 
@@ -1514,8 +1514,8 @@ class RPGApplication {
             this.camera.zoom = this.tileMap.playCameraZoom || 1.0;
           }
           this.minimap.tileMap = this.tileMap;
-          this.saveToLocalStorage(true);
-          this.showToast('✅ Mapa importado com sucesso!');
+          this.saveGameToStorage(true);
+          this.showToast('Mapa importado com sucesso!');
         } else {
           alert('Formato de mapa inválido.');
         }
@@ -1525,6 +1525,11 @@ class RPGApplication {
     };
     reader.readAsText(file);
     event.target.value = '';
+  }
+
+  // Safety compatibility alias
+  saveToLocalStorage(instant = false) {
+    return this.saveGameToStorage(instant);
   }
 
   gameLoop(currentTime) {
@@ -2003,7 +2008,7 @@ class RPGApplication {
 
       if (avatarEl) avatarEl.src = `assets/characters/${hero.id}/portrait.jpg`;
       if (nameEl) nameEl.innerText = hero.name.split(' (')[0];
-      if (passiveEl) passiveEl.innerText = `🐾 ${hero.passive.name}`;
+      if (passiveEl) passiveEl.innerText = hero.passive.name;
     };
 
     this.openHeroSelectionModal = () => {
@@ -2016,22 +2021,19 @@ class RPGApplication {
         const card = document.createElement('div');
         card.className = `hero-card ${isCurrent ? 'selected' : ''}`;
 
-        const speciesIcons = { wolf: '🐺', bat: '🦇', eagle: '🦅', cat: '🐱' };
-        const icon = speciesIcons[hero.species] || '🧙‍♂️';
-
         card.innerHTML = `
           <img src="assets/characters/${hero.id}/portrait.jpg" alt="${hero.name}" class="hero-card-portrait">
-          <div class="hero-card-name">${icon} ${hero.name}</div>
+          <div class="hero-card-name">${hero.name}</div>
           <div class="hero-card-tags">
             <span class="hero-badge archetype">${hero.archetype}</span>
             <span class="hero-badge gender">${hero.gender === 'male' ? 'Masc' : 'Fem'}</span>
           </div>
           <div class="hero-passive-box">
-            <span class="hero-passive-title">✨ ${hero.passive.name}</span>
+            <span class="hero-passive-title">${hero.passive.name}</span>
             <span>${hero.passive.desc}</span>
           </div>
           <button class="hero-select-btn ${isCurrent ? 'active' : ''}">
-            ${isCurrent ? 'Herói Atual ✅' : 'Escolher Herói ⚔️'}
+            ${isCurrent ? 'Herói Atual' : 'Escolher Herói'}
           </button>
         `;
 
@@ -2041,7 +2043,7 @@ class RPGApplication {
           this.updateHeroHeaderBadge(hero.id);
           this.triggerAutoSave();
           this.player.spawnCraftPoof();
-          this.showToast(`🎭 Você agora é ${hero.name}! Habilidade Ativa: ${hero.passive.name}`);
+          this.showToast(`Você agora é ${hero.name}! Habilidade Ativa: ${hero.passive.name}`);
           modal.style.display = 'none';
         });
 
@@ -2232,20 +2234,19 @@ class RPGApplication {
 
         item.innerHTML = `
           <div class="dragon-info">
-            <span class="dragon-item-icon">${drag.icon}</span>
             <div class="dragon-details">
               <h4>${drag.name} <span style="font-size: 0.75rem; color: #f59e0b; background: #1e293b; padding: 2px 6px; border-radius: 4px;">Lv.${drag.level}</span></h4>
               <p><strong>${drag.element}</strong> • HP: ${drag.hp}/${drag.maxHp} • Amizade: ${drag.bond}%</p>
-              <p style="color: #94a3b8; font-size: 0.72rem;">✨ Especial: ${drag.fieldMove}</p>
-              <p style="color: #38bdf8; font-size: 0.72rem;">🛡️ Esquiva [1]: ${drag.dodgeAbility}</p>
+              <p style="color: #94a3b8; font-size: 0.72rem;">Especial: ${drag.fieldMove}</p>
+              <p style="color: #38bdf8; font-size: 0.72rem;">Esquiva [1]: ${drag.dodgeAbility}</p>
             </div>
           </div>
           <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
             <button class="mount-btn btn-toggle-mount" data-id="${drag.id}" style="${isActive && isMounted ? 'background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff;' : ''}">
-              ${isActive && isMounted ? 'Desmontar 🛑' : 'Montar 🏇'}
+              ${isActive && isMounted ? 'Desmontar' : 'Montar'}
             </button>
             <button class="mount-btn btn-toggle-follow" data-id="${drag.id}" style="background: ${isActive && !isMounted ? '#10b981' : '#334155'}; color: #fff; font-size: 0.72rem; padding: 4px 8px;">
-              ${isActive && !isMounted ? 'Acompanhando 🐾' : 'Acompanhar 🐾'}
+              ${isActive && !isMounted ? 'Acompanhando' : 'Acompanhar'}
             </button>
           </div>
         `;
@@ -2254,10 +2255,10 @@ class RPGApplication {
           this.dragonManager.setActiveDragon(drag.id);
           if (isActive && isMounted) {
             this.dragonManager.setMode('follow');
-            this.showToast(`🚶 Você desmontou de ${drag.name}.`);
+            this.showToast(`Você desmontou de ${drag.name}.`);
           } else {
             this.dragonManager.setMode('mounted');
-            this.showToast(`🐉 Você montou em ${drag.name}! (+Velocidade de Corrida)`);
+            this.showToast(`Você montou em ${drag.name}! (+Velocidade de Corrida)`);
           }
           renderDragonsTab();
         });
@@ -2265,7 +2266,7 @@ class RPGApplication {
         item.querySelector('.btn-toggle-follow')?.addEventListener('click', () => {
           this.dragonManager.setActiveDragon(drag.id);
           this.dragonManager.setMode('follow');
-          this.showToast(`🐾 ${drag.name} agora está te acompanhando!`);
+          this.showToast(`${drag.name} agora está te acompanhando!`);
           renderDragonsTab();
         });
 
@@ -2480,32 +2481,33 @@ class RPGApplication {
   }
 
   setupQuickMountButton() {
-    const btn = document.getElementById('btn-quick-mount');
-    const label = document.getElementById('quick-mount-label');
-    if (!btn) return;
-
     this.toggleQuickMount = () => {
       if (this.mode !== 'play') return;
       const res = this.dragonManager.toggleMount();
       if (res.success) {
         const isMounted = res.mounted;
-        btn.classList.toggle('mounted', isMounted);
+        const btn = document.getElementById('btn-quick-mount');
+        const label = document.getElementById('quick-mount-label');
+        if (btn) btn.classList.toggle('mounted', isMounted);
         if (label) {
           label.innerText = isMounted ? 'Desmontar [R]' : 'Montar [R]';
         }
         this.player.isMounted = isMounted;
         this.player.mountSpeedMultiplier = res.dragon?.mountSpeedMultiplier || 1.8;
         if (isMounted) {
-          this.showToast(`🐉 Você montou em ${res.dragon.name}! Corrida rápida ativada.`);
+          this.showToast(`Você montou em ${res.dragon.name}! (+Velocidade de Corrida)`);
         } else {
-          this.showToast(`🚶 Você desmontou de ${res.dragon.name}.`);
+          this.showToast(`Você desmontou de ${res.dragon.name}.`);
         }
       } else {
         this.showToast(res.reason || 'Nenhum dragão disponível para montaria.');
       }
     };
 
-    btn.addEventListener('click', () => this.toggleQuickMount());
+    const btn = document.getElementById('btn-quick-mount');
+    if (btn) {
+      btn.addEventListener('click', () => this.toggleQuickMount());
+    }
   }
 
   setupNetworkDisconnectionMonitor() {

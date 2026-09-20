@@ -355,6 +355,7 @@ export class DragonManager {
         size: 4 + Math.random() * 6,
         life: 0,
         maxLife: 0.6 + Math.random() * 0.3,
+        alpha: 1.0,
         type: 'dodge'
       });
     }
@@ -363,7 +364,7 @@ export class DragonManager {
   // Interactive Field Moves
   triggerFieldMove(tileMap, playerX, playerY) {
     const dragon = this.getActiveDragon();
-    if (!dragon) return { success: false, reason: 'Nenhum dragão ativo na Bag B.' };
+    if (!dragon) return { success: false, reason: 'Nenhum dragão ativo na Mochila.' };
 
     const tileSize = tileMap?.tileSize || 64;
     const centerTileX = Math.floor((playerX + 32) / tileSize);
@@ -373,7 +374,7 @@ export class DragonManager {
 
     if (dragon.category === 'land') {
       // Earth / Magma: Clear boulders and harvest stone
-      effectDesc = `💥 ${dragon.name} usou Quebra de Rochas! Caminhos liberados ao redor.`;
+      effectDesc = `${dragon.name} usou Quebra de Rochas! Caminhos liberados ao redor.`;
       for (let i = 0; i < 20; i++) {
         this.combatParticles.push({
           x: playerX + 32 + (Math.random() - 0.5) * 64,
@@ -384,12 +385,13 @@ export class DragonManager {
           size: 5 + Math.random() * 4,
           life: 0,
           maxLife: 0.8,
+          alpha: 1.0,
           type: 'rock'
         });
       }
     } else if (dragon.category === 'water') {
       // Water / Frost: Freeze water or surfing
-      effectDesc = `❄️ ${dragon.name} usou Congelamento de Marés! Superfície cristalizada em gelo seguro.`;
+      effectDesc = `${dragon.name} usou Congelamento de Marés! Superfície cristalizada em gelo seguro.`;
       for (let i = 0; i < 25; i++) {
         this.combatParticles.push({
           x: playerX + 32 + (Math.random() - 0.5) * 80,
@@ -400,12 +402,13 @@ export class DragonManager {
           size: 4 + Math.random() * 5,
           life: 0,
           maxLife: 1.0,
+          alpha: 1.0,
           type: 'frost'
         });
       }
     } else if (dragon.category === 'fly') {
       // Fly: Wind burst
-      effectDesc = `🌪️ ${dragon.name} usou Corrente Térmica! Salto no ar com visão ampliada.`;
+      effectDesc = `${dragon.name} usou Corrente Térmica! Salto no ar com visão ampliada.`;
       for (let i = 0; i < 20; i++) {
         this.combatParticles.push({
           x: playerX + 32 + (Math.random() - 0.5) * 50,
@@ -416,12 +419,13 @@ export class DragonManager {
           size: 3 + Math.random() * 4,
           life: 0,
           maxLife: 0.7,
+          alpha: 1.0,
           type: 'wind'
         });
       }
     } else {
       // Mythic
-      effectDesc = `✨ ${dragon.name} invocou a Bênção Astral da Ilha Lua!`;
+      effectDesc = `${dragon.name} invocou a Bênção Astral da Ilha Lua!`;
     }
 
     return {
@@ -619,6 +623,7 @@ export class DragonManager {
         size: 4 + Math.random() * 4,
         life: 0,
         maxLife: 0.5,
+        alpha: 1.0,
         type: 'attack'
       });
     }
@@ -627,6 +632,7 @@ export class DragonManager {
   // Render Companion, Targets, Nests, and Combat UI in World Space
   render(ctx, assetLoader, player = null) {
     const dragon = this.getActiveDragon();
+    if (!dragon) return;
 
     // 1. Render Wild Dragon Nests
     this.renderWildNests(ctx);
@@ -635,7 +641,7 @@ export class DragonManager {
     this.renderTrainingTargets(ctx);
 
     // 3. Render Active Dragon Companion (if not mounted, or socket underlay)
-    if (dragon && this.mode !== 'none') {
+    if (this.mode !== 'none') {
       this.renderDragonEntity(ctx, dragon, player);
     }
 
@@ -733,52 +739,48 @@ export class DragonManager {
     ctx.arc(drawX + 33, drawY + 15, 2.5, 0, Math.PI * 2);
     ctx.fill();
 
-    // 7. Mini Overhead Companion Badge & Proximity Mount [R] Balloon
+    // 7. Mini Overhead Companion Badge & Proximity Mount [R] Keycap Balloon
     if (this.mode === 'follow') {
       const dist = player ? Math.hypot(player.x - this.x, player.y - this.y) : 999;
       const isNearby = dist < 120;
 
       if (isNearby) {
-        // Balão de Montaria estilo Animal Crossing / Zelda
-        const bubbleW = 76;
-        const bubbleH = 22;
-        const bubbleX = drawX + 24 - bubbleW / 2;
-        const bubbleY = drawY - 30;
+        // Balão compacto com apenas a tecla [R] estilo Zelda/Animal Crossing
+        const badgeSize = 22;
+        const badgeX = drawX + 24 - badgeSize / 2;
+        const badgeY = drawY - 26;
 
-        // Fundo do balão
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 1.5;
+        // Sombra suave do badge
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         ctx.beginPath();
-        ctx.roundRect(bubbleX, bubbleY, bubbleW, bubbleH, 6);
-        ctx.fill();
-        ctx.stroke();
-
-        // Ponta triangular apontando para a cabeça do dragão
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
-        ctx.beginPath();
-        ctx.moveTo(drawX + 20, bubbleY + bubbleH);
-        ctx.lineTo(drawX + 24, bubbleY + bubbleH + 4);
-        ctx.lineTo(drawX + 28, bubbleY + bubbleH);
+        ctx.roundRect(badgeX - 1, badgeY - 1, badgeSize + 2, badgeSize + 2, 6);
         ctx.fill();
 
-        // Botão [R] keycap badge
+        // Keycap dourado
         ctx.fillStyle = '#f59e0b';
         ctx.beginPath();
-        ctx.roundRect(bubbleX + 6, bubbleY + 3, 16, 16, 3);
+        ctx.roundRect(badgeX, badgeY, badgeSize, badgeSize, 5);
         ctx.fill();
 
+        // Borda dourada suave
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Letra R centralizada
         ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 10px JetBrains Mono, monospace';
+        ctx.font = 'bold 12px "JetBrains Mono", monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('R', bubbleX + 14, bubbleY + 11);
+        ctx.fillText('R', badgeX + badgeSize / 2, badgeY + badgeSize / 2 + 0.5);
 
-        // Texto Montar
-        ctx.fillStyle = '#f3f4f6';
-        ctx.font = 'bold 11px Outfit, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText('Montar', bubbleX + 27, bubbleY + 11);
+        // Pontinha triangular sutil abaixo do badge apontando para a cabeça do dragão
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.moveTo(drawX + 21, badgeY + badgeSize);
+        ctx.lineTo(drawX + 24, badgeY + badgeSize + 3);
+        ctx.lineTo(drawX + 27, badgeY + badgeSize);
+        ctx.fill();
       } else {
         // Badge simples de nível quando longe
         ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
@@ -798,36 +800,47 @@ export class DragonManager {
   renderWildNests(ctx) {
     for (const nest of this.wildNests) {
       ctx.save();
-      // Nest Straw Bed
+      // Nest Straw Circle
       ctx.fillStyle = '#78350f';
       ctx.beginPath();
-      ctx.ellipse(nest.x + 24, nest.y + 24, 22, 14, 0, 0, Math.PI * 2);
+      ctx.ellipse(nest.x + 32, nest.y + 36, 26, 14, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = '#d97706';
-      ctx.beginPath();
-      ctx.ellipse(nest.x + 24, nest.y + 22, 18, 10, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.strokeStyle = '#b45309';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
 
       if (!nest.hatched) {
-        // Egg Shell
-        ctx.font = '22px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(nest.eggIcon, nest.x + 24, nest.y + 20);
-
-        // Warmth bar
-        if (nest.warmthProgress > 0) {
-          ctx.fillStyle = 'rgba(0,0,0,0.6)';
-          ctx.fillRect(nest.x + 4, nest.y - 8, 40, 6);
-          ctx.fillStyle = '#ef4444';
-          ctx.fillRect(nest.x + 4, nest.y - 8, 40 * (nest.warmthProgress / 100), 6);
-        }
-      } else {
-        // Empty hatched shell
+        // Egg
         ctx.fillStyle = '#fef08a';
-        ctx.font = '12px sans-serif';
+        ctx.beginPath();
+        ctx.ellipse(nest.x + 32, nest.y + 26, 12, 16, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Warmth Mini Bar
+        if (nest.warmthProgress > 0) {
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+          ctx.fillRect(nest.x + 12, nest.y + 44, 40, 6);
+
+          ctx.fillStyle = '#f97316';
+          ctx.fillRect(nest.x + 12, nest.y + 44, 40 * (nest.warmthProgress / 100), 6);
+        }
+
+        // Floating Title
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = 'bold 9px Outfit, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('✨ Eclodido', nest.x + 24, nest.y + 22);
+        ctx.fillText(nest.name, nest.x + 32, nest.y + 6);
+      } else {
+        // Hatched Empty Shell
+        ctx.fillStyle = '#a1a1aa';
+        ctx.font = 'italic 8px Outfit, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('(Chocado)', nest.x + 32, nest.y + 30);
       }
 
       ctx.restore();
@@ -837,34 +850,22 @@ export class DragonManager {
   renderTrainingTargets(ctx) {
     for (const target of this.trainingTargets) {
       if (target.hp <= 0) continue;
-      ctx.save();
 
-      // Shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.save();
+      const isHit = target.hitTimer > 0;
+      target.hitTimer = Math.max(0, (target.hitTimer || 0) - 0.016);
+
+      // Dummy Body
+      ctx.fillStyle = isHit ? '#ef4444' : '#64748b';
       ctx.beginPath();
-      ctx.ellipse(target.x + 20, target.y + 36, 16, 6, 0, 0, Math.PI * 2);
+      ctx.arc(target.x + 20, target.y + 20, 16, 0, Math.PI * 2);
       ctx.fill();
 
-      // Body (Dummy or Slime)
-      if (target.id.includes('slime')) {
-        ctx.fillStyle = '#6366f1';
-        ctx.beginPath();
-        ctx.arc(target.x + 20, target.y + 20, 16, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.arc(target.x + 16, target.y + 16, 3, 0, Math.PI * 2);
-        ctx.arc(target.x + 24, target.y + 16, 3, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        // Training Dummy Wood
-        ctx.fillStyle = '#b45309';
-        ctx.fillRect(target.x + 14, target.y + 10, 12, 24);
-        ctx.fillStyle = '#fbbf24';
-        ctx.arc(target.x + 20, target.y + 8, 8, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 2;
+      ctx.stroke();
 
-      // Overhead Floating HP Bar
+      // HP Bar above target
       const barW = 44;
       const barH = 5;
       const hpPct = target.hp / target.maxHp;
@@ -886,11 +887,13 @@ export class DragonManager {
 
   renderParticles(ctx) {
     for (const p of this.combatParticles) {
+      const alpha = typeof p.alpha === 'number' && !isNaN(p.alpha) ? Math.max(0, Math.min(1, p.alpha)) : 1;
+      if (alpha <= 0) continue;
       ctx.save();
-      ctx.fillStyle = p.color;
-      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color || '#38bdf8';
+      ctx.globalAlpha = alpha;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.arc(p.x || 0, p.y || 0, Math.max(1, p.size || 4), 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
@@ -898,12 +901,14 @@ export class DragonManager {
 
   renderDamageNumbers(ctx) {
     for (const d of this.damageNumbers) {
+      const alpha = typeof d.alpha === 'number' && !isNaN(d.alpha) ? Math.max(0, Math.min(1, d.alpha)) : 1;
+      if (alpha <= 0) continue;
       ctx.save();
-      ctx.fillStyle = d.color;
-      ctx.globalAlpha = d.alpha;
+      ctx.fillStyle = d.color || '#ffffff';
+      ctx.globalAlpha = alpha;
       ctx.font = 'bold 12px "JetBrains Mono", sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(d.text, d.x, d.y);
+      ctx.fillText(d.text, d.x || 0, d.y || 0);
       ctx.restore();
     }
   }

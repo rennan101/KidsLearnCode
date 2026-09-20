@@ -251,9 +251,11 @@ export class MultiplayerClient {
             'O dia está lindo hoje para coletar sementes!',
             'Aperte [1] para esquivar durante as batalhas!'
           ];
-          const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-          dialogueSystem.addBubble(bot.id, bot.name, phrase, bot.heroId);
-        }
+          if (typeof dialogueSystem.addBubble === 'function') {
+            dialogueSystem.addBubble(bot.id, bot.name, phrase, bot.heroId);
+          } else if (typeof dialogueSystem.addSpeechBubble === 'function') {
+            dialogueSystem.addSpeechBubble(bot.id, phrase, { x: bot.x, y: bot.y });
+          }
       }
     }
   }
