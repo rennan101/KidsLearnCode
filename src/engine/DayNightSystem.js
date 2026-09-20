@@ -151,19 +151,19 @@ export class DayNightSystem {
     const { hours } = this.getCurrentTime();
     if (hours >= 6 && hours < 8) {
       // Dawn (soft warm golden orange)
-      return { r: 255, g: 200, b: 150, alpha: 0.15, name: 'Amanhecer' };
+      return { r: 255, g: 200, b: 150, alpha: 0.10, name: 'Amanhecer' };
     } else if (hours >= 8 && hours < 16) {
       // Broad Daylight (crystal clear)
       return { r: 255, g: 255, b: 255, alpha: 0.0, name: 'Dia' };
     } else if (hours >= 16 && hours <= 17) {
       // Golden Hour / Sunset (warm amber purple)
-      return { r: 250, g: 150, b: 100, alpha: 0.22, name: 'Entardecer' };
+      return { r: 250, g: 150, b: 100, alpha: 0.12, name: 'Entardecer' };
     } else if (hours > 17 && hours < 20) {
-      // Dusk / Twilight (deep blue-purple)
-      return { r: 50, g: 40, b: 120, alpha: 0.45, name: 'Crepúsculo' };
+      // Dusk / Twilight (soft moonlit deep indigo)
+      return { r: 70, g: 80, b: 150, alpha: 0.18, name: 'Crepúsculo' };
     } else {
-      // Deep Night (mystical deep navy indigo)
-      return { r: 20, g: 25, b: 60, alpha: 0.65, name: 'Noite' };
+      // Deep Night (magical starlit blue with high contrast)
+      return { r: 50, g: 65, b: 130, alpha: 0.25, name: 'Noite' };
     }
   }
 

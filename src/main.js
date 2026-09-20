@@ -122,6 +122,17 @@ class RPGApplication {
     // Populate the asset drawer
     this.populateAssetDrawer();
 
+    // Sincroniza visibilidade de controles admin e modo
+    this.updateAdminAndModeUI();
+
+    // Se o usuário não estiver logado com e-mail/senha, apresenta a tela inicial de Login / Criar Conta
+    if (!this.supabaseClient.user || this.supabaseClient.user.isGuest) {
+      const authModal = document.getElementById('auth-modal');
+      if (authModal) {
+        authModal.style.display = 'flex';
+      }
+    }
+
     // Periodic background auto-save (every 4 seconds) non-blocking via IndexedDB
     setInterval(() => this.saveGameToStorage(true), 4000);
 
@@ -798,6 +809,7 @@ class RPGApplication {
 
       // Snap camera directly onto Geralt so playmode never starts on empty black space
       this.camera.follow(this.player.x + 32, this.player.y + 32, 1.0);
+      this.updateAdminAndModeUI();
       this.saveToLocalStorage(true);
     });
 
@@ -824,7 +836,7 @@ class RPGApplication {
 
       // Center camera immediately on Geralt in Editor Mode so player is 100% visible and centered
       this.editorController.focusPlayer();
-
+      this.updateAdminAndModeUI();
       this.saveToLocalStorage(true);
     });
 
@@ -1289,6 +1301,50 @@ class RPGApplication {
     }
   }
 
+  isAdminUser() {
+    const email = this.supabaseClient?.user?.email;
+    return email === 'rennancr93@gmail.com';
+  }
+
+  updateAdminAndModeUI() {
+    const isEdit = this.mode === 'edit';
+    const isAdmin = this.isAdminUser();
+
+    // 1. Badge de status de persistência (Apenas no Modo de Edição)
+    const saveStatus = document.getElementById('save-status');
+    if (saveStatus) {
+      saveStatus.style.display = isEdit ? 'flex' : 'none';
+    }
+
+    // 2. Opções admin / desenvolvedor (Colliders, Save JSON, Load JSON, Clear Map)
+    // Só devem aparecer no modo de edição para a conta com o e-mail rennancr93@gmail.com
+    const adminButtons = [
+      'btn-toggle-colliders',
+      'btn-save-json',
+      'btn-load-json',
+      'btn-clear-map'
+    ];
+
+    adminButtons.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.style.display = (isEdit && isAdmin) ? 'inline-flex' : 'none';
+      }
+    });
+
+    // 3. Atualiza label da conta Supabase (sem a palavra Convidado)
+    const labelEl = document.getElementById('cloud-account-label');
+    if (labelEl) {
+      const user = this.supabaseClient?.user;
+      if (user && !user.isGuest) {
+        const name = user.user_metadata?.nickname || (user.email ? user.email.split('@')[0] : 'Conta');
+        labelEl.innerText = `👤 ${name}`;
+      } else {
+        labelEl.innerText = 'Entrar';
+      }
+    }
+  }
+
   setupAuthUI() {
     const modal = document.getElementById('auth-modal');
     const triggerBtn = document.getElementById('btn-cloud-account');
@@ -1314,21 +1370,19 @@ class RPGApplication {
       const user = this.supabaseClient.user;
       const isGuest = user?.isGuest ?? true;
 
-      if (labelEl) {
-        labelEl.innerText = isGuest ? '☁️ Convidado' : `☁️ ${user.user_metadata?.nickname || user.email.split('@')[0]}`;
-      }
+      this.updateAdminAndModeUI();
 
       if (statusBadge) {
-        statusBadge.innerText = isGuest ? 'Modo Convidado' : 'Conta Conectada';
+        statusBadge.innerText = isGuest ? 'Modo Offline' : 'Conta Conectada';
         statusBadge.style.background = isGuest ? '#334155' : '#047857';
       }
 
       if (userNameEl) {
-        userNameEl.innerText = user?.user_metadata?.nickname || (isGuest ? (user?.nickname || 'Aventureiro Convidado') : user.email.split('@')[0]);
+        userNameEl.innerText = user?.user_metadata?.nickname || (isGuest ? (user?.nickname || 'Aventureiro') : user.email.split('@')[0]);
       }
 
       if (userEmailEl) {
-        userEmailEl.innerText = user?.email || 'guest@kidslearncode.local';
+        userEmailEl.innerText = user?.email || 'offline@kidslearncode.local';
       }
 
       if (signoutBtn) {
@@ -1563,7 +1617,8 @@ class RPGApplication {
   }
 
   render() {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillStyle = '#1b3b5f';
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
     this.ctx.save();
     try {

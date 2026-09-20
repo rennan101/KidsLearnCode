@@ -27,11 +27,8 @@
   <!-- Top App Navigation Bar -->
   <header class="app-header">
     <div class="brand-section">
-      <span class="brand-badge">2D MMORPG</span>
-      <span class="brand-title">Universo</span>
-      
-      <!-- Auto-Save Status Indicator Badge -->
-      <div id="save-status" class="save-status saved" title="Status de persistência do mapa">
+      <!-- Auto-Save Status Indicator Badge (Apenas visível no Modo de Edição) -->
+      <div id="save-status" class="save-status saved" title="Status de persistência do mapa" style="display: none;">
         <span class="save-dot"></span>
         <span>Salvo</span>
       </div>
@@ -39,7 +36,7 @@
 
     <!-- Play Mode vs World Editor Toggle -->
     <div class="mode-toggle">
-      <button id="btn-mode-play" class="mode-btn active" title="Control Geralt with WASD">
+      <button id="btn-mode-play" class="mode-btn active" title="Controlar Herói com WASD">
         <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polygon>
           <line x1="13" y1="19" x2="19" y2="13"></line>
@@ -48,7 +45,7 @@
         </svg>
         <span>Play</span>
       </button>
-      <button id="btn-mode-edit" class="mode-btn" title="Paint tiles and build the world">
+      <button id="btn-mode-edit" class="mode-btn" title="Pintar tiles e construir o mundo">
         <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
         </svg>
@@ -66,27 +63,27 @@
         </div>
       </button>
 
-      <button id="btn-open-backpack" class="backpack-quick-btn" title="Abrir Mochila de Aventura [B]">
-        <span>🎒 Mochila</span>
+      <button id="btn-open-backpack" class="backpack-quick-btn" title="Mochila [B]">
+        <span>🎒</span>
       </button>
 
       <button id="btn-cloud-account" class="cloud-account-btn" title="Conta Supabase & Sincronização em Nuvem MMORPG">
         <span class="cloud-dot online"></span>
-        <span id="cloud-account-label">☁️ Convidado</span>
+        <span id="cloud-account-label">Entrar</span>
       </button>
     </div>
 
-    <!-- Map Persistence, Collider Overlay & Quick Actions -->
-    <div class="header-actions">
+    <!-- Map Persistence, Collider Overlay & Quick Actions (Admin / Editor Only) -->
+    <div class="header-actions" id="header-admin-actions">
       <!-- Toggle Collider Wireframe Overlay -->
-      <button id="btn-toggle-colliders" class="action-btn active" title="Show or hide invisible collision boxes">
+      <button id="btn-toggle-colliders" class="action-btn active" title="Show or hide invisible collision boxes" style="display: none;">
         <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
         </svg>
         <span>Colliders</span>
       </button>
 
-      <button id="btn-save-json" class="action-btn" title="Save map as JSON file">
+      <button id="btn-save-json" class="action-btn" title="Save map as JSON file" style="display: none;">
         <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
           <polyline points="17 21 17 13 7 13 7 21"></polyline>
@@ -94,7 +91,7 @@
         </svg>
         <span>Save JSON</span>
       </button>
-      <button id="btn-load-json" class="action-btn" title="Upload JSON map">
+      <button id="btn-load-json" class="action-btn" title="Upload JSON map" style="display: none;">
         <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
         </svg>
@@ -102,7 +99,7 @@
       </button>
       <input type="file" id="file-input-json" accept=".json" style="display: none;">
       
-      <button id="btn-clear-map" class="action-btn danger" title="Reset current map to empty void">
+      <button id="btn-clear-map" class="action-btn danger" title="Reset current map to empty void" style="display: none;">
         <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="3 6 5 6 21 6"></polyline>
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
