@@ -74,7 +74,7 @@ flowchart TD
 * [[Camera & Infinite Viewport]] — Câmera com interpolação suave, zoom matricial e conversão Screen-to-World.
 * [[Circular & Expanded Tactical Minimap]] — Radar de bússola circular, mapa tático expandido.
 * [[Asset Discovery & Dynamic Loader]] — Scanner assíncrono de diretórios e inferência automática de dimensões.
-* [[Player Entity & 8-Way Movement]] — Máquina de estados do Geralt, sprites direcionais e colisor dos pés.
+* [[Player Entity & 4-Way Movement]] — Máquina de estados dos heróis em 4 direções, animações (idle, walk, run, craft, mount) e colisor.
 
 ### 2. 🛠️ [[Brush, Fill & Multi-Tile Placement|World Editor & Ferramentas]]
 * [[Brush, Fill & Multi-Tile Placement]] — Pincel inteligente de pegada multi-célula (`gridW x gridH`) e flood fill.
