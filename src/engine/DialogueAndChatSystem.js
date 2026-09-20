@@ -16,25 +16,32 @@ export class DialogueAndChatSystem {
   }
 
   initAudio() {
-    // Web Audio API for cute Animal Crossing blip-blop synthesizer sounds
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (AudioCtx) {
-        this.audioContext = new AudioCtx();
+    // Lazy initialize on first audio playback to respect browser autoplay policies
+  }
+
+  getAudioContext() {
+    if (!this.audioContext && typeof window !== 'undefined') {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          this.audioContext = new AudioCtx();
+        }
+      } catch {
+        // Audio not available
       }
-    } catch {
-      // Audio not supported
     }
+    return this.audioContext;
   }
 
   playACBlip(pitch = 440) {
-    if (!this.audioContext) return;
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
     try {
-      if (this.audioContext.state === 'suspended') {
-        this.audioContext.resume();
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
       }
-      const osc = this.audioContext.createOscillator();
-      const gain = this.audioContext.createGain();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
 
       osc.type = 'triangle';
       // Pitch variation based on character voice

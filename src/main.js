@@ -51,32 +51,36 @@ class RPGApplication {
   }
 
   async init() {
-    this.setupWindowResize();
-    this.setupDrawerResizing();
-    this.setupColliderPanel();
-    this.setupPlayCameraZoomPanel();
-    this.setupTileInspector();
-    this.setupLayerManager();
-    this.setupChatSystem();
-    this.setupCraftingUI();
-    this.setupDragonPartyUI();
-    this.bindDOMEvents();
+    try {
+      this.setupWindowResize();
+      this.setupDrawerResizing();
+      this.setupColliderPanel();
+      this.setupPlayCameraZoomPanel();
+      this.setupTileInspector();
+      this.setupLayerManager();
+      this.setupChatSystem();
+      this.setupCraftingUI();
+      this.setupDragonPartyUI();
+      this.bindDOMEvents();
 
-    // Preload all sprites and tiles
-    const progressFill = document.getElementById('progress-fill');
-    const progressText = document.getElementById('progress-text');
+      // Preload all sprites and tiles
+      const progressFill = document.getElementById('progress-fill');
+      const progressText = document.getElementById('progress-text');
 
-    await this.assetLoader.loadAll((progress) => {
-      const pct = Math.round(progress * 100);
-      if (progressFill) progressFill.style.width = `${pct}%`;
-      if (progressText) progressText.innerText = `${pct}%`;
-    });
-
-    // Hide loading screen
-    const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen) {
-      loadingScreen.style.opacity = '0';
-      setTimeout(() => (loadingScreen.style.display = 'none'), 400);
+      await this.assetLoader.loadAll((progress) => {
+        const pct = Math.round(progress * 100);
+        if (progressFill) progressFill.style.width = `${pct}%`;
+        if (progressText) progressText.innerText = `${pct}%`;
+      });
+    } catch (err) {
+      console.error('Error during init/asset preloading:', err);
+    } finally {
+      // Guarantee loading screen always hides
+      const loadingScreen = document.getElementById('loading-screen');
+      if (loadingScreen) {
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => (loadingScreen.style.display = 'none'), 300);
+      }
     }
 
     // Load saved map from local storage if present (with multi-key migration/fallback)
