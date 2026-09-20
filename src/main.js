@@ -1938,7 +1938,7 @@ class RPGApplication {
     this.dialogueSystem.openNpcConversation(npc, this.blocklySystem, {
       onOpenLesson: (lessonId) => {
         const codingModal = document.getElementById('coding-studio-modal');
-        const lessonSelect = document.getElementById('lesson-select');
+        const lessonSelect = document.getElementById('select-lua-lesson');
         if (codingModal && this.blocklySystem) {
           this.blocklySystem.setLesson(lessonId);
           if (lessonSelect) {
@@ -1955,13 +1955,15 @@ class RPGApplication {
           if (rewardBadge) rewardBadge.innerText = `+${lesson.rewardXP} XP / +${lesson.rewardGold} Moedas`;
           if (codeEditor) codeEditor.value = lesson.starterLua;
           if (consoleOut) {
-            consoleOut.innerHTML = `> Lição carregada: <strong>${lesson.title}</strong> (${lesson.concept})\n> Edite o código ou clique nos Blocos e depois em 'Executar Código'.`;
+            consoleOut.innerHTML = `> Lição carregada: <strong>${lesson.title}</strong> (${lesson.concept})\n> Objeto a Desbloquear: <strong>${lesson.unlockedAssetName}</strong>\n> Edite o código ou clique nos Blocos e depois em 'Executar Código'.`;
           }
           codingModal.style.display = 'flex';
         }
       },
-      onAccessFeature: (featureId, npcData) => {
-        this.handleAccessFeature(featureId, npcData);
+      onOpenCrafting: () => {
+        if (this.openCraftingModal) {
+          this.openCraftingModal();
+        }
       }
     });
   }
@@ -2595,7 +2597,11 @@ class RPGApplication {
         this.showToast(res.message, 4500);
         populateLessons();
 
-        // Step 2: Physical Map Grid Spawning in front of Player
+        if (res.unlockedAssetId && this.craftingSystem) {
+          this.craftingSystem.unlockRecipe(res.unlockedAssetId);
+        }
+
+        // Physical Map Grid Spawning in front of Player
         const dirDeltas = { north: { dx: 0, dy: -1 }, south: { dx: 0, dy: 1 }, west: { dx: -1, dy: 0 }, east: { dx: 1, dy: 0 } };
         const delta = dirDeltas[this.player.direction] || { dx: 0, dy: 1 };
         const pTx = Math.floor((this.player.x + 32) / 64);
@@ -2605,42 +2611,43 @@ class RPGApplication {
 
         if (res.logs && res.logs.length > 0) {
           for (const log of res.logs) {
-            if (log.startsWith('movel_fabricado:')) {
+            if (log.startsWith('movel_fabricado:') || log.startsWith('mesa_fabricada:') || log.startsWith('cama_fabricada:') || log.startsWith('cama_nobre_fabricada:') || log.startsWith('tenda_erguida:') || log.startsWith('casa_concluida:')) {
               this.tileMap.setTile('solid', targetX, targetY, 'crate');
-              this.inventorySystem.addItem('wood', 15);
+              this.inventorySystem.addItem('wood', 10);
               this.player.spawnCraftPoof();
               this.triggerAutoSave();
-              this.showToast('Bancada e Mesa de Madeira materializadas no mapa!');
-            } else if (log.startsWith('semente_plantada:')) {
-              const treeTile = 'flower-magic';
-              this.tileMap.setTile('decor', targetX, targetY, treeTile);
+            } else if (log.startsWith('ferramenta_forjada:') || log.startsWith('machado_forjado:') || log.startsWith('picareta_forjada:')) {
+              this.inventorySystem.addItem('iron_ore', 5);
+              if (log.includes('pickaxe')) this.inventorySystem.equipTool('tool_pickaxe');
+              if (log.includes('axe')) this.inventorySystem.equipTool('tool_axe');
+              this.player.spawnCraftPoof();
+            } else if (log.startsWith('regador_pronto:') || log.startsWith('sementes_embaladas:') || log.startsWith('arbusto_plantado:') || log.startsWith('arvore_cultivada:') || log.startsWith('pinheiro_plantado:')) {
+              this.tileMap.setTile('decor', targetX, targetY, 'flower-magic');
               this.inventorySystem.addItem('pumpkin_seed', 5);
               this.player.spawnCraftPoof();
               this.triggerAutoSave();
-              this.showToast('Canteiro arado e sementes brotando!');
-            } else if (log.startsWith('barra_fundida:')) {
-              this.inventorySystem.addItem('iron_ore', 5);
-              this.inventorySystem.equipTool('tool_pickaxe');
+            } else if (log.startsWith('cerca_fincada:') || log.startsWith('portao_montado:') || log.startsWith('ponte_h_construida:') || log.startsWith('ponte_v_construida:')) {
+              this.tileMap.setTile('solid', targetX, targetY, 'crate');
               this.player.spawnCraftPoof();
-              this.showToast('Picareta Mágica forjada e equipada na bigorna!');
-            } else if (log.startsWith('isca_equipada:')) {
-              this.inventorySystem.addItem('sea_bass', 3);
-              this.inventorySystem.equipTool('tool_rod');
+              this.triggerAutoSave();
+            } else if (log.startsWith('vara_montada:') || log.startsWith('rede_tecida:') || log.startsWith('agua_animada:') || log.startsWith('cachoeira_gerada:')) {
+              this.inventorySystem.addItem('sea_bass', 2);
               this.player.spawnCraftPoof();
-              this.showToast('Isca glacial equipada na vara de pesca!');
-            } else if (log.startsWith('nado_iniciado:')) {
+            } else if (log.startsWith('piso_assentado:') || log.startsWith('paralelepipedo_encaixado:') || log.startsWith('tabuado_pregado:') || log.startsWith('grama_florida_semeada:') || log.startsWith('praia_criada:') || log.startsWith('mosaico_polido:')) {
+              this.tileMap.setTile('ground', targetX, targetY, 'grass');
               this.player.spawnCraftPoof();
-              this.showToast('Propulsão aquática sincronizada com sucesso!');
-            } else if (log.startsWith('viagem_iniciada:')) {
+              this.triggerAutoSave();
+            } else if (log.startsWith('poste_aceso:') || log.startsWith('poco_erguido:') || log.startsWith('degraus_entalhados:') || log.startsWith('rampa_esculpida:')) {
+              this.tileMap.setTile('solid', targetX, targetY, 'crate');
               this.player.spawnCraftPoof();
-              this.showToast('Cálculo de rota de balsa concluído com precisão!');
-            } else if (log.startsWith('item_tingido:')) {
+              this.triggerAutoSave();
+            } else if (log.startsWith('fogueira_acesa:') || log.startsWith('magma_borbulhante:')) {
+              this.tileMap.setTile('decor', targetX, targetY, 'flower-magic');
               this.player.spawnCraftPoof();
-              this.showToast('Pigmentos esmeralda aplicados com sucesso!');
-            } else if (log.startsWith('voo_mitico_ativado')) {
+              this.triggerAutoSave();
+            } else if (log.startsWith('ninho_aquecido_criado:') || log.startsWith('apito_entalhado:') || log.startsWith('ovo_desperto:') || log.startsWith('ovo_sagrado_desperto:')) {
               this.dragonManager.adoptHatchedDragon('dragon_fly_solar');
               this.player.spawnCraftPoof();
-              this.showToast('Voo Mítico desbloqueado pelo Mestre Casco!');
             }
           }
         }

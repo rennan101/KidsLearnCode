@@ -292,11 +292,15 @@ export class DialogueAndChatSystem {
     this.activeDialogue = null;
   }
 
-  // Open complete NPC conversation with quest branching and choices
+  // Open complete NPC conversation with progressive multi-mission branching and asset unlocking
   openNpcConversation(npcData, blocklySystem, callbacks = {}) {
     if (!npcData) return;
-    const isCompleted = blocklySystem?.isLessonCompleted(npcData.lessonId) || false;
-    const dialogues = npcData.dialogues || {};
+    const progress = blocklySystem?.getNpcProgress(npcData.id) || {
+      completedCount: 0,
+      totalCount: 1,
+      isFinished: false,
+      nextLesson: null
+    };
 
     const speakerMeta = {
       name: `${npcData.name} - ${npcData.role}`,
@@ -304,22 +308,22 @@ export class DialogueAndChatSystem {
       pitch: 500
     };
 
-    if (isCompleted) {
-      // Completed state conversation
-      const text = dialogues.repeat || `Obrigado por ajudar a nossa ilha! O recurso ${npcData.unlockedTitle || ''} está totalmente ativo!`;
+    if (progress.isFinished) {
+      // All missions for this NPC are completed
+      const text = npcData.masterDialogue || `Parabéns! Você completou todos os meus ${progress.totalCount} desafios de código! Todos os objetos correspondentes estão totalmente liberados para você construir a ilha!`;
       const choices = [];
 
-      if (callbacks.onAccessFeature && npcData.unlockedFeature) {
+      if (callbacks.onOpenCrafting) {
         choices.push({
-          label: `Acessar ${npcData.unlockedTitle || 'Recurso'}`,
-          action: () => callbacks.onAccessFeature(npcData.unlockedFeature, npcData)
+          label: 'Abrir Bancada de Criação',
+          action: () => callbacks.onOpenCrafting()
         });
       }
 
-      if (callbacks.onOpenLesson && npcData.lessonId) {
+      if (callbacks.onOpenLesson && progress.nextLesson) {
         choices.push({
-          label: 'Revisar Desafio no Grimório',
-          action: () => callbacks.onOpenLesson(npcData.lessonId)
+          label: 'Revisar Desafios no Grimório',
+          action: () => callbacks.onOpenLesson(progress.nextLesson.id)
         });
       }
 
@@ -330,27 +334,32 @@ export class DialogueAndChatSystem {
 
       this.startNPCDialogue(speakerMeta, text, choices);
     } else {
-      // First time / quest state conversation
-      const text = `${dialogues.intro || ''}\n\n${dialogues.quest || ''}`;
+      // There is an active pending mission in the sequence
+      const lesson = progress.nextLesson;
+      if (!lesson) return;
+
+      const progressTag = `[Etapa ${progress.completedCount + 1} de ${progress.totalCount}]`;
+      const text = `${npcData.greeting || ''}\n\n${progressTag} ${lesson.title}\n${lesson.description}\n\nRecompensa de Criação: ${lesson.unlockedAssetName}`;
+
       const choices = [
         {
-          label: 'Aceitar Desafio de Código',
+          label: `Aceitar: ${lesson.unlockedAssetName}`,
           action: () => {
-            if (callbacks.onOpenLesson && npcData.lessonId) {
-              callbacks.onOpenLesson(npcData.lessonId);
+            if (callbacks.onOpenLesson) {
+              callbacks.onOpenLesson(lesson.id);
             }
           }
         },
         {
           label: 'Pedir Dica',
           action: () => {
-            const hintText = dialogues.hint || 'Pense na lógica passo a passo e execute no Grimório de Códigos!';
+            const hintText = `Dica de ${lesson.concept}: Escreva o script de acordo com os parâmetros necessários e clique em "Executar Código" no Grimório Lua!`;
             this.startNPCDialogue(speakerMeta, hintText, [
               {
-                label: 'Aceitar Desafio de Código',
+                label: `Iniciar Desafio (${lesson.unlockedAssetName})`,
                 action: () => {
-                  if (callbacks.onOpenLesson && npcData.lessonId) {
-                    callbacks.onOpenLesson(npcData.lessonId);
+                  if (callbacks.onOpenLesson) {
+                    callbacks.onOpenLesson(lesson.id);
                   }
                 }
               },
