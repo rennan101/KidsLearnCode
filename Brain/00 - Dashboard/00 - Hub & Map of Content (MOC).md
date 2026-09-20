@@ -65,6 +65,7 @@ flowchart TD
 
 ### 1. ⚙️ [[Game Loop & Canvas Coordinator|Core Engine 2D]]
 * [[Game Loop & Canvas Coordinator]] — Loop com delta-time, escalonamento e coordenação de subsistemas.
+* [[Day Night Cycle & Action Points System]] — Ciclo Dia/Noite (06h-17h Brasília), Barra de Ações (5-10 AP) e bônus do Morcego Vampiro.
 * [[TileMap & Sparse Grid Engine]] — Estrutura de dados esparsa infinita indexada por coordenadas `x,y`.
 * [[Layer Hierarchy & Dynamic Stacking]] — Pilha de renderização reordenável (Chão, Decoração, Sólido, Personagens).
 * [[Mount & Modular Character Layering System]] — Sistema de sockets de montaria (posicionamento do herói sobre qualquer dragão).

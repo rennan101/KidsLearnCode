@@ -96,7 +96,7 @@ Cada jogador pode escolher livremente seu avatar inicial. Cada classe possui **1
 ### 2.2. Morcego — Vampiro / Vampira
 * **Arquétipo:** O Aristocrata Noturno e Alquimista.
 * **Personalidade:** Culto, misterioso, refinado, amante da noite, de livros arcanos e de poções doces.
-* **Habilidade Única — `Eco Noturno`:** Permite enxergar com clareza total dentro de cavernas escuras e concede +15% de velocidade de ataque automático para o dragão companheiro durante a noite.
+* **Habilidade Única — `Eco Noturno`:** Permite enxergar com clareza dentro de cavernas, concede **+5 Ações Noturnas exclusivas** durante a noite (após às 17h de Brasília, quando outros descansam) e +15% de velocidade de ataque noturno ao dragão companheiro.
 
 #### 🦇 Morcego Masculino (`char_bat_vampire_m`)
 * **Visual:** Pelagem roxo-escura aveludada, orelhas grandes triangulares com interior rosa suave, pequenos dentinhos pontudos adoráveis ao sorrir, elegante colete bordô com botões dourados e mini-capa preta de seda.
@@ -252,8 +252,8 @@ NPCs adicionais desenhados para enriquecer a economia, o ecossistema de dragões
 | :--- | :--- | :---: | :--- | :--- | :--- |
 | `char_wolf_hunter_m` | **Lobo Caçador** | ♂️ | *Ragnar* | **Faro Selvagem** | Revela trilha de pegadas para ovos de dragão e itens a 15 tiles. |
 | `char_wolf_hunter_f` | **Lobo Caçadora** | ♀️ | *Lyra* | **Faro Selvagem** | Revela trilha de pegadas para ovos de dragão e itens a 15 tiles. |
-| `char_bat_vampire_m` | **Morcego Vampiro** | ♂️ | *Vlad* | **Eco Noturno** | Visão cristalina no escuro/cavernas e +15% de velocidade de ataque noturna ao dragão. |
-| `char_bat_vampire_f` | **Morcego Vampira** | ♀️ | *Carmilla* | **Eco Noturno** | Visão cristalina no escuro/cavernas e +15% de velocidade de ataque noturna ao dragão. |
+| `char_bat_vampire_m` | **Morcego Vampiro** | ♂️ | *Vlad* | **Eco Noturno** | **+5 Ações Noturnas** (após 17h), visão no escuro e +15% vel. de ataque noturna ao dragão. |
+| `char_bat_vampire_f` | **Morcego Vampira** | ♀️ | *Carmilla* | **Eco Noturno** | **+5 Ações Noturnas** (após 17h), visão no escuro e +15% vel. de ataque noturna ao dragão. |
 | `char_eagle_archer_m` | **Águia Arqueiro** | ♂️ | *Zephyr* | **Mira Perfeita** | +30% velocidade de coleta com ferramentas e -1s no cooldown da Esquiva (Tecla 1). |
 | `char_eagle_archer_f` | **Águia Arqueira** | ♀️ | *Astra* | **Mira Perfeita** | +30% velocidade de coleta com ferramentas e -1s no cooldown da Esquiva (Tecla 1). |
 | `char_cat_mage_m` | **Gato Bruxo** | ♂️ | *Merlin* | **Afinidade Arcana** | +10% de ganho de XP aos dragões e pistas automáticas nos quebra-cabeças Lua. |
