@@ -66,6 +66,11 @@ export class MultiplayerClient {
         if (this.onChatReceived) {
           this.onChatReceived(chatMsg);
         }
+      },
+      (mapPayload) => {
+        if (this.onMapUpdated) {
+          this.onMapUpdated(mapPayload);
+        }
       }
     );
   }

@@ -87,6 +87,19 @@ class RPGApplication {
       await this.storageManager.init();
       await this.supabaseClient.init();
       this.multiplayerClient.attachSupabase(this.supabaseClient);
+
+      if (this.multiplayerClient) {
+        this.multiplayerClient.onMapUpdated = (payload) => {
+          if (payload && payload.map) {
+            console.log('[Multiplayer] Recebido mapa atualizado em tempo real por:', payload.updatedBy);
+            this.tileMap.fromJSON(payload.map);
+            this.minimap.tileMap = this.tileMap;
+            this.editorController.tileMap = this.tileMap;
+            this.showToast(`Mapa atualizado online por ${payload.updatedBy || 'outro jogador'}!`, 4000);
+          }
+        };
+      }
+
       await this.assetLoader.syncWithStorage(this.storageManager);
 
       // Preload all sprites and tiles
@@ -1061,7 +1074,7 @@ class RPGApplication {
         } else if (tile.isCharacter) {
           const badge = document.createElement('span');
           badge.className = 'character-badge';
-          badge.innerText = tile.characterType === 'player' ? 'SPAWN' : 'NPC';
+          badge.innerText = tile.characterType === 'player' ? 'SPAWN' : (tile.characterType === 'hero' ? 'HERÓI' : (tile.characterType === 'enemy' ? 'GUARDA' : 'NPC'));
           card.appendChild(badge);
         }
 
@@ -1154,9 +1167,13 @@ class RPGApplication {
         this.updateSaveIndicator('error');
       }
 
-      // Sincroniza em segundo plano com a Nuvem Supabase (se autenticado)
-      if (this.supabaseClient && !this.supabaseClient.user?.isGuest) {
-        this.supabaseClient.saveCloudGame(payload);
+      // Sincroniza em segundo plano com a Nuvem Supabase e transmite para outros jogadores online
+      if (this.supabaseClient) {
+        if (!this.supabaseClient.user?.isGuest) {
+          this.supabaseClient.saveCloudGame(payload);
+        }
+        // Sempre salva o mapa online compartilhado e transmite via broadcast para outros players
+        this.supabaseClient.saveGlobalWorldMap(mapData);
       }
     } catch (err) {
       console.warn('Failed to auto-save to StorageManager:', err);
@@ -1199,6 +1216,18 @@ class RPGApplication {
         if (cloudData && (!data || (cloudData.savedAt && cloudData.savedAt > (data.savedAt || 0)))) {
           data = cloudData;
           await this.storageManager.saveGame(cloudData);
+        }
+      }
+
+      // Se conectado ao Supabase, verifica se há um mapa global online compartilhado
+      if (this.supabaseClient) {
+        const globalOnlineMap = await this.supabaseClient.loadGlobalWorldMap();
+        if (globalOnlineMap && globalOnlineMap.map) {
+          if (!data || (globalOnlineMap.updatedAt && globalOnlineMap.updatedAt > (data.savedAt || 0))) {
+            if (!data) data = { id: 'active_save', player: { x: 320, y: 320 }, activeHero: 'char_wolf_hunter_m' };
+            data.map = globalOnlineMap.map;
+            data.savedAt = globalOnlineMap.updatedAt;
+          }
         }
       }
 

@@ -1856,7 +1856,7 @@ export class AssetLoader {
       },
       {
             "id": "character-geralt",
-            "name": "Geralt (Player Spawn)",
+            "name": "Spawn do Jogador (Geralt)",
             "category": "Characters",
             "layer": "characters",
             "isCharacter": true,
@@ -1874,27 +1874,340 @@ export class AssetLoader {
             }
       },
       {
-            "id": "character-npc-villager",
-            "name": "NPC Villager",
+            "id": "char_wolf_hunter_m",
+            "name": "Lobo Caçador (Ragnar)",
+            "category": "Characters",
+            "layer": "characters",
+            "isCharacter": true,
+            "characterType": "hero",
+            "scale": 1,
+            "gridW": 1,
+            "gridH": 1,
+            "src": "assets/characters/char_wolf_hunter_m/frames/wolf_hunter_r0_c0.png",
+            "collider": {
+                  "enabled": true,
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
+            }
+      },
+      {
+            "id": "char_wolf_hunter_f",
+            "name": "Lobo Caçadora (Lyra)",
+            "category": "Characters",
+            "layer": "characters",
+            "isCharacter": true,
+            "characterType": "hero",
+            "scale": 1,
+            "gridW": 1,
+            "gridH": 1,
+            "src": "assets/characters/char_wolf_hunter_f/frames/wolf_hunter_r0_c0.png",
+            "collider": {
+                  "enabled": true,
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
+            }
+      },
+      {
+            "id": "char_bat_vampire_m",
+            "name": "Morcego Vampiro (Vlad)",
+            "category": "Characters",
+            "layer": "characters",
+            "isCharacter": true,
+            "characterType": "hero",
+            "scale": 1,
+            "gridW": 1,
+            "gridH": 1,
+            "src": "assets/characters/char_bat_vampire_m/frames/wolf_hunter_r0_c0.png",
+            "collider": {
+                  "enabled": true,
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
+            }
+      },
+      {
+            "id": "char_bat_vampire_f",
+            "name": "Morcego Vampira (Carmilla)",
+            "category": "Characters",
+            "layer": "characters",
+            "isCharacter": true,
+            "characterType": "hero",
+            "scale": 1,
+            "gridW": 1,
+            "gridH": 1,
+            "src": "assets/characters/char_bat_vampire_f/frames/wolf_hunter_r0_c0.png",
+            "collider": {
+                  "enabled": true,
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
+            }
+      },
+      {
+            "id": "char_eagle_archer_m",
+            "name": "Águia Arqueiro (Zephyr)",
+            "category": "Characters",
+            "layer": "characters",
+            "isCharacter": true,
+            "characterType": "hero",
+            "scale": 1,
+            "gridW": 1,
+            "gridH": 1,
+            "src": "assets/characters/char_eagle_archer_m/frames/wolf_hunter_r0_c0.png",
+            "collider": {
+                  "enabled": true,
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
+            }
+      },
+      {
+            "id": "char_eagle_archer_f",
+            "name": "Águia Arqueira (Astra)",
+            "category": "Characters",
+            "layer": "characters",
+            "isCharacter": true,
+            "characterType": "hero",
+            "scale": 1,
+            "gridW": 1,
+            "gridH": 1,
+            "src": "assets/characters/char_eagle_archer_f/frames/wolf_hunter_r0_c0.png",
+            "collider": {
+                  "enabled": true,
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
+            }
+      },
+      {
+            "id": "char_cat_mage_m",
+            "name": "Gato Bruxo (Merlin)",
+            "category": "Characters",
+            "layer": "characters",
+            "isCharacter": true,
+            "characterType": "hero",
+            "scale": 1,
+            "gridW": 1,
+            "gridH": 1,
+            "src": "assets/characters/char_cat_mage_m/frames/wolf_hunter_r0_c0.png",
+            "collider": {
+                  "enabled": true,
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
+            }
+      },
+      {
+            "id": "char_cat_witch_f",
+            "name": "Gato Bruxa (Luna)",
+            "category": "Characters",
+            "layer": "characters",
+            "isCharacter": true,
+            "characterType": "hero",
+            "scale": 1,
+            "gridW": 1,
+            "gridH": 1,
+            "src": "assets/characters/char_cat_witch_f/frames/wolf_hunter_r0_c0.png",
+            "collider": {
+                  "enabled": true,
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
+            }
+      },
+      {
+            "id": "npc_shark_surfer",
+            "name": "Kai, o Tubarão das Ondas",
             "category": "Characters",
             "layer": "characters",
             "isCharacter": true,
             "characterType": "npc",
+            "role": "Navegação, Pesca e Dragões Aquáticos",
             "scale": 1,
             "gridW": 1,
             "gridH": 1,
-            "src": "Geralt/Idle/rotations/south-east.png",
+            "src": "assets/characters/char_wolf_hunter_m/frames/wolf_hunter_r0_c0.png",
             "collider": {
                   "enabled": true,
-                  "x": 20,
-                  "y": 46,
-                  "w": 24,
-                  "h": 16
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
+            }
+      },
+      {
+            "id": "npc_alligator_ferryman",
+            "name": "Barnabé, o Barqueiro",
+            "category": "Characters",
+            "layer": "characters",
+            "isCharacter": true,
+            "characterType": "npc",
+            "role": "Travessias, Balsas e Pontes",
+            "scale": 1,
+            "gridW": 1,
+            "gridH": 1,
+            "src": "assets/characters/char_wolf_hunter_f/frames/wolf_hunter_r0_c0.png",
+            "collider": {
+                  "enabled": true,
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
+            }
+      },
+      {
+            "id": "npc_monkey_builder",
+            "name": "Bambu, o Engenheiro",
+            "category": "Characters",
+            "layer": "characters",
+            "isCharacter": true,
+            "characterType": "npc",
+            "role": "Workbench, Mobília e Casas",
+            "scale": 1,
+            "gridW": 1,
+            "gridH": 1,
+            "src": "assets/characters/char_eagle_archer_m/frames/wolf_hunter_r0_c0.png",
+            "collider": {
+                  "enabled": true,
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
+            }
+      },
+      {
+            "id": "npc_chameleon_magician",
+            "name": "Cromos, o Tecelão de Cores",
+            "category": "Characters",
+            "layer": "characters",
+            "isCharacter": true,
+            "characterType": "npc",
+            "role": "Tinturas, Ilusões e Customização",
+            "scale": 1,
+            "gridW": 1,
+            "gridH": 1,
+            "src": "assets/characters/char_cat_witch_f/frames/wolf_hunter_r0_c0.png",
+            "collider": {
+                  "enabled": true,
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
+            }
+      },
+      {
+            "id": "npc_owl_professor",
+            "name": "Dr. Arquimedes",
+            "category": "Characters",
+            "layer": "characters",
+            "isCharacter": true,
+            "characterType": "npc",
+            "role": "Mentor de Programação Blockly e Lua",
+            "scale": 1,
+            "gridW": 1,
+            "gridH": 1,
+            "src": "assets/characters/char_cat_mage_m/frames/wolf_hunter_r0_c0.png",
+            "collider": {
+                  "enabled": true,
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
+            }
+      },
+      {
+            "id": "npc_bull_blacksmith",
+            "name": "Brutus da Bigorna",
+            "category": "Characters",
+            "layer": "characters",
+            "isCharacter": true,
+            "characterType": "npc",
+            "role": "Ferreiro, Ferramentas e Armaduras",
+            "scale": 1,
+            "gridW": 1,
+            "gridH": 1,
+            "src": "assets/characters/char_bat_vampire_m/frames/wolf_hunter_r0_c0.png",
+            "collider": {
+                  "enabled": true,
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
+            }
+      },
+      {
+            "id": "npc_rabbit_farmer",
+            "name": "Flora dos Brotos",
+            "category": "Characters",
+            "layer": "characters",
+            "isCharacter": true,
+            "characterType": "npc",
+            "role": "Herbalista, Sementes e Ninhos",
+            "scale": 1,
+            "gridW": 1,
+            "gridH": 1,
+            "src": "assets/characters/char_eagle_archer_f/frames/wolf_hunter_r0_c0.png",
+            "collider": {
+                  "enabled": true,
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
+            }
+      },
+      {
+            "id": "npc_turtle_elder",
+            "name": "Mestre Casco",
+            "category": "Characters",
+            "layer": "characters",
+            "isCharacter": true,
+            "characterType": "npc",
+            "role": "Guardião Ancestral e Dragão Mítico",
+            "scale": 1,
+            "gridW": 1,
+            "gridH": 1,
+            "src": "assets/characters/char_bat_vampire_f/frames/wolf_hunter_r0_c0.png",
+            "collider": {
+                  "enabled": true,
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
+            }
+      },
+      {
+            "id": "npc_penguin_angler",
+            "name": "Pingo dos Icebergs",
+            "category": "Characters",
+            "layer": "characters",
+            "isCharacter": true,
+            "characterType": "npc",
+            "role": "Pesca Polar e Biomas Glaciais",
+            "scale": 1,
+            "gridW": 1,
+            "gridH": 1,
+            "src": "assets/characters/char_wolf_hunter_f/frames/wolf_hunter_r0_c0.png",
+            "collider": {
+                  "enabled": true,
+                  "x": 18,
+                  "y": 44,
+                  "w": 28,
+                  "h": 18
             }
       },
       {
             "id": "character-enemy-guard",
-            "name": "Enemy Guard",
+            "name": "Guarda Sentinela",
             "category": "Characters",
             "layer": "characters",
             "isCharacter": true,

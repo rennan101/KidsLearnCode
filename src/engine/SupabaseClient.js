@@ -223,8 +223,63 @@ export class SupabaseClient {
   }
 
   // ==========================================
-  // Saves na Nuvem (PostgreSQL game_saves)
+  // Saves na Nuvem (PostgreSQL game_saves & Global World Map)
   // ==========================================
+
+  async saveGlobalWorldMap(mapData) {
+    if (!this.client || !mapData) {
+      return { success: false, reason: 'offline_or_invalid_map' };
+    }
+
+    try {
+      // 1. Tenta salvar na tabela game_saves como registro global
+      const payload = {
+        user_id: 'global_community_world_map',
+        map_data: mapData,
+        player_data: { x: mapData.spawnPoint?.x || 320, y: mapData.spawnPoint?.y || 320 },
+        inventory_data: {},
+        dragons_data: {},
+        coding_progress: {},
+        updated_at: new Date().toISOString()
+      };
+
+      await this.client
+        .from('game_saves')
+        .upsert(payload, { onConflict: 'user_id' });
+
+      // 2. Dispara broadcast em tempo real para todos os clientes conectados
+      this.broadcastMapUpdate(mapData);
+
+      return { success: true };
+    } catch (err) {
+      console.warn('[SupabaseClient] Erro ao salvar mapa online:', err.message);
+      // Mesmo se o banco falhar, emite via Realtime broadcast para outros players online
+      this.broadcastMapUpdate(mapData);
+      return { success: false, error: err.message };
+    }
+  }
+
+  async loadGlobalWorldMap() {
+    if (!this.client) return null;
+
+    try {
+      const { data, error } = await this.client
+        .from('game_saves')
+        .select('map_data, updated_at')
+        .eq('user_id', 'global_community_world_map')
+        .single();
+
+      if (error || !data || !data.map_data) return null;
+
+      return {
+        map: data.map_data,
+        updatedAt: new Date(data.updated_at).getTime()
+      };
+    } catch (err) {
+      console.warn('[SupabaseClient] Erro ao carregar mapa global online:', err.message);
+      return null;
+    }
+  }
 
   async saveCloudGame(payload) {
     if (!this.client || this.user?.isGuest) {
@@ -275,7 +330,7 @@ export class SupabaseClient {
         savedAt: new Date(data.updated_at).getTime()
       };
     } catch (err) {
-      console.warn('[SupabaseClient] Erro ao carregar save da nuvem:', err);
+      console.warn('[SupabaseClient] Erro ao carregar save da nuvem:', err.message);
       return null;
     }
   }
@@ -284,7 +339,7 @@ export class SupabaseClient {
   // Realtime MMORPG Multiplayer Broadcast
   // ==========================================
 
-  setupRealtimeChannel(onRemotePlayerUpdate = () => {}, onChatMessage = () => {}) {
+  setupRealtimeChannel(onRemotePlayerUpdate = () => {}, onChatMessage = () => {}, onMapUpdated = () => {}) {
     if (!this.client) return;
 
     if (this.realtimeChannel) {
@@ -310,6 +365,11 @@ export class SupabaseClient {
         .on('broadcast', { event: 'chat_message' }, (payload) => {
           if (payload.payload && onChatMessage) {
             onChatMessage(payload.payload);
+          }
+        })
+        .on('broadcast', { event: 'map_update' }, (payload) => {
+          if (payload.payload && onMapUpdated) {
+            onMapUpdated(payload.payload);
           }
         })
         .subscribe((status) => {
@@ -359,6 +419,21 @@ export class SupabaseClient {
         text,
         x: Math.round(player.x),
         y: Math.round(player.y)
+      }
+    });
+  }
+
+  broadcastMapUpdate(mapData) {
+    if (!this.realtimeChannel || !mapData) return;
+
+    this.realtimeChannel.send({
+      type: 'broadcast',
+      event: 'map_update',
+      payload: {
+        id: this.user?.id || 'guest',
+        updatedBy: this.profile?.nickname || this.user?.user_metadata?.nickname || this.user?.nickname || 'Aventureiro',
+        map: mapData,
+        timestamp: Date.now()
       }
     });
   }

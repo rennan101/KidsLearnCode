@@ -117,7 +117,7 @@ export class DialogueAndChatSystem {
     }
   }
 
-  // Render floating speech bubbles in screen space directly above characters
+  // Render floating speech bubbles in screen space directly above characters (ACNH Style)
   render(ctx, camera) {
     const now = Date.now();
 
@@ -128,9 +128,17 @@ export class DialogueAndChatSystem {
         const screenPos = camera.worldToScreen(bubble.worldPos.x + 32, bubble.worldPos.y);
 
         // Stacking calculation: index 0 is oldest (higher), index 1 is newest (just above head)
-        const stackOffset = (bubbleCount - 1 - index) * 38; // 38px per stack level
-        const bubbleY = screenPos.y - 45 - stackOffset;
+        const stackOffset = (bubbleCount - 1 - index) * 42; // 42px per stack level
+        const bubbleY = screenPos.y - 48 - stackOffset;
         const bubbleX = screenPos.x;
+
+        // Pop-in animation scale in the first 160ms
+        const age = now - bubble.createdAt;
+        let scale = 1.0;
+        if (age < 160) {
+          const t = age / 160;
+          scale = 0.85 + Math.sin(t * Math.PI / 2) * 0.15;
+        }
 
         // Fade-out opacity in the last 600ms
         const remainingTime = bubble.expiresAt - now;
@@ -141,51 +149,66 @@ export class DialogueAndChatSystem {
 
         ctx.save();
         ctx.globalAlpha = opacity;
+        ctx.translate(bubbleX, bubbleY);
+        ctx.scale(scale, scale);
 
         // Measure text
-        ctx.font = 'bold 13px "Outfit", "Comic Sans MS", -apple-system, sans-serif';
+        ctx.font = 'bold 13px "Outfit", sans-serif';
         const metrics = ctx.measureText(bubble.text);
-        const paddingX = 14;
+        const paddingX = 16;
         const paddingY = 8;
-        const boxWidth = Math.max(50, metrics.width + paddingX * 2);
-        const boxHeight = 28;
-        const boxX = bubbleX - boxWidth / 2;
-        const boxY = bubbleY - boxHeight / 2;
-        const radius = 14;
+        const boxWidth = Math.max(56, metrics.width + paddingX * 2);
+        const boxHeight = 32;
+        const boxX = -boxWidth / 2;
+        const boxY = -boxHeight / 2;
+        const radius = 16;
 
-        // Draw Animal Crossing cartoon speech balloon with rounded corners
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+        // 1. Draw ACNH soft warm drop shadow
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.22)';
         ctx.shadowBlur = 8;
         ctx.shadowOffsetY = 3;
 
-        ctx.fillStyle = '#FFFFFF';
+        // 2. Main Bubble Body - Warm Cream Fill (#fdfbf7)
+        ctx.fillStyle = '#fdfbf7';
         ctx.beginPath();
         ctx.roundRect(boxX, boxY, boxWidth, boxHeight, radius);
         ctx.fill();
 
-        // Speech balloon pointer tail (pointing down to character head on bottom-most bubble)
+        // 3. Pointer tail on bottom-most bubble
         if (index === bubbleCount - 1) {
           ctx.beginPath();
-          ctx.moveTo(bubbleX - 6, boxY + boxHeight - 1);
-          ctx.lineTo(bubbleX, boxY + boxHeight + 8);
-          ctx.lineTo(bubbleX + 6, boxY + boxHeight - 1);
+          ctx.moveTo(-7, boxHeight / 2 - 1);
+          ctx.lineTo(0, boxHeight / 2 + 9);
+          ctx.lineTo(7, boxHeight / 2 - 1);
           ctx.closePath();
           ctx.fill();
         }
 
-        // Clean border outline
+        // 4. ACNH Characteristic Warm Chocolate Outline (#7a583e)
         ctx.shadowColor = 'transparent';
-        ctx.strokeStyle = '#4A3B32'; // Soft warm chocolate outline
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#7a583e';
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
         ctx.roundRect(boxX, boxY, boxWidth, boxHeight, radius);
         ctx.stroke();
 
-        // Draw Text
-        ctx.fillStyle = '#2D3748';
+        if (index === bubbleCount - 1) {
+          ctx.beginPath();
+          ctx.moveTo(-7, boxHeight / 2);
+          ctx.lineTo(0, boxHeight / 2 + 9);
+          ctx.lineTo(7, boxHeight / 2);
+          ctx.stroke();
+
+          // Patch seam between bubble and tail
+          ctx.fillStyle = '#fdfbf7';
+          ctx.fillRect(-6, boxHeight / 2 - 2, 12, 3);
+        }
+
+        // 5. Draw High-Contrast Dark Warm Text
+        ctx.fillStyle = '#3b281c';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(bubble.text, bubbleX, bubbleY);
+        ctx.fillText(bubble.text, 0, 0);
 
         ctx.restore();
       });
@@ -240,7 +263,7 @@ export class DialogueAndChatSystem {
     if (!choices || choices.length === 0) {
       const continueBtn = document.createElement('button');
       continueBtn.className = 'ac-choice-btn';
-      continueBtn.innerText = 'Entendido! 🐾';
+      continueBtn.innerText = 'Entendido!';
       continueBtn.addEventListener('click', () => {
         this.closeNPCDialogue();
         if (onComplete) onComplete(null);
