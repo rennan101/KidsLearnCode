@@ -670,6 +670,21 @@ class RPGApplication {
       }
       if (this.mode === 'edit') {
         this.editorController.handleMouseDown(e, this.canvas);
+      } else if (this.mode === 'play') {
+        // Allow clicking directly on nearby NPCs to start conversation
+        const rect = this.canvas.getBoundingClientRect();
+        const screenX = e.clientX - rect.left;
+        const screenY = e.clientY - rect.top;
+        const worldPos = this.camera.screenToWorld(screenX, screenY);
+        const clickedNpc = this.findNearbyNPC(worldPos.x - 32, worldPos.y - 32, 60);
+        if (clickedNpc) {
+          const pDist = Math.hypot(clickedNpc.worldX - this.player.x, clickedNpc.worldY - this.player.y);
+          if (pDist <= 140) {
+            this.interactWithNPC(clickedNpc);
+          } else {
+            this.showToast(`Aproxime-se de ${clickedNpc.name.split(',')[0]} para conversar.`);
+          }
+        }
       }
     });
 
@@ -1875,9 +1890,9 @@ class RPGApplication {
 
     // 3. Floating Interaction Prompt for Nearby NPCs (Play Mode)
     if (this.mode === 'play') {
-      const nearbyNpc = this.findNearbyNPC(this.player.x, this.player.y, 90);
+      const nearbyNpc = this.findNearbyNPC(this.player.x, this.player.y, 110);
       if (nearbyNpc) {
-        const screenPos = this.camera.worldToScreen(nearbyNpc.worldX + 32, nearbyNpc.worldY - 12);
+        const screenPos = this.camera.worldToScreen(nearbyNpc.worldX + 32, nearbyNpc.worldY - 14);
         this.ctx.save();
         this.ctx.font = 'bold 12px "Outfit", sans-serif';
         const promptText = `[E] Conversar com ${nearbyNpc.name.split(',')[0]}`;
@@ -1887,13 +1902,27 @@ class RPGApplication {
         const x = screenPos.x - w / 2;
         const y = screenPos.y - h;
 
-        this.ctx.fillStyle = 'rgba(9, 12, 18, 0.88)';
+        // Soft drop shadow
+        this.ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+        this.ctx.shadowBlur = 8;
+        this.ctx.shadowOffsetY = 2;
+
+        // Background pill
+        this.ctx.fillStyle = '#090c12';
         this.ctx.strokeStyle = '#38bdf8';
-        this.ctx.lineWidth = 1.5;
+        this.ctx.lineWidth = 1.6;
         this.ctx.beginPath();
         this.ctx.roundRect(x, y, w, h, 13);
         this.ctx.fill();
         this.ctx.stroke();
+
+        // Small indicator notch pointing down to NPC
+        this.ctx.fillStyle = '#090c12';
+        this.ctx.beginPath();
+        this.ctx.moveTo(screenPos.x - 5, y + h);
+        this.ctx.lineTo(screenPos.x, y + h + 4);
+        this.ctx.lineTo(screenPos.x + 5, y + h);
+        this.ctx.fill();
 
         this.ctx.fillStyle = '#f8fafc';
         this.ctx.textAlign = 'center';
@@ -1904,30 +1933,36 @@ class RPGApplication {
     }
   }
 
-  findNearbyNPC(worldX, worldY, radius = 90) {
-    const charLayer = this.tileMap?.layers?.characters;
-    if (!charLayer) return null;
+  findNearbyNPC(worldX, worldY, radius = 110) {
+    if (!this.tileMap || !this.tileMap.layers) return null;
 
     let nearest = null;
     let minDistance = radius;
 
-    for (const [key, tileId] of charLayer.entries()) {
-      if (typeof tileId === 'string' && tileId.startsWith('npc_')) {
-        const [tx, ty] = key.split(',').map(Number);
-        const npcWorldX = tx * 64 + 32;
-        const npcWorldY = ty * 64 + 32;
-        const dist = Math.hypot(npcWorldX - (worldX + 32), npcWorldY - (worldY + 32));
-        if (dist <= minDistance) {
-          minDistance = dist;
-          const npcData = CharacterRegistry.VILLAGE_NPCS.find(n => n.id === tileId);
-          if (npcData) {
-            nearest = {
-              ...npcData,
-              tx,
-              ty,
-              worldX: tx * 64,
-              worldY: ty * 64
-            };
+    const layersToCheck = ['characters', 'solid', 'decor'];
+    for (const layerName of layersToCheck) {
+      const layer = this.tileMap.layers[layerName];
+      if (!layer) continue;
+
+      for (const [key, cell] of layer.entries()) {
+        const tileId = (typeof cell === 'object' && cell !== null) ? cell.tileId : (typeof cell === 'string' ? cell : null);
+        if (tileId && typeof tileId === 'string' && tileId.startsWith('npc_')) {
+          const [tx, ty] = key.split(',').map(Number);
+          const npcWorldX = tx * 64 + 32;
+          const npcWorldY = ty * 64 + 32;
+          const dist = Math.hypot(npcWorldX - (worldX + 32), npcWorldY - (worldY + 32));
+          if (dist <= minDistance) {
+            minDistance = dist;
+            const npcData = CharacterRegistry.VILLAGE_NPCS.find(n => n.id === tileId);
+            if (npcData) {
+              nearest = {
+                ...npcData,
+                tx,
+                ty,
+                worldX: tx * 64,
+                worldY: ty * 64
+              };
+            }
           }
         }
       }
