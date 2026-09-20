@@ -515,6 +515,60 @@
     </div>
   </footer>
 
+  <!-- In-Game Chat Input Bar (Press Enter to Chat) -->
+  <div class="game-chat-bar" id="game-chat-bar" style="display: none;">
+    <input type="text" id="game-chat-input" placeholder="Digite uma mensagem e pressione Enter... (Estilo Animal Crossing)" maxlength="60" autocomplete="off">
+    <button id="btn-send-chat" class="chat-send-btn">Enviar 💬</button>
+  </div>
+
+  <!-- Animal Crossing NPC Dialogue Modal -->
+  <div class="ac-dialogue-modal" id="ac-dialogue-modal" style="display: none;">
+    <div class="ac-dialogue-box">
+      <div class="ac-portrait-wrapper">
+        <img id="ac-dialogue-portrait" src="assets/characters/char_wolf_hunter_m/portrait.jpg" alt="Speaker">
+      </div>
+      <div class="ac-text-content">
+        <div class="ac-name-tag" id="ac-dialogue-name">Dr. Arquimedes</div>
+        <div class="ac-bubble-text" id="ac-dialogue-text">Olá, pequeno aventureiro! Bem-vindo à Ilha Lua!</div>
+        <div class="ac-choices" id="ac-dialogue-choices"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Crafting & Workbench Modal -->
+  <div class="crafting-modal" id="crafting-modal" style="display: none;">
+    <div class="crafting-card">
+      <div class="crafting-header">
+        <div class="crafting-title">
+          <span class="crafting-icon">🔨</span>
+          <span>Bancada de Criação (Workbench)</span>
+        </div>
+        <button id="btn-close-crafting" class="modal-close-btn">✕</button>
+      </div>
+      <div class="crafting-body">
+        <div class="crafting-recipe-list" id="crafting-recipe-list">
+          <!-- Populated by CraftingSystem -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dragon Party (Bag B) Modal -->
+  <div class="dragon-party-modal" id="dragon-party-modal" style="display: none;">
+    <div class="dragon-card">
+      <div class="dragon-header">
+        <div class="dragon-title">
+          <span class="dragon-icon">🐉</span>
+          <span>Mochila de Dragões (Bag B)</span>
+        </div>
+        <button id="btn-close-dragons" class="modal-close-btn">✕</button>
+      </div>
+      <div class="dragon-body" id="dragon-party-list">
+        <!-- Populated by DragonManager -->
+      </div>
+    </div>
+  </div>
+
   <!-- RPG System Toast Notification -->
   <div id="rpg-toast" class="rpg-toast"></div>
 

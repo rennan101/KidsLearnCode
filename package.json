@@ -1,6 +1,7 @@
 {
   "name": "geralts-realm-rpg",
   "version": "3.2.0",
+  "type": "module",
   "description": "2D RPG Engine & World Editor with Geralt, resizable entities, rotatable assets, and dynamic layer manager.",
   "scripts": {
     "start": "npx -y serve . -p 8000",

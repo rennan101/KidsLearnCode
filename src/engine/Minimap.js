@@ -1,11 +1,12 @@
 // High-fantasy RPG Circular & Expanded Minimap Engine
 
 export class Minimap {
-  constructor(tileMap, assetLoader, player, camera) {
+  constructor(tileMap, assetLoader, player, camera, dayNightSystem = null) {
     this.tileMap = tileMap;
     this.assetLoader = assetLoader;
     this.player = player;
     this.camera = camera;
+    this.dayNightSystem = dayNightSystem;
 
     // DOM Elements
     this.container = document.getElementById('minimap-hud');
@@ -345,7 +346,78 @@ export class Minimap {
       grad.addColorStop(1, 'rgba(0, 0, 0, 0.65)');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, width, height);
+
+      // Draw Radial Day/Night Orbital Sun/Moon and Action Points on Circular Rim
+      if (this.dayNightSystem) {
+        this.renderDayNightAndAPRing(ctx, centerX, centerY, width * 0.46);
+      }
     }
+  }
+
+  renderDayNightAndAPRing(ctx, cx, cy, radius) {
+    const isDay = this.dayNightSystem.isDay();
+    const progress = this.dayNightSystem.getCycleProgress();
+    const currentAP = this.dayNightSystem.currentAP;
+    const maxAP = this.dayNightSystem.currentMaxAP;
+    const nightBonus = this.dayNightSystem.nightAPBonus;
+    const { formatted } = this.dayNightSystem.getCurrentTime();
+
+    // 1. Draw Rim Bezel Ring
+    ctx.strokeStyle = isDay ? 'rgba(245, 158, 11, 0.4)' : 'rgba(99, 102, 241, 0.4)';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 2. Draw Orbital Sun or Moon icon along the rim
+    const orbitalAngle = progress * Math.PI * 2 - Math.PI / 2;
+    const orbitX = cx + Math.cos(orbitalAngle) * (radius - 2);
+    const orbitY = cy + Math.sin(orbitalAngle) * (radius - 2);
+
+    ctx.save();
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = isDay ? '#f59e0b' : '#818cf8';
+    ctx.shadowBlur = 10;
+    ctx.fillText(isDay ? '☀️' : '🌙', orbitX, orbitY);
+    ctx.restore();
+
+    // 3. Draw Action Points (AP) segmented arc along the top-left rim
+    const totalSegments = maxAP;
+    const startArc = Math.PI * 0.75;
+    const arcSpan = Math.PI * 0.7;
+    const segmentAngle = arcSpan / totalSegments;
+
+    for (let i = 0; i < totalSegments; i++) {
+      const segStart = startArc + i * segmentAngle + 0.03;
+      const segEnd = segStart + segmentAngle - 0.06;
+      const isFilled = i < currentAP;
+
+      ctx.strokeStyle = isFilled ? '#10b981' : 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius - 8, segStart, segEnd);
+      ctx.stroke();
+    }
+
+    // 4. Time badge in the bottom center of minimap
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = isDay ? '#f59e0b' : '#6366f1';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(cx - 36, cy + radius - 24, 72, 18, 9);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = isDay ? '#fef08a' : '#c7d2fe';
+    ctx.font = 'bold 10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const apText = nightBonus > 0 ? `${currentAP}+${nightBonus}⚡` : `${currentAP}/${maxAP}⚡`;
+    ctx.fillText(`${formatted} ${apText}`, cx, cy + radius - 15);
+    ctx.restore();
   }
 
   renderTileLayer(ctx, layerName, focusX, focusY, scale, minTileX, maxTileX, minTileY, maxTileY, isEditor) {

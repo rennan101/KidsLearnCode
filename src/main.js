@@ -1,11 +1,15 @@
-// Main game entrypoint & loop coordinator with resizable drawer and collider panel sync
-
 import { AssetLoader } from './engine/AssetLoader.js';
 import { TileMap } from './engine/TileMap.js';
 import { Player } from './engine/Player.js';
 import { Camera } from './engine/Camera.js';
 import { EditorController } from './editor/EditorController.js';
 import { Minimap } from './engine/Minimap.js';
+import { DayNightSystem } from './engine/DayNightSystem.js';
+import { DialogueAndChatSystem } from './engine/DialogueAndChatSystem.js';
+import { CraftingSystem } from './engine/CraftingSystem.js';
+import { DragonManager } from './engine/DragonManager.js';
+import { BlocklyLuaSystem } from './engine/BlocklyLuaSystem.js';
+import { CharacterRegistry } from './engine/CharacterRegistry.js';
 
 class RPGApplication {
   constructor() {
@@ -14,11 +18,17 @@ class RPGApplication {
     this.canvasWrapper = document.getElementById('canvas-wrapper');
 
     // Subsystems
+    this.dayNightSystem = new DayNightSystem();
+    this.dialogueSystem = new DialogueAndChatSystem();
+    this.craftingSystem = new CraftingSystem(this.dayNightSystem);
+    this.dragonManager = new DragonManager();
+    this.blocklySystem = new BlocklyLuaSystem();
+
     this.assetLoader = new AssetLoader();
     this.tileMap = new TileMap();
     this.player = new Player(320, 320);
     this.camera = new Camera();
-    this.minimap = new Minimap(this.tileMap, this.assetLoader, this.player, this.camera);
+    this.minimap = new Minimap(this.tileMap, this.assetLoader, this.player, this.camera, this.dayNightSystem);
     this.editorController = new EditorController(
       this.tileMap,
       this.assetLoader,
@@ -47,6 +57,9 @@ class RPGApplication {
     this.setupPlayCameraZoomPanel();
     this.setupTileInspector();
     this.setupLayerManager();
+    this.setupChatSystem();
+    this.setupCraftingUI();
+    this.setupDragonPartyUI();
     this.bindDOMEvents();
 
     // Preload all sprites and tiles
@@ -1183,8 +1196,11 @@ class RPGApplication {
       }
     }
 
-    // Update animations
+    // Update animations & floating chat bubbles
     this.tileMap.update(deltaTime);
+    if (this.dialogueSystem && this.player) {
+      this.dialogueSystem.update(new Map([['player', { x: this.player.x, y: this.player.y }]]));
+    }
 
     if (this.mode === 'play') {
       // Move player with collision checking against tile colliders
@@ -1376,7 +1392,193 @@ class RPGApplication {
     } finally {
       this.ctx.restore();
     }
+
+    // 1. Day / Night Atmospheric Lighting Tint Overlay (Play Mode)
+    if (this.mode === 'play' && this.dayNightSystem) {
+      const ambient = this.dayNightSystem.getAmbientLight();
+      if (ambient.alpha > 0.02) {
+        this.ctx.save();
+        this.ctx.fillStyle = `rgba(${ambient.r}, ${ambient.g}, ${ambient.b}, ${ambient.alpha})`;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.restore();
+      }
+    }
+
+    // 2. Animal Crossing Floating Speech Bubbles (Rendered in screen space)
+    if (this.dialogueSystem) {
+      this.dialogueSystem.render(this.ctx, this.camera);
+    }
   }
+
+  setupChatSystem() {
+    const chatBar = document.getElementById('game-chat-bar');
+    const chatInput = document.getElementById('game-chat-input');
+    const sendBtn = document.getElementById('btn-send-chat');
+
+    const toggleChat = () => {
+      if (this.mode !== 'play') return;
+      const isVisible = chatBar.style.display !== 'none';
+      if (isVisible) {
+        chatBar.style.display = 'none';
+        chatInput.blur();
+        this.canvas.focus();
+      } else {
+        chatBar.style.display = 'flex';
+        chatInput.value = '';
+        chatInput.focus();
+      }
+    };
+
+    const sendMsg = () => {
+      const text = chatInput.value.trim();
+      if (text.length > 0) {
+        this.dialogueSystem.addSpeechBubble('player', text, { x: this.player.x, y: this.player.y });
+        chatInput.value = '';
+        chatBar.style.display = 'none';
+        this.canvas.focus();
+      }
+    };
+
+    sendBtn?.addEventListener('click', sendMsg);
+
+    chatInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        sendMsg();
+      } else if (e.key === 'Escape') {
+        chatBar.style.display = 'none';
+        this.canvas.focus();
+      }
+      e.stopPropagation();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.target && e.target.tagName === 'INPUT') return;
+      if (this.mode === 'play' && e.key === 'Enter') {
+        toggleChat();
+        e.preventDefault();
+      }
+    });
+  }
+
+  setupCraftingUI() {
+    const craftingModal = document.getElementById('crafting-modal');
+    const closeBtn = document.getElementById('btn-close-crafting');
+    const recipeList = document.getElementById('crafting-recipe-list');
+
+    closeBtn?.addEventListener('click', () => {
+      craftingModal.style.display = 'none';
+    });
+
+    this.openCraftingModal = () => {
+      if (!craftingModal || !recipeList) return;
+      craftingModal.style.display = 'flex';
+      recipeList.innerHTML = '';
+
+      const recipes = this.craftingSystem.getRecipes();
+      recipes.forEach((rec) => {
+        const item = document.createElement('div');
+        item.className = 'craft-recipe-item';
+        item.innerHTML = `
+          <div class="recipe-info">
+            <span class="recipe-icon">${rec.icon}</span>
+            <div class="recipe-details">
+              <h4>${rec.name} (${rec.apCost} AP)</h4>
+              <p>${rec.description}</p>
+            </div>
+          </div>
+          <button class="craft-btn" data-id="${rec.id}">Fabricar 🔨</button>
+        `;
+
+        item.querySelector('.craft-btn')?.addEventListener('click', () => {
+          const res = this.craftingSystem.craftItem(rec.id, this.player, () => {
+            this.showToast(`💨 ${rec.name} fabricado na bancada!`);
+          });
+          if (res.success) {
+            this.showToast(res.message);
+            craftingModal.style.display = 'none';
+          } else {
+            this.showToast(`⚠️ ${res.reason}`);
+          }
+        });
+
+        recipeList.appendChild(item);
+      });
+    };
+
+    // Shortcut 'C' in Play Mode to open Crafting
+    window.addEventListener('keydown', (e) => {
+      if (e.target && e.target.tagName === 'INPUT') return;
+      if (this.mode === 'play' && (e.key === 'c' || e.key === 'C')) {
+        const isVisible = craftingModal.style.display !== 'none';
+        if (isVisible) {
+          craftingModal.style.display = 'none';
+        } else {
+          this.openCraftingModal();
+        }
+      }
+    });
+  }
+
+  setupDragonPartyUI() {
+    const dragonModal = document.getElementById('dragon-party-modal');
+    const closeBtn = document.getElementById('btn-close-dragons');
+    const partyList = document.getElementById('dragon-party-list');
+
+    closeBtn?.addEventListener('click', () => {
+      dragonModal.style.display = 'none';
+    });
+
+    this.openDragonModal = () => {
+      if (!dragonModal || !partyList) return;
+      dragonModal.style.display = 'flex';
+      partyList.innerHTML = '';
+
+      const party = this.dragonManager.getParty();
+      party.forEach((drag) => {
+        const item = document.createElement('div');
+        item.className = 'dragon-party-item';
+        const isMounted = this.dragonManager.getActiveMount()?.id === drag.id;
+
+        item.innerHTML = `
+          <div class="dragon-info">
+            <span class="dragon-item-icon">${drag.icon}</span>
+            <div class="dragon-details">
+              <h4>${drag.name} (Nível ${drag.level})</h4>
+              <p>${drag.species} • Especial: ${drag.fieldMove}</p>
+            </div>
+          </div>
+          <button class="mount-btn" data-id="${drag.id}">
+            ${isMounted ? 'Desmontar 🛑' : 'Montar 🏇'}
+          </button>
+        `;
+
+        item.querySelector('.mount-btn')?.addEventListener('click', () => {
+          if (isMounted) {
+            this.dragonManager.dismountDragon();
+            this.showToast(`🚶 Você desmontou de ${drag.name}.`);
+          } else {
+            this.dragonManager.mountDragon(drag.id);
+            this.showToast(`🐉 Você montou em ${drag.name}! Velocidade aumentada.`);
+          }
+          this.openDragonModal();
+        });
+
+        partyList.appendChild(item);
+      });
+    };
+
+    // Shortcut 'B' in Play Mode to open Bag B (Dragons)
+    window.addEventListener('keydown', (e) => {
+      if (e.target && e.target.tagName === 'INPUT') return;
+      if (this.mode === 'play' && (e.key === 'b' || e.key === 'B')) {
+        const isVisible = dragonModal.style.display !== 'none';
+        if (isVisible) {
+          dragonModal.style.display = 'none';
+        } else {
+          this.openDragonModal();
+        }
+      }
+    });
 }
 
 // Bootstrap application on page load
