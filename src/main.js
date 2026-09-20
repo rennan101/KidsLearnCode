@@ -1338,7 +1338,7 @@ class RPGApplication {
       const user = this.supabaseClient?.user;
       if (user && !user.isGuest) {
         const name = user.user_metadata?.nickname || (user.email ? user.email.split('@')[0] : 'Conta');
-        labelEl.innerText = `👤 ${name}`;
+        labelEl.innerText = name;
       } else {
         labelEl.innerText = 'Entrar';
       }
