@@ -1,0 +1,19 @@
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Private Game Design Documents, GDDs, Second Brain Vault & Prompt Catalogs
+Brain/
+HIGH_CONCEPT.md
+CATALOG_CHARACTERS_AND_NPCS.md
+CATALOG_DRAGONS_PROMPTS.md
+CATALOG_CRAFTABLE_ASSETS_PROMPTS.md
+planejamento_ilha_lua.md
+*.draft.md
+docs/private/
+scratch/
+
+# Temporary and log files
+*.log
+*.tmp
+.system_generated/
