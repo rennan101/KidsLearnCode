@@ -20,8 +20,11 @@ export class SupabaseClient {
 
   async init() {
     try {
-      // Importa dinamicamente a SDK do Supabase via ESM
-      const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+      // Importa dinamicamente a SDK do Supabase com timeout de segurança (2.5s)
+      const importPromise = import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Supabase SDK load timeout')), 2500));
+      
+      const { createClient } = await Promise.race([importPromise, timeoutPromise]);
       
       const activeUrl = this.url.trim();
       const activeKey = this.anonKey.trim();

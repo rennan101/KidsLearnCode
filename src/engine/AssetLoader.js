@@ -2252,6 +2252,8 @@ export class AssetLoader {
   }
 
   async loadAll(onProgress = () => {}) {
+    const urlsToLoad = [];
+
     for (const tile of this.overworldTiles) {
       if (tile.isInvisibleAsset && !tile.src) {
         tile.src = this.generateInvisibleColliderPreview(tile.gridW || 1, tile.gridH || 1);
