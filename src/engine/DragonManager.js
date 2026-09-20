@@ -12,7 +12,7 @@ export const DRAGON_CATALOG = [
     element: 'Ar / Vento',
     color: '#38bdf8',
     secondaryColor: '#fef08a',
-    icon: '🌪️',
+    icon: 'Ar',
     fieldMove: 'Voo Livre sobre Penhascos e Rios',
     mountSpeedMultiplier: 1.8,
     socketOffset: { x: 0, y: -18 },
@@ -26,7 +26,7 @@ export const DRAGON_CATALOG = [
     element: 'Elétrico',
     color: '#818cf8',
     secondaryColor: '#22d3ee',
-    icon: '⚡',
+    icon: 'Trovão',
     fieldMove: 'Iluminação por Faíscas e Voo Elétrico',
     mountSpeedMultiplier: 1.9,
     socketOffset: { x: 0, y: -18 },
@@ -40,7 +40,7 @@ export const DRAGON_CATALOG = [
     element: 'Luz Solar',
     color: '#fbbf24',
     secondaryColor: '#f97316',
-    icon: '☀️',
+    icon: 'Solar',
     fieldMove: 'Acelera Cultivos e Clima Solar',
     mountSpeedMultiplier: 1.75,
     socketOffset: { x: 0, y: -18 },
@@ -54,7 +54,7 @@ export const DRAGON_CATALOG = [
     element: 'Terra / Rocha',
     color: '#78716c',
     secondaryColor: '#84cc16',
-    icon: '⛰️',
+    icon: 'Rocha',
     fieldMove: 'Quebra de Rochas e Mineração Rápida',
     mountSpeedMultiplier: 1.45,
     socketOffset: { x: 0, y: -14 },
@@ -68,7 +68,7 @@ export const DRAGON_CATALOG = [
     element: 'Fogo Vulcânico',
     color: '#ef4444',
     secondaryColor: '#f97316',
-    icon: '🔥',
+    icon: 'Fogo',
     fieldMove: 'Derrete Gelo e Acende Tochas Noturnas',
     mountSpeedMultiplier: 1.6,
     socketOffset: { x: 0, y: -15 },
@@ -82,7 +82,7 @@ export const DRAGON_CATALOG = [
     element: 'Natureza',
     color: '#10b981',
     secondaryColor: '#f472b6',
-    icon: '🌿',
+    icon: 'Flora',
     fieldMove: 'Germina Flores e Aumenta Colheita',
     mountSpeedMultiplier: 1.5,
     socketOffset: { x: 0, y: -14 },
@@ -96,7 +96,7 @@ export const DRAGON_CATALOG = [
     element: 'Água Marinha',
     color: '#06b6d4',
     secondaryColor: '#f43f5e',
-    icon: '🌊',
+    icon: 'Oceano',
     fieldMove: 'Navegação em Águas Profundas e Pesca',
     mountSpeedMultiplier: 1.7,
     socketOffset: { x: 0, y: -12 },
@@ -110,7 +110,7 @@ export const DRAGON_CATALOG = [
     element: 'Gelo Glacial',
     color: '#bae6fd',
     secondaryColor: '#38bdf8',
-    icon: '❄️',
+    icon: 'Gelo',
     fieldMove: 'Congela a Água Criando Pontes de Gelo',
     mountSpeedMultiplier: 1.65,
     socketOffset: { x: 0, y: -14 },
@@ -124,7 +124,7 @@ export const DRAGON_CATALOG = [
     element: 'Sombra Abissal',
     color: '#312e81',
     secondaryColor: '#06b6d4',
-    icon: '🌌',
+    icon: 'Abismo',
     fieldMove: 'Visão Noturna no Fundo do Mar e Baús Ocultos',
     mountSpeedMultiplier: 1.6,
     socketOffset: { x: 0, y: -14 },
@@ -138,7 +138,7 @@ export const DRAGON_CATALOG = [
     element: 'Arcano / Estelar',
     color: '#e0e7ff',
     secondaryColor: '#fbbf24',
-    icon: '✨',
+    icon: 'Lua',
     fieldMove: 'Voo Supremo, Travessia Terrestre e Aquática',
     mountSpeedMultiplier: 2.1,
     socketOffset: { x: 0, y: -20 },
@@ -625,7 +625,7 @@ export class DragonManager {
   }
 
   // Render Companion, Targets, Nests, and Combat UI in World Space
-  render(ctx, assetLoader) {
+  render(ctx, assetLoader, player = null) {
     const dragon = this.getActiveDragon();
 
     // 1. Render Wild Dragon Nests
@@ -636,7 +636,7 @@ export class DragonManager {
 
     // 3. Render Active Dragon Companion (if not mounted, or socket underlay)
     if (dragon && this.mode !== 'none') {
-      this.renderDragonEntity(ctx, dragon);
+      this.renderDragonEntity(ctx, dragon, player);
     }
 
     // 4. Render Combat Particles
@@ -646,7 +646,7 @@ export class DragonManager {
     this.renderDamageNumbers(ctx);
   }
 
-  renderDragonEntity(ctx, dragon) {
+  renderDragonEntity(ctx, dragon, player = null) {
     ctx.save();
 
     const bounce = Math.sin(this.floatTimer * 4) * 4;
@@ -733,16 +733,63 @@ export class DragonManager {
     ctx.arc(drawX + 33, drawY + 15, 2.5, 0, Math.PI * 2);
     ctx.fill();
 
-    // 7. Mini Overhead Companion Badge (Level & Icon)
+    // 7. Mini Overhead Companion Badge & Proximity Mount [R] Balloon
     if (this.mode === 'follow') {
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
-      ctx.roundRect(drawX + 4, drawY - 14, 40, 12, 4);
-      ctx.fill();
+      const dist = player ? Math.hypot(player.x - this.x, player.y - this.y) : 999;
+      const isNearby = dist < 120;
 
-      ctx.fillStyle = '#fef08a';
-      ctx.font = 'bold 8px Outfit, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`Lv.${dragon.level} ${dragon.icon}`, drawX + 24, drawY - 5);
+      if (isNearby) {
+        // Balão de Montaria estilo Animal Crossing / Zelda
+        const bubbleW = 76;
+        const bubbleH = 22;
+        const bubbleX = drawX + 24 - bubbleW / 2;
+        const bubbleY = drawY - 30;
+
+        // Fundo do balão
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(bubbleX, bubbleY, bubbleW, bubbleH, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        // Ponta triangular apontando para a cabeça do dragão
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+        ctx.beginPath();
+        ctx.moveTo(drawX + 20, bubbleY + bubbleH);
+        ctx.lineTo(drawX + 24, bubbleY + bubbleH + 4);
+        ctx.lineTo(drawX + 28, bubbleY + bubbleH);
+        ctx.fill();
+
+        // Botão [R] keycap badge
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.roundRect(bubbleX + 6, bubbleY + 3, 16, 16, 3);
+        ctx.fill();
+
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 10px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('R', bubbleX + 14, bubbleY + 11);
+
+        // Texto Montar
+        ctx.fillStyle = '#f3f4f6';
+        ctx.font = 'bold 11px Outfit, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('Montar', bubbleX + 27, bubbleY + 11);
+      } else {
+        // Badge simples de nível quando longe
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+        ctx.roundRect(drawX + 4, drawY - 14, 40, 12, 4);
+        ctx.fill();
+
+        ctx.fillStyle = '#fef08a';
+        ctx.font = 'bold 8px Outfit, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Lv.${dragon.level}`, drawX + 24, drawY - 5);
+      }
     }
 
     ctx.restore();

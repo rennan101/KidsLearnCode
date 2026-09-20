@@ -1780,7 +1780,7 @@ class RPGApplication {
       // Render Dragon Companion, Targets, Particles and Wild Nests
       if (this.dragonManager && this.mode === 'play') {
         try {
-          this.dragonManager.render(this.ctx, this.assetLoader);
+          this.dragonManager.render(this.ctx, this.assetLoader, this.player);
         } catch (dragonErr) {
           console.error('Error rendering dragon entity:', dragonErr);
         }

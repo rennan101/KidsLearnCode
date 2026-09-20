@@ -327,12 +327,18 @@ export class TileMap {
     const layer = this.layers[layerName];
     if (!layer || layer.size === 0) return;
 
+    const camX = (camera && typeof camera.x === 'number' && isFinite(camera.x)) ? camera.x : 0;
+    const camY = (camera && typeof camera.y === 'number' && isFinite(camera.y)) ? camera.y : 0;
+    const camZ = (camera && typeof camera.zoom === 'number' && isFinite(camera.zoom) && camera.zoom > 0.05) ? camera.zoom : 1.0;
+    const camW = (camera && typeof camera.viewportWidth === 'number' && isFinite(camera.viewportWidth) && camera.viewportWidth > 0) ? camera.viewportWidth : 800;
+    const camH = (camera && typeof camera.viewportHeight === 'number' && isFinite(camera.viewportHeight) && camera.viewportHeight > 0) ? camera.viewportHeight : 600;
+
     // Viewport bounds culling (with padding for large objects)
     const padding = 6;
-    const startCol = Math.floor(camera.x / this.tileSize) - padding;
-    const endCol = Math.ceil((camera.x + camera.viewportWidth / camera.zoom) / this.tileSize) + padding;
-    const startRow = Math.floor(camera.y / this.tileSize) - padding;
-    const endRow = Math.ceil((camera.y + camera.viewportHeight / camera.zoom) / this.tileSize) + padding;
+    const startCol = Math.floor(camX / this.tileSize) - padding;
+    const endCol = Math.ceil((camX + camW / camZ) / this.tileSize) + padding;
+    const startRow = Math.floor(camY / this.tileSize) - padding;
+    const endRow = Math.ceil((camY + camH / camZ) / this.tileSize) + padding;
 
     for (let y = startRow; y <= endRow; y++) {
       for (let x = startCol; x <= endCol; x++) {
