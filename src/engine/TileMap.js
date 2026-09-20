@@ -17,19 +17,21 @@ export class TileMap {
       decor: new Map(),
       solid: new Map(),
       characters: new Map(),
-      overhead: new Map()
+      overhead: new Map(),
+      colliders: new Map()
     };
 
     // Customizable visual rendering order (from bottom to top)
-    this.layerOrder = ['ground', 'decor', 'solid', 'characters', 'overhead'];
+    this.layerOrder = ['ground', 'decor', 'solid', 'characters', 'overhead', 'colliders'];
 
     // Layer metadata with human-friendly Portuguese labels and colors
     this.layerDefinitions = {
       ground: { id: 'ground', label: 'Chão', num: 1, color: '#3b82f6', desc: 'Água / Terreno Base' },
       decor: { id: 'decor', label: 'Decoração', num: 2, color: '#10b981', desc: 'Flora / Caminhos / Detalhes' },
-      solid: { id: 'solid', label: 'Sólido', num: 3, color: '#f59e0b', desc: 'Estruturas / Barreiras' },
+      solid: { id: 'solid', label: 'Sólido', num: 3, color: '#f59e0b', desc: 'Estruturas / Objetos' },
       characters: { id: 'characters', label: 'Personagens', num: 4, color: '#ec4899', desc: 'Geralt / NPCs / Inimigos' },
-      overhead: { id: 'overhead', label: 'Topo / Cobertura', num: 5, color: '#8b5cf6', desc: 'Copa das Árvores / Telhados / Acima do Player' }
+      overhead: { id: 'overhead', label: 'Topo / Cobertura', num: 5, color: '#8b5cf6', desc: 'Copa das Árvores / Telhados / Acima do Player' },
+      colliders: { id: 'colliders', label: 'Colisores', num: 6, color: '#ef4444', desc: 'Barreiras e Paredes Invisíveis' }
     };
 
     // Animated tile clock (for water)
@@ -51,7 +53,7 @@ export class TileMap {
   setLayerOrder(newOrder) {
     if (Array.isArray(newOrder) && newOrder.length > 0) {
       // Ensure all required layers exist in the order
-      const validLayers = ['ground', 'decor', 'solid', 'characters', 'overhead'];
+      const validLayers = ['ground', 'decor', 'solid', 'characters', 'overhead', 'colliders'];
       const filtered = newOrder.filter((l) => validLayers.includes(l));
       for (const vl of validLayers) {
         if (!filtered.includes(vl)) filtered.push(vl);
@@ -145,6 +147,39 @@ export class TileMap {
 
   // Erases from top to bottom according to dynamic layer order
   deleteTile(x, y, activeLayer = 'all', assetLoader = null) {
+    // 1. If activeLayer is 'all', check if there is an invisible barrier/collider at this cell first
+    if (activeLayer === 'all') {
+      // Check colliders layer or any layer containing an invisible collider
+      const layersToCheckColliders = ['colliders', ...this.layerOrder];
+      for (const layerName of layersToCheckColliders) {
+        const layer = this.layers[layerName];
+        if (!layer) continue;
+        const cell = layer.get(this.getKey(x, y));
+        if (cell) {
+          const meta = assetLoader ? assetLoader.getTileMetadata(cell.tileId) : null;
+          const isInvisible = (cell.tileId && cell.tileId.startsWith('invisible-collider')) || (meta && meta.isInvisibleAsset);
+          if (isInvisible || layerName === 'colliders') {
+            const rootX = (cell.rootX !== undefined) ? cell.rootX : x;
+            const rootY = (cell.rootY !== undefined) ? cell.rootY : y;
+            let gw = 1;
+            let gh = 1;
+            if (meta) {
+              const isRotated90or270 = (cell.rotation === 90 || cell.rotation === 270);
+              gw = isRotated90or270 ? (meta.gridH || 1) : (meta.gridW || 1);
+              gh = isRotated90or270 ? (meta.gridW || 1) : (meta.gridH || 1);
+            }
+            for (let dy = 0; dy < gh; dy++) {
+              for (let dx = 0; dx < gw; dx++) {
+                layer.delete(this.getKey(rootX + dx, rootY + dy));
+              }
+            }
+            return; // Successfully deleted ONLY the invisible collider!
+          }
+        }
+      }
+    }
+
+    // 2. Standard layer deletion
     const topToBottom = [...this.layerOrder].reverse();
     const layersToCheck = (activeLayer === 'all') 
       ? topToBottom 
@@ -392,7 +427,8 @@ export class TileMap {
         decor: serializeLayer(this.layers.decor),
         solid: serializeLayer(this.layers.solid),
         characters: serializeLayer(this.layers.characters),
-        overhead: serializeLayer(this.layers.overhead)
+        overhead: serializeLayer(this.layers.overhead),
+        colliders: serializeLayer(this.layers.colliders)
       }
     };
   }
@@ -438,8 +474,23 @@ export class TileMap {
       decor: deserializeLayer(data.layers.decor),
       solid: deserializeLayer(data.layers.solid),
       characters: deserializeLayer(data.layers.characters || data.layers.player),
-      overhead: deserializeLayer(data.layers.overhead)
+      overhead: deserializeLayer(data.layers.overhead),
+      colliders: deserializeLayer(data.layers.colliders)
     };
+
+    // Auto-migrate any invisible colliders in legacy layers to the dedicated colliders layer
+    for (const [layerKey, layerMap] of Object.entries(this.layers)) {
+      if (layerKey === 'colliders') continue;
+      for (const [coordKey, cell] of layerMap.entries()) {
+        if (cell && cell.tileId && cell.tileId.startsWith('invisible-collider')) {
+          if (!this.layers.colliders.has(coordKey)) {
+            this.layers.colliders.set(coordKey, cell);
+          }
+          layerMap.delete(coordKey);
+        }
+      }
+    }
+
     return true;
   }
 }

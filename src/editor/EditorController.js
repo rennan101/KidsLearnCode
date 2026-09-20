@@ -255,7 +255,7 @@ export class EditorController {
   }
 
   setLayer(layer) {
-    if (!['ground', 'decor', 'solid', 'characters', 'overhead'].includes(layer)) return;
+    if (!['ground', 'decor', 'solid', 'characters', 'overhead', 'colliders'].includes(layer)) return;
     this.activeLayer = layer;
 
     // Update UI button segment states
@@ -266,7 +266,7 @@ export class EditorController {
     // Update status bar
     const statusLayer = document.getElementById('status-layer');
     if (statusLayer) {
-      const names = { ground: 'CHÃO', decor: 'DECORAÇÃO', solid: 'SÓLIDO', characters: 'PERSONAGENS', overhead: 'TOPO' };
+      const names = { ground: 'CHÃO', decor: 'DECORAÇÃO', solid: 'SÓLIDO', characters: 'PERSONAGENS', overhead: 'TOPO', colliders: 'COLISORES' };
       statusLayer.innerText = names[layer] || layer.toUpperCase();
     }
   }

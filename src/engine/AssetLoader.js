@@ -1682,7 +1682,7 @@ export class AssetLoader {
             "id": "invisible-collider",
             "name": "Invisible Wall (1x1 Full)",
             "category": "Colliders",
-            "layer": "solid",
+            "layer": "colliders",
             "isInvisibleAsset": true,
             "gridW": 1,
             "gridH": 1,
@@ -1698,7 +1698,7 @@ export class AssetLoader {
             "id": "invisible-collider-top",
             "name": "Borda Superior (Top Edge)",
             "category": "Colliders",
-            "layer": "solid",
+            "layer": "colliders",
             "isInvisibleAsset": true,
             "gridW": 1,
             "gridH": 1,
@@ -1714,7 +1714,7 @@ export class AssetLoader {
             "id": "invisible-collider-bottom",
             "name": "Borda Inferior (Bottom Edge)",
             "category": "Colliders",
-            "layer": "solid",
+            "layer": "colliders",
             "isInvisibleAsset": true,
             "gridW": 1,
             "gridH": 1,
@@ -1730,7 +1730,7 @@ export class AssetLoader {
             "id": "invisible-collider-left",
             "name": "Borda Esquerda (Left Edge)",
             "category": "Colliders",
-            "layer": "solid",
+            "layer": "colliders",
             "isInvisibleAsset": true,
             "gridW": 1,
             "gridH": 1,
@@ -1746,7 +1746,7 @@ export class AssetLoader {
             "id": "invisible-collider-right",
             "name": "Borda Direita (Right Edge)",
             "category": "Colliders",
-            "layer": "solid",
+            "layer": "colliders",
             "isInvisibleAsset": true,
             "gridW": 1,
             "gridH": 1,
@@ -1762,7 +1762,7 @@ export class AssetLoader {
             "id": "invisible-collider-corner-tl",
             "name": "Canto L Superior Esquerdo (Top-Left L)",
             "category": "Colliders",
-            "layer": "solid",
+            "layer": "colliders",
             "isInvisibleAsset": true,
             "gridW": 1,
             "gridH": 1,
@@ -1782,7 +1782,7 @@ export class AssetLoader {
             "id": "invisible-collider-corner-tr",
             "name": "Canto L Superior Direito (Top-Right L)",
             "category": "Colliders",
-            "layer": "solid",
+            "layer": "colliders",
             "isInvisibleAsset": true,
             "gridW": 1,
             "gridH": 1,
@@ -1802,7 +1802,7 @@ export class AssetLoader {
             "id": "invisible-collider-corner-bl",
             "name": "Canto L Inferior Esquerdo (Bottom-Left L)",
             "category": "Colliders",
-            "layer": "solid",
+            "layer": "colliders",
             "isInvisibleAsset": true,
             "gridW": 1,
             "gridH": 1,
@@ -1822,7 +1822,7 @@ export class AssetLoader {
             "id": "invisible-collider-corner-br",
             "name": "Canto L Inferior Direito (Bottom-Right L)",
             "category": "Colliders",
-            "layer": "solid",
+            "layer": "colliders",
             "isInvisibleAsset": true,
             "gridW": 1,
             "gridH": 1,
@@ -1842,7 +1842,7 @@ export class AssetLoader {
             "id": "invisible-collider-2x2",
             "name": "Invisible Barrier (2x2)",
             "category": "Colliders",
-            "layer": "solid",
+            "layer": "colliders",
             "isInvisibleAsset": true,
             "gridW": 2,
             "gridH": 2,
@@ -2095,41 +2095,104 @@ export class AssetLoader {
     }
   }
 
-  generateInvisibleColliderPreview(gridW = 1, gridH = 1) {
+  generateInvisibleColliderPreview(tile = {}) {
     const canvas = document.createElement('canvas');
     canvas.width = 64;
     canvas.height = 64;
     const ctx = canvas.getContext('2d');
 
-    const grad = ctx.createLinearGradient(0, 0, 64, 64);
-    grad.addColorStop(0, 'rgba(239, 68, 68, 0.25)');
-    grad.addColorStop(1, 'rgba(185, 28, 28, 0.45)');
-    ctx.fillStyle = grad;
+    // 1. Dark blueprint background representing the grid cell
+    ctx.fillStyle = '#090c12';
     ctx.fillRect(0, 0, 64, 64);
 
-    ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
-    ctx.lineWidth = 4;
-    for (let i = -64; i < 128; i += 16) {
+    // Subtle cell border
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, 63, 63);
+
+    // Subtle inner grid guide (dashed cross at center)
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.5)';
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath();
+    ctx.moveTo(32, 0); ctx.lineTo(32, 64);
+    ctx.moveTo(0, 32); ctx.lineTo(64, 32);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 2. Render exact collision boxes as on the map
+    const col = tile?.collider;
+    const gridW = tile?.gridW || 1;
+    const gridH = tile?.gridH || 1;
+    const totalW = gridW * 64;
+    const totalH = gridH * 64;
+    const scale = 64 / Math.max(totalW, totalH);
+
+    const boxesToRender = (col && Array.isArray(col.boxes) && col.boxes.length > 0)
+      ? col.boxes
+      : [{ x: col?.x || 0, y: col?.y || 0, w: col?.w || totalW, h: col?.h || totalH }];
+
+    for (const b of boxesToRender) {
+      const bx = (b.x || 0) * scale;
+      const by = (b.y || 0) * scale;
+      const bw = (b.w || totalW) * scale;
+      const bh = (b.h || totalH) * scale;
+
+      // Semi-transparent red fill
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+      ctx.fillRect(bx, by, bw, bh);
+
+      // Red border
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(bx + 0.5, by + 0.5, Math.max(1, bw - 1), Math.max(1, bh - 1));
+
+      // Diagonal stripes inside the collision box (identical to map rendering)
+      ctx.save();
       ctx.beginPath();
-      ctx.moveTo(i, 0);
-      ctx.lineTo(i + 64, 64);
-      ctx.stroke();
+      ctx.rect(bx, by, bw, bh);
+      ctx.clip();
+
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.65)';
+      ctx.lineWidth = 2;
+      for (let offset = -bh; offset < bw + bh; offset += 8) {
+        ctx.beginPath();
+        ctx.moveTo(bx + Math.max(0, offset), by + Math.max(0, -offset));
+        ctx.lineTo(bx + Math.min(bw, offset + bh), by + Math.min(bh, bh - (offset + bh - bw)));
+        ctx.stroke();
+      }
+      ctx.restore();
     }
 
+    // 3. Identification label for the barrier type
+    let tag = '';
+    const id = tile?.id || '';
+    if (id.includes('top')) tag = 'TOP';
+    else if (id.includes('bottom')) tag = 'BOT';
+    else if (id.includes('left')) tag = 'LEFT';
+    else if (id.includes('right')) tag = 'RIGHT';
+    else if (id.includes('corner-tl')) tag = 'L-TL';
+    else if (id.includes('corner-tr')) tag = 'L-TR';
+    else if (id.includes('corner-bl')) tag = 'L-BL';
+    else if (id.includes('corner-br')) tag = 'L-BR';
+    else if (id.includes('2x2')) tag = '2x2';
+    else tag = 'FULL';
+
+    // Badge background pill
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
     ctx.strokeStyle = '#ef4444';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(1, 1, 62, 62);
+    ctx.lineWidth = 1;
+    const tagW = Math.max(26, tag.length * 7 + 8);
+    const tagH = 14;
+    const tagX = 32 - tagW / 2;
+    const tagY = 32 - tagH / 2;
+    ctx.fillRect(tagX, tagY, tagW, tagH);
+    ctx.strokeRect(tagX, tagY, tagW, tagH);
 
     ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(32, 32, 14, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#ef4444';
-    ctx.font = 'bold 12px monospace';
+    ctx.font = 'bold 9px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`${gridW}x${gridH}`, 32, 32);
+    ctx.fillText(tag, 32, 32);
 
     return canvas.toDataURL();
   }
@@ -2256,7 +2319,7 @@ export class AssetLoader {
 
     for (const tile of this.overworldTiles) {
       if (tile.isInvisibleAsset && !tile.src) {
-        tile.src = this.generateInvisibleColliderPreview(tile.gridW || 1, tile.gridH || 1);
+        tile.src = this.generateInvisibleColliderPreview(tile);
       }
     }
 

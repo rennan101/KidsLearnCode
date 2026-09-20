@@ -216,6 +216,8 @@ class RPGApplication {
       listEl.innerHTML = '';
 
       const defs = this.tileMap.layerDefinitions || {
+        colliders: { id: 'colliders', label: 'Colisores', color: '#ef4444', desc: 'Barreiras / Paredes Invisíveis' },
+        overhead: { id: 'overhead', label: 'Topo / Cobertura', color: '#8b5cf6', desc: 'Copa das Árvores / Telhados' },
         characters: { id: 'characters', label: 'Personagens', color: '#ec4899', desc: 'Geralt / NPCs' },
         solid: { id: 'solid', label: 'Sólido', color: '#f59e0b', desc: 'Estruturas' },
         decor: { id: 'decor', label: 'Decoração', color: '#10b981', desc: 'Flora / Caminhos' },
@@ -302,15 +304,16 @@ class RPGApplication {
       listEl.innerHTML = '';
 
       const defs = this.tileMap.layerDefinitions || {
+        colliders: { id: 'colliders', label: 'Camada 6 (Colisores)', color: '#ef4444', desc: 'Barreiras e Paredes Invisíveis' },
         overhead: { id: 'overhead', label: 'Camada 5 (Topo)', color: '#8b5cf6', desc: 'Copa das Árvores / Telhados' },
         characters: { id: 'characters', label: 'Camada 4 (Personagens)', color: '#ec4899', desc: 'Geralt / NPCs' },
-        solid: { id: 'solid', label: 'Camada 3 (Sólido)', color: '#f59e0b', desc: 'Estruturas / Barreiras' },
+        solid: { id: 'solid', label: 'Camada 3 (Sólido)', color: '#f59e0b', desc: 'Estruturas / Objetos' },
         decor: { id: 'decor', label: 'Camada 2 (Decoração)', color: '#10b981', desc: 'Flora / Caminhos' },
         ground: { id: 'ground', label: 'Camada 1 (Chão)', color: '#3b82f6', desc: 'Água / Terreno Base' }
       };
 
       // Top to bottom inspection matching visual hierarchy
-      const displayLayers = [...(this.tileMap.layerOrder || ['ground', 'decor', 'solid', 'characters', 'overhead'])].reverse();
+      const displayLayers = [...(this.tileMap.layerOrder || ['ground', 'decor', 'solid', 'characters', 'overhead', 'colliders'])].reverse();
 
       displayLayers.forEach((key) => {
         const def = defs[key] || { label: key, color: '#94a3b8', desc: '' };
@@ -336,7 +339,7 @@ class RPGApplication {
         const tileName = hasTile ? (meta?.name || data.tileId) : 'Vazio (Nenhum tile)';
         const rot = data?.rotation || 0;
         const details = hasTile 
-          ? `${meta?.category || 'Geral'} • ${meta?.gridW || 1}x${meta?.gridH || 1}${rot ? ` • 🔄 ${rot}°` : ''}${meta?.collider?.enabled ? ' • [COL]' : ''}`
+          ? `${meta?.category || 'Geral'} • ${meta?.gridW || 1}x${meta?.gridH || 1}${rot ? ` • ${rot}°` : ''}${meta?.collider?.enabled ? ' • [COL]' : ''}`
           : defaultName;
 
         item.innerHTML = `
@@ -407,7 +410,7 @@ class RPGApplication {
 
               this.triggerAutoSave();
               this.editorController.inspectTileAt(tx, ty);
-              this.showToast(`🔄 Asset rotacionado para ${nextRot}°!`);
+              this.showToast(`Asset rotacionado para ${nextRot}°!`);
             }
           });
         }
@@ -424,7 +427,7 @@ class RPGApplication {
             this.editorController.setTool('brush');
             document.querySelectorAll('.tool-btn').forEach((b) => b.classList.remove('active'));
             document.getElementById('tool-brush')?.classList.add('active');
-            this.showToast(`🖌️ Asset "${tileName}" selecionado (${targetRot}°) para pintar na camada ${targetLayer}!`);
+            this.showToast(`Asset "${tileName}" selecionado (${targetRot}°) para pintar na camada ${targetLayer}!`);
           });
         }
 
@@ -435,10 +438,10 @@ class RPGApplication {
             const tx = parseInt(deleteBtn.dataset.x, 10);
             const ty = parseInt(deleteBtn.dataset.y, 10);
             this.editorController.recordState();
-            this.tileMap.setTile(targetLayer, tx, ty, null);
+            this.tileMap.deleteTile(tx, ty, targetLayer, this.assetLoader);
             this.triggerAutoSave();
             this.editorController.inspectTileAt(tx, ty);
-            this.showToast(`🗑️ Tile removido da camada ${targetLayer}!`);
+            this.showToast(`Tile removido da camada ${targetLayer}!`);
           });
         }
 
