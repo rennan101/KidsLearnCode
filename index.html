@@ -230,15 +230,31 @@
         </div>
       </div>
 
+      <!-- Quick Mount Dragon Action Button (HUD) -->
+      <div class="quick-actions-hud" id="quick-actions-hud">
+        <button id="btn-quick-mount" class="quick-mount-btn" title="Montar / Desmontar no Dragão Ativo [R]">
+          <span class="quick-mount-icon">🏇</span>
+          <span id="quick-mount-label">Montar [R]</span>
+        </button>
+      </div>
+
       <!-- Play Mode HUD Hint -->
       <div class="play-hud-hint" id="play-hint">
-        <span>Controles: <span class="key-badge">W</span> <span class="key-badge">A</span> <span class="key-badge">S</span> <span class="key-badge">D</span></span>
+        <span>Mover: <span class="key-badge">W</span> <span class="key-badge">A</span> <span class="key-badge">S</span> <span class="key-badge">D</span></span>
         <span>|</span>
-        <span>Chat: <span class="key-badge">Enter</span></span>
+        <span>Montar: <span class="key-badge">R</span></span>
+        <span>|</span>
+        <span>Esquiva: <span class="key-badge">1</span></span>
+        <span>|</span>
+        <span>Dragões: <span class="key-badge">B</span></span>
+        <span>|</span>
+        <span>Código Lua: <span class="key-badge">K</span></span>
+        <span>|</span>
+        <span>Interagir: <span class="key-badge">E</span></span>
         <span>|</span>
         <span>Craft: <span class="key-badge">C</span></span>
         <span>|</span>
-        <span>Dragões: <span class="key-badge">B</span></span>
+        <span>Chat: <span class="key-badge">Enter</span></span>
       </div>
 
       <!-- Circular RPG Minimap (Top Right) -->
@@ -573,8 +589,98 @@
     </div>
   </div>
 
+  <!-- Dragon Egg Hatching Modal -->
+  <div class="dragon-party-modal" id="dragon-hatch-modal" style="display: none;">
+    <div class="dragon-card hatch-card">
+      <div class="dragon-header">
+        <div class="dragon-title">
+          <span class="dragon-icon">🥚✨</span>
+          <span id="hatch-title">Ninho de Dragão</span>
+        </div>
+        <button id="btn-close-hatch" class="modal-close-btn">✕</button>
+      </div>
+      <div class="dragon-body" id="dragon-hatch-body">
+        <div class="hatch-display" id="hatch-display">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Educational Blockly / Lua Coding Studio Modal (Sprint 6) -->
+  <div class="crafting-modal" id="coding-modal" style="display: none;">
+    <div class="crafting-card" style="width: 780px; max-width: 95vw; height: 85vh;">
+      <div class="crafting-header">
+        <div class="crafting-title">
+          <span class="crafting-icon">🧙‍♂️📜</span>
+          <span id="coding-studio-title">Estúdio de Código Lua (Dr. Arquimedes)</span>
+        </div>
+        <button id="btn-close-coding" class="modal-close-btn">✕</button>
+      </div>
+      <div class="crafting-body" style="padding: 12px; gap: 12px; display: flex; flex-direction: column; height: 100%;">
+        <!-- Lesson Selector & Description Bar -->
+        <div style="background: #090c12; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <select id="select-lua-lesson" style="background: #1e293b; color: #fef08a; border: 1px solid #334155; padding: 4px 8px; border-radius: 6px; font-weight: 600;">
+              <!-- Populated by main.js -->
+            </select>
+            <span id="lesson-reward-badge" style="background: #047857; color: #a7f3d0; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px;">+100 XP</span>
+          </div>
+          <p id="lesson-desc" style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4;"></p>
+        </div>
+
+        <!-- Code Editor & Blocks Area -->
+        <div style="display: flex; gap: 10px; flex: 1; min-height: 0;">
+          <!-- Visual Blocks Palette -->
+          <div style="width: 220px; background: #090c12; border: 1px solid #1e293b; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto;">
+            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Blocos de Código</span>
+            <button class="block-btn" data-insert='local item = "bancada_madeira"'>📦 Variável Item</button>
+            <button class="block-btn" data-insert='criar(item)'>🔨 Criar(item)</button>
+            <button class="block-btn" data-insert='se tem_item("chave_ouro") entao\n  abrir_portao()\nsenao\n  pedir_dica()\nfim'>❓ Se / Senão</button>
+            <button class="block-btn" data-insert='para i = 1, 4 faca\n  plantar_arvore(i)\n  avancar()\nfim'>🔄 Laço Para (For)</button>
+            <button class="block-btn" data-insert='funcao chocar_ninho(tipo)\n  aquecer_ninho()\n  adotar(tipo)\nfim'>⚡ Declarar Função</button>
+            <button class="block-btn" data-insert='congelar_superficie()'>❄️ Congelar Superfície</button>
+            <button class="block-btn" data-insert='voo_livre()'>🌪️ Voo Livre</button>
+          </div>
+
+          <!-- Lua Code Textarea & Execution Console -->
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+            <textarea id="lua-code-editor" style="flex: 1; background: #050811; color: #38bdf8; border: 1px solid #1e293b; border-radius: 8px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; resize: none; outline: none; line-height: 1.5;"></textarea>
+            <div id="lua-console-output" style="height: 70px; background: #000; border: 1px solid #1e293b; border-radius: 6px; padding: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #a3e635; overflow-y: auto;">
+              > Console Lua pronto. Clique em 'Executar Código' para testar.
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Footer -->
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button id="btn-reset-lua" class="mount-btn" style="background: #334155; color: #cbd5e1;">Restaurar</button>
+          <button id="btn-run-lua" class="mount-btn" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff;">
+            ▶️ Executar Código Lua
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- RPG System Toast Notification -->
   <div id="rpg-toast" class="rpg-toast"></div>
+
+  <!-- Disconnection / Internet Lost Screen Overlay -->
+  <div id="disconnection-overlay" class="disconnection-overlay" style="display: none;">
+    <div class="disconnection-card">
+      <div class="disconnection-icon-pulse">📡⚡</div>
+      <h2>Conexão Perdida</h2>
+      <p>Você foi desconectado do servidor. Sem conexão com a internet, o acesso ao universo e à Ilha Lua foi suspenso.</p>
+      <div class="disconnection-status">
+        <span class="offline-dot pulse"></span>
+        <span id="disconnection-status-text">Sem sinal de rede com o servidor</span>
+      </div>
+      <button id="btn-retry-connection" class="retry-connection-btn">
+        🔄 Tentar Reconectar
+      </button>
+    </div>
+  </div>
 
   <!-- App Entrypoint Script -->
   <script type="module" src="src/main.js"></script>

@@ -8,12 +8,16 @@
 
 | Tecla / Ação | Função |
 | :--- | :--- |
-| <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> / Setas | **Movimento em Grid (Estilo Pokémon nas 8 direções)**: Passo a passo de 64px com interpolação suave |
-| <kbd>E</kbd> / <kbd>Espaço</kbd> | **Interagir**: Conversar com NPCs, abrir desafios de blocos Lua, coletar ovos e itens |
-| <kbd>B</kbd> | **Bolsa de Dragões**: Abrir menu rápido para selecionar companheiro, invocar ou montar dragão |
-| <kbd>1</kbd> | **Esquiva Tática**: Comando em tempo real durante batalhas automáticas de dragões |
-| <kbd>F</kbd> | Centraliza e trava a câmera imediatamente no Geralt |
-| <kbd>M</kbd> | Abre / Fecha o Mapa Tático Expandido |
+| <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> / Setas | **Movimento Cardeal 4-Way Preciso**: Caminhada suave sem diagonais |
+| <kbd>R</kbd> / Botão HUD | **Montar / Desmontar no Dragão**: Ativa montaria instantânea (corrida contínua turbo) |
+| <kbd>1</kbd> | **Esquiva Tática**: Desvio com 0.8s de invulnerabilidade e efeito elementar da espécie |
+| <kbd>B</kbd> | **Mochila de Dragões (Bag B)**: Gerenciar as 10 espécies, Pet Follow e status |
+| <kbd>K</kbd> | **Estúdio de Código Blockly ➔ Lua**: Lições de programação com Dr. Arquimedes |
+| <kbd>E</kbd> | **Interagir / Field Move**: Chocar ninhos de ovos, falar com NPCs e quebrar rochas |
+| <kbd>C</kbd> | **Bancada de Criação (Workbench)**: Forjar móveis e itens com receitas |
+| <kbd>Enter</kbd> | **Chat**: Mensagens com balões flutuantes estilo Animal Crossing |
+| <kbd>F</kbd> | Centraliza e trava a câmera imediatamente no Herói |
+| <kbd>M</kbd> | Abre / Fecha o Mapa Tático Expandido da Ilha |
 | <kbd>Esc</kbd> | Fecha o Mapa Expandido / Menus Sobrepostos |
 
 ---

@@ -9,6 +9,7 @@ import { DialogueAndChatSystem } from './engine/DialogueAndChatSystem.js';
 import { CraftingSystem } from './engine/CraftingSystem.js';
 import { DragonManager } from './engine/DragonManager.js';
 import { BlocklyLuaSystem } from './engine/BlocklyLuaSystem.js';
+import { MultiplayerClient } from './engine/MultiplayerClient.js';
 import { CharacterRegistry } from './engine/CharacterRegistry.js';
 
 class RPGApplication {
@@ -23,6 +24,7 @@ class RPGApplication {
     this.craftingSystem = new CraftingSystem(this.dayNightSystem);
     this.dragonManager = new DragonManager();
     this.blocklySystem = new BlocklyLuaSystem();
+    this.multiplayerClient = new MultiplayerClient();
 
     this.assetLoader = new AssetLoader();
     this.tileMap = new TileMap();
@@ -61,6 +63,9 @@ class RPGApplication {
       this.setupChatSystem();
       this.setupCraftingUI();
       this.setupDragonPartyUI();
+      this.setupCodingStudioUI();
+      this.setupQuickMountButton();
+      this.setupNetworkDisconnectionMonitor();
       this.bindDOMEvents();
 
       // Preload all sprites and tiles
@@ -634,6 +639,53 @@ class RPGApplication {
           this.showToast('🎯 Câmera centralizada no Geralt [F]');
           return;
         }
+
+        // Key R: Quick Mount / Dismount on Active Dragon
+        if (e.key === 'r' || e.key === 'R') {
+          if (this.toggleQuickMount) {
+            this.toggleQuickMount();
+          }
+          return;
+        }
+
+        // Key 1: Tactical Dodge (Sprint 5)
+        if (e.key === '1') {
+          const res = this.dragonManager.triggerTacticalDodge();
+          if (res.success) {
+            this.showToast(`🛡️ Esquiva Tática! ${res.abilityName}`);
+          } else if (res.reason) {
+            this.showToast(res.reason);
+          }
+          return;
+        }
+
+        // Key E: Interact with Wild Nest or Trigger Active Dragon Field Move (Sprint 5)
+        if (e.key === 'e' || e.key === 'E') {
+          // Check proximity to wild nests
+          const nearbyNest = this.dragonManager.wildNests.find(n => {
+            return Math.hypot(n.x - this.player.x, n.y - this.player.y) < 70;
+          });
+
+          if (nearbyNest) {
+            const nestRes = this.dragonManager.interactWithNest(nearbyNest.id);
+            if (nestRes.hatched) {
+              this.openEggHatchModal(nestRes.speciesData, nearbyNest);
+            } else {
+              this.showToast(nestRes.message || nestRes.reason);
+            }
+            return;
+          }
+
+          // Otherwise trigger active dragon Field Move
+          const fieldRes = this.dragonManager.triggerFieldMove(this.tileMap, this.player.x, this.player.y);
+          if (fieldRes.success) {
+            this.showToast(fieldRes.message);
+          } else {
+            this.showToast(fieldRes.reason);
+          }
+          return;
+        }
+
         this.player.handleKeyDown(e.key);
       } else if (this.mode === 'edit') {
         this.editorController.handleKeyDown(e);
@@ -1200,6 +1252,13 @@ class RPGApplication {
       }
     }
 
+    // Freeze gameplay update when disconnected from network
+    if (this.isNetworkDisconnected) {
+      this.render();
+      requestAnimationFrame((t) => this.gameLoop(t));
+      return;
+    }
+
     // Update animations & floating chat bubbles
     this.tileMap.update(deltaTime);
     if (this.dialogueSystem && this.player) {
@@ -1207,9 +1266,33 @@ class RPGApplication {
     }
 
     if (this.mode === 'play') {
-      // Move player with collision checking against tile colliders
+      // Sync active dragon mount multiplier to player
+      const activeDragon = this.dragonManager?.getActiveDragon();
+      const isMounted = this.dragonManager?.isMounted();
+      this.player.isMounted = isMounted;
+      if (isMounted && activeDragon) {
+        this.player.speed = (this.player.isSprinting ? this.player.sprintSpeed : this.player.baseSpeed) * (activeDragon.mountSpeedMultiplier || 1.6);
+      }
+
+      // Move player with collision checking against tile colliders (4-way)
       this.player.update(deltaTime, this.tileMap, this.assetLoader);
       this.camera.follow(this.player.x + 32, this.player.y + 32, 0.1);
+
+      // Update Dragon Manager (Pet Follow AI, Combat, Particles)
+      if (this.dragonManager) {
+        this.dragonManager.update(deltaTime, this.player, this.tileMap);
+      }
+
+      // Update Multiplayer Client & Broadcast Local Movement
+      if (this.multiplayerClient) {
+        this.multiplayerClient.update(deltaTime, this.dialogueSystem);
+        this.multiplayerClient.sendLocalPlayerUpdate(
+          this.player,
+          this.player.heroId,
+          this.player.heroData?.name || 'Aventureiro',
+          this.dragonManager?.getActiveDragon()?.id
+        );
+      }
 
       const statusPos = document.getElementById('status-pos');
       if (statusPos) {
@@ -1383,6 +1466,24 @@ class RPGApplication {
         }
       }
 
+      // Render Remote Players (Multiplayer)
+      if (this.multiplayerClient && this.mode === 'play') {
+        try {
+          this.multiplayerClient.render(this.ctx, this.assetLoader);
+        } catch (mpErr) {
+          console.error('Error rendering multiplayer entities:', mpErr);
+        }
+      }
+
+      // Render Dragon Companion, Targets, Particles and Wild Nests
+      if (this.dragonManager && this.mode === 'play') {
+        try {
+          this.dragonManager.render(this.ctx, this.assetLoader);
+        } catch (dragonErr) {
+          console.error('Error rendering dragon entity:', dragonErr);
+        }
+      }
+
       // Render Editor Overlays (Infinite Grid, Hover Ghost, Colliders wireframes, Resize handles)
       if (isEditor) {
         try {
@@ -1437,11 +1538,20 @@ class RPGApplication {
       const text = chatInput.value.trim();
       if (text.length > 0) {
         this.dialogueSystem.addSpeechBubble('player', text, { x: this.player.x, y: this.player.y });
+        if (this.multiplayerClient) {
+          this.multiplayerClient.sendChatMessage(text, this.player, this.player.heroData?.name || 'Aventureiro');
+        }
         chatInput.value = '';
         chatBar.style.display = 'none';
         this.canvas.focus();
       }
     };
+
+    if (this.multiplayerClient) {
+      this.multiplayerClient.onChatReceived = (data) => {
+        this.dialogueSystem.addSpeechBubble(data.senderId, data.text, { x: data.x, y: data.y });
+      };
+    }
 
     sendBtn?.addEventListener('click', sendMsg);
 
@@ -1528,9 +1638,53 @@ class RPGApplication {
     const closeBtn = document.getElementById('btn-close-dragons');
     const partyList = document.getElementById('dragon-party-list');
 
+    const hatchModal = document.getElementById('dragon-hatch-modal');
+    const closeHatchBtn = document.getElementById('btn-close-hatch');
+    const hatchBody = document.getElementById('dragon-hatch-body');
+
     closeBtn?.addEventListener('click', () => {
       dragonModal.style.display = 'none';
     });
+
+    closeHatchBtn?.addEventListener('click', () => {
+      hatchModal.style.display = 'none';
+    });
+
+    this.openEggHatchModal = (speciesData, nest) => {
+      if (!hatchModal || !hatchBody) return;
+      hatchModal.style.display = 'flex';
+      hatchBody.innerHTML = `
+        <div style="text-align: center; padding: 12px 0;">
+          <div style="font-size: 3.5rem; margin-bottom: 8px; animation: pulse 1s infinite;">${speciesData.icon}</div>
+          <h3 style="color: #fef08a; font-family: 'Cinzel', serif; font-size: 1.2rem; margin-bottom: 4px;">${speciesData.name}</h3>
+          <span style="display: inline-block; background: #1e293b; color: #38bdf8; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-bottom: 12px;">${speciesData.element} • Categoria: ${speciesData.category.toUpperCase()}</span>
+          <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 16px; line-height: 1.4;">${speciesData.desc}</p>
+          <div style="display: flex; gap: 10px; justify-content: center;">
+            <button id="btn-adopt-dragon" class="mount-btn" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff;">
+              Adotar na Bag B 🐉
+            </button>
+            <button id="btn-release-dragon" class="mount-btn" style="background: #334155; color: #e2e8f0;">
+              Libertar na Natureza 🕊️ (+30 Karma)
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('btn-adopt-dragon')?.addEventListener('click', () => {
+        const res = this.dragonManager.adoptHatchedDragon(speciesData.id);
+        if (res.success) {
+          this.showToast(`🎉 ${speciesData.name} foi adicionado à sua Mochila de Dragões!`);
+        } else {
+          this.showToast(`⚠️ ${res.reason}`);
+        }
+        hatchModal.style.display = 'none';
+      });
+
+      document.getElementById('btn-release-dragon')?.addEventListener('click', () => {
+        this.showToast(`🕊️ Você libertou o dragãozinho na natureza. Karma e harmonia da ilha aumentados! (+30)`);
+        hatchModal.style.display = 'none';
+      });
+    };
 
     this.openDragonModal = () => {
       if (!dragonModal || !partyList) return;
@@ -1538,32 +1692,50 @@ class RPGApplication {
       partyList.innerHTML = '';
 
       const party = this.dragonManager.getParty();
+      const activeDragon = this.dragonManager.getActiveDragon();
+      const isMounted = this.dragonManager.isMounted();
+
       party.forEach((drag) => {
         const item = document.createElement('div');
         item.className = 'dragon-party-item';
-        const isMounted = this.dragonManager.getActiveMount()?.id === drag.id;
+        const isActive = activeDragon?.id === drag.id;
 
         item.innerHTML = `
           <div class="dragon-info">
             <span class="dragon-item-icon">${drag.icon}</span>
             <div class="dragon-details">
-              <h4>${drag.name} (Nível ${drag.level})</h4>
-              <p>${drag.species} • Especial: ${drag.fieldMove}</p>
+              <h4>${drag.name} <span style="font-size: 0.75rem; color: #f59e0b; background: #1e293b; padding: 2px 6px; border-radius: 4px;">Lv.${drag.level}</span></h4>
+              <p><strong>${drag.element}</strong> • HP: ${drag.hp}/${drag.maxHp} • Amizade: ${drag.bond}%</p>
+              <p style="color: #94a3b8; font-size: 0.72rem;">✨ Especial: ${drag.fieldMove}</p>
+              <p style="color: #38bdf8; font-size: 0.72rem;">🛡️ Esquiva [1]: ${drag.dodgeAbility}</p>
             </div>
           </div>
-          <button class="mount-btn" data-id="${drag.id}">
-            ${isMounted ? 'Desmontar 🛑' : 'Montar 🏇'}
-          </button>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
+            <button class="mount-btn btn-toggle-mount" data-id="${drag.id}" style="${isActive && isMounted ? 'background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff;' : ''}">
+              ${isActive && isMounted ? 'Desmontar 🛑' : 'Montar 🏇'}
+            </button>
+            <button class="mount-btn btn-toggle-follow" data-id="${drag.id}" style="background: ${isActive && !isMounted ? '#10b981' : '#334155'}; color: #fff; font-size: 0.72rem; padding: 4px 8px;">
+              ${isActive && !isMounted ? 'Acompanhando 🐾' : 'Acompanhar 🐾'}
+            </button>
+          </div>
         `;
 
-        item.querySelector('.mount-btn')?.addEventListener('click', () => {
-          if (isMounted) {
-            this.dragonManager.dismountDragon();
-            this.showToast(`🚶 Você desmontou de ${drag.name}.`);
+        item.querySelector('.btn-toggle-mount')?.addEventListener('click', () => {
+          this.dragonManager.setActiveDragon(drag.id);
+          if (isActive && isMounted) {
+            this.dragonManager.setMode('follow');
+            this.showToast(`🚶 Você desmontou de ${drag.name}. Ele agora te acompanha a pé.`);
           } else {
-            this.dragonManager.mountDragon(drag.id);
-            this.showToast(`🐉 Você montou em ${drag.name}! Velocidade aumentada.`);
+            this.dragonManager.setMode('mounted');
+            this.showToast(`🐉 Você montou em ${drag.name}! (+Velocidade de Montaria)`);
           }
+          this.openDragonModal();
+        });
+
+        item.querySelector('.btn-toggle-follow')?.addEventListener('click', () => {
+          this.dragonManager.setActiveDragon(drag.id);
+          this.dragonManager.setMode('follow');
+          this.showToast(`🐾 ${drag.name} agora está te acompanhando pelo mapa!`);
           this.openDragonModal();
         });
 
@@ -1573,7 +1745,7 @@ class RPGApplication {
 
     // Shortcut 'B' in Play Mode to open Bag B (Dragons)
     window.addEventListener('keydown', (e) => {
-      if (e.target && e.target.tagName === 'INPUT') return;
+      if (e.target && e.target.tagName === 'INPUT' || e.target && e.target.tagName === 'TEXTAREA') return;
       if (this.mode === 'play' && (e.key === 'b' || e.key === 'B')) {
         const isVisible = dragonModal.style.display !== 'none';
         if (isVisible) {
@@ -1583,6 +1755,191 @@ class RPGApplication {
         }
       }
     });
+  }
+
+  setupCodingStudioUI() {
+    const modal = document.getElementById('coding-modal');
+    const closeBtn = document.getElementById('btn-close-coding');
+    const lessonSelect = document.getElementById('select-lua-lesson');
+    const lessonDesc = document.getElementById('lesson-desc');
+    const rewardBadge = document.getElementById('lesson-reward-badge');
+    const codeEditor = document.getElementById('lua-code-editor');
+    const consoleOut = document.getElementById('lua-console-output');
+    const btnRun = document.getElementById('btn-run-lua');
+    const btnReset = document.getElementById('btn-reset-lua');
+
+    if (!modal || !lessonSelect || !codeEditor) return;
+
+    closeBtn?.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    const populateLessons = () => {
+      lessonSelect.innerHTML = '';
+      this.blocklySystem.lessons.forEach((l, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        const isDone = this.blocklySystem.completedLessons.has(l.id);
+        opt.innerText = `${isDone ? '✅ ' : ''}${l.title}`;
+        lessonSelect.appendChild(opt);
+      });
+    };
+
+    const loadLesson = (idx) => {
+      const lesson = this.blocklySystem.setLesson(idx);
+      if (!lesson) return;
+
+      if (lessonDesc) lessonDesc.innerText = `📜 ${lesson.mentor} (${lesson.mentorRole}): ${lesson.description}`;
+      if (rewardBadge) rewardBadge.innerText = `+${lesson.rewardXP} XP / +${lesson.rewardGold} Moedas`;
+      if (codeEditor) codeEditor.value = lesson.starterLua;
+      if (consoleOut) {
+        consoleOut.innerHTML = `> Lição carregada: <strong>${lesson.title}</strong> (${lesson.concept})\n> Edite o código ou clique nos Blocos e depois em 'Executar Código'.`;
+      }
+    };
+
+    populateLessons();
+    loadLesson(0);
+
+    lessonSelect.addEventListener('change', (e) => {
+      loadLesson(parseInt(e.target.value, 10));
+    });
+
+    // Block button insertion
+    document.querySelectorAll('.block-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const insertText = btn.dataset.insert;
+        if (insertText && codeEditor) {
+          const start = codeEditor.selectionStart;
+          const end = codeEditor.selectionEnd;
+          const text = codeEditor.value;
+          codeEditor.value = text.substring(0, start) + '\n' + insertText + '\n' + text.substring(end);
+          codeEditor.focus();
+        }
+      });
+    });
+
+    // Run code
+    btnRun?.addEventListener('click', () => {
+      const code = codeEditor.value;
+      const res = this.blocklySystem.runScript(code);
+
+      if (consoleOut) {
+        let outHtml = `> Executando script Lua...\n`;
+        if (res.logs && res.logs.length > 0) {
+          outHtml += res.logs.map(l => `> [LOG] ${l}`).join('\n') + '\n';
+        }
+        outHtml += `> ${res.message}\n`;
+        consoleOut.innerText = outHtml;
+        consoleOut.scrollTop = consoleOut.scrollHeight;
+      }
+
+      if (res.success) {
+        this.showToast(res.message, 4500);
+        populateLessons();
+      } else {
+        this.showToast(`⚠️ ${res.message}`, 4000);
+      }
+    });
+
+    // Reset code
+    btnReset?.addEventListener('click', () => {
+      const lesson = this.blocklySystem.getCurrentLesson();
+      if (lesson && codeEditor) {
+        codeEditor.value = lesson.starterLua;
+        if (consoleOut) consoleOut.innerText = '> Código restaurado ao estado inicial da lição.';
+      }
+    });
+
+    // Shortcut 'K' in Play Mode to open Coding Studio
+    window.addEventListener('keydown', (e) => {
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+      if (this.mode === 'play' && (e.key === 'k' || e.key === 'K')) {
+        const isVisible = modal.style.display !== 'none';
+        if (isVisible) {
+          modal.style.display = 'none';
+        } else {
+          modal.style.display = 'flex';
+          loadLesson(this.blocklySystem.activeLessonIndex);
+        }
+      }
+    });
+  }
+
+  setupQuickMountButton() {
+    const btn = document.getElementById('btn-quick-mount');
+    const label = document.getElementById('quick-mount-label');
+    if (!btn) return;
+
+    this.toggleQuickMount = () => {
+      if (this.mode !== 'play') return;
+      const res = this.dragonManager.toggleMount();
+      if (res.success) {
+        const isMounted = res.mounted;
+        btn.classList.toggle('mounted', isMounted);
+        if (label) {
+          label.innerText = isMounted ? 'Desmontar [R]' : 'Montar [R]';
+        }
+        this.player.isMounted = isMounted;
+        this.player.mountSpeedMultiplier = res.dragon?.mountSpeedMultiplier || 1.8;
+        if (isMounted) {
+          this.showToast(`🐉 Você montou em ${res.dragon.name}! Corrida rápida ativada.`);
+        } else {
+          this.showToast(`🚶 Você desmontou de ${res.dragon.name}.`);
+        }
+      } else {
+        this.showToast(res.reason || 'Nenhum dragão disponível para montaria.');
+      }
+    };
+
+    btn.addEventListener('click', () => this.toggleQuickMount());
+  }
+
+  setupNetworkDisconnectionMonitor() {
+    const overlay = document.getElementById('disconnection-overlay');
+    const retryBtn = document.getElementById('btn-retry-connection');
+    const statusText = document.getElementById('disconnection-status-text');
+
+    const showDisconnection = (reason = 'Sem conexão com a internet') => {
+      this.isNetworkDisconnected = true;
+      this.player.resetKeys();
+      if (overlay) {
+        overlay.style.display = 'flex';
+      }
+      if (statusText) {
+        statusText.innerText = reason;
+      }
+    };
+
+    const tryReconnect = () => {
+      if (navigator.onLine) {
+        this.isNetworkDisconnected = false;
+        if (overlay) overlay.style.display = 'none';
+        if (this.multiplayerClient) {
+          this.multiplayerClient.connect();
+        }
+        this.showToast('🌐 Conexão restaurada com sucesso! Bem-vindo de volta!');
+      } else {
+        showDisconnection('Ainda offline. Verifique seu Wi-Fi/rede local.');
+        this.showToast('⚠️ Sem conexão com a internet. Verifique sua rede e tente novamente.', 3500);
+      }
+    };
+
+    window.addEventListener('offline', () => {
+      showDisconnection('Conexão com a internet perdida');
+    });
+
+    window.addEventListener('online', () => {
+      tryReconnect();
+    });
+
+    retryBtn?.addEventListener('click', () => {
+      tryReconnect();
+    });
+
+    // Check initial online status
+    if (!navigator.onLine) {
+      showDisconnection('Você está sem conexão com a internet.');
+    }
   }
 }
 

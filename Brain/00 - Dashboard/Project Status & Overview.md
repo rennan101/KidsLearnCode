@@ -23,15 +23,16 @@
 | **Câmera LERP com Zoom e Pan** | ✅ Pronto | [[Camera & Infinite Viewport]] |
 | **Minimapa Circular com Bússola e Mapa Tático** | ✅ Pronto | [[Circular & Expanded Tactical Minimap]] |
 | **Scanner Dinâmico de Assets** | ✅ Pronto | [[Asset Discovery & Dynamic Loader]] |
-| **Movimento 8-Way do Geralt** | ✅ Pronto | [[Player Entity & 8-Way Movement]] |
+| **Movimento 4-Way Preciso (Sem Diagonais)** | ✅ Pronto | [[Player Entity & 4-Way Movement]] |
 | **Pincel, Balde Flood Fill e Multi-Tile** | ✅ Pronto | [[Brush, Fill & Multi-Tile Placement]] |
 | **Pipeline de Rotação 0°/90°/180°/270°** | ✅ Pronto | [[Asset Rotation Pipeline (0°, 90°, 180°, 270°)]] |
 | **Gizmos Interativos de Colisão** | ✅ Pronto | [[Interactive Collider Box Gizmos]] |
 | **Escala de Personagens (0.2x a 5.0x)** | ✅ Pronto | [[Character Scale & Entity Manager]] |
 | **Histórico Undo/Redo (50 Estados)** | ✅ Pronto | [[Undo-Redo History Manager (50 States)]] |
 | **Persistência Multi-Chave com Auto-Save** | ✅ Pronto | [[State Persistence & Auto-Save Protocol]] |
-| **Integração Google Blockly ➔ Lua** | 🟡 Planejado | [[Lua Island Educational Gameplay (Blockly & Lua)]] |
-| **Servidor Multiplayer WebSockets** | 🔵 Planejado | [[Web MMO Client-Server Architecture]] |
+| **Bolsa B & Ecossistema de Dragões (Sprint 5)** | ✅ Pronto | [[Catalog - Dragons, Species & Generation Prompts]] |
+| **Trilha Educativa Google Blockly ➔ Lua (Sprint 6)** | ✅ Pronto | [[Lua Island Educational Gameplay (Blockly & Lua)]] |
+| **Servidor Multiplayer WebSockets & Real-Time Sync (Sprint 7)** | ✅ Pronto | [[Web MMO Client-Server Architecture]] |
 
 ---
 

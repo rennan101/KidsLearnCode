@@ -36,18 +36,20 @@ export class Player {
       height: 16
     };
 
-    // Smooth movement input keys
+    // Smooth movement input keys (WASD / Arrows)
     this.keys = {
       w: false,
       a: false,
       s: false,
       d: false,
-      Shift: false,
       ArrowUp: false,
       ArrowLeft: false,
       ArrowDown: false,
       ArrowRight: false
     };
+
+    // Strict 4-way direction stack (most recent active cardinal direction has priority, no diagonal)
+    this.moveStack = [];
 
     // Animation frame timing
     this.animTimer = 0;
@@ -114,36 +116,60 @@ export class Player {
     for (const k in this.keys) {
       this.keys[k] = false;
     }
+    this.moveStack = [];
     this.isMoving = false;
     this.isSprinting = false;
   }
 
+  getCardinalDirection(k) {
+    if (k === 'w' || k === 'arrowup') return 'north';
+    if (k === 's' || k === 'arrowdown') return 'south';
+    if (k === 'a' || k === 'arrowleft') return 'west';
+    if (k === 'd' || k === 'arrowright') return 'east';
+    return null;
+  }
+
   handleKeyDown(key) {
     if (!key) return;
-    const k = (typeof key === 'string' ? key : key.key || '').toLowerCase();
+    const raw = (typeof key === 'string' ? key : key.key || '');
+    const k = raw.toLowerCase();
     if (['w', 'a', 's', 'd'].includes(k)) this.keys[k] = true;
-    if (k === 'shift' || key === 'Shift') {
-      this.keys['Shift'] = true;
-      this.isSprinting = true;
+    if (raw === 'ArrowUp' || k === 'arrowup') { this.keys['ArrowUp'] = true; this.keys['w'] = true; }
+    if (raw === 'ArrowLeft' || k === 'arrowleft') { this.keys['ArrowLeft'] = true; this.keys['a'] = true; }
+    if (raw === 'ArrowDown' || k === 'arrowdown') { this.keys['ArrowDown'] = true; this.keys['s'] = true; }
+    if (raw === 'ArrowRight' || k === 'arrowright') { this.keys['ArrowRight'] = true; this.keys['d'] = true; }
+
+    const dir = this.getCardinalDirection(k);
+    if (dir) {
+      const idx = this.moveStack.indexOf(dir);
+      if (idx !== -1) this.moveStack.splice(idx, 1);
+      this.moveStack.push(dir);
     }
-    if (key === 'ArrowUp' || k === 'arrowup') { this.keys['ArrowUp'] = true; this.keys['w'] = true; }
-    if (key === 'ArrowLeft' || k === 'arrowleft') { this.keys['ArrowLeft'] = true; this.keys['a'] = true; }
-    if (key === 'ArrowDown' || k === 'arrowdown') { this.keys['ArrowDown'] = true; this.keys['s'] = true; }
-    if (key === 'ArrowRight' || k === 'arrowright') { this.keys['ArrowRight'] = true; this.keys['d'] = true; }
   }
 
   handleKeyUp(key) {
     if (!key) return;
-    const k = (typeof key === 'string' ? key : key.key || '').toLowerCase();
+    const raw = (typeof key === 'string' ? key : key.key || '');
+    const k = raw.toLowerCase();
     if (['w', 'a', 's', 'd'].includes(k)) this.keys[k] = false;
-    if (k === 'shift' || key === 'Shift') {
-      this.keys['Shift'] = false;
-      this.isSprinting = false;
+    if (raw === 'ArrowUp' || k === 'arrowup') { this.keys['ArrowUp'] = false; this.keys['w'] = false; }
+    if (raw === 'ArrowLeft' || k === 'arrowleft') { this.keys['ArrowLeft'] = false; this.keys['a'] = false; }
+    if (raw === 'ArrowDown' || k === 'arrowdown') { this.keys['ArrowDown'] = false; this.keys['s'] = false; }
+    if (raw === 'ArrowRight' || k === 'arrowright') { this.keys['ArrowRight'] = false; this.keys['d'] = false; }
+
+    const dir = this.getCardinalDirection(k);
+    if (dir) {
+      let stillHeld = false;
+      if (dir === 'north' && (this.keys.w || this.keys.ArrowUp)) stillHeld = true;
+      if (dir === 'south' && (this.keys.s || this.keys.ArrowDown)) stillHeld = true;
+      if (dir === 'west' && (this.keys.a || this.keys.ArrowLeft)) stillHeld = true;
+      if (dir === 'east' && (this.keys.d || this.keys.ArrowRight)) stillHeld = true;
+
+      if (!stillHeld) {
+        const idx = this.moveStack.indexOf(dir);
+        if (idx !== -1) this.moveStack.splice(idx, 1);
+      }
     }
-    if (key === 'ArrowUp' || k === 'arrowup') { this.keys['ArrowUp'] = false; this.keys['w'] = false; }
-    if (key === 'ArrowLeft' || k === 'arrowleft') { this.keys['ArrowLeft'] = false; this.keys['a'] = false; }
-    if (key === 'ArrowDown' || k === 'arrowdown') { this.keys['ArrowDown'] = false; this.keys['s'] = false; }
-    if (key === 'ArrowRight' || k === 'arrowright') { this.keys['ArrowRight'] = false; this.keys['d'] = false; }
   }
 
   getFeetBox(px = this.x, py = this.y) {
@@ -177,29 +203,49 @@ export class Player {
       return;
     }
 
+    // Quando montado no dragão, o herói SEMPRE corre na velocidade do dragão (+corrida rápida)
+    // A pé, o herói caminha no ritmo normal constante (sem sprint manual)
+    this.isSprinting = !!this.isMounted;
+    if (this.isMounted) {
+      const mountMultiplier = this.mountSpeedMultiplier || 1.8;
+      this.speed = this.baseSpeed * mountMultiplier;
+    } else {
+      this.speed = this.baseSpeed;
+    }
+
+    // Limpa direções que não estão mais pressionadas
+    this.moveStack = this.moveStack.filter(dir => {
+      if (dir === 'north') return this.keys.w || this.keys.ArrowUp;
+      if (dir === 'south') return this.keys.s || this.keys.ArrowDown;
+      if (dir === 'west') return this.keys.a || this.keys.ArrowLeft;
+      if (dir === 'east') return this.keys.d || this.keys.ArrowRight;
+      return false;
+    });
+
+    let activeDir = null;
+    if (this.moveStack.length > 0) {
+      activeDir = this.moveStack[this.moveStack.length - 1];
+    }
+
     let vx = 0;
     let vy = 0;
 
-    const up = this.keys.w || this.keys.ArrowUp;
-    const down = this.keys.s || this.keys.ArrowDown;
-    const left = this.keys.a || this.keys.ArrowLeft;
-    const right = this.keys.d || this.keys.ArrowRight;
-    this.isSprinting = !!this.keys.Shift;
-    this.speed = this.isSprinting ? this.sprintSpeed : this.baseSpeed;
-
-    if (up) vy -= 1;
-    if (down) vy += 1;
-    if (left) vx -= 1;
-    if (right) vx += 1;
+    // Movimento estritamente 4-Way (NUNCA diagonal)
+    if (activeDir === 'north') {
+      vy = -1;
+      this.direction = 'north';
+    } else if (activeDir === 'south') {
+      vy = 1;
+      this.direction = 'south';
+    } else if (activeDir === 'west') {
+      vx = -1;
+      this.direction = 'west';
+    } else if (activeDir === 'east') {
+      vx = 1;
+      this.direction = 'east';
+    }
 
     if (vx !== 0 || vy !== 0) {
-      if (vx !== 0 && vy !== 0) {
-        const invSqrt2 = 0.70710678;
-        vx *= invSqrt2;
-        vy *= invSqrt2;
-      }
-
-      this.update4WayDirection(vx, vy);
       this.isMoving = true;
 
       const moveDistX = vx * this.speed * dt;
@@ -208,31 +254,13 @@ export class Player {
       const nextX = this.x + moveDistX;
       const nextY = this.y + moveDistY;
 
-      // 1. Movimento completo
+      // Movimento 4-way direto com teste de colisão
       if (!this.checkCollision(nextX, nextY, tileMap, assetLoader)) {
         this.x = nextX;
         this.y = nextY;
-      } else {
-        // 2. Deslizamento de parede X
-        if (moveDistX !== 0 && !this.checkCollision(nextX, this.y, tileMap, assetLoader)) {
-          this.x = nextX;
-        }
-        // 3. Deslizamento de parede Y
-        if (moveDistY !== 0 && !this.checkCollision(this.x, nextY, tileMap, assetLoader)) {
-          this.y = nextY;
-        }
       }
     } else {
       this.isMoving = false;
-    }
-  }
-
-  update4WayDirection(vx, vy) {
-    // Prioriza a direção cardinal mais dominante
-    if (Math.abs(vy) > Math.abs(vx)) {
-      this.direction = vy > 0 ? 'south' : 'north';
-    } else if (Math.abs(vx) > 0) {
-      this.direction = vx > 0 ? 'east' : 'west';
     }
   }
 
