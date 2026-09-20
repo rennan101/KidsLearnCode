@@ -1,0 +1,20 @@
+{
+  "name": "geralts-realm-rpg",
+  "version": "3.2.0",
+  "description": "2D RPG Engine & World Editor with Geralt, resizable entities, rotatable assets, and dynamic layer manager.",
+  "scripts": {
+    "start": "npx -y serve . -p 8000",
+    "dev": "npx -y serve . -p 8000",
+    "open": "open http://localhost:8000 && npx -y serve . -p 8000",
+    "server": "python3 -m http.server 8000"
+  },
+  "keywords": [
+    "rpg",
+    "canvas",
+    "world-editor",
+    "pixel-art",
+    "game-engine"
+  ],
+  "author": "",
+  "license": "MIT"
+}

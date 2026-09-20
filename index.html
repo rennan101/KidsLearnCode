@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geralt's Realm - RPG Engine & World Editor</title>
+  <!-- Google Fonts for High-Fantasy Styling -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Asset Preloading Screen -->
+  <div id="loading-screen">
+    <div class="loader-card">
+      <h1>Geralt's Realm</h1>
+      <p>Loading overworld tiles, animated water, and Geralt sprites...</p>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-text" id="progress-text">0%</div>
+    </div>
+  </div>
+
+  <!-- Top App Navigation Bar -->
+  <header class="app-header">
+    <div class="brand-section">
+      <span class="brand-badge">2D RPG</span>
+      <span class="brand-title">Geralt's Realm</span>
+      
+      <!-- Auto-Save Status Indicator Badge -->
+      <div id="save-status" class="save-status saved" title="Automatic map persistence status">
+        <span class="save-dot"></span>
+        <span>Auto-saved</span>
+      </div>
+    </div>
+
+    <!-- Play Mode vs World Editor Toggle -->
+    <div class="mode-toggle">
+      <button id="btn-mode-play" class="mode-btn active" title="Control Geralt with WASD">
+        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polygon>
+          <line x1="13" y1="19" x2="19" y2="13"></line>
+          <line x1="16" y1="16" x2="20" y2="20"></line>
+          <line x1="19" y1="21" x2="21" y2="19"></line>
+        </svg>
+        <span>Play Mode</span>
+      </button>
+      <button id="btn-mode-edit" class="mode-btn" title="Paint tiles and build the world">
+        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+        </svg>
+        <span>World Editor</span>
+      </button>
+    </div>
+
+    <!-- Map Persistence, Collider Overlay & Quick Actions -->
+    <div class="header-actions">
+      <!-- Toggle Collider Wireframe Overlay -->
+      <button id="btn-toggle-colliders" class="action-btn active" title="Show or hide invisible collision boxes">
+        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        <span>Colliders</span>
+      </button>
+
+      <button id="btn-save-json" class="action-btn" title="Save map as JSON file">
+        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        <span>Save JSON</span>
+      </button>
+      <button id="btn-load-json" class="action-btn" title="Upload JSON map">
+        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span>Load JSON</span>
+      </button>
+      <input type="file" id="file-input-json" accept=".json" style="display: none;">
+      
+      <button id="btn-clear-map" class="action-btn danger" title="Reset current map to empty void">
+        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          <line x1="10" y1="11" x2="10" y2="17"></line>
+          <line x1="14" y1="11" x2="14" y2="17"></line>
+        </svg>
+        <span>Clear Map</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- App Main Body -->
+  <div class="app-body">
+
+    <!-- Viewport Canvas Area -->
+    <div class="canvas-wrapper" id="canvas-wrapper">
+      <canvas id="game-canvas"></canvas>
+
+      <!-- Vertical Photoshop-style Toolbar Rail (Only active in Editor Mode) -->
+      <div class="canvas-controls-overlay vertical-toolbar" id="editor-tools" style="display: none;">
+        <!-- Creation & Modification Tools -->
+        <div class="tool-group">
+          <button id="tool-select" class="tool-btn" title="Selecionar / Inspecionar Tile [V]">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path>
+              <path d="m13 13 6 6"></path>
+            </svg>
+            <span class="tool-shortcut-badge">V</span>
+          </button>
+          <button id="tool-brush" class="tool-btn active" title="Pincel / Pintar Tile [B]">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9.06 11.9l8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"></path>
+              <path d="M7.07 14.94c-1.66 0-3 1.34-3 3 0 1.5 1.5 2.06 2.5 3.06.4.4.9.6 1.43.6 1.7 0 3.07-1.37 3.07-3.06v-1.6"></path>
+            </svg>
+            <span class="tool-shortcut-badge">B</span>
+          </button>
+          <button id="tool-fill" class="tool-btn" title="Balde de Preenchimento [G]">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 11l-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z"></path>
+              <path d="m5 2 5 5"></path>
+              <path d="M2 13h15"></path>
+              <path d="M22 20a2 2 0 1 1-4 0c0-1.6 2-4.5 2-4.5s2 2.9 2 4.5Z"></path>
+            </svg>
+            <span class="tool-shortcut-badge">G</span>
+          </button>
+          <button id="tool-spawn" class="tool-btn" title="Definir Ponto de Spawn do Geralt [P]">
+            <svg class="ui-icon gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <span class="tool-shortcut-badge">P</span>
+          </button>
+          <button id="tool-collider" class="tool-btn" title="Editar Colisor / Caixas de Colisão [C]">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            <span class="tool-shortcut-badge">C</span>
+          </button>
+          <button id="tool-eraser" class="tool-btn" title="Borracha / Apagar Tiles [E] (ou Botão Direito)">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"></path>
+              <path d="M22 21H7"></path>
+              <path d="m5 11 9 9"></path>
+            </svg>
+            <span class="tool-shortcut-badge">E</span>
+          </button>
+          <button id="tool-eyedropper" class="tool-btn" title="Conta-gotas / Copiar Tile [I]">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m2 22 1-1h3l9-9"></path>
+              <path d="M19 9a2.5 2.5 0 0 0 0-3.5l-2-2a2.5 2.5 0 0 0-3.5 0l-1.5 1.5 5.5 5.5Z"></path>
+            </svg>
+            <span class="tool-shortcut-badge">I</span>
+          </button>
+        </div>
+
+        <!-- Transform & Mirroring Tools -->
+        <div class="tool-group">
+          <button id="tool-rotate" class="tool-btn" title="Girar Asset 90° [R]">
+            <svg class="ui-icon gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+            </svg>
+            <span class="tool-shortcut-badge">R</span>
+          </button>
+          <button id="tool-flip" class="tool-btn" title="Espelhar Horizontalmente / Flip [H]">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="8 3 4 7 8 11"></polyline>
+              <polyline points="16 3 20 7 16 11"></polyline>
+              <line x1="4" y1="7" x2="20" y2="7"></line>
+              <line x1="12" y1="2" x2="12" y2="22" stroke-dasharray="3 3"></line>
+              <polyline points="8 21 4 17 8 13"></polyline>
+              <polyline points="16 21 20 17 16 13"></polyline>
+              <line x1="4" y1="17" x2="20" y2="17"></line>
+            </svg>
+            <span class="tool-shortcut-badge">H</span>
+          </button>
+        </div>
+
+        <!-- History Undo / Redo -->
+        <div class="tool-group">
+          <button id="btn-undo" class="tool-btn" title="Desfazer Ação [Ctrl+Z]" disabled>
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 14 4 9 9 4"></polyline>
+              <path d="M20 20v-7a4 4 0 0 0-4-4H4"></path>
+            </svg>
+            <span class="tool-shortcut-badge">^Z</span>
+          </button>
+          <button id="btn-redo" class="tool-btn" title="Refazer Ação [Ctrl+Y / Ctrl+Shift+Z]" disabled>
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 14 20 9 15 4"></polyline>
+              <path d="M4 20v-7a4 4 0 0 1 4-4h12"></path>
+            </svg>
+            <span class="tool-shortcut-badge">^Y</span>
+          </button>
+        </div>
+
+        <!-- Navigation & Zoom Tools -->
+        <div class="tool-group">
+          <button id="btn-focus-player" class="tool-btn" title="Centralizar Câmera no Geralt [F]">
+            <svg class="ui-icon gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="22" y1="12" x2="18" y2="12"></line>
+              <line x1="6" y1="12" x2="2" y2="12"></line>
+              <line x1="12" y1="6" x2="12" y2="2"></line>
+              <line x1="12" y1="22" x2="12" y2="18"></line>
+            </svg>
+            <span class="tool-shortcut-badge">F</span>
+          </button>
+          <button id="btn-zoom-in" class="tool-btn" title="Zoom In (+)">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="11" y1="8" x2="11" y2="14"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+          </button>
+          <button id="btn-zoom-out" class="tool-btn" title="Zoom Out (-)">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+          </button>
+          <button id="btn-zoom-reset" class="tool-btn text-only" title="Reset Zoom (100%)">100%</button>
+        </div>
+      </div>
+
+      <!-- Play Mode HUD Hint -->
+      <div class="play-hud-hint" id="play-hint">
+        <span>Geralt: <span class="key-badge">W</span> <span class="key-badge">A</span> <span class="key-badge">S</span> <span class="key-badge">D</span></span>
+        <span>|</span>
+        <span>Collisions: Active</span>
+      </div>
+
+      <!-- Circular RPG Minimap (Top Right) -->
+      <div class="minimap-hud" id="minimap-hud">
+        <div class="minimap-bezel">
+          <!-- Cardinal Direction Compass Points -->
+          <div class="compass-marker marker-n" title="North">N</div>
+          <div class="compass-marker marker-e" title="East">E</div>
+          <div class="compass-marker marker-s" title="South">S</div>
+          <div class="compass-marker marker-w" title="West">W</div>
+          
+          <div class="minimap-inner-mask">
+            <canvas id="minimap-canvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Minimap Actions & Expand Toggle -->
+        <button id="btn-minimap-expand" class="minimap-btn-expand" title="Expand Tactical Map (M)">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <polyline points="9 21 3 21 3 15"></polyline>
+            <line x1="21" y1="3" x2="14" y2="10"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+          </svg>
+          <span class="minimap-key-hint">M</span>
+        </button>
+      </div>
+
+      <!-- Expanded Tactical RPG World Map Modal Overlay -->
+      <div class="expanded-map-modal" id="expanded-map-modal">
+        <div class="expanded-map-backdrop" id="expanded-map-backdrop"></div>
+        <div class="expanded-map-card">
+          <div class="expanded-map-header">
+            <div class="expanded-map-title">
+              <svg class="ui-icon gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                <line x1="8" y1="2" x2="8" y2="18"></line>
+                <line x1="16" y1="6" x2="16" y2="22"></line>
+              </svg>
+              <span>Realm Cartography & Overview</span>
+            </div>
+            <div class="expanded-map-actions">
+              <div class="tool-group mini">
+                <button id="btn-map-zoom-in" class="tool-btn" title="Zoom In">
+                  <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    <line x1="11" y1="8" x2="11" y2="14"></line>
+                    <line x1="8" y1="11" x2="14" y2="11"></line>
+                  </svg>
+                </button>
+                <button id="btn-map-zoom-out" class="tool-btn" title="Zoom Out">
+                  <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    <line x1="8" y1="11" x2="14" y2="11"></line>
+                  </svg>
+                </button>
+                <button id="btn-map-zoom-reset" class="tool-btn" title="Reset Map Zoom">100%</button>
+              </div>
+              <button id="btn-close-expanded-map" class="action-btn danger" title="Close Map (M or Esc)">
+                <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                <span>Close [M]</span>
+              </button>
+            </div>
+          </div>
+          <div class="expanded-map-canvas-container">
+            <canvas id="expanded-map-canvas"></canvas>
+          </div>
+          <div class="expanded-map-footer">
+            <span>Click & Drag to pan map | Double-click to fast travel | Press [M] or [ESC] to close</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating Drawer Toggle Button -->
+      <button id="btn-toggle-drawer" class="toggle-drawer-btn" style="display: none;">
+        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+        </svg>
+        <span>Asset Drawer</span>
+      </button>
+    </div>
+
+    <!-- Resizable Asset Palette Drawer -->
+    <aside class="asset-drawer" id="asset-drawer">
+      <!-- Left edge mouse resize handle -->
+      <div class="drawer-resizer" id="drawer-resizer" title="Drag to resize drawer width"></div>
+
+      <div class="drawer-header">
+        <h3>Overworld Assets</h3>
+        <button id="btn-refresh-assets" class="drawer-action-btn" title="Escanear e carregar novos assets da pasta RPG-overworld-tileset">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          <span>Atualizar</span>
+        </button>
+      </div>
+
+      <!-- Target Editing Layer Segment Control -->
+      <div class="drawer-layer-selector">
+        <div class="layer-selector-header">
+          <span class="layer-label">Camada:</span>
+          <button id="btn-toggle-layer-manager" class="layer-order-toggle-btn" title="Organizar ordem visual das camadas (Reordenar Stack)">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <polyline points="19 12 12 19 5 12"></polyline>
+              <polyline points="5 12 12 5 19 12"></polyline>
+            </svg>
+            <span>Ordem</span>
+          </button>
+        </div>
+        <div class="layer-btn-group" id="layer-btn-group">
+          <button class="layer-btn active" data-layer="ground" title="Camada 1: Chão / Água / Base (Atalho: 1)">
+            <span class="layer-num">1</span>
+            <span>Chão</span>
+          </button>
+          <button class="layer-btn" data-layer="decor" title="Camada 2: Decoração / Caminhos / Flora (Atalho: 2)">
+            <span class="layer-num">2</span>
+            <span>Decoração</span>
+          </button>
+          <button class="layer-btn" data-layer="solid" title="Camada 3: Estruturas / Sólido / Base de Árvores (Atalho: 3)">
+            <span class="layer-num">3</span>
+            <span>Sólido</span>
+          </button>
+          <button class="layer-btn" data-layer="characters" title="Camada 4: Personagens / Geralt / NPCs (Atalho: 4)">
+            <span class="layer-num">4</span>
+            <span>Personagens</span>
+          </button>
+          <button class="layer-btn" data-layer="overhead" title="Camada 5: Topo / Copa das Árvores / Telhados / Acima do Player (Atalho: 5)">
+            <span class="layer-num">5</span>
+            <span>Topo</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Layer Stacking Order Manager (Collapsible) -->
+      <div class="layer-manager-panel" id="layer-manager-panel" style="display: none;">
+        <div class="layer-manager-header">
+          <span>Ordem de Renderização (Topo ➔ Base)</span>
+          <span class="layer-manager-hint">Use ▲ / ▼ para alterar qual camada fica por cima</span>
+        </div>
+        <div class="layer-manager-list" id="layer-manager-list">
+          <!-- Dynamically populated by main.js with Move Up and Move Down buttons -->
+        </div>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div class="drawer-category-tabs" id="category-tabs">
+        <button class="cat-tab active" data-cat="All">All</button>
+        <button class="cat-tab" data-cat="Characters">Characters</button>
+        <button class="cat-tab" data-cat="Colliders">Colliders</button>
+        <button class="cat-tab" data-cat="Water">Water (Anim)</button>
+        <button class="cat-tab" data-cat="Terrain">Terrain</button>
+        <button class="cat-tab" data-cat="Nature">Nature</button>
+        <button class="cat-tab" data-cat="Structures">Structures</button>
+        <button class="cat-tab" data-cat="Farming">Farming</button>
+      </div>
+
+      <!-- Tile Inspector Panel (Shows all layers at selected cell) -->
+      <div class="tile-inspector-panel" id="tile-inspector-panel">
+        <div class="inspector-header">
+          <div class="inspector-title">
+            <svg class="ui-icon gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+              <polyline points="2 17 12 22 22 17"></polyline>
+              <polyline points="2 12 12 17 22 12"></polyline>
+            </svg>
+            <span id="inspector-coords-title">Inspetor de Célula (X: -, Y: -)</span>
+          </div>
+          <button id="btn-close-inspector" class="inspector-close-btn" title="Fechar inspetor">✕</button>
+        </div>
+        <div class="inspector-layers-list" id="inspector-layers-list">
+          <!-- Dynamically populated per layer (Solid, Decor, Ground) -->
+        </div>
+      </div>
+
+      <!-- Tile Grid -->
+      <div class="drawer-grid" id="tile-drawer-grid">
+        <!-- Rendered dynamically by main.js -->
+      </div>
+
+      <!-- Interactive Tile Collider Editor Box -->
+      <div class="collider-panel" id="collider-panel">
+        <div class="collider-panel-header">
+          <h4 id="collider-tile-title">Collider: Animated Water</h4>
+          <label class="collider-toggle-label">
+            <input type="checkbox" id="collider-enable-cb" checked>
+            <span>Enable Collider</span>
+          </label>
+        </div>
+
+        <!-- Dynamic Character Scale Control (Visible when character selected) -->
+        <div class="character-scale-panel" id="character-scale-panel" style="display: none;">
+          <div class="scale-panel-header">
+            <span class="scale-label">Character Size: <strong id="character-scale-val">1.0x</strong></span>
+            <div class="scale-preset-btns">
+              <button type="button" class="scale-btn" data-scale="0.5">0.5x</button>
+              <button type="button" class="scale-btn" data-scale="0.75">0.75x</button>
+              <button type="button" class="scale-btn active" data-scale="1.0">1.0x</button>
+              <button type="button" class="scale-btn" data-scale="1.25">1.25x</button>
+              <button type="button" class="scale-btn" data-scale="1.5">1.5x</button>
+              <button type="button" class="scale-btn" data-scale="2.0">2.0x</button>
+            </div>
+          </div>
+          <div class="scale-slider-row">
+            <input type="range" id="character-scale-slider" min="0.4" max="2.5" step="0.05" value="1.0">
+          </div>
+        </div>
+
+        <div class="collider-inputs-grid">
+          <div class="input-field">
+            <label>X (px)</label>
+            <input type="number" id="collider-input-x" value="0" min="0">
+          </div>
+          <div class="input-field">
+            <label>Y (px)</label>
+            <input type="number" id="collider-input-y" value="0" min="0">
+          </div>
+          <div class="input-field">
+            <label>W (px)</label>
+            <input type="number" id="collider-input-w" value="64" min="4">
+          </div>
+          <div class="input-field">
+            <label>H (px)</label>
+            <input type="number" id="collider-input-h" value="64" min="4">
+          </div>
+        </div>
+      </div>
+
+      <!-- Play Mode Camera Zoom (Global World Camera Proximity for All Players) -->
+      <div class="camera-settings-panel" id="camera-settings-panel">
+        <div class="camera-settings-header">
+          <div class="camera-settings-title">
+            <svg class="ui-icon gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+              <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+            <span>Câmera do Jogo (Play Mode)</span>
+          </div>
+          <span class="camera-zoom-val" id="play-camera-zoom-val">1.0x</span>
+        </div>
+        <div class="camera-settings-body">
+          <div class="camera-zoom-presets">
+            <button type="button" class="cam-preset-btn" data-zoom="0.75">0.75x</button>
+            <button type="button" class="cam-preset-btn active" data-zoom="1.0">1.0x</button>
+            <button type="button" class="cam-preset-btn" data-zoom="1.25">1.25x</button>
+            <button type="button" class="cam-preset-btn" data-zoom="1.5">1.5x</button>
+            <button type="button" class="cam-preset-btn" data-zoom="2.0">2.0x</button>
+          </div>
+          <div class="camera-slider-row">
+            <input type="range" id="play-camera-zoom-slider" min="0.5" max="2.5" step="0.05" value="1.0">
+          </div>
+          <span class="camera-settings-desc">Define a proximidade global da câmera de todos os jogadores no Play Mode</span>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Bottom Status Bar -->
+  <footer class="status-bar">
+    <div class="status-group">
+      <div class="status-item">Mode: <span id="status-mode">PLAY</span></div>
+      <div class="status-item">Layer: <span id="status-layer">CHÃO</span></div>
+      <div class="status-item"><span id="status-pos">X: 300, Y: 300</span></div>
+      <div class="status-item">Selected: <span id="status-tile">Animated Water</span></div>
+    </div>
+    <div class="status-group">
+      <div class="status-item">World: <span>Infinite Expandable</span></div>
+      <div class="status-item">FPS: <span id="status-fps">60</span></div>
+    </div>
+  </footer>
+
+  <!-- RPG System Toast Notification -->
+  <div id="rpg-toast" class="rpg-toast"></div>
+
+  <!-- App Entrypoint Script -->
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

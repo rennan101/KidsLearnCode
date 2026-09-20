@@ -1,0 +1,36 @@
+{
+  "group_id": "c7048c78-914a-4dfd-86e7-e83fc548733f",
+  "states": [
+    {
+      "character": {
+        "id": "778f41b6-c642-49cd-9a6a-44bcf4a035aa",
+        "name": "Idle",
+        "prompt": "Create **Geralt of Rivia from The Witcher** as a high-quality **16-bit/modern pixel art RPG character**, designed for a game inspired by the visual quality and presentation of **Sea of Stars**.\n\nGeralt is standing in a heroic three-quarter pose, recognizable by his **long white hair, pale skin, beard, scarred face, and distinctive witcher appearance**. He wears detailed dark leather witcher armor, layered belts, gloves, boots, and a dark cloak. His **two swords** are clearly visible, with one sword resting on his back and the other positioned naturally at his side.\n\nUse **clean, hand-crafted pixel art**, expressive silhouette, carefully placed highlights and shadows, rich but controlled color palette, strong readability at small resolution, detailed sprite shading, subtle dithering, and crisp pixel clusters.\n\nThe character should feel like a **premium JRPG playable character sprite**, with exaggerated but believable proportions, dramatic lighting, and a polished fantasy-adventure aesthetic.\n\n**Full body, centered composition, isolated character, neutral transparent/background-free presentation, no text, no UI, no frame, no border.**\n\nAvoid photorealism, 3D rendering, blurry pixels, excessive detail that destroys readability, chibi proportions, pixel noise, modern smooth digital painting, or oversized head.\n",
+        "size": {
+          "width": 64,
+          "height": 64
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "low top-down",
+        "created_at": "2026-09-12T21:51:23.036000+00:00"
+      },
+      "folder": "Idle",
+      "frames": {
+        "rotations": {
+          "south": "Idle/rotations/south.png",
+          "south-east": "Idle/rotations/south-east.png",
+          "east": "Idle/rotations/east.png",
+          "north-east": "Idle/rotations/north-east.png",
+          "north": "Idle/rotations/north.png",
+          "north-west": "Idle/rotations/north-west.png",
+          "west": "Idle/rotations/west.png",
+          "south-west": "Idle/rotations/south-west.png"
+        },
+        "animations": {}
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-09-12T21:54:50.036897"
+}
