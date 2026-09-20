@@ -341,7 +341,9 @@ export class Player {
     }
 
     const frameUrl = `assets/characters/${this.heroId}/frames/wolf_hunter_r${row}_c${col}.png`;
-    let sprite = assetLoader.getImage(frameUrl) || assetLoader.getImage(`assets/characters/${this.heroId}/portrait.jpg`);
+    let sprite = assetLoader.getImage(frameUrl) 
+      || assetLoader.getImage(`assets/characters/${this.heroId}/portrait.jpg`)
+      || (this.isMoving ? assetLoader.getImage(`Geralt/running/rotations/${dir}.png`) : assetLoader.getImage(`Geralt/Idle/rotations/${dir}.png`));
 
     if (sprite) {
       ctx.drawImage(sprite, drawX, drawY, renderW, renderH);

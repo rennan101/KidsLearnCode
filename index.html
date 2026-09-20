@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Geralt's Realm - RPG Engine & World Editor</title>
+  <title>Universo - KidsLearnCode (Ilha Lua)</title>
   <!-- Google Fonts for High-Fantasy Styling -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,8 +15,8 @@
   <!-- Asset Preloading Screen -->
   <div id="loading-screen">
     <div class="loader-card">
-      <h1>Geralt's Realm</h1>
-      <p>Loading overworld tiles, animated water, and Geralt sprites...</p>
+      <h1>Universo</h1>
+      <p>Carregando o mundo de Ilha Lua, heróis, dragões e tiles...</p>
       <div class="progress-bar">
         <div class="progress-fill" id="progress-fill"></div>
       </div>
@@ -27,13 +27,13 @@
   <!-- Top App Navigation Bar -->
   <header class="app-header">
     <div class="brand-section">
-      <span class="brand-badge">2D RPG</span>
-      <span class="brand-title">Geralt's Realm</span>
+      <span class="brand-badge">2D MMORPG</span>
+      <span class="brand-title">Universo</span>
       
       <!-- Auto-Save Status Indicator Badge -->
-      <div id="save-status" class="save-status saved" title="Automatic map persistence status">
+      <div id="save-status" class="save-status saved" title="Status de persistência do mapa">
         <span class="save-dot"></span>
-        <span>Auto-saved</span>
+        <span>Salvo</span>
       </div>
     </div>
 
@@ -232,9 +232,13 @@
 
       <!-- Play Mode HUD Hint -->
       <div class="play-hud-hint" id="play-hint">
-        <span>Geralt: <span class="key-badge">W</span> <span class="key-badge">A</span> <span class="key-badge">S</span> <span class="key-badge">D</span></span>
+        <span>Controles: <span class="key-badge">W</span> <span class="key-badge">A</span> <span class="key-badge">S</span> <span class="key-badge">D</span></span>
         <span>|</span>
-        <span>Collisions: Active</span>
+        <span>Chat: <span class="key-badge">Enter</span></span>
+        <span>|</span>
+        <span>Craft: <span class="key-badge">C</span></span>
+        <span>|</span>
+        <span>Dragões: <span class="key-badge">B</span></span>
       </div>
 
       <!-- Circular RPG Minimap (Top Right) -->

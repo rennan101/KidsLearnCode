@@ -2219,18 +2219,15 @@ export class AssetLoader {
 
     const urlsToLoad = [];
 
-    // Preload Wolf Hunter Hero frames (8 cols x 4 rows)
-    for (let r = 0; r < 4; r++) {
-      for (let c = 0; c < 8; c++) {
-        urlsToLoad.push(`assets/characters/char_wolf_hunter_m/frames/wolf_hunter_r${r}_c${c}.png`);
-      }
-    }
+    // Preload Character Portrait
     urlsToLoad.push(`assets/characters/char_wolf_hunter_m/portrait.jpg`);
 
-    // Geralt Legacy Idle & Running (fallback)
-    for (const dir of this.directions) {
-      urlsToLoad.push(`Geralt/Idle/rotations/${dir}.png`);
-      urlsToLoad.push(`Geralt/running/rotations/${dir}.png`);
+    // Character Sprites
+    if (this.directions) {
+      for (const dir of this.directions) {
+        urlsToLoad.push(`Geralt/Idle/rotations/${dir}.png`);
+        urlsToLoad.push(`Geralt/running/rotations/${dir}.png`);
+      }
     }
 
     // Tiles
@@ -2245,7 +2242,7 @@ export class AssetLoader {
     }
 
     let loadedCount = 0;
-    const total = urlsToLoad.length;
+    const total = Math.max(1, urlsToLoad.length);
 
     const promises = urlsToLoad.map((url) => {
       return new Promise((resolve) => {
@@ -2256,18 +2253,32 @@ export class AssetLoader {
         }
 
         const img = new Image();
+        let settled = false;
+
+        const finish = (result) => {
+          if (settled) return;
+          settled = true;
+          loadedCount++;
+          onProgress(loadedCount / total);
+          resolve(result);
+        };
+
+        // 1.5s timeout safety per image so loader never gets stuck
+        const timer = setTimeout(() => {
+          finish(null);
+        }, 1500);
+
         img.onload = () => {
+          clearTimeout(timer);
           this.images.set(url, img);
-          loadedCount++;
-          onProgress(loadedCount / total);
-          resolve(img);
+          finish(img);
         };
+
         img.onerror = () => {
-          console.warn(`Failed to load image: ${url}`);
-          loadedCount++;
-          onProgress(loadedCount / total);
-          resolve(null);
+          clearTimeout(timer);
+          finish(null);
         };
+
         img.src = url;
       });
     });
