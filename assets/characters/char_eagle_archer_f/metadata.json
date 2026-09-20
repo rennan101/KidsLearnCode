@@ -1,0 +1,9 @@
+{
+  "id": "char_eagle_archer_f",
+  "name": "Águia Arqueira (Astra)",
+  "species": "eagle",
+  "spritesheet": {
+    "framesDir": "assets/characters/char_eagle_archer_f/frames",
+    "portrait": "assets/characters/char_eagle_archer_f/portrait.jpg"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "name": "universo-kidslearncode-rpg",
+  "builds": [
+    {
+      "src": "**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "headers": { "cache-control": "s-maxage=31536000, immutable" },
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/RPG-overworld-tileset/(.*)",
+      "headers": { "cache-control": "s-maxage=31536000, immutable" },
+      "dest": "/RPG-overworld-tileset/$1"
+    },
+    {
+      "src": "/Geralt/(.*)",
+      "headers": { "cache-control": "s-maxage=31536000, immutable" },
+      "dest": "/Geralt/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}

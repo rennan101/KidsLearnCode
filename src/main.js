@@ -10,7 +10,9 @@ import { CraftingSystem } from './engine/CraftingSystem.js';
 import { DragonManager } from './engine/DragonManager.js';
 import { BlocklyLuaSystem } from './engine/BlocklyLuaSystem.js';
 import { MultiplayerClient } from './engine/MultiplayerClient.js';
-import { CharacterRegistry } from './engine/CharacterRegistry.js';
+import { CharacterRegistry, PLAYABLE_HEROES } from './engine/CharacterRegistry.js';
+import { InventorySystem } from './engine/InventorySystem.js';
+import { StorageManager } from './engine/StorageManager.js';
 
 class RPGApplication {
   constructor() {
@@ -18,11 +20,15 @@ class RPGApplication {
     this.ctx = this.canvas.getContext('2d');
     this.canvasWrapper = document.getElementById('canvas-wrapper');
 
+    // Persistence & Storage Engine (IndexedDB)
+    this.storageManager = new StorageManager();
+
     // Subsystems
     this.dayNightSystem = new DayNightSystem();
     this.dialogueSystem = new DialogueAndChatSystem();
     this.craftingSystem = new CraftingSystem(this.dayNightSystem);
     this.dragonManager = new DragonManager();
+    this.inventorySystem = new InventorySystem();
     this.blocklySystem = new BlocklyLuaSystem();
     this.multiplayerClient = new MultiplayerClient();
 
@@ -61,12 +67,17 @@ class RPGApplication {
       this.setupTileInspector();
       this.setupLayerManager();
       this.setupChatSystem();
+      this.setupHeroSelectionUI();
+      this.setupBackpackUI();
       this.setupCraftingUI();
-      this.setupDragonPartyUI();
       this.setupCodingStudioUI();
       this.setupQuickMountButton();
       this.setupNetworkDisconnectionMonitor();
       this.bindDOMEvents();
+
+      // Initialize IndexedDB Storage Engine
+      await this.storageManager.init();
+      await this.assetLoader.syncWithStorage(this.storageManager);
 
       // Preload all sprites and tiles
       const progressFill = document.getElementById('progress-fill');
@@ -88,8 +99,8 @@ class RPGApplication {
       }
     }
 
-    // Load saved map from local storage if present (with multi-key migration/fallback)
-    this.loadFromLocalStorage();
+    // Load saved map & game state from IndexedDB (with multi-key migration/fallback)
+    await this.loadGameFromStorage();
 
     // Sync player collider and position with loaded data
     this.player.syncCollider(this.assetLoader);
@@ -101,14 +112,14 @@ class RPGApplication {
     // Populate the asset drawer
     this.populateAssetDrawer();
 
-    // Periodic background auto-save (every 4 seconds)
-    setInterval(() => this.saveToLocalStorage(true), 4000);
+    // Periodic background auto-save (every 4 seconds) non-blocking via IndexedDB
+    setInterval(() => this.saveGameToStorage(true), 4000);
 
     // Auto-save on page unload/close/hide
-    window.addEventListener('beforeunload', () => this.saveToLocalStorage(true));
-    window.addEventListener('pagehide', () => this.saveToLocalStorage(true));
+    window.addEventListener('beforeunload', () => this.saveGameToStorage(true));
+    window.addEventListener('pagehide', () => this.saveGameToStorage(true));
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) this.saveToLocalStorage(true);
+      if (document.hidden) this.saveGameToStorage(true);
     });
 
     // Start game loop
@@ -1074,36 +1085,54 @@ class RPGApplication {
     this.updateSaveIndicator('saving');
     clearTimeout(this.saveTimeout);
     this.saveTimeout = setTimeout(() => {
-      this.saveToLocalStorage(false);
-    }, 300);
+      this.saveGameToStorage(false);
+    }, 250);
   }
 
-  saveToLocalStorage(instant = false) {
+  async saveGameToStorage(instant = false) {
     try {
       const mapData = this.tileMap.toJSON();
       const payload = {
-        ...mapData,
+        map: mapData,
         player: {
           x: Math.round(this.player.x),
           y: Math.round(this.player.y),
-          scale: this.player.scale || 1.0
+          scale: this.player.scale || 1.0,
+          heroId: this.player.heroId || 'char_wolf_hunter_m'
         },
+        inventory: {
+          items: this.inventorySystem.getItems(),
+          tools: this.inventorySystem.getTools(),
+          eggs: this.inventorySystem.getEggs(),
+          equippedToolId: this.inventorySystem.equippedToolId
+        },
+        dragons: {
+          party: this.dragonManager.getParty(),
+          activeDragonId: this.dragonManager.getActiveDragon()?.id,
+          mode: this.dragonManager.mode
+        },
+        codingProgress: {
+          completedLessons: Array.from(this.blocklySystem.completedLessons),
+          playerXP: this.blocklySystem.playerXP,
+          playerGold: this.blocklySystem.playerGold
+        },
+        activeHero: this.player.heroId,
         savedAt: Date.now()
       };
 
-      const json = JSON.stringify(payload);
-      localStorage.setItem(this.STORAGE_KEY, json);
-      // Secondary backup key for safety
-      localStorage.setItem('kidslean_rpg_world_map_backup', json);
-
-      this.updateSaveIndicator('saved');
+      const res = await this.storageManager.saveGame(payload);
+      if (res && res.success) {
+        this.updateSaveIndicator('saved', res.storage || 'IndexedDB');
+      } else {
+        this.updateSaveIndicator('error');
+      }
     } catch (err) {
-      console.warn('Failed to auto-save to localStorage:', err);
+      console.warn('Failed to auto-save to StorageManager:', err);
       this.updateSaveIndicator('error');
     }
   }
 
-  updateSaveIndicator(state) {
+  updateSaveIndicator(state, engine = 'IndexedDB') {
     const indicator = document.getElementById('save-status');
     if (!indicator) return;
 
@@ -1111,63 +1140,104 @@ class RPGApplication {
       indicator.className = 'save-status saving';
       indicator.innerHTML = `
         <span class="save-dot pulse"></span>
-        <span>Saving...</span>
+        <span>Salvando...</span>
       `;
     } else if (state === 'saved') {
       indicator.className = 'save-status saved';
       indicator.innerHTML = `
         <span class="save-dot"></span>
-        <span>Auto-saved</span>
+        <span>${engine} Salvo</span>
       `;
     } else if (state === 'error') {
       indicator.className = 'save-status error';
       indicator.innerHTML = `
         <span class="save-dot red"></span>
-        <span>Save failed</span>
+        <span>Falha no Save</span>
       `;
     }
   }
 
-  loadFromLocalStorage() {
+  async loadGameFromStorage() {
     try {
-      const keysToSearch = [
-        this.STORAGE_KEY,
-        'kidslean_rpg_world_map_backup',
-        'kidslean_rpg_world_map_v2',
-        'kidslean_rpg_world_map_v1',
-        'kidslean_rpg_world_map',
-        'geralt_realm_map_v1'
-      ];
+      const data = await this.storageManager.loadGame();
 
-      let saved = null;
-      for (const k of keysToSearch) {
-        saved = localStorage.getItem(k);
-        if (saved) break;
-      }
-
-      if (saved) {
-        const data = JSON.parse(saved);
-        if (this.tileMap.fromJSON(data)) {
-          if (data.player) {
-            if (data.player.x !== undefined && data.player.y !== undefined) {
-              this.player.x = data.player.x;
-              this.player.y = data.player.y;
-            }
-            if (data.player.scale) {
-              this.player.setScale(data.player.scale);
-            }
-          }
+      if (data) {
+        // 1. Restaurar TileMap
+        const mapPayload = data.map ? data.map : data;
+        if (this.tileMap.fromJSON(mapPayload)) {
           if (this.updatePlayCameraZoomUI) {
             this.updatePlayCameraZoomUI(this.tileMap.playCameraZoom || 1.0);
           }
           if (this.mode === 'play') {
             this.camera.zoom = this.tileMap.playCameraZoom || 1.0;
           }
-          this.updateSaveIndicator('saved');
         }
+
+        // 2. Restaurar Player
+        if (data.player) {
+          if (data.player.x !== undefined && data.player.y !== undefined) {
+            this.player.x = data.player.x;
+            this.player.y = data.player.y;
+          }
+          if (data.player.scale) {
+            this.player.setScale(data.player.scale);
+          }
+          if (data.player.heroId || data.activeHero) {
+            const hId = data.player.heroId || data.activeHero;
+            this.player.setHero(hId);
+            if (this.updateHeroHeaderBadge) {
+              this.updateHeroHeaderBadge(hId);
+            }
+          }
+        }
+
+        // 3. Restaurar Inventário & Mochila
+        if (data.inventory) {
+          if (data.inventory.items && Array.isArray(data.inventory.items)) {
+            this.inventorySystem.items = data.inventory.items;
+          }
+          if (data.inventory.tools && Array.isArray(data.inventory.tools)) {
+            this.inventorySystem.tools = data.inventory.tools;
+          }
+          if (data.inventory.eggs && Array.isArray(data.inventory.eggs)) {
+            this.inventorySystem.eggs = data.inventory.eggs;
+          }
+          if (data.inventory.equippedToolId) {
+            this.inventorySystem.equippedToolId = data.inventory.equippedToolId;
+          }
+          this.inventorySystem.notify();
+        }
+
+        // 4. Restaurar Dragões
+        if (data.dragons) {
+          if (data.dragons.party && Array.isArray(data.dragons.party)) {
+            this.dragonManager.party = data.dragons.party;
+          }
+          if (data.dragons.activeDragonId) {
+            this.dragonManager.setActiveDragon(data.dragons.activeDragonId);
+          }
+          if (data.dragons.mode) {
+            this.dragonManager.setMode(data.dragons.mode);
+          }
+        }
+
+        // 5. Restaurar Progresso de Código Blockly / Lua
+        if (data.codingProgress) {
+          if (data.codingProgress.completedLessons && Array.isArray(data.codingProgress.completedLessons)) {
+            this.blocklySystem.completedLessons = new Set(data.codingProgress.completedLessons);
+          }
+          if (data.codingProgress.playerXP !== undefined) {
+            this.blocklySystem.playerXP = data.codingProgress.playerXP;
+          }
+          if (data.codingProgress.playerGold !== undefined) {
+            this.blocklySystem.playerGold = data.codingProgress.playerGold;
+          }
+        }
+
+        this.updateSaveIndicator('saved', this.storageManager.useFallback ? 'localStorage' : 'IndexedDB');
       }
     } catch (err) {
-      console.warn('Failed to load from localStorage:', err);
+      console.warn('Failed to load game from StorageManager:', err);
     }
   }
 
@@ -1685,11 +1755,239 @@ class RPGApplication {
         hatchModal.style.display = 'none';
       });
     };
+  }
 
-    this.openDragonModal = () => {
-      if (!dragonModal || !partyList) return;
-      dragonModal.style.display = 'flex';
-      partyList.innerHTML = '';
+  setupHeroSelectionUI() {
+    const modal = document.getElementById('hero-selection-modal');
+    const closeBtn = document.getElementById('btn-close-hero-selection');
+    const grid = document.getElementById('hero-selection-grid');
+    const profileBtn = document.getElementById('btn-hero-profile');
+
+    this.updateHeroHeaderBadge = (heroId) => {
+      const hero = PLAYABLE_HEROES.find(h => h.id === heroId) || PLAYABLE_HEROES[0];
+      const avatarEl = document.getElementById('header-hero-avatar');
+      const nameEl = document.getElementById('header-hero-name');
+      const passiveEl = document.getElementById('header-hero-passive');
+
+      if (avatarEl) avatarEl.src = `assets/characters/${hero.id}/portrait.jpg`;
+      if (nameEl) nameEl.innerText = hero.name.split(' (')[0];
+      if (passiveEl) passiveEl.innerText = `🐾 ${hero.passive.name}`;
+    };
+
+    this.openHeroSelectionModal = () => {
+      if (!modal || !grid) return;
+      grid.innerHTML = '';
+      modal.style.display = 'flex';
+
+      PLAYABLE_HEROES.forEach((hero) => {
+        const isCurrent = this.player.heroId === hero.id;
+        const card = document.createElement('div');
+        card.className = `hero-card ${isCurrent ? 'selected' : ''}`;
+
+        const speciesIcons = { wolf: '🐺', bat: '🦇', eagle: '🦅', cat: '🐱' };
+        const icon = speciesIcons[hero.species] || '🧙‍♂️';
+
+        card.innerHTML = `
+          <img src="assets/characters/${hero.id}/portrait.jpg" alt="${hero.name}" class="hero-card-portrait">
+          <div class="hero-card-name">${icon} ${hero.name}</div>
+          <div class="hero-card-tags">
+            <span class="hero-badge archetype">${hero.archetype}</span>
+            <span class="hero-badge gender">${hero.gender === 'male' ? 'Masc' : 'Fem'}</span>
+          </div>
+          <div class="hero-passive-box">
+            <span class="hero-passive-title">✨ ${hero.passive.name}</span>
+            <span>${hero.passive.desc}</span>
+          </div>
+          <button class="hero-select-btn ${isCurrent ? 'active' : ''}">
+            ${isCurrent ? 'Herói Atual ✅' : 'Escolher Herói ⚔️'}
+          </button>
+        `;
+
+        card.querySelector('.hero-select-btn')?.addEventListener('click', () => {
+          this.player.setHero(hero.id);
+          localStorage.setItem('kidslearn_active_hero', hero.id);
+          this.updateHeroHeaderBadge(hero.id);
+          this.triggerAutoSave();
+          this.player.spawnCraftPoof();
+          this.showToast(`🎭 Você agora é ${hero.name}! Habilidade Ativa: ${hero.passive.name}`);
+          modal.style.display = 'none';
+        });
+
+        grid.appendChild(card);
+      });
+    };
+
+    closeBtn?.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    profileBtn?.addEventListener('click', () => {
+      this.openHeroSelectionModal();
+    });
+
+    // Shortcut 'P' in Play Mode to open Hero Selection
+    window.addEventListener('keydown', (e) => {
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+      if (this.mode === 'play' && (e.key === 'p' || e.key === 'P')) {
+        const isVisible = modal.style.display !== 'none';
+        if (isVisible) {
+          modal.style.display = 'none';
+        } else {
+          this.openHeroSelectionModal();
+        }
+      }
+    });
+
+    // Initialize saved hero or default
+    const savedHero = localStorage.getItem('kidslearn_active_hero') || 'char_wolf_hunter_m';
+    this.player.setHero(savedHero);
+    this.updateHeroHeaderBadge(savedHero);
+  }
+
+  setupBackpackUI() {
+    const modal = document.getElementById('backpack-modal');
+    const closeBtn = document.getElementById('btn-close-backpack');
+    const quickBackpackBtn = document.getElementById('btn-open-backpack');
+    const tabsContainer = document.getElementById('backpack-tabs');
+
+    let currentTab = 'items';
+
+    const renderItemsTab = () => {
+      const grid = document.getElementById('backpack-items-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+      const items = this.inventorySystem.getItems();
+
+      items.forEach(item => {
+        const slot = document.createElement('div');
+        slot.className = 'backpack-slot';
+        slot.title = item.desc;
+        slot.innerHTML = `
+          <span class="backpack-slot-count">x${item.count}</span>
+          <span class="backpack-slot-icon">${item.icon}</span>
+          <span class="backpack-slot-name">${item.name}</span>
+          <span class="backpack-slot-category">${item.category}</span>
+        `;
+        grid.appendChild(slot);
+      });
+    };
+
+    const renderToolsTab = () => {
+      const list = document.getElementById('backpack-tools-list');
+      if (!list) return;
+      list.innerHTML = '';
+      const tools = this.inventorySystem.getTools();
+      const equipped = this.inventorySystem.getEquippedTool();
+
+      tools.forEach(tool => {
+        const isEquipped = equipped?.id === tool.id;
+        const card = document.createElement('div');
+        card.className = 'tool-card';
+        const pct = Math.round((tool.durability / tool.maxDurability) * 100);
+
+        card.innerHTML = `
+          <div class="tool-info">
+            <span class="tool-icon">${tool.icon}</span>
+            <div class="tool-details">
+              <h4>${tool.name} ${isEquipped ? '<span style="font-size: 0.72rem; color: #10b981;">[Equipado]</span>' : ''}</h4>
+              <p>${tool.desc} • Poder: ${tool.power}x</p>
+            </div>
+          </div>
+          <div class="durability-bar-wrapper">
+            <div class="durability-label">
+              <span>Durabilidade</span>
+              <span>${tool.durability}/${tool.maxDurability}</span>
+            </div>
+            <div class="durability-bar">
+              <div class="durability-fill" style="width: ${pct}%"></div>
+            </div>
+          </div>
+          <button class="btn-equip-tool ${isEquipped ? 'equipped' : ''}" data-id="${tool.id}">
+            ${isEquipped ? 'Equipado ✅' : 'Equipar 🛠️'}
+          </button>
+        `;
+
+        card.querySelector('.btn-equip-tool')?.addEventListener('click', () => {
+          if (!isEquipped) {
+            this.inventorySystem.equipTool(tool.id);
+            this.player.spawnCraftPoof();
+            this.showToast(`🛠️ ${tool.name} equipado com sucesso!`);
+            renderToolsTab();
+          }
+        });
+
+        list.appendChild(card);
+      });
+    };
+
+    const renderEggsTab = () => {
+      const list = document.getElementById('backpack-eggs-list');
+      if (!list) return;
+      list.innerHTML = '';
+      const eggs = this.inventorySystem.getEggs();
+
+      if (eggs.length === 0) {
+        list.innerHTML = `
+          <div style="text-align: center; padding: 30px; color: #94a3b8;">
+            <p style="font-size: 2rem; margin-bottom: 8px;">🪹</p>
+            <p>Seu ninho está vazio no momento. Explore a Ilha Lua e use 'E' perto de ninhos selvagens para coletar novos ovos de dragão!</p>
+          </div>
+        `;
+        return;
+      }
+
+      eggs.forEach(egg => {
+        const card = document.createElement('div');
+        card.className = 'egg-card';
+        const pct = Math.round((egg.warmth / egg.maxWarmth) * 100);
+
+        card.innerHTML = `
+          <div class="egg-info">
+            <span class="egg-icon">${egg.icon}</span>
+            <div class="egg-details">
+              <h4>${egg.name}</h4>
+              <p>${egg.desc}</p>
+            </div>
+          </div>
+          <div class="warmth-bar-wrapper">
+            <div class="warmth-label">
+              <span>Incubação / Calor</span>
+              <span>${pct}%</span>
+            </div>
+            <div class="warmth-bar">
+              <div class="warmth-fill" style="width: ${pct}%"></div>
+            </div>
+          </div>
+          <button class="btn-warm-egg" data-id="${egg.id}">
+            🔥 Aquecer (+25%)
+          </button>
+        `;
+
+        card.querySelector('.btn-warm-egg')?.addEventListener('click', () => {
+          const res = this.inventorySystem.warmEgg(egg.id, 25);
+          if (res.success) {
+            if (res.hatched) {
+              this.dragonManager.adoptHatchedDragon(egg.speciesId);
+              this.inventorySystem.removeEgg(egg.id);
+              this.player.spawnCraftPoof();
+              this.showToast(`🥚✨ O ${egg.name} chocou! Um novo dragão se juntou ao seu grupo!`);
+              renderEggsTab();
+            } else {
+              this.player.spawnCraftPoof();
+              this.showToast(`🔥 Você aqueceu o ${egg.name}! Calor: ${res.warmth}%`);
+              renderEggsTab();
+            }
+          }
+        });
+
+        list.appendChild(card);
+      });
+    };
+
+    const renderDragonsTab = () => {
+      const list = document.getElementById('backpack-dragons-list');
+      if (!list) return;
+      list.innerHTML = '';
 
       const party = this.dragonManager.getParty();
       const activeDragon = this.dragonManager.getActiveDragon();
@@ -1724,34 +2022,72 @@ class RPGApplication {
           this.dragonManager.setActiveDragon(drag.id);
           if (isActive && isMounted) {
             this.dragonManager.setMode('follow');
-            this.showToast(`🚶 Você desmontou de ${drag.name}. Ele agora te acompanha a pé.`);
+            this.showToast(`🚶 Você desmontou de ${drag.name}.`);
           } else {
             this.dragonManager.setMode('mounted');
-            this.showToast(`🐉 Você montou em ${drag.name}! (+Velocidade de Montaria)`);
+            this.showToast(`🐉 Você montou em ${drag.name}! (+Velocidade de Corrida)`);
           }
-          this.openDragonModal();
+          renderDragonsTab();
         });
 
         item.querySelector('.btn-toggle-follow')?.addEventListener('click', () => {
           this.dragonManager.setActiveDragon(drag.id);
           this.dragonManager.setMode('follow');
-          this.showToast(`🐾 ${drag.name} agora está te acompanhando pelo mapa!`);
-          this.openDragonModal();
+          this.showToast(`🐾 ${drag.name} agora está te acompanhando!`);
+          renderDragonsTab();
         });
 
-        partyList.appendChild(item);
+        list.appendChild(item);
       });
     };
 
-    // Shortcut 'B' in Play Mode to open Bag B (Dragons)
+    const switchTab = (tabName) => {
+      currentTab = tabName;
+      document.querySelectorAll('.backpack-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === tabName);
+      });
+
+      const contents = ['items', 'tools', 'eggs', 'dragons'];
+      contents.forEach(name => {
+        const el = document.getElementById(`tab-content-${name}`);
+        if (el) el.style.display = (name === tabName) ? 'block' : 'none';
+      });
+
+      if (tabName === 'items') renderItemsTab();
+      if (tabName === 'tools') renderToolsTab();
+      if (tabName === 'eggs') renderEggsTab();
+      if (tabName === 'dragons') renderDragonsTab();
+    };
+
+    tabsContainer?.querySelectorAll('.backpack-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        switchTab(tab.dataset.tab);
+      });
+    });
+
+    this.openBackpackModal = (initialTab = 'items') => {
+      if (!modal) return;
+      modal.style.display = 'flex';
+      switchTab(initialTab);
+    };
+
+    closeBtn?.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    quickBackpackBtn?.addEventListener('click', () => {
+      this.openBackpackModal('items');
+    });
+
+    // Shortcut 'B' and 'I' in Play Mode to toggle Backpack
     window.addEventListener('keydown', (e) => {
-      if (e.target && e.target.tagName === 'INPUT' || e.target && e.target.tagName === 'TEXTAREA') return;
-      if (this.mode === 'play' && (e.key === 'b' || e.key === 'B')) {
-        const isVisible = dragonModal.style.display !== 'none';
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+      if (this.mode === 'play' && (e.key === 'b' || e.key === 'B' || e.key === 'i' || e.key === 'I')) {
+        const isVisible = modal.style.display !== 'none';
         if (isVisible) {
-          dragonModal.style.display = 'none';
+          modal.style.display = 'none';
         } else {
-          this.openDragonModal();
+          this.openBackpackModal(e.key.toLowerCase() === 'b' ? 'items' : 'items');
         }
       }
     });
@@ -1818,7 +2154,7 @@ class RPGApplication {
       });
     });
 
-    // Run code
+    // Run code & execute physical Map Grid spawning (Step 2)
     btnRun?.addEventListener('click', () => {
       const code = codeEditor.value;
       const res = this.blocklySystem.runScript(code);
@@ -1836,6 +2172,52 @@ class RPGApplication {
       if (res.success) {
         this.showToast(res.message, 4500);
         populateLessons();
+
+        // Step 2: Physical Map Grid Spawning in front of Player
+        const dirDeltas = { north: { dx: 0, dy: -1 }, south: { dx: 0, dy: 1 }, west: { dx: -1, dy: 0 }, east: { dx: 1, dy: 0 } };
+        const delta = dirDeltas[this.player.direction] || { dx: 0, dy: 1 };
+        const pTx = Math.floor((this.player.x + 32) / 64);
+        const pTy = Math.floor((this.player.y + 32) / 64);
+        const targetX = pTx + delta.dx;
+        const targetY = pTy + delta.dy;
+
+        if (res.logs && res.logs.length > 0) {
+          for (const log of res.logs) {
+            if (log.startsWith('item_criado:bancada_madeira') || log.includes('bancada_madeira')) {
+              this.tileMap.setTile('solid', targetX, targetY, 'crate');
+              this.inventorySystem.addItem('wood', 15);
+              this.player.spawnCraftPoof();
+              this.triggerAutoSave();
+              this.showToast('🪵 Bancada de Madeira materializada no mapa à sua frente!');
+            } else if (log.startsWith('arvore_plantada:')) {
+              const treeIdx = parseInt(log.split(':')[1] || '1', 10);
+              const treeX = pTx + (delta.dx !== 0 ? delta.dx * treeIdx : (treeIdx - 2));
+              const treeY = pTy + (delta.dy !== 0 ? delta.dy * treeIdx : 0);
+              const treeTile = treeIdx % 2 === 0 ? 'tree-pine' : 'tree-oak-large';
+              this.tileMap.setTile('solid', treeX, treeY, treeTile);
+              this.player.spawnCraftPoof();
+              this.triggerAutoSave();
+            } else if (log.startsWith('superficie_congelada')) {
+              for (let ox = -1; ox <= 1; ox++) {
+                for (let oy = -1; oy <= 1; oy++) {
+                  this.tileMap.setTile('ground', targetX + ox, targetY + oy, 'water-animated');
+                }
+              }
+              this.player.spawnCraftPoof();
+              this.triggerAutoSave();
+              this.showToast('❄️ Superfície congelada pelo poder do código!');
+            } else if (log.startsWith('item_forjado:picareta_magica')) {
+              this.inventorySystem.addItem('iron_ore', 5);
+              this.inventorySystem.equipTool('tool_pickaxe');
+              this.player.spawnCraftPoof();
+              this.showToast('⛏️ Picareta Mágica forjada e equipada na bigorna!');
+            } else if (log.startsWith('dragao_adotado:')) {
+              this.dragonManager.adoptHatchedDragon('dragon_fly_solar');
+              this.player.spawnCraftPoof();
+              this.showToast('🐉 Dragão Solar adotado com sucesso via Função Lua!');
+            }
+          }
+        }
       } else {
         this.showToast(`⚠️ ${res.message}`, 4000);
       }

@@ -1,0 +1,9 @@
+{
+  "id": "char_bat_vampire_m",
+  "name": "Morcego Vampiro (Vlad)",
+  "species": "bat",
+  "spritesheet": {
+    "framesDir": "assets/characters/char_bat_vampire_m/frames",
+    "portrait": "assets/characters/char_bat_vampire_m/portrait.jpg"
+  }
+}

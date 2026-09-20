@@ -1,0 +1,9 @@
+{
+  "id": "char_cat_witch_f",
+  "name": "Gato Bruxa (Luna)",
+  "species": "cat",
+  "spritesheet": {
+    "framesDir": "assets/characters/char_cat_witch_f/frames",
+    "portrait": "assets/characters/char_cat_witch_f/portrait.jpg"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "id": "char_eagle_archer_m",
+  "name": "Águia Arqueiro (Zephyr)",
+  "species": "eagle",
+  "spritesheet": {
+    "framesDir": "assets/characters/char_eagle_archer_m/frames",
+    "portrait": "assets/characters/char_eagle_archer_m/portrait.jpg"
+  }
+}

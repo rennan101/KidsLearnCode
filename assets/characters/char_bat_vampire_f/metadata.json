@@ -1,0 +1,9 @@
+{
+  "id": "char_bat_vampire_f",
+  "name": "Morcego Vampira (Carmilla)",
+  "species": "bat",
+  "spritesheet": {
+    "framesDir": "assets/characters/char_bat_vampire_f/frames",
+    "portrait": "assets/characters/char_bat_vampire_f/portrait.jpg"
+  }
+}

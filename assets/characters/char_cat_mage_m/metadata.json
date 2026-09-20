@@ -1,0 +1,9 @@
+{
+  "id": "char_cat_mage_m",
+  "name": "Gato Bruxo (Merlin)",
+  "species": "cat",
+  "spritesheet": {
+    "framesDir": "assets/characters/char_cat_mage_m/frames",
+    "portrait": "assets/characters/char_cat_mage_m/portrait.jpg"
+  }
+}

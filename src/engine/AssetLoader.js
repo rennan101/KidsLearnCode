@@ -1934,6 +1934,35 @@ export class AssetLoader {
     ];
   }
 
+  async syncWithStorage(storageManager) {
+    if (!storageManager) return;
+    this.storageManager = storageManager;
+
+    const [depths, scales, colliders] = await Promise.all([
+      storageManager.loadAssetOverrides('depth'),
+      storageManager.loadAssetOverrides('scale'),
+      storageManager.loadAssetOverrides('collider')
+    ]);
+
+    if (depths) {
+      for (const tile of this.overworldTiles) {
+        if (depths[tile.id] !== undefined) tile.depthOffset = depths[tile.id];
+      }
+    }
+
+    if (scales) {
+      for (const tile of this.overworldTiles) {
+        if (scales[tile.id] !== undefined) tile.scale = scales[tile.id];
+      }
+    }
+
+    if (colliders) {
+      for (const tile of this.overworldTiles) {
+        if (colliders[tile.id]) tile.collider = colliders[tile.id];
+      }
+    }
+  }
+
   loadCustomDepthOffsets() {
     try {
       if (typeof window === 'undefined' || !window.localStorage) return;
@@ -1953,14 +1982,18 @@ export class AssetLoader {
 
   saveCustomDepthOffsets() {
     try {
-      if (typeof window === 'undefined' || !window.localStorage) return;
       const customDepths = {};
       for (const tile of this.overworldTiles) {
         if (tile.depthOffset !== undefined) {
           customDepths[tile.id] = tile.depthOffset;
         }
       }
-      localStorage.setItem(this.DEPTH_STORAGE_KEY, JSON.stringify(customDepths));
+      if (this.storageManager) {
+        this.storageManager.saveAssetOverrides('depth', customDepths);
+      }
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(this.DEPTH_STORAGE_KEY, JSON.stringify(customDepths));
+      }
     } catch (e) {
       console.warn('Failed to save custom depth offsets:', e);
     }
@@ -1993,14 +2026,18 @@ export class AssetLoader {
 
   saveCustomScales() {
     try {
-      if (typeof window === 'undefined' || !window.localStorage) return;
       const customScales = {};
       for (const tile of this.overworldTiles) {
         if (tile.scale !== undefined) {
           customScales[tile.id] = tile.scale;
         }
       }
-      localStorage.setItem(this.SCALE_STORAGE_KEY, JSON.stringify(customScales));
+      if (this.storageManager) {
+        this.storageManager.saveAssetOverrides('scale', customScales);
+      }
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(this.SCALE_STORAGE_KEY, JSON.stringify(customScales));
+      }
     } catch (e) {
       console.warn('Failed to save custom scales:', e);
     }
@@ -2033,14 +2070,18 @@ export class AssetLoader {
 
   saveCustomColliders() {
     try {
-      if (typeof window === 'undefined' || !window.localStorage) return;
       const customColliders = {};
       for (const tile of this.overworldTiles) {
         if (tile.collider) {
           customColliders[tile.id] = tile.collider;
         }
       }
-      localStorage.setItem(this.COLLIDER_STORAGE_KEY, JSON.stringify(customColliders));
+      if (this.storageManager) {
+        this.storageManager.saveAssetOverrides('collider', customColliders);
+      }
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(this.COLLIDER_STORAGE_KEY, JSON.stringify(customColliders));
+      }
     } catch (e) {
       console.warn('Failed to save custom colliders:', e);
     }
@@ -2217,12 +2258,24 @@ export class AssetLoader {
       }
     }
 
-    const urlsToLoad = [];
+    // Preload Playable Hero Characters (Portraits & 4-Way Animated Frames)
+    const heroIds = [
+      'char_wolf_hunter_m', 'char_wolf_hunter_f',
+      'char_bat_vampire_m', 'char_bat_vampire_f',
+      'char_eagle_archer_m', 'char_eagle_archer_f',
+      'char_cat_mage_m', 'char_cat_witch_f'
+    ];
 
-    // Preload Character Portrait
-    urlsToLoad.push(`assets/characters/char_wolf_hunter_m/portrait.jpg`);
+    for (const hId of heroIds) {
+      urlsToLoad.push(`assets/characters/${hId}/portrait.jpg`);
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 8; c++) {
+          urlsToLoad.push(`assets/characters/${hId}/frames/wolf_hunter_r${r}_c${c}.png`);
+        }
+      }
+    }
 
-    // Character Sprites
+    // Legacy Geralt Fallback Sprites
     if (this.directions) {
       for (const dir of this.directions) {
         urlsToLoad.push(`Geralt/Idle/rotations/${dir}.png`);

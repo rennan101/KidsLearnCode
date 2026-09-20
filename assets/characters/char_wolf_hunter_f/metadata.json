@@ -1,0 +1,9 @@
+{
+  "id": "char_wolf_hunter_f",
+  "name": "Lobo Caçadora (Lyra)",
+  "species": "wolf",
+  "spritesheet": {
+    "framesDir": "assets/characters/char_wolf_hunter_f/frames",
+    "portrait": "assets/characters/char_wolf_hunter_f/portrait.jpg"
+  }
+}
