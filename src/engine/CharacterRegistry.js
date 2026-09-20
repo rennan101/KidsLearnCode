@@ -89,3 +89,10 @@ export const VILLAGE_NPCS = [
   { id: "npc_turtle_elder", name: "Mestre Casco", role: "Guardião Ancestral e Dragão Mítico" },
   { id: "npc_penguin_angler", name: "Pingo dos Icebergs", role: "Pesca Polar e Biomas Glaciais" }
 ];
+
+export const CharacterRegistry = {
+  PLAYABLE_HEROES,
+  VILLAGE_NPCS
+};
+
+export default CharacterRegistry;

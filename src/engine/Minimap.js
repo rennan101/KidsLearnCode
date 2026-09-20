@@ -144,6 +144,7 @@ export class Minimap {
 
     // Keyboard shortcut 'M'
     window.addEventListener('keydown', (e) => {
+      if (!e) return;
       if (e.target && e.target.tagName === 'INPUT') return;
       if (e.key === 'm' || e.key === 'M') {
         this.toggleExpand();
