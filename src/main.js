@@ -797,25 +797,25 @@ class RPGApplication {
       }
     });
 
-    // Mouse wheel zoom in Editor Mode (smooth cursor-anchored zoom)
+    // Mouse wheel zoom in Play & Editor Mode (smooth zoom)
     this.canvas.addEventListener('wheel', (e) => {
-      if (this.mode === 'edit') {
-        e.preventDefault();
-        const rect = this.canvas.getBoundingClientRect();
-        const mouseScreenX = e.clientX - rect.left;
-        const mouseScreenY = e.clientY - rect.top;
+      e.preventDefault();
+      const rect = this.canvas.getBoundingClientRect();
+      const mouseScreenX = e.clientX - rect.left;
+      const mouseScreenY = e.clientY - rect.top;
 
-        // World pos before zoom
-        const worldPosBefore = this.camera.screenToWorld(mouseScreenX, mouseScreenY);
+      // World pos before zoom
+      const worldPosBefore = this.camera.screenToWorld(mouseScreenX, mouseScreenY);
 
-        const zoomFactor = e.deltaY < 0 ? 1.12 : 0.89;
-        const newZoom = Math.max(0.3, Math.min(3.5, this.camera.zoom * zoomFactor));
-        this.camera.zoom = newZoom;
+      const zoomFactor = e.deltaY < 0 ? 1.12 : 0.89;
+      const minZoom = this.mode === 'edit' ? 0.3 : 0.6;
+      const maxZoom = this.mode === 'edit' ? 3.5 : 2.5;
+      const newZoom = Math.max(minZoom, Math.min(maxZoom, this.camera.zoom * zoomFactor));
+      this.camera.zoom = newZoom;
 
-        // Reposition camera so mouse points to the exact same world coordinate
-        this.camera.x = worldPosBefore.x - mouseScreenX / newZoom;
-        this.camera.y = worldPosBefore.y - mouseScreenY / newZoom;
-      }
+      // Reposition camera so mouse points to the exact same world coordinate
+      this.camera.x = worldPosBefore.x - mouseScreenX / newZoom;
+      this.camera.y = worldPosBefore.y - mouseScreenY / newZoom;
     }, { passive: false });
 
     // Prevent context menu in editor for right click erasing
@@ -1453,6 +1453,12 @@ class RPGApplication {
     const closeBtn = document.getElementById('btn-close-auth');
     const labelEl = document.getElementById('cloud-account-label');
 
+    const formContainer = document.getElementById('auth-form-container');
+    const confirmationNotice = document.getElementById('auth-confirmation-notice');
+    const confirmTitle = document.getElementById('auth-confirm-title');
+    const confirmMessage = document.getElementById('auth-confirm-message');
+    const confirmBackBtn = document.getElementById('btn-confirm-back');
+
     const tabLogin = document.getElementById('auth-tab-login');
     const tabSignup = document.getElementById('auth-tab-signup');
     const nicknameInput = document.getElementById('auth-nickname');
@@ -1498,8 +1504,26 @@ class RPGApplication {
 
     refreshAuthUI();
 
+    // Ouvinte automático para ativação de conta via confirmação de e-mail (Redirecionamento / Realtime)
+    this.supabaseClient.onAuthChange(async (user, profile, event) => {
+      if (user && !user.isGuest) {
+        if (confirmationNotice) confirmationNotice.style.display = 'none';
+        if (formContainer) formContainer.style.display = 'flex';
+        if (modal) modal.style.display = 'none';
+        refreshAuthUI();
+        await this.loadGameFromStorage();
+        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+          this.showToast(`Passaporte ativado com sucesso! Bem-vindo(a) à Ilha Lua, ${user.user_metadata?.nickname || user.email}!`, 5000);
+        }
+      } else {
+        refreshAuthUI();
+      }
+    });
+
     triggerBtn?.addEventListener('click', () => {
       refreshAuthUI();
+      if (confirmationNotice) confirmationNotice.style.display = 'none';
+      if (formContainer) formContainer.style.display = 'flex';
       modal.style.display = 'flex';
     });
 
@@ -1513,6 +1537,11 @@ class RPGApplication {
 
     closeBtn?.addEventListener('click', () => {
       modal.style.display = 'none';
+    });
+
+    confirmBackBtn?.addEventListener('click', () => {
+      if (confirmationNotice) confirmationNotice.style.display = 'none';
+      if (formContainer) formContainer.style.display = 'flex';
     });
 
     over18Checkbox?.addEventListener('change', () => {
@@ -1582,11 +1611,22 @@ class RPGApplication {
 
       if (res.success) {
         if (res.requiresConfirmation) {
+          if (formContainer) formContainer.style.display = 'none';
+          if (confirmationNotice) {
+            confirmationNotice.style.display = 'flex';
+            if (confirmTitle) {
+              confirmTitle.innerText = res.isMinor ? 'Autorização do Responsável (ECA)' : 'Confirmação de E-mail';
+            }
+            if (confirmMessage) {
+              confirmMessage.innerText = res.isMinor
+                ? `Conforme o ECA (Lei 8.069/90), enviamos um link de autorização para o responsável em ${res.confirmTarget}. O responsável deve clicar no link para aprovar seu acesso à Ilha Lua!`
+                : `Enviamos um link de confirmação para ${res.confirmTarget}. Acesse sua caixa de entrada e clique no link para ativar seu Passaporte da Ilha Lua!`;
+            }
+          }
           this.showToast(res.message, 6000);
           refreshAuthUI();
-          modal.style.display = 'none';
         } else {
-          this.showToast(`Bem-vindo, ${res.user.user_metadata?.nickname || res.user.email}!`);
+          this.showToast(`Bem-vindo(a), ${res.user.user_metadata?.nickname || res.user.email}!`);
           refreshAuthUI();
           await this.loadGameFromStorage();
           modal.style.display = 'none';

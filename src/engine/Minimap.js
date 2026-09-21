@@ -138,8 +138,12 @@ export class Minimap {
         if (this.camera) {
           this.camera.x = targetWorldX - this.camera.viewportWidth / 2;
           this.camera.y = targetWorldY - this.camera.viewportHeight / 2;
-        }
-      });
+      // Wheel to zoom expanded map
+      this.expandedCanvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.15 : 0.85;
+        this.expandedZoom = Math.max(0.4, Math.min(3.5, this.expandedZoom * factor));
+      }, { passive: false });
     }
 
     // Keyboard shortcut 'M'

@@ -258,7 +258,6 @@
               <line x1="8" y1="11" x2="14" y2="11"></line>
             </svg>
           </button>
-          <button id="btn-zoom-reset" class="tool-btn text-only" title="Reset Zoom (100%)">100%</button>
         </div>
       </div>
 
@@ -346,7 +345,6 @@
                     <line x1="8" y1="11" x2="14" y2="11"></line>
                   </svg>
                 </button>
-                <button id="btn-map-zoom-reset" class="tool-btn" title="Reset Map Zoom">100%</button>
               </div>
               <button id="btn-close-expanded-map" class="action-btn danger" title="Close Map (M or Esc)">
                 <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -990,6 +988,28 @@
             </div>
             <span id="auth-badge-status" style="background: var(--animal-primary, #19c8b9); color: #ffffff; font-size: 0.75rem; padding: 4px 12px; border-radius: 50px; font-weight: 800; box-shadow: 0 2px 0 0 var(--animal-primary-dark, #0f8e83);">Conectado</span>
           </div>
+        </div>
+
+        <!-- Confirmation Required Notice Card (Animal Island UI) -->
+        <div id="auth-confirmation-notice" style="display: none; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 8px 4px;">
+          <div style="width: 64px; height: 64px; background: var(--animal-primary-bg, #e6f9f6); border: 2.5px solid var(--animal-primary, #19c8b9); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(25, 200, 185, 0.25);">
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="var(--animal-primary-dark, #0f8e83)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+          </div>
+          <h3 id="auth-confirm-title" style="font-family: var(--animal-font-title, 'Cinzel', serif); font-size: 1.22rem; font-weight: 800; color: var(--animal-text, #794f27); margin: 0;">Confirmação de E-mail</h3>
+          <p id="auth-confirm-message" style="font-family: var(--animal-font, 'Nunito', sans-serif); font-size: 0.88rem; font-weight: 600; color: var(--animal-text-body, #725d42); line-height: 1.5; margin: 0;">
+            Enviamos um link de ativação para o seu e-mail. Por favor, acesse sua caixa de entrada e clique no link para autorizar o acesso à Ilha Lua.
+          </p>
+          <div style="background: var(--animal-bg-content, #f7f3df); border: 1.5px solid var(--animal-border, #c4b89e); border-radius: 14px; padding: 10px 14px; width: 100%; box-sizing: border-box;">
+            <span style="font-size: 0.76rem; font-weight: 700; color: var(--animal-primary-dark, #0f8e83); line-height: 1.4; display: block;">
+              Assim que o e-mail for confirmado no navegador, o jogo será ativado automaticamente nesta página!
+            </span>
+          </div>
+          <button type="button" id="btn-confirm-back" class="codekit-btn-secondary" style="width: 100%; border-radius: 50px; font-weight: 800; padding: 10px 0;">
+            Voltar
+          </button>
         </div>
 
         <!-- Login / Register Form Tabs -->

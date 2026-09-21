@@ -33,8 +33,29 @@ export class SupabaseClient {
         this.client = createClient(activeUrl, activeKey, {
           auth: {
             persistSession: true,
-            autoRefreshToken: true
+            autoRefreshToken: true,
+            detectSessionInUrl: true
           }
+        });
+
+        // Ouvinte em tempo real para mudanças de autenticação (Confirmação de e-mail por link, Login, Logout)
+        this.client.auth.onAuthStateChange(async (event, session) => {
+          console.log('[SupabaseClient] onAuthStateChange:', event, session?.user?.email);
+          if (session && session.user) {
+            this.user = session.user;
+            this.profile = await this.getUserProfile();
+            this.isConfigured = true;
+            this.setupRealtimeChannel();
+
+            // Limpa parâmetros de token e hash da URL após confirmação de e-mail bem-sucedida
+            if (window.location.hash.includes('access_token') || window.location.search.includes('code=')) {
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+          } else if (event === 'SIGNED_OUT') {
+            this.user = this.getGuestUser();
+            this.profile = null;
+          }
+          this.notifyAuthChange(event, session);
         });
 
         const { data: { session } } = await this.client.auth.getSession();
@@ -93,11 +114,21 @@ export class SupabaseClient {
     }
 
     try {
+      const redirectUrl = window.location.origin + window.location.pathname;
+      const isMinor = extraData.isOver18 === false;
+      const parentEmail = extraData.parentEmail || null;
+
       const { data, error } = await this.client.auth.signUp({
         email,
         password,
         options: {
-          data: { nickname, ...extraData }
+          emailRedirectTo: redirectUrl,
+          data: { 
+            nickname,
+            isOver18: extraData.isOver18 ?? true,
+            parentEmail,
+            game: 'Kids Learn Code - Ilha Lua'
+          }
         }
       });
 
@@ -106,16 +137,22 @@ export class SupabaseClient {
       if (data.session && data.user) {
         this.user = data.user;
         await this.syncUserProfile({ nickname, heroId: 'char_wolf_hunter_m', level: 1, xp: 0, gold: 100 });
-        this.notifyAuthChange();
+        this.notifyAuthChange('SIGNED_IN', data.session);
         this.setupRealtimeChannel();
         return { success: true, user: data.user, requiresConfirmation: false };
       } else if (data.user) {
-        // Confirmação de e-mail ativada no Supabase
+        const confirmTarget = isMinor && parentEmail ? parentEmail : email;
+        const msg = isMinor 
+          ? `Conforme o ECA (Lei 8.069/90), enviamos um e-mail de autorização para o responsável em ${confirmTarget}. O responsável deve clicar no link para liberar o acesso à Ilha Lua!`
+          : `Enviamos um e-mail de confirmação para ${email}. Acesse sua caixa de entrada e confirme para acessar a Ilha Lua!`;
+
         return { 
           success: true, 
           user: data.user, 
           requiresConfirmation: true,
-          message: 'Conta criada com sucesso! Se a confirmação de e-mail estiver ativada, verifique sua caixa de entrada.' 
+          isMinor,
+          confirmTarget,
+          message: msg
         };
       }
 
@@ -450,8 +487,8 @@ export class SupabaseClient {
     this.listeners.push(callback);
   }
 
-  notifyAuthChange() {
-    this.listeners.forEach(fn => fn(this.user, this.profile));
+  notifyAuthChange(event = 'UNKNOWN', session = null) {
+    this.listeners.forEach(fn => fn(this.user, this.profile, event, session));
   }
 }
 

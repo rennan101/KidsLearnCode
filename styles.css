@@ -61,11 +61,11 @@
   --animal-shadow-btn-wood: 0 4px 0 0 #5c3c26, 0 6px 14px rgba(92, 60, 38, 0.35);
   --animal-shadow-card: 0 12px 32px rgba(80, 55, 30, 0.18), 0 2px 6px rgba(80, 55, 30, 0.08);
 
-  /* Animal Island UI Custom SVG Cursors (Brown Border & Warm Beige Fill) */
-  --animal-cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cg filter='drop-shadow(0 2px 3px rgba(80,50,20,0.4))'%3E%3Cpath d='M6 3 L20 17 L13.5 18 L18.5 28 L14.5 30 L9.5 20 L4 24 Z' fill='%23fdfbf7' stroke='%237a583e' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M7 6 L15 14 L12 15 Z' fill='%2319c8b9' opacity='0.9'/%3E%3C/g%3E%3C/svg%3E") 3 3;
-  --animal-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cg filter='drop-shadow(0 2px 4px rgba(80,50,20,0.4))'%3E%3Cpath d='M10 2 C8.8 2 8 2.8 8 4 L8 14 C7.2 13.2 6 12.8 4.8 13.5 C3.5 14.3 3.2 16 4 17.2 L9 24 C10.5 26 13 28 16 28 L19 28 C23 28 26 25 26 21 L26 15 C26 13.8 25 13 24 13 C23.5 13 23 13.2 22.5 13.6 C22.2 12.6 21.3 12 20.2 12 C19.8 12 19.4 12.1 19 12.3 C18.6 11.5 17.7 11 16.8 11 C16.4 11 16 11.1 15.6 11.3 L15.6 4 C15.6 2.8 14.8 2 13.6 2 C12.8 2 12.2 2.4 11.8 3 L11.8 4 C11.8 2.8 11 2 10 2 Z' fill='%23fdfbf7' stroke='%237a583e' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M11 25 C13 25 18 25 20 25 C21 25 21.5 26.5 21 27.5 C20 28.5 13 28.5 10.5 27.5 C10 26.5 10.5 25 11 25 Z' fill='%2319c8b9' stroke='%237a583e' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") 10 2;
-  --animal-cursor-grab: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cg filter='drop-shadow(0 2px 3px rgba(80,50,20,0.4))'%3E%3Cpath d='M9 10 C8 10 7 11 7 12 L7 17 C6 16.5 4.5 16.8 4 18 C3.5 19.2 4 20.5 5 21.5 L10 26 C12 28 15 29 18 29 L20 29 C24 29 27 26 27 22 L27 15 C27 14 26 13 25 13 C24.5 13 24 13.2 23.5 13.6 C23.2 12.6 22.3 12 21.2 12 C20.8 12 20.4 12.1 20 12.3 C19.6 11.5 18.7 11 17.8 11 C17.4 11 17 11.1 16.6 11.3 L16.6 10 C16.6 9 15.6 8 14.6 8 C13.6 8 12.8 8.8 12.8 9.8 L12.8 12 C12.4 10.8 11.5 10 10.5 10 Z' fill='%23fdfbf7' stroke='%237a583e' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M12 26 C14 26 18 26 21 26 C22 26 22.5 27.5 22 28.5 C21 29.5 14 29.5 11.5 28.5 C11 27.5 11.5 26 12 26 Z' fill='%2319c8b9' stroke='%237a583e' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") 14 14;
-  --animal-cursor-grabbing: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cg filter='drop-shadow(0 2px 3px rgba(80,50,20,0.4))'%3E%3Cpath d='M8 14 C7 14 6 15 6 16 L6 20 C6 24 9 27 13 28 L18 28 C22 28 25 25 25 21 L25 17 C25 15.5 23.8 14.5 22.5 14.5 C22 14.5 21.5 14.7 21 15 C20.5 14 19.5 13.5 18.5 13.5 C18 13.5 17.5 13.7 17 14 C16.5 13 15.5 12.5 14.5 12.5 C13.5 12.5 12.8 13 12.5 13.5 L12.5 13 C12.5 11.8 11.5 11 10.5 11 C9.5 11 8.5 11.8 8.5 13 Z' fill='%23fdfbf7' stroke='%237a583e' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M11 25 C13 25 17 25 20 25 C21 25 21.5 26.5 21 27.5 C20 28.5 13 28.5 10.5 27.5 C10 26.5 10.5 25 11 25 Z' fill='%2319c8b9' stroke='%237a583e' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") 14 14;
+  /* Animal Island UI Clean Compact SVG Cursors (Brown Border & Warm Beige Fill) */
+  --animal-cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22' fill='none'%3E%3Cpath d='M2 2 L2 17 L6.5 12.5 L11 20 L13.5 18.5 L9 11 L15 11 Z' fill='%23fdfbf7' stroke='%237a583e' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E") 2 2;
+  --animal-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 2 C5.8 2 5 2.8 5 4 L5 11 C4.3 10.5 3.3 10.7 2.7 11.4 C2 12.2 2.1 13.4 2.8 14.2 L6.5 19 C7.8 20.8 10 22 12.5 22 L14.5 22 C18 22 20.5 19.5 20.5 16 L20.5 11.5 C20.5 10.5 19.5 9.8 18.5 9.8 C18.1 9.8 17.7 10 17.3 10.3 C17 9.5 16.2 9 15.3 9 C14.9 9 14.5 9.1 14.2 9.3 C13.8 8.6 13 8.2 12.2 8.2 C11.8 8.2 11.4 8.3 11 8.5 L11 4 C11 2.8 10.2 2 9 2 Z' fill='%23fdfbf7' stroke='%237a583e' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M9 20 L16 20 C16.5 20 17 21 16.5 21.8 C15.8 22.5 10 22.5 8.5 21.8 C8 21 8.5 20 9 20 Z' fill='%2319c8b9' stroke='%237a583e' stroke-width='1'/%3E%3C/svg%3E") 6 2;
+  --animal-cursor-grab: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22' fill='none'%3E%3Cpath d='M5 7 C4 7 3 8 3 9 L3 13 C2.5 12.5 1.5 12.7 1 13.5 C0.5 14.5 0.8 15.5 1.5 16.2 L5 20 C6.5 21.5 8.5 22 11 22 L13 22 C16.5 22 19 19.5 19 16 L19 10.5 C19 9.5 18 8.8 17 8.8 C16.6 8.8 16.2 9 15.8 9.3 C15.5 8.5 14.7 8 13.8 8 C13.4 8 13 8.1 12.7 8.3 C12.3 7.6 11.5 7.2 10.7 7.2 C10.3 7.2 9.9 7.3 9.5 7.5 L9.5 7 C9.5 5.8 8.7 5 7.5 5 C6.3 5 5.5 5.8 5.5 7 Z' fill='%23fdfbf7' stroke='%237a583e' stroke-width='1.8' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E") 10 10;
+  --animal-cursor-grabbing: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22' fill='none'%3E%3Cpath d='M5 9 C4 9 3 10 3 11 L3 15 C3 18.5 5.5 21 9 21 L13 21 C16.5 21 19 18.5 19 15 L19 12 C19 10.8 18 10 17 10 C16.5 10 16 10.2 15.5 10.5 C15 9.8 14.2 9.5 13.5 9.5 C13 9.5 12.5 9.7 12 10 C11.5 9.3 10.7 9 10 9 C9.5 9 9 9.2 8.5 9.5 L8.5 9 C8.5 7.8 7.5 7 6.5 7 C5.5 7 5 7.8 5 9 Z' fill='%23fdfbf7' stroke='%237a583e' stroke-width='1.8' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E") 10 10;
 
   /* Legacy Token Fallbacks for Full Compatibility */
   --bg-dark: #f8f8f0;
@@ -314,15 +314,16 @@ header.app-header {
 }
 
 .mode-btn.active {
-  background: linear-gradient(135deg, var(--animal-primary, #19c8b9), var(--animal-primary-dark, #0f8e83));
-  color: #ffffff;
-  box-shadow: 0 3px 0 0 #0b6961, 0 4px 10px rgba(25, 200, 185, 0.35);
+  background: #ffffff !important;
+  color: var(--animal-text, #794f27) !important;
+  border: 2px solid var(--animal-border-wood, #7a583e) !important;
+  box-shadow: 0 3px 0 0 var(--animal-border-wood, #7a583e) !important;
   transform: translateY(-1px);
 }
 
 .mode-btn.active:active {
   transform: translateY(2px);
-  box-shadow: 0 1px 0 0 #0b6961;
+  box-shadow: 0 1px 0 0 var(--animal-border-wood, #7a583e) !important;
 }
 
 /* Header Actions */
@@ -550,8 +551,8 @@ canvas#game-canvas {
 
 .drawer-header {
   padding: 12px 18px;
-  background: linear-gradient(180deg, var(--animal-primary, #19c8b9) 0%, var(--animal-primary-dark, #0f8e83) 100%);
-  border-bottom: 3px solid var(--animal-border-wood, #7a583e);
+  background: linear-gradient(180deg, #7a583e 0%, #5c3c26 100%);
+  border-bottom: 3.5px solid #4a2f1c;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -560,13 +561,13 @@ canvas#game-canvas {
 }
 
 .drawer-header h3 {
-  font-family: var(--animal-font, 'Nunito', sans-serif);
-  font-size: 1rem;
+  font-family: var(--animal-font-title, 'Cinzel', serif);
+  font-size: 1.05rem;
   font-weight: 800;
   color: #ffffff;
   white-space: nowrap;
   letter-spacing: 0.5px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 .drawer-action-btn {
@@ -1694,21 +1695,22 @@ canvas#game-canvas {
 
 .expanded-map-header {
   padding: 12px 18px;
-  background: #131924;
-  border-bottom: 2px solid #232d3f;
+  background: linear-gradient(180deg, #7a583e 0%, #5c3c26 100%) !important;
+  border-bottom: 3.5px solid #4a2f1c !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  color: #ffffff;
 }
 
 .expanded-map-title {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: 'Cinzel', serif;
+  font-family: var(--animal-font-title, 'Cinzel', serif);
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--accent-gold);
+  color: #ffffff;
   letter-spacing: 0.5px;
 }
 
@@ -1967,30 +1969,33 @@ canvas#game-canvas {
 }
 
 .ac-choice-btn {
-  background: linear-gradient(135deg, var(--animal-primary, #19c8b9), var(--animal-primary-dark, #0f8e83));
-  border: 1px solid var(--animal-primary-hover, #3dd4c6);
+  background: #ffffff !important;
+  border: 2.5px solid var(--animal-border-wood, #7a583e) !important;
   border-radius: var(--animal-radius-pill, 50px);
-  color: #ffffff;
+  color: var(--animal-text, #794f27) !important;
   font-family: var(--animal-font, 'Nunito', sans-serif);
   font-size: 0.88rem;
   font-weight: 800;
   padding: 8px 20px;
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 3px 0 0 #0b6961, 0 4px 10px rgba(25, 200, 185, 0.3);
+  box-shadow: 0 4px 0 0 var(--animal-border-wood, #7a583e) !important;
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
 .ac-choice-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 0 0 #0b6961, 0 6px 14px rgba(25, 200, 185, 0.45);
+  background: #fdfbf7 !important;
+  color: #5c3c26 !important;
+  border-color: #5c3c26 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 0 #5c3c26 !important;
 }
 
 .ac-choice-btn:active {
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 0 #0b6961;
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 var(--animal-border-wood, #7a583e) !important;
 }
 
 .animal-dialogue-indicator {
@@ -2041,8 +2046,8 @@ canvas#game-canvas {
 
 .crafting-header, .dragon-header {
   padding: 12px 18px;
-  background: #182233;
-  border-bottom: 2px solid #232d3f;
+  background: linear-gradient(180deg, #7a583e 0%, #5c3c26 100%);
+  border-bottom: 3.5px solid #4a2f1c;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2052,10 +2057,10 @@ canvas#game-canvas {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: 'Cinzel', serif;
-  font-weight: 700;
+  font-family: var(--animal-font-title, 'Cinzel', serif);
+  font-weight: 800;
   font-size: 1.05rem;
-  color: var(--accent-gold);
+  color: #ffffff;
 }
 
 .modal-close-btn {
@@ -2466,10 +2471,11 @@ canvas#game-canvas {
    Animal Island UI (ACNH) Pocket Bolsa, DIY Workbench & Dragon Modals
    ========================================================================== */
 .ac-header-mint {
-  background: linear-gradient(135deg, var(--animal-primary), var(--animal-primary-dark)) !important;
+  background: linear-gradient(180deg, #7a583e 0%, #5c3c26 100%) !important;
   color: #ffffff !important;
-  border-bottom: 3px solid #0b6961 !important;
-  box-shadow: 0 4px 14px rgba(25, 200, 185, 0.35);
+  border-bottom: 3.5px solid #4a2f1c !important;
+  box-shadow: 0 4px 14px rgba(80, 50, 20, 0.35);
+  font-family: var(--animal-font-title, 'Cinzel', serif);
 }
 
 .ac-pocket-card, .ac-diy-card {
@@ -2514,20 +2520,22 @@ canvas#game-canvas {
   font-size: 0.84rem;
   cursor: pointer;
   transition: all 0.15s ease;
+  box-shadow: 0 2px 0 0 #c4b89e;
 }
 
 .backpack-tab:hover {
-  background: #e6f9f6;
-  border-color: var(--animal-primary);
-  color: #0f8e83;
+  background: #ffffff;
+  color: #794f27;
+  border-color: #7a583e;
+  transform: translateY(-1px);
 }
 
 .backpack-tab.active {
-  background: linear-gradient(135deg, var(--animal-primary), var(--animal-primary-dark));
-  color: #ffffff;
-  border-color: #0b6961;
-  box-shadow: 0 3px 0 0 #0b6961, 0 4px 10px rgba(25, 200, 185, 0.35);
-  transform: translateY(-1px);
+  background: #ffffff !important;
+  color: #794f27 !important;
+  border: 2.5px solid #7a583e !important;
+  box-shadow: 0 3px 0 0 #7a583e !important;
+  font-weight: 800 !important;
 }
 
 /* 2-Column Pocket Layout: 20 Circular Slots on Left, Item Details on Right */
@@ -3108,40 +3116,49 @@ canvas#game-canvas {
 }
 
 .btn-equip-tool, .btn-warm-egg, .mount-btn {
-  background: linear-gradient(135deg, #00a896, #028072);
-  color: #ffffff;
-  border: 1px solid #34d399;
+  background: #ffffff !important;
+  color: var(--animal-text, #794f27) !important;
+  border: 2px solid var(--animal-border-wood, #7a583e) !important;
   padding: 7px 16px;
-  border-radius: 20px;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 700;
-  font-size: 0.78rem;
+  border-radius: var(--animal-radius-pill, 50px);
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-weight: 800;
+  font-size: 0.82rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   transition: all 0.15s ease;
-  box-shadow: 0 4px 10px rgba(0, 168, 150, 0.3);
+  box-shadow: 0 4px 0 0 var(--animal-border-wood, #7a583e) !important;
 }
 
 .btn-equip-tool.equipped {
-  background: #025950;
-  border-color: #00a896;
-  color: #a7f3d0;
+  background: var(--animal-primary-bg, #e6f9f6) !important;
+  border-color: var(--animal-primary, #19c8b9) !important;
+  color: var(--animal-primary-dark, #0f8e83) !important;
   cursor: default;
-  box-shadow: none;
+  box-shadow: 0 2px 0 0 var(--animal-primary-dark, #0f8e83) !important;
 }
 
 .btn-warm-egg {
-  background: linear-gradient(135deg, #d97706, #b45309);
-  border-color: #f59e0b;
-  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+  background: #ffffff !important;
+  color: #b45309 !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 4px 0 0 #d97706 !important;
 }
 
 .btn-equip-tool:not(.equipped):hover, .btn-warm-egg:hover, .mount-btn:hover {
-  transform: scale(1.04);
-  box-shadow: 0 6px 14px rgba(0, 168, 150, 0.5);
+  background: #fdfbf7 !important;
+  color: #5c3c26 !important;
+  border-color: #5c3c26 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 0 #5c3c26 !important;
+}
+
+.btn-equip-tool:active, .mount-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 var(--animal-border-wood, #7a583e) !important;
 }
 
 /* ==========================================================================
@@ -3174,8 +3191,8 @@ canvas#game-canvas {
 
 .hero-selection-header {
   padding: 16px 24px;
-  background: linear-gradient(180deg, var(--animal-primary, #19c8b9) 0%, var(--animal-primary-dark, #0f8e83) 100%);
-  border-bottom: 3px solid var(--animal-border-wood, #7a583e);
+  background: linear-gradient(180deg, #7a583e 0%, #5c3c26 100%) !important;
+  border-bottom: 3.5px solid #4a2f1c !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3195,7 +3212,7 @@ canvas#game-canvas {
 }
 
 .hero-selection-title h2 {
-  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-family: var(--animal-font-title, 'Cinzel', serif);
   font-weight: 800;
   font-size: 1.3rem;
   color: #ffffff;
@@ -3314,9 +3331,9 @@ canvas#game-canvas {
 
 .hero-select-btn {
   width: 100%;
-  background: var(--animal-primary, #19c8b9);
-  color: #ffffff;
-  border: none;
+  background: #ffffff !important;
+  color: var(--animal-text, #794f27) !important;
+  border: 2px solid var(--animal-border-wood, #7a583e) !important;
   padding: 9px 0;
   border-radius: var(--animal-radius-pill, 50px);
   font-weight: 800;
@@ -3324,24 +3341,27 @@ canvas#game-canvas {
   cursor: pointer;
   transition: all 0.15s ease;
   margin-top: 4px;
-  box-shadow: var(--animal-shadow-btn-primary, 0 4px 0 0 #0f8e83);
+  box-shadow: 0 4px 0 0 var(--animal-border-wood, #7a583e) !important;
 }
 
 .hero-select-btn:hover {
-  background: var(--animal-primary-hover, #3dd4c6);
-  transform: translateY(-1px);
-  box-shadow: 0 5px 0 0 #0f8e83;
+  background: #fdfbf7 !important;
+  color: #5c3c26 !important;
+  border-color: #5c3c26 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 0 #5c3c26 !important;
 }
 
 .hero-select-btn:active {
   transform: translateY(3px);
-  box-shadow: 0 1px 0 0 #0f8e83;
+  box-shadow: 0 1px 0 0 var(--animal-border-wood, #7a583e) !important;
 }
 
 .hero-select-btn.active {
-  background: #10b981;
-  color: #ffffff;
-  box-shadow: 0 4px 0 0 #059669;
+  background: var(--animal-primary-bg, #e6f9f6) !important;
+  color: var(--animal-primary-dark, #0f8e83) !important;
+  border-color: var(--animal-primary, #19c8b9) !important;
+  box-shadow: 0 3px 0 0 var(--animal-primary-dark, #0f8e83) !important;
   cursor: default;
 }
 
@@ -3611,8 +3631,8 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
 /* Mission Objective Header Bar */
 .codekit-mission-bar {
   padding: 12px 20px;
-  background: linear-gradient(180deg, var(--animal-primary, #19c8b9) 0%, var(--animal-primary-dark, #0f8e83) 100%);
-  border-bottom: 3px solid var(--animal-border-wood, #7a583e);
+  background: linear-gradient(180deg, #7a583e 0%, #5c3c26 100%) !important;
+  border-bottom: 3.5px solid #4a2f1c !important;
   color: #ffffff;
 }
 
@@ -4187,9 +4207,9 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
 }
 
 .codekit-btn-primary {
-  background: var(--animal-primary, #19c8b9);
-  border: none;
-  color: #ffffff;
+  background: #ffffff !important;
+  border: 2.5px solid var(--animal-border-wood, #7a583e) !important;
+  color: var(--animal-text, #794f27) !important;
   padding: 9px 20px;
   border-radius: var(--animal-radius-pill, 50px);
   font-family: var(--animal-font, 'Nunito', sans-serif);
@@ -4200,18 +4220,20 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
   align-items: center;
   gap: 8px;
   transition: all 0.15s ease;
-  box-shadow: var(--animal-shadow-btn-primary, 0 4px 0 0 #0f8e83);
+  box-shadow: 0 4px 0 0 var(--animal-border-wood, #7a583e) !important;
 }
 
 .codekit-btn-primary:hover {
-  background: var(--animal-primary-hover, #3dd4c6);
-  transform: translateY(-1px);
-  box-shadow: 0 5px 0 0 #0f8e83;
+  background: #fdfbf7 !important;
+  color: #5c3c26 !important;
+  border-color: #5c3c26 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 0 #5c3c26 !important;
 }
 
 .codekit-btn-primary:active {
   transform: translateY(3px);
-  box-shadow: 0 1px 0 0 #0f8e83;
+  box-shadow: 0 1px 0 0 var(--animal-border-wood, #7a583e) !important;
 }
 
 .codekit-btn-primary svg {
