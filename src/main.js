@@ -86,32 +86,55 @@ class RPGApplication {
   }
 
   async init() {
+    const hideLoader = () => {
+      const loadingScreen = document.getElementById('loading-screen');
+      if (loadingScreen && loadingScreen.style.display !== 'none') {
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => {
+          if (loadingScreen) loadingScreen.style.display = 'none';
+        }, 250);
+      }
+    };
+
+    // Failsafe: hide loader after 2s under any circumstances
+    const forceHideTimer = setTimeout(hideLoader, 2000);
+
     try {
-      this.setupWindowResize();
-      this.setupDrawerResizing();
-      this.setupColliderPanel();
-      this.setupPlayCameraZoomPanel();
-      this.setupTileInspector();
-      this.setupLayerManager();
-      this.setupChatSystem();
-      this.setupAuthUI();
-      this.setupHeroSelectionUI();
-      this.setupBackpackUI();
-      this.setupCraftingUI();
-      this.setupCodingStudioUI();
-      this.setupQuickMountButton();
-      this.setupNetworkDisconnectionMonitor();
-      this.bindDOMEvents();
+      const safeCall = (fn, name) => {
+        try {
+          if (typeof fn === 'function') fn.call(this);
+        } catch (e) {
+          console.warn(`[Init] Non-fatal issue in ${name}:`, e);
+        }
+      };
 
-      // Ativa proteções de segurança, anti-scrape e bloqueio de download de assets
-      securityManager.init();
+      safeCall(this.setupWindowResize, 'setupWindowResize');
+      safeCall(this.setupDrawerResizing, 'setupDrawerResizing');
+      safeCall(this.setupColliderPanel, 'setupColliderPanel');
+      safeCall(this.setupPlayCameraZoomPanel, 'setupPlayCameraZoomPanel');
+      safeCall(this.setupTileInspector, 'setupTileInspector');
+      safeCall(this.setupLayerManager, 'setupLayerManager');
+      safeCall(this.setupChatSystem, 'setupChatSystem');
+      safeCall(this.setupAuthUI, 'setupAuthUI');
+      safeCall(this.setupHeroSelectionUI, 'setupHeroSelectionUI');
+      safeCall(this.setupBackpackUI, 'setupBackpackUI');
+      safeCall(this.setupCraftingUI, 'setupCraftingUI');
+      safeCall(this.setupCodingStudioUI, 'setupCodingStudioUI');
+      safeCall(this.setupQuickMountButton, 'setupQuickMountButton');
+      safeCall(this.setupNetworkDisconnectionMonitor, 'setupNetworkDisconnectionMonitor');
+      safeCall(this.bindDOMEvents, 'bindDOMEvents');
 
-      // Initialize IndexedDB Storage Engine & Supabase Cloud
-      await this.storageManager.init();
-      await this.supabaseClient.init();
-      this.multiplayerClient.attachSupabase(this.supabaseClient);
+      // Ativa proteções de segurança
+      try { securityManager.init(); } catch (e) { console.warn('SecurityManager init:', e); }
+
+      // Initialize Storage & Supabase in parallel
+      await Promise.allSettled([
+        this.storageManager.init().catch(e => console.warn('StorageManager error:', e)),
+        this.supabaseClient.init().catch(e => console.warn('SupabaseClient error:', e))
+      ]);
 
       if (this.multiplayerClient) {
+        this.multiplayerClient.attachSupabase(this.supabaseClient);
         this.multiplayerClient.onMapUpdated = (payload) => {
           if (payload && payload.map) {
             console.log('[Multiplayer] Recebido mapa atualizado em tempo real por:', payload.updatedBy);
@@ -123,9 +146,9 @@ class RPGApplication {
         };
       }
 
-      await this.assetLoader.syncWithStorage(this.storageManager);
+      await this.assetLoader.syncWithStorage(this.storageManager).catch(e => console.warn('AssetLoader sync:', e));
 
-      // Preload all sprites and tiles
+      // Preload sprites and tiles
       const progressFill = document.getElementById('progress-fill');
       const progressText = document.getElementById('progress-text');
 
@@ -133,29 +156,19 @@ class RPGApplication {
         const pct = Math.round(progress * 100);
         if (progressFill) progressFill.style.width = `${pct}%`;
         if (progressText) progressText.innerText = `${pct}%`;
-      });
+      }).catch(e => console.warn('AssetLoader loadAll:', e));
+
+      if (progressFill) progressFill.style.width = '100%';
+      if (progressText) progressText.innerText = '100%';
     } catch (err) {
       console.error('Error during init/asset preloading:', err);
     } finally {
-      // Guarantee loading screen always hides
-      const loadingScreen = document.getElementById('loading-screen');
-      if (loadingScreen) {
-        loadingScreen.style.opacity = '0';
-        setTimeout(() => (loadingScreen.style.display = 'none'), 300);
-      }
+      clearTimeout(forceHideTimer);
+      hideLoader();
     }
 
-    // Safety fallback: maximum 3.5s to ensure loading screen is hidden in all circumstances
-    setTimeout(() => {
-      const loadingScreen = document.getElementById('loading-screen');
-      if (loadingScreen && loadingScreen.style.display !== 'none') {
-        loadingScreen.style.opacity = '0';
-        setTimeout(() => (loadingScreen.style.display = 'none'), 300);
-      }
-    }, 3500);
-
     // Load saved map & game state from IndexedDB (with multi-key migration/fallback)
-    await this.loadGameFromStorage();
+    await this.loadGameFromStorage().catch(e => console.warn('loadGameFromStorage error:', e));
 
     // Sync player collider and position with loaded data
     this.player.syncCollider(this.assetLoader);
@@ -184,7 +197,11 @@ class RPGApplication {
     requestAnimationFrame((t) => this.gameLoop(t));
 
     // Start Interactive Kid-Friendly Tutorial
-    this.tutorialManager?.startTutorial();
+    try {
+      this.tutorialManager?.startTutorial();
+    } catch (tutErr) {
+      console.warn('TutorialManager start error:', tutErr);
+    }
   }
 
   setupWindowResize() {
@@ -1869,10 +1886,10 @@ class RPGApplication {
             // Collect visible solid tiles and characters entities for unified Y-sorting
             const ySortEntities = [];
 
-            // 1. Solid layer root tiles within viewport
+            // 1. Solid layer root tiles within viewport (2 blocks padding)
             const solidLayer = this.tileMap.layers.solid;
             if (solidLayer && solidLayer.size > 0) {
-              const padding = 6;
+              const padding = 2;
               const startCol = Math.floor(this.camera.x / this.tileMap.tileSize) - padding;
               const endCol = Math.ceil((this.camera.x + this.camera.viewportWidth / this.camera.zoom) / this.tileMap.tileSize) + padding;
               const startRow = Math.floor(this.camera.y / this.tileMap.tileSize) - padding;
@@ -1895,10 +1912,10 @@ class RPGApplication {
               }
             }
 
-            // 2. Characters layer tiles within viewport (if any)
+            // 2. Characters layer tiles within viewport (2 blocks padding)
             const charLayer = this.tileMap.layers.characters;
             if (charLayer && charLayer.size > 0) {
-              const padding = 6;
+              const padding = 2;
               const startCol = Math.floor(this.camera.x / this.tileMap.tileSize) - padding;
               const endCol = Math.ceil((this.camera.x + this.camera.viewportWidth / this.camera.zoom) / this.tileMap.tileSize) + padding;
               const startRow = Math.floor(this.camera.y / this.tileMap.tileSize) - padding;
@@ -1986,7 +2003,7 @@ class RPGApplication {
       // Render Remote Players (Multiplayer)
       if (this.multiplayerClient && this.mode === 'play') {
         try {
-          this.multiplayerClient.render(this.ctx, this.assetLoader);
+          this.multiplayerClient.render(this.ctx, this.assetLoader, this.camera);
         } catch (mpErr) {
           console.error('Error rendering multiplayer entities:', mpErr);
         }
@@ -3270,8 +3287,25 @@ class RPGApplication {
   }
 }
 
-// Bootstrap application on page load
-window.addEventListener('DOMContentLoaded', () => {
-  const app = new RPGApplication();
-  app.init();
-});
+// Resilient Bootstrap Application on page load
+function bootstrapApp() {
+  try {
+    const app = new RPGApplication();
+    window.app = app;
+    app.init().catch(err => {
+      console.error('[RPGApplication] Erro durante inicialização:', err);
+      const loadingScreen = document.getElementById('loading-screen');
+      if (loadingScreen) loadingScreen.style.display = 'none';
+    });
+  } catch (err) {
+    console.error('[RPGApplication] Erro fatal ao instanciar aplicação:', err);
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) loadingScreen.style.display = 'none';
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootstrapApp);
+} else {
+  bootstrapApp();
+}

@@ -2694,10 +2694,10 @@ export class AssetLoader {
           resolve(result);
         };
 
-        // 1.5s timeout safety per image so loader never gets stuck
+        // 400ms timeout safety per image so loader never gets stuck
         const timer = setTimeout(() => {
           finish(null);
-        }, 1500);
+        }, 400);
 
         img.onload = () => {
           clearTimeout(timer);

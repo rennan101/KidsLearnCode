@@ -267,12 +267,28 @@ export class MultiplayerClient {
     }
   }
 
-  render(ctx, assetLoader) {
+  render(ctx, assetLoader, camera = null) {
     const listToRender = this.isConnected 
       ? Array.from(this.remotePlayers.values()) 
       : this.simulatedBots;
 
+    const tileSize = 64;
+    const padding = 2 * tileSize;
+
     for (const p of listToRender) {
+      if (camera && typeof camera.x === 'number' && typeof camera.y === 'number') {
+        const zoom = camera.zoom || 1.0;
+        const viewW = camera.viewportWidth / zoom;
+        const viewH = camera.viewportHeight / zoom;
+        if (
+          p.x + 64 < camera.x - padding ||
+          p.x > camera.x + viewW + padding ||
+          p.y + 64 < camera.y - padding ||
+          p.y > camera.y + viewH + padding
+        ) {
+          continue; // Outside camera + 2 blocks
+        }
+      }
       this.renderRemotePlayer(ctx, p, assetLoader);
     }
   }

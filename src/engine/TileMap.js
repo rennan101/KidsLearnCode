@@ -368,8 +368,8 @@ export class TileMap {
     const camW = (camera && typeof camera.viewportWidth === 'number' && isFinite(camera.viewportWidth) && camera.viewportWidth > 0) ? camera.viewportWidth : 800;
     const camH = (camera && typeof camera.viewportHeight === 'number' && isFinite(camera.viewportHeight) && camera.viewportHeight > 0) ? camera.viewportHeight : 600;
 
-    // Viewport bounds culling (with padding for large objects)
-    const padding = 6;
+    // Viewport bounds culling (strict 2 blocks margin around visible camera)
+    const padding = 2;
     const startCol = Math.floor(camX / this.tileSize) - padding;
     const endCol = Math.ceil((camX + camW / camZ) / this.tileSize) + padding;
     const startRow = Math.floor(camY / this.tileSize) - padding;
