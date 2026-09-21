@@ -851,6 +851,7 @@ class RPGApplication {
       editorTools.style.display = 'none';
       playHint.style.display = 'flex';
       assetDrawer.classList.add('collapsed');
+      assetDrawer.style.display = 'none';
       btnToggleDrawer.style.display = 'none';
       this.canvasWrapper.classList.remove('editing');
       if (statusMode) statusMode.innerText = 'PLAY';
@@ -877,6 +878,7 @@ class RPGApplication {
       btnPlay.classList.remove('active');
       editorTools.style.display = 'flex';
       playHint.style.display = 'none';
+      assetDrawer.style.display = 'flex';
       assetDrawer.classList.remove('collapsed');
       btnToggleDrawer.style.display = 'flex';
       this.canvasWrapper.classList.add('editing');
@@ -1414,6 +1416,31 @@ class RPGApplication {
       if (cloudBtn) cloudBtn.style.display = 'inline-flex';
       if (labelEl) labelEl.innerText = 'Entrar';
       if (headerLogoutBtn) headerLogoutBtn.style.display = 'none';
+    }
+
+    // 4. Asset Drawer & Editor controls strictly hidden in Play Mode
+    const assetDrawer = document.getElementById('asset-drawer');
+    const btnToggleDrawer = document.getElementById('btn-toggle-drawer');
+    const editorTools = document.getElementById('editor-tools');
+    const playHint = document.getElementById('play-hint');
+
+    if (!isEdit) {
+      if (assetDrawer) {
+        assetDrawer.classList.add('collapsed');
+        assetDrawer.style.display = 'none';
+      }
+      if (btnToggleDrawer) btnToggleDrawer.style.display = 'none';
+      if (editorTools) editorTools.style.display = 'none';
+      if (playHint) playHint.style.display = 'flex';
+      this.canvasWrapper?.classList.remove('editing');
+    } else {
+      if (assetDrawer) {
+        assetDrawer.style.display = 'flex';
+      }
+      if (btnToggleDrawer) btnToggleDrawer.style.display = 'flex';
+      if (editorTools) editorTools.style.display = 'flex';
+      if (playHint) playHint.style.display = 'none';
+      this.canvasWrapper?.classList.add('editing');
     }
   }
 

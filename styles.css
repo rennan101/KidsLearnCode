@@ -418,6 +418,8 @@ canvas#game-canvas {
   transform: translateX(100%);
   width: 0 !important;
   min-width: 0 !important;
+  display: none !important;
+  pointer-events: none !important;
   border-left: none;
 }
 
