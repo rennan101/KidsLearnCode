@@ -1,9 +1,30 @@
 import { DRAGON_CATALOG } from './DragonManager.js';
+import { PLAYABLE_HEROES, VILLAGE_NPCS } from './CharacterRegistry.js';
 
 export function generateDragonSVG(dragon) {
   const body = dragon.color || '#38bdf8';
   const accent = dragon.secondaryColor || '#fef08a';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><ellipse cx="32" cy="54" rx="20" ry="7" fill="rgba(0,0,0,0.22)"/><ellipse cx="14" cy="28" rx="10" ry="6" fill="${accent}" transform="rotate(-25 14 28)"/><ellipse cx="50" cy="28" rx="10" ry="6" fill="${accent}" transform="rotate(25 50 28)"/><ellipse cx="32" cy="36" rx="18" ry="15" fill="${body}"/><ellipse cx="32" cy="38" rx="11" ry="10" fill="${accent}"/><circle cx="32" cy="22" r="14" fill="${body}"/><polygon points="24,14 20,4 28,12" fill="${accent}"/><polygon points="40,14 44,4 36,12" fill="${accent}"/><circle cx="27" cy="21" r="3.2" fill="#1e293b"/><circle cx="37" cy="21" r="3.2" fill="#1e293b"/><circle cx="26" cy="20" r="1.2" fill="#ffffff"/><circle cx="36" cy="20" r="1.2" fill="#ffffff"/><circle cx="23" cy="25" r="2.5" fill="rgba(244,114,182,0.6)"/><circle cx="41" cy="25" r="2.5" fill="rgba(244,114,182,0.6)"/></svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+export function generateNestSVG(eggColor = '#fbbf24', twigColor = '#854d0e') {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><ellipse cx="32" cy="54" rx="26" ry="9" fill="rgba(0,0,0,0.25)"/><ellipse cx="32" cy="44" rx="24" ry="13" fill="${twigColor}" stroke="#5c3c26" stroke-width="2"/><ellipse cx="32" cy="42" rx="18" ry="8" fill="#a16207"/><ellipse cx="32" cy="35" rx="9" ry="12" fill="${eggColor}" stroke="#ffffff" stroke-width="1.5"/><ellipse cx="30" cy="31" rx="3" ry="5" fill="rgba(255,255,255,0.4)"/><path d="M 12 42 Q 32 50 52 42" stroke="#713f12" stroke-width="2" fill="none"/><path d="M 16 38 Q 32 46 48 38" stroke="#451a03" stroke-width="1.5" fill="none"/></svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+export function generateIncubatorSVG() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><ellipse cx="32" cy="56" rx="22" ry="7" fill="rgba(0,0,0,0.28)"/><rect x="14" y="42" width="36" height="16" rx="8" fill="#334155" stroke="#0f172a" stroke-width="2"/><circle cx="32" cy="50" r="4" fill="#38bdf8"/><path d="M 18 42 C 18 20, 46 20, 46 42 Z" fill="rgba(56, 189, 248, 0.35)" stroke="#38bdf8" stroke-width="2"/><ellipse cx="32" cy="34" rx="7" ry="10" fill="#fbbf24" stroke="#ffffff" stroke-width="1.5"/><circle cx="32" cy="18" r="4" fill="#f59e0b" stroke="#ffffff" stroke-width="1"/></svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+export function generateEggSVG(color = '#fbbf24', spotColor = '#f97316') {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><ellipse cx="32" cy="52" rx="14" ry="5" fill="rgba(0,0,0,0.22)"/><ellipse cx="32" cy="34" rx="14" ry="19" fill="${color}" stroke="#78350f" stroke-width="1.8"/><ellipse cx="36" cy="30" rx="4" ry="5" fill="${spotColor}" opacity="0.85"/><ellipse cx="28" cy="40" rx="3" ry="4" fill="${spotColor}" opacity="0.85"/><ellipse cx="28" cy="26" rx="2" ry="4" fill="rgba(255,255,255,0.6)"/></svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+export function generateDummySVG() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><ellipse cx="32" cy="56" rx="16" ry="6" fill="rgba(0,0,0,0.25)"/><rect x="30" y="24" width="4" height="32" fill="#78350f"/><rect x="18" y="28" width="28" height="4" fill="#78350f"/><ellipse cx="32" cy="36" rx="12" ry="14" fill="#ca8a04" stroke="#854d0e" stroke-width="1.5"/><circle cx="32" cy="18" r="9" fill="#eab308" stroke="#854d0e" stroke-width="1.5"/><line x1="28" y1="16" x2="30" y2="18" stroke="#713f12" stroke-width="1.5"/><line x1="36" y1="16" x2="34" y2="18" stroke="#713f12" stroke-width="1.5"/></svg>`;
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
 
@@ -2258,6 +2279,131 @@ export class AssetLoader {
         }
       });
     }
+
+    // Register Dragon Nests, Incubator & Eggs in Overworld Tiles (Category: 'Dragons')
+    const dragonNests = [
+      { id: 'struct_dragon_nest_solar', name: 'Ninho Solar da Aurora', eggType: 'dragon_fly_solar', eggName: 'Ovo Solar da Aurora', eggIcon: 'solar', color: '#fbbf24', twig: '#854d0e' },
+      { id: 'struct_dragon_nest_magma', name: 'Ninho Vulcânico de Obsidiana', eggType: 'dragon_land_magma', eggName: 'Ovo de Magma Ardente', eggIcon: 'magma', color: '#ef4444', twig: '#451a03' },
+      { id: 'struct_dragon_nest_frost', name: 'Ninho Glacial dos Recifes', eggType: 'dragon_water_frost', eggName: 'Ovo Glacial dos Icebergs', eggIcon: 'frost', color: '#38bdf8', twig: '#0284c7' },
+      { id: 'struct_dragon_nest_forest', name: 'Ninho Silvestre de Musgo', eggType: 'dragon_land_forest', eggName: 'Ovo da Floresta', eggIcon: 'flora', color: '#10b981', twig: '#15803d' },
+      { id: 'struct_dragon_nest_generic', name: 'Ninho de Gravetos Rústico', eggType: 'dragon_fly_zephyr', eggName: 'Ovo dos Ventos', eggIcon: 'zephyr', color: '#fef08a', twig: '#78350f' }
+    ];
+
+    for (const nest of dragonNests) {
+      this.overworldTiles.push({
+        id: nest.id,
+        name: nest.name,
+        category: 'Dragons',
+        layer: 'decor',
+        isNest: true,
+        eggType: nest.eggType,
+        eggName: nest.eggName,
+        eggIcon: nest.eggIcon,
+        src: generateNestSVG(nest.color, nest.twig),
+        gridW: 1,
+        gridH: 1,
+        collider: {
+          enabled: true,
+          x: 12,
+          y: 36,
+          w: 40,
+          h: 22
+        }
+      });
+    }
+
+    // Incubadora Térmica de Ovos
+    this.overworldTiles.push({
+      id: 'struct_egg_incubator',
+      name: 'Incubadora Térmica de Ovos',
+      category: 'Dragons',
+      layer: 'decor',
+      isIncubator: true,
+      src: generateIncubatorSVG(),
+      gridW: 1,
+      gridH: 1,
+      collider: {
+        enabled: true,
+        x: 14,
+        y: 38,
+        w: 36,
+        h: 22
+      }
+    });
+
+    // Ovos Avulsos de Dragão
+    const dragonEggs = [
+      { id: 'item_dragon_egg_solar', name: 'Ovo Solar da Aurora', eggType: 'dragon_fly_solar', color: '#fbbf24', spot: '#f97316' },
+      { id: 'item_dragon_egg_magma', name: 'Ovo de Magma Ardente', eggType: 'dragon_land_magma', color: '#ef4444', spot: '#7f1d1d' },
+      { id: 'item_dragon_egg_frost', name: 'Ovo Glacial dos Icebergs', eggType: 'dragon_water_frost', color: '#38bdf8', spot: '#0284c7' },
+      { id: 'item_dragon_egg_lunar', name: 'Ovo Mítico da Lua', eggType: 'dragon_mythic_lua', color: '#e0e7ff', spot: '#fbbf24' }
+    ];
+
+    for (const egg of dragonEggs) {
+      this.overworldTiles.push({
+        id: egg.id,
+        name: egg.name,
+        category: 'Dragons',
+        layer: 'decor',
+        isEgg: true,
+        eggType: egg.eggType,
+        src: generateEggSVG(egg.color, egg.spot),
+        gridW: 1,
+        gridH: 1,
+        collider: {
+          enabled: true,
+          x: 20,
+          y: 38,
+          w: 24,
+          h: 18
+        }
+      });
+    }
+
+    // Register Playable Heroes in Overworld Tiles (Category: 'Characters')
+    if (Array.isArray(PLAYABLE_HEROES)) {
+      for (const hero of PLAYABLE_HEROES) {
+        this.overworldTiles.push({
+          id: hero.id,
+          name: hero.name,
+          category: 'Characters',
+          layer: 'characters',
+          isCharacter: true,
+          characterType: 'hero',
+          heroData: hero,
+          src: `assets/characters/${hero.id}/frames/wolf_hunter_r0_c0.png`,
+          gridW: 1,
+          gridH: 1,
+          collider: {
+            enabled: true,
+            x: 18,
+            y: 44,
+            w: 28,
+            h: 18
+          }
+        });
+      }
+    }
+
+    // Register Training Targets in Overworld Tiles (Category: 'Characters')
+    this.overworldTiles.push({
+      id: 'training_dummy_straw',
+      name: 'Espantalho de Treino',
+      category: 'Characters',
+      layer: 'characters',
+      isCharacter: true,
+      characterType: 'enemy',
+      src: generateDummySVG(),
+      gridW: 1,
+      gridH: 1,
+      collider: {
+        enabled: true,
+        x: 18,
+        y: 40,
+        w: 28,
+        h: 20
+      }
+    });
 
     // Load custom colliders, scales & depth offsets from localStorage if user modified them
     this.COLLIDER_STORAGE_KEY = 'kidslean_rpg_custom_colliders_v1';

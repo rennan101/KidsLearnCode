@@ -209,70 +209,11 @@ export class DragonManager {
     this.damageNumbers = [];
     this.combatCooldown = 0;
 
-    // Training Targets in World
-    this.trainingTargets = [
-      {
-        id: 'target_dummy_1',
-        name: 'Espantalho de Treino',
-        x: 480,
-        y: 320,
-        hp: 200,
-        maxHp: 200,
-        level: 3,
-        attackTimer: 0,
-        isAggro: false,
-        hitTimer: 0
-      },
-      {
-        id: 'target_shadow_slime',
-        name: 'Gosma Sombria Selvagem',
-        x: 640,
-        y: 420,
-        hp: 140,
-        maxHp: 140,
-        level: 4,
-        attackTimer: 0,
-        isAggro: false,
-        hitTimer: 0
-      }
-    ];
+    // Training Targets in World (placed dynamically by ADM in Edit Mode)
+    this.trainingTargets = [];
 
-    // Wild Dragon Nests in the World
-    this.wildNests = [
-      {
-        id: 'nest_solar',
-        name: 'Ninho Solar dos Penhascos',
-        x: 200,
-        y: 180,
-        eggType: 'dragon_fly_solar',
-        eggName: 'Ovo Solar da Aurora',
-        eggIcon: 'solar',
-        warmthProgress: 0, // 0 to 100%
-        hatched: false
-      },
-      {
-        id: 'nest_magma',
-        name: 'Ninho Vulcânico de Obsidiana',
-        x: 520,
-        y: 600,
-        eggType: 'dragon_land_magma',
-        eggName: 'Ovo de Magma Ardente',
-        eggIcon: 'magma',
-        warmthProgress: 0,
-        hatched: false
-      },
-      {
-        id: 'nest_frost',
-        name: 'Ninho Glacial dos Recifes',
-        x: 120,
-        y: 500,
-        eggType: 'dragon_water_frost',
-        eggName: 'Ovo Glacial dos Icebergs',
-        eggIcon: 'frost',
-        warmthProgress: 0,
-        hatched: false
-      }
-    ];
+    // Wild Dragon Nests in World (placed dynamically by ADM in Edit Mode)
+    this.wildNests = [];
   }
 
   getParty() {
@@ -462,8 +403,20 @@ export class DragonManager {
   }
 
   // Dragon Egg Nest Interaction (Warmth & Hatching)
-  interactWithNest(nestId) {
-    const nest = this.wildNests.find(n => n.id === nestId);
+  interactWithNest(nestId, nestData = null) {
+    let nest = this.wildNests.find(n => n.id === nestId);
+    if (!nest && nestData) {
+      nest = {
+        id: nestId,
+        name: nestData.name || 'Ninho de Dragão',
+        eggType: nestData.eggType || 'dragon_fly_solar',
+        eggName: nestData.eggName || 'Ovo de Dragão',
+        eggIcon: nestData.eggIcon || 'solar',
+        warmthProgress: 0,
+        hatched: false
+      };
+      this.wildNests.push(nest);
+    }
     if (!nest) return { success: false, reason: 'Ninho não encontrado.' };
 
     if (nest.hatched) {

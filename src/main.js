@@ -862,6 +862,18 @@ class RPGApplication {
             return;
           }
         }
+
+        const clickedNest = this.findNearbyPlacedNest(worldPos.x - 32, worldPos.y - 32, 60);
+        if (clickedNest) {
+          const pDist = Math.hypot(clickedNest.worldX - this.player.x, clickedNest.worldY - this.player.y);
+          if (pDist <= 140) {
+            this.interactWithPlacedNest(clickedNest);
+            return;
+          } else {
+            this.showToast(`Aproxime-se de ${clickedNest.name} para interagir.`);
+            return;
+          }
+        }
       }
     });
 
@@ -932,18 +944,10 @@ class RPGApplication {
             return;
           }
 
-          // 3. Check proximity to wild nests
-          const nearbyNest = this.dragonManager.wildNests.find(n => {
-            return Math.hypot(n.x - this.player.x, n.y - this.player.y) < 70;
-          });
-
+          // 3. Check proximity to placed dragon nests, incubators or eggs on TileMap
+          const nearbyNest = this.findNearbyPlacedNest(this.player.x, this.player.y, 90);
           if (nearbyNest) {
-            const nestRes = this.dragonManager.interactWithNest(nearbyNest.id);
-            if (nestRes.hatched) {
-              this.openEggHatchModal(nestRes.speciesData, nearbyNest);
-            } else {
-              this.showToast(nestRes.message || nestRes.reason);
-            }
+            this.interactWithPlacedNest(nearbyNest);
             return;
           }
 
@@ -2730,6 +2734,56 @@ class RPGApplication {
       }
     }
     return nearest;
+  }
+
+  findNearbyPlacedNest(worldX, worldY, radius = 90) {
+    if (!this.tileMap || !this.tileMap.layers) return null;
+    let nearest = null;
+    let minDistance = radius;
+
+    const layersToCheck = ['characters', 'solid', 'decor', 'ground'];
+    for (const layerName of layersToCheck) {
+      const layer = this.tileMap.layers[layerName];
+      if (!layer) continue;
+
+      for (const [key, cell] of layer.entries()) {
+        const tileId = (typeof cell === 'object' && cell !== null) ? cell.tileId : (typeof cell === 'string' ? cell : null);
+        if (tileId && (tileId.includes('nest') || tileId.includes('incubator') || tileId.includes('egg'))) {
+          const [tx, ty] = key.split(',').map(Number);
+          const objWorldX = tx * 64 + 32;
+          const objWorldY = ty * 64 + 32;
+          const dist = Math.hypot(objWorldX - (worldX + 32), objWorldY - (worldY + 32));
+          if (dist <= minDistance) {
+            minDistance = dist;
+            const meta = this.assetLoader.getTileMetadata(tileId);
+            nearest = {
+              id: key,
+              tileId,
+              name: meta?.name || 'Ninho de Dragão',
+              tx,
+              ty,
+              worldX: tx * 64,
+              worldY: ty * 64,
+              eggType: meta?.eggType || 'dragon_fly_solar',
+              eggName: meta?.eggName || 'Ovo de Dragão',
+              eggIcon: meta?.eggIcon || 'solar',
+              speciesData: DRAGON_CATALOG.find(d => d.id === meta?.eggType) || DRAGON_CATALOG[0]
+            };
+          }
+        }
+      }
+    }
+    return nearest;
+  }
+
+  interactWithPlacedNest(nest) {
+    if (!nest) return;
+    const nestRes = this.dragonManager.interactWithNest(nest.id, nest);
+    if (nestRes.hatched) {
+      this.openEggHatchModal(nestRes.speciesData, nest);
+    } else {
+      this.showToast(nestRes.message || nestRes.reason);
+    }
   }
 
   interactWithDragon(dragon) {
