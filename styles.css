@@ -1690,38 +1690,65 @@ canvas#game-canvas {
   inset: 0;
   z-index: 150;
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 40px;
-  background: rgba(10, 15, 25, 0.45);
-  backdrop-filter: blur(4px);
-  pointer-events: auto;
+  background: transparent;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  pointer-events: none;
 }
 
 .ac-dialogue-box {
   background: #fdfbf7;
   border: 4px solid #7a583e;
   border-radius: 28px;
-  width: 680px;
-  max-width: 90vw;
+  width: 620px;
+  max-width: 92vw;
   padding: 16px 20px;
   display: flex;
   gap: 16px;
   box-shadow: 
     0 15px 40px rgba(0, 0, 0, 0.6),
     inset 0 2px 0 rgba(255, 255, 255, 0.8);
-  animation: acPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
+  animation: acPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: absolute;
+  pointer-events: auto;
+}
+
+/* Animal Crossing pointer tail pointing down to NPC */
+.ac-dialogue-box::after {
+  content: '';
+  position: absolute;
+  bottom: -18px;
+  left: calc(50% + var(--tail-offset-x, 0px));
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-top: 18px solid #7a583e;
+}
+
+.ac-dialogue-box::before {
+  content: '';
+  position: absolute;
+  bottom: -13px;
+  left: calc(50% + var(--tail-offset-x, 0px));
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 11px solid transparent;
+  border-right: 11px solid transparent;
+  border-top: 14px solid #fdfbf7;
+  z-index: 1;
 }
 
 @keyframes acPop {
-  0% { transform: scale(0.9) translateY(30px); opacity: 0; }
+  0% { transform: scale(0.9) translateY(20px); opacity: 0; }
   100% { transform: scale(1) translateY(0); opacity: 1; }
 }
 
 .ac-portrait-wrapper {
-  width: 90px;
-  height: 90px;
+  width: 84px;
+  height: 84px;
   background: #eadecb;
   border: 3px solid #7a583e;
   border-radius: 20px;
@@ -1761,11 +1788,11 @@ canvas#game-canvas {
 
 .ac-bubble-text {
   font-family: 'Outfit', sans-serif;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #3b281c;
   line-height: 1.4;
-  min-height: 48px;
+  min-height: 44px;
 }
 
 .ac-choices {
@@ -1796,18 +1823,19 @@ canvas#game-canvas {
 }
 
 /* =========================================
-   CRAFTING & DRAGON MODALS
+   CRAFTING, BACKPACK & DRAGON MODALS
    ========================================= */
 
-.crafting-modal, .dragon-party-modal {
+.crafting-modal, .dragon-party-modal, .backpack-modal {
   position: fixed;
   inset: 0;
   z-index: 120;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(5, 8, 15, 0.8);
-  backdrop-filter: blur(8px);
+  background: rgba(5, 8, 15, 0.78);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .crafting-card, .dragon-card {
@@ -2551,84 +2579,113 @@ canvas#game-canvas {
   box-shadow: 0 4px 12px rgba(0, 168, 150, 0.4);
 }
 
-/* Tools List Session */
-.tools-list, .eggs-list {
+/* Tools, Eggs & Dragons ACNH Tab Styles */
+.tools-list, .eggs-list, .dragon-body {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.tool-card, .egg-card {
+.ac-tools-grid, .ac-eggs-grid, .ac-dragons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+
+.tool-card, .egg-card, .dragon-party-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #0d121d;
-  border: 1px solid #1e293b;
-  border-radius: 10px;
+  background: #0b121c;
+  border: 1.5px solid #192638;
+  border-radius: 16px;
   padding: 12px 16px;
-  gap: 14px;
-
-  transition: all 0.15s ease;
+  gap: 12px;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-.tool-card:hover, .egg-card:hover {
-  border-color: #38bdf8;
-  background: #151c2c;
+.tool-card:hover, .egg-card:hover, .dragon-party-item:hover {
+  border-color: #00a896;
+  background: #101c2c;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 168, 150, 0.2);
 }
 
-.tool-info, .egg-info {
+.tool-info, .egg-info, .dragon-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   flex: 1;
 }
 
-.tool-icon, .egg-icon {
-  font-size: 2rem;
-  line-height: 1;
-}
-
-.tool-details, .egg-details {
+.ac-tab-avatar-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #111e2e;
+  border: 2px solid #00a896;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 
-.tool-details h4, .egg-details h4 {
-  font-size: 0.9rem;
-  color: #f8fafc;
+.ac-tab-avatar-circle svg {
+  width: 28px;
+  height: 28px;
+  stroke: currentColor;
 }
 
-.tool-details p, .egg-details p {
-  font-size: 0.75rem;
-  color: #94a3b8;
-}
-
-.durability-bar-wrapper, .warmth-bar-wrapper {
-  width: 140px;
+.tool-details, .egg-details, .dragon-details {
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
 
+.tool-details h4, .egg-details h4, .dragon-details h4 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tool-details p, .egg-details p, .dragon-details p {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  line-height: 1.3;
+}
+
+.durability-bar-wrapper, .warmth-bar-wrapper {
+  width: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 3px;
+}
+
 .durability-label, .warmth-label {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-family: var(--font-mono);
-  color: #cbd5e1;
+  color: #94a3b8;
   display: flex;
   justify-content: space-between;
 }
 
 .durability-bar, .warmth-bar {
   height: 6px;
-  background: #1e293b;
-  border-radius: 3px;
+  background: #162436;
+  border-radius: 4px;
   overflow: hidden;
 }
 
 .durability-fill {
   height: 100%;
-  background: linear-gradient(90deg, #10b981, #34d399);
+  background: linear-gradient(90deg, #00a896, #34d399);
 }
 
 .warmth-fill {
@@ -2636,27 +2693,41 @@ canvas#game-canvas {
   background: linear-gradient(90deg, #f59e0b, #ef4444);
 }
 
-.btn-equip-tool, .btn-warm-egg {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: #fff;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 8px;
+.btn-equip-tool, .btn-warm-egg, .mount-btn {
+  background: linear-gradient(135deg, #00a896, #028072);
+  color: #ffffff;
+  border: 1px solid #34d399;
+  padding: 7px 16px;
+  border-radius: 20px;
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 0.78rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   transition: all 0.15s ease;
+  box-shadow: 0 4px 10px rgba(0, 168, 150, 0.3);
 }
 
 .btn-equip-tool.equipped {
-  background: #047857;
+  background: #025950;
+  border-color: #00a896;
   color: #a7f3d0;
   cursor: default;
+  box-shadow: none;
 }
 
-.btn-equip-tool:not(.equipped):hover, .btn-warm-egg:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
+.btn-warm-egg {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  border-color: #f59e0b;
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+}
+
+.btn-equip-tool:not(.equipped):hover, .btn-warm-egg:hover, .mount-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 6px 14px rgba(0, 168, 150, 0.5);
 }
 
 /* ==========================================================================

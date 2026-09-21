@@ -22,6 +22,7 @@ export class Player {
     this.isSprinting = false;
     this.isCrafting = false;
     this.isMounted = false;
+    this.isDialogueActive = false;
     this.direction = 'south'; // 4-way: 'south', 'east', 'north', 'west'
 
     // Crafting timer & cloud poof effect
@@ -187,6 +188,13 @@ export class Player {
   update(deltaTime, tileMap, assetLoader) {
     const dt = Math.min(deltaTime / 1000, 0.1);
     this.animTimer += dt;
+
+    // Se estiver em diálogo com NPC, trava o movimento imediatamente
+    if (this.isDialogueActive) {
+      this.isMoving = false;
+      this.moveStack = [];
+      return;
+    }
 
     // Se estiver craftando, atualiza as partículas de poof de construção
     if (this.isCrafting) {

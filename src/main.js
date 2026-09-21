@@ -54,6 +54,18 @@ class RPGApplication {
     // Mode: 'play' or 'edit'
     this.mode = 'play';
 
+    // Active NPC dialogue tracking & camera zoom
+    this.activeDialogueNPC = null;
+    this.dialogueSystem.onDialogueOpen = (npc) => {
+      this.player.isDialogueActive = true;
+      this.player.resetKeys();
+      this.activeDialogueNPC = npc;
+    };
+    this.dialogueSystem.onDialogueClose = () => {
+      this.player.isDialogueActive = false;
+      this.activeDialogueNPC = null;
+    };
+
     // FPS Counter
     this.lastTime = performance.now();
     this.frameCount = 0;
@@ -1639,6 +1651,24 @@ class RPGApplication {
     }
 
     if (this.mode === 'play') {
+      // NPC Dialogue Camera Zoom and Anchor Positioning
+      if (this.player.isDialogueActive && this.activeDialogueNPC) {
+        const targetZoom = 1.55;
+        this.camera.zoom += (targetZoom - this.camera.zoom) * 0.08;
+        const targetWorldX = this.activeDialogueNPC.worldX ?? (this.activeDialogueNPC.tx ? this.activeDialogueNPC.tx * 64 : this.player.x);
+        const targetWorldY = this.activeDialogueNPC.worldY ?? (this.activeDialogueNPC.ty ? this.activeDialogueNPC.ty * 64 : this.player.y);
+        const midX = ((this.player.x + targetWorldX) / 2) + 32;
+        const midY = ((this.player.y + targetWorldY) / 2) + 32;
+        this.camera.follow(midX, midY, 0.08);
+        this.dialogueSystem.updateDialoguePosition(this.camera);
+      } else {
+        const baseZoom = this.tileMap.playCameraZoom || 1.0;
+        if (Math.abs(this.camera.zoom - baseZoom) > 0.005) {
+          this.camera.zoom += (baseZoom - this.camera.zoom) * 0.08;
+        }
+        this.camera.follow(this.player.x + 32, this.player.y + 32, 0.1);
+      }
+
       // Sync active dragon mount multiplier to player
       const activeDragon = this.dragonManager?.getActiveDragon();
       const isMounted = this.dragonManager?.isMounted();
@@ -1649,7 +1679,6 @@ class RPGApplication {
 
       // Move player with collision checking against tile colliders (4-way)
       this.player.update(deltaTime, this.tileMap, this.assetLoader);
-      this.camera.follow(this.player.x + 32, this.player.y + 32, 0.1);
 
       // Update Dragon Manager (Pet Follow AI, Combat, Particles)
       if (this.dragonManager) {
@@ -1972,6 +2001,9 @@ class RPGApplication {
 
   interactWithNPC(npc) {
     if (!npc) return;
+    this.player.isDialogueActive = true;
+    this.player.resetKeys();
+    this.activeDialogueNPC = npc;
     this.dialogueSystem.openNpcConversation(npc, this.blocklySystem, {
       onOpenLesson: (lessonId) => {
         const codingModal = document.getElementById('coding-modal') || document.getElementById('coding-studio-modal');
@@ -2469,6 +2501,12 @@ class RPGApplication {
       updateDetailPanel(selectedItem);
     });
 
+    const updateWalletBar = () => {
+      const goldItem = this.inventorySystem.items.find(i => i.id === 'gold_coin');
+      if (walletGold) walletGold.innerText = goldItem ? `${goldItem.count}` : '0';
+      if (walletXp) walletXp.innerText = `Nv. 1 (100 XP)`;
+    };
+
     const renderToolsTab = () => {
       const list = document.getElementById('backpack-tools-list');
       if (!list) return;
@@ -2483,14 +2521,23 @@ class RPGApplication {
         const iconSvg = this.getItemSvgIcon(tool.iconKey || tool.id);
 
         card.innerHTML = `
-          <div class="tool-info" style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 40px; height: 40px; color: #38bdf8; display: flex; align-items: center; justify-content: center;">${iconSvg}</div>
+          <div class="tool-info">
+            <div class="ac-tab-avatar-circle">${iconSvg}</div>
             <div class="tool-details">
-              <h4 style="color: #f8fafc; font-size: 0.9rem;">${tool.name} ${isEquipped ? '<span style="font-size: 0.72rem; color: #10b981; font-weight: 700;">[Equipado]</span>' : ''}</h4>
-              <p style="color: #94a3b8; font-size: 0.75rem;">${tool.desc} • Poder: ${tool.power}x</p>
+              <h4>${tool.name} ${isEquipped ? '<span style="font-size: 0.72rem; color: #34d399; font-weight: 700; background: #064e3b; padding: 1px 8px; border-radius: 10px;">Equipado</span>' : ''}</h4>
+              <p>${tool.desc} • Poder: ${tool.power}x</p>
+              <div class="durability-bar-wrapper">
+                <div class="durability-label">
+                  <span>Durabilidade</span>
+                  <span>${tool.durability || 100}%</span>
+                </div>
+                <div class="durability-bar">
+                  <div class="durability-fill" style="width: ${tool.durability || 100}%"></div>
+                </div>
+              </div>
             </div>
           </div>
-          <button class="btn-equip-tool ${isEquipped ? 'equipped' : ''}" data-id="${tool.id}" style="background: ${isEquipped ? '#059669' : '#1e293b'}; color: #fff; border: 1px solid #334155; padding: 6px 14px; border-radius: 14px; font-weight: 700; cursor: pointer;">
+          <button class="btn-equip-tool ${isEquipped ? 'equipped' : ''}" data-id="${tool.id}">
             ${isEquipped ? 'Equipado' : 'Equipar'}
           </button>
         `;
@@ -2506,6 +2553,7 @@ class RPGApplication {
 
         list.appendChild(card);
       });
+      updateWalletBar();
     };
 
     const renderEggsTab = () => {
@@ -2516,11 +2564,13 @@ class RPGApplication {
 
       if (eggs.length === 0) {
         list.innerHTML = `
-          <div style="text-align: center; padding: 30px; color: #94a3b8;">
-            <svg class="ui-icon" style="width: 40px; height: 40px; margin-bottom: 8px; color: #64748b;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="13" rx="7" ry="9"/></svg>
-            <p>Seu ninho está vazio. Explore a Ilha Lua e use 'E' perto de ninhos selvagens para coletar novos ovos de dragão!</p>
+          <div style="text-align: center; padding: 36px 20px; color: #94a3b8; grid-column: 1 / -1;">
+            <svg class="ui-icon" style="width: 44px; height: 44px; margin-bottom: 8px; color: #00a896;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="13" rx="7" ry="9"/></svg>
+            <p style="font-size: 0.9rem; font-weight: 600; color: #cbd5e1;">Nenhum ovo no seu ninho</p>
+            <p style="font-size: 0.78rem; margin-top: 4px;">Explore a Ilha Lua e use 'E' perto de ninhos selvagens para coletar novos ovos de dragão!</p>
           </div>
         `;
+        updateWalletBar();
         return;
       }
 
@@ -2531,14 +2581,23 @@ class RPGApplication {
         const iconSvg = this.getItemSvgIcon(egg.iconKey || 'egg_solar');
 
         card.innerHTML = `
-          <div class="egg-info" style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 40px; height: 40px; color: #f59e0b; display: flex; align-items: center; justify-content: center;">${iconSvg}</div>
+          <div class="egg-info">
+            <div class="ac-tab-avatar-circle" style="border-color: #f59e0b; color: #f59e0b;">${iconSvg}</div>
             <div class="egg-details">
-              <h4 style="color: #f8fafc; font-size: 0.9rem;">${egg.name}</h4>
-              <p style="color: #94a3b8; font-size: 0.75rem;">${egg.desc}</p>
+              <h4>${egg.name}</h4>
+              <p>${egg.desc}</p>
+              <div class="warmth-bar-wrapper">
+                <div class="warmth-label">
+                  <span>Calor do Ninho</span>
+                  <span>${pct}%</span>
+                </div>
+                <div class="warmth-bar">
+                  <div class="warmth-fill" style="width: ${pct}%"></div>
+                </div>
+              </div>
             </div>
           </div>
-          <button class="btn-warm-egg" data-id="${egg.id}" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; border: none; padding: 6px 14px; border-radius: 14px; font-weight: 800; cursor: pointer;">
+          <button class="btn-warm-egg" data-id="${egg.id}">
             Aquecer (+25%)
           </button>
         `;
@@ -2562,6 +2621,7 @@ class RPGApplication {
 
         list.appendChild(card);
       });
+      updateWalletBar();
     };
 
     const renderDragonsTab = () => {
@@ -2580,18 +2640,20 @@ class RPGApplication {
 
         item.innerHTML = `
           <div class="dragon-info">
+            <div class="ac-tab-avatar-circle" style="border-color: #38bdf8; color: #38bdf8;">
+              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </div>
             <div class="dragon-details">
-              <h4>${drag.name} <span style="font-size: 0.75rem; color: #f59e0b; background: #1e293b; padding: 2px 6px; border-radius: 4px;">Lv.${drag.level}</span></h4>
+              <h4>${drag.name} <span style="font-size: 0.72rem; color: #f59e0b; background: #162436; padding: 2px 7px; border-radius: 8px;">Lv.${drag.level}</span></h4>
               <p><strong>${drag.element}</strong> • HP: ${drag.hp}/${drag.maxHp} • Amizade: ${drag.bond}%</p>
-              <p style="color: #94a3b8; font-size: 0.72rem;">Especial: ${drag.fieldMove}</p>
-              <p style="color: #38bdf8; font-size: 0.72rem;">Esquiva [1]: ${drag.dodgeAbility}</p>
+              <p style="color: #94a3b8; font-size: 0.72rem;">Especial: ${drag.fieldMove} • Esquiva: ${drag.dodgeAbility}</p>
             </div>
           </div>
           <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
-            <button class="mount-btn btn-toggle-mount" data-id="${drag.id}" style="${isActive && isMounted ? 'background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff;' : ''}">
+            <button class="mount-btn btn-toggle-mount" data-id="${drag.id}" style="${isActive && isMounted ? 'background: linear-gradient(135deg, #ef4444, #b91c1c); border-color: #f87171;' : ''}">
               ${isActive && isMounted ? 'Desmontar' : 'Montar'}
             </button>
-            <button class="mount-btn btn-toggle-follow" data-id="${drag.id}" style="background: ${isActive && !isMounted ? '#10b981' : '#334155'}; color: #fff; font-size: 0.72rem; padding: 4px 8px;">
+            <button class="mount-btn btn-toggle-follow" data-id="${drag.id}" style="background: ${isActive && !isMounted ? '#059669' : '#1e293b'}; border-color: ${isActive && !isMounted ? '#34d399' : '#334155'}; font-size: 0.72rem; padding: 4px 10px;">
               ${isActive && !isMounted ? 'Acompanhando' : 'Acompanhar'}
             </button>
           </div>
@@ -2618,6 +2680,7 @@ class RPGApplication {
 
         list.appendChild(item);
       });
+      updateWalletBar();
     };
 
     const switchTab = (tabName) => {

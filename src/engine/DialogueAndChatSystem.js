@@ -216,7 +216,15 @@ export class DialogueAndChatSystem {
   }
 
   // Open Full Animal Crossing Style NPC Dialogue Box
-  startNPCDialogue(speakerMeta, dialogueText, choices = [], onComplete = null) {
+  startNPCDialogue(speakerMeta, dialogueText, choices = [], onComplete = null, npcData = null) {
+    if (npcData) {
+      this.activeNpc = {
+        ...npcData,
+        worldX: npcData.worldX ?? (npcData.tx ? npcData.tx * 64 : 0),
+        worldY: npcData.worldY ?? (npcData.ty ? npcData.ty * 64 : 0)
+      };
+    }
+
     this.activeDialogue = {
       speaker: speakerMeta,
       fullText: dialogueText,
@@ -242,6 +250,10 @@ export class DialogueAndChatSystem {
     }
     if (choicesEl) choicesEl.innerHTML = '';
 
+    if (this.onDialogueOpen) {
+      this.onDialogueOpen(this.activeNpc, speakerMeta);
+    }
+
     clearInterval(this.typewriterTimer);
     this.typewriterTimer = setInterval(() => {
       if (this.typewriterIndex < this.activeDialogue.fullText.length) {
@@ -255,6 +267,36 @@ export class DialogueAndChatSystem {
         this.renderChoices(choicesEl, choices, onComplete);
       }
     }, 28);
+  }
+
+  // Update floating dialogue box position above the NPC on screen
+  updateDialoguePosition(camera) {
+    if (!this.activeDialogue || !this.activeNpc || !camera) return;
+    const modalEl = document.getElementById('ac-dialogue-modal');
+    const boxEl = modalEl?.querySelector('.ac-dialogue-box');
+    if (!modalEl || !boxEl || modalEl.style.display === 'none') return;
+
+    const screenPos = camera.worldToScreen(this.activeNpc.worldX + 32, this.activeNpc.worldY);
+    if (!screenPos) return;
+
+    const boxW = boxEl.offsetWidth || 620;
+    const boxH = boxEl.offsetHeight || 140;
+    const pad = 16;
+    const halfW = boxW / 2;
+
+    const targetX = screenPos.x;
+    const targetY = screenPos.y - 30; // Float 30px above NPC head
+
+    const clampedX = Math.max(halfW + pad, Math.min(window.innerWidth - halfW - pad, targetX));
+    const clampedY = Math.max(boxH + pad, Math.min(window.innerHeight - pad, targetY));
+
+    boxEl.style.position = 'absolute';
+    boxEl.style.left = `${clampedX}px`;
+    boxEl.style.top = `${clampedY}px`;
+    boxEl.style.transform = 'translate(-50%, -100%)';
+
+    const tailOffset = Math.max(-halfW + 40, Math.min(halfW - 40, targetX - clampedX));
+    boxEl.style.setProperty('--tail-offset-x', `${tailOffset}px`);
   }
 
   renderChoices(container, choices, onComplete) {
@@ -290,11 +332,21 @@ export class DialogueAndChatSystem {
     const modalEl = document.getElementById('ac-dialogue-modal');
     if (modalEl) modalEl.style.display = 'none';
     this.activeDialogue = null;
+    this.activeNpc = null;
+    if (this.onDialogueClose) {
+      this.onDialogueClose();
+    }
   }
 
   // Open complete NPC conversation with progressive multi-mission branching and asset unlocking
   openNpcConversation(npcData, blocklySystem, callbacks = {}) {
     if (!npcData) return;
+    this.activeNpc = {
+      ...npcData,
+      worldX: npcData.worldX ?? (npcData.tx ? npcData.tx * 64 : 0),
+      worldY: npcData.worldY ?? (npcData.ty ? npcData.ty * 64 : 0)
+    };
+
     const progress = blocklySystem?.getNpcProgress(npcData.id) || {
       completedCount: 0,
       totalCount: 1,
@@ -332,7 +384,7 @@ export class DialogueAndChatSystem {
         action: () => this.closeNPCDialogue()
       });
 
-      this.startNPCDialogue(speakerMeta, text, choices);
+      this.startNPCDialogue(speakerMeta, text, choices, null, npcData);
     } else {
       // There is an active pending mission in the sequence
       const lesson = progress.nextLesson;
@@ -367,7 +419,7 @@ export class DialogueAndChatSystem {
                 label: 'Entendido!',
                 action: () => this.closeNPCDialogue()
               }
-            ]);
+            ], null, npcData);
           }
         },
         {
@@ -376,7 +428,7 @@ export class DialogueAndChatSystem {
         }
       ];
 
-      this.startNPCDialogue(speakerMeta, text, choices);
+      this.startNPCDialogue(speakerMeta, text, choices, null, npcData);
     }
   }
 }
