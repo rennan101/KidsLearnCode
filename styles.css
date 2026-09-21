@@ -61,11 +61,11 @@
   --animal-shadow-btn-wood: 0 4px 0 0 #5c3c26, 0 6px 14px rgba(92, 60, 38, 0.35);
   --animal-shadow-card: 0 12px 32px rgba(80, 55, 30, 0.18), 0 2px 6px rgba(80, 55, 30, 0.08);
 
-  /* Animal Island UI Custom SVG Cursors (Animal Crossing Style) */
-  --animal-cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cg filter='drop-shadow(0 2px 3px rgba(80,50,20,0.35))'%3E%3Cpath d='M6 3 L20 17 L13.5 18 L18.5 28 L14.5 30 L9.5 20 L4 24 Z' fill='%237a583e' stroke='%237a583e' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M6 3 L20 17 L13.5 18 L18.5 28 L14.5 30 L9.5 20 L4 24 Z' fill='%23fdfbf7'/%3E%3Cpath d='M7 6 L15 14 L12 15 Z' fill='%2319c8b9' opacity='0.85'/%3E%3C/g%3E%3C/svg%3E") 3 3;
-  --animal-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cg filter='drop-shadow(0 2px 4px rgba(80,50,20,0.35))'%3E%3Cpath d='M10 2 C8.8 2 8 2.8 8 4 L8 14 C7.2 13.2 6 12.8 4.8 13.5 C3.5 14.3 3.2 16 4 17.2 L9 24 C10.5 26 13 28 16 28 L19 28 C23 28 26 25 26 21 L26 15 C26 13.8 25 13 24 13 C23.5 13 23 13.2 22.5 13.6 C22.2 12.6 21.3 12 20.2 12 C19.8 12 19.4 12.1 19 12.3 C18.6 11.5 17.7 11 16.8 11 C16.4 11 16 11.1 15.6 11.3 L15.6 4 C15.6 2.8 14.8 2 13.6 2 C12.8 2 12.2 2.4 11.8 3 L11.8 4 C11.8 2.8 11 2 10 2 Z' fill='%237a583e' stroke='%237a583e' stroke-width='2.2' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M10 2 C8.8 2 8 2.8 8 4 L8 14 C7.2 13.2 6 12.8 4.8 13.5 C3.5 14.3 3.2 16 4 17.2 L9 24 C10.5 26 13 28 16 28 L19 28 C23 28 26 25 26 21 L26 15 C26 13.8 25 13 24 13 C23.5 13 23 13.2 22.5 13.6 C22.2 12.6 21.3 12 20.2 12 C19.8 12 19.4 12.1 19 12.3 C18.6 11.5 17.7 11 16.8 11 C16.4 11 16 11.1 15.6 11.3 L15.6 4 C15.6 2.8 14.8 2 13.6 2 C12.8 2 12.2 2.4 11.8 3 L11.8 4 C11.8 2.8 11 2 10 2 Z' fill='%23fdfbf7'/%3E%3Cpath d='M11 25 C13 25 18 25 20 25 C21 25 21.5 26.5 21 27.5 C20 28.5 13 28.5 10.5 27.5 C10 26.5 10.5 25 11 25 Z' fill='%2319c8b9'/%3E%3C/g%3E%3C/svg%3E") 10 2;
-  --animal-cursor-grab: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cg filter='drop-shadow(0 2px 3px rgba(80,50,20,0.35))'%3E%3Cpath d='M9 10 C8 10 7 11 7 12 L7 17 C6 16.5 4.5 16.8 4 18 C3.5 19.2 4 20.5 5 21.5 L10 26 C12 28 15 29 18 29 L20 29 C24 29 27 26 27 22 L27 15 C27 14 26 13 25 13 C24.5 13 24 13.2 23.5 13.6 C23.2 12.6 22.3 12 21.2 12 C20.8 12 20.4 12.1 20 12.3 C19.6 11.5 18.7 11 17.8 11 C17.4 11 17 11.1 16.6 11.3 L16.6 10 C16.6 9 15.6 8 14.6 8 C13.6 8 12.8 8.8 12.8 9.8 L12.8 12 C12.4 10.8 11.5 10 10.5 10 Z' fill='%237a583e' stroke='%237a583e' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M9 10 C8 10 7 11 7 12 L7 17 C6 16.5 4.5 16.8 4 18 C3.5 19.2 4 20.5 5 21.5 L10 26 C12 28 15 29 18 29 L20 29 C24 29 27 26 27 22 L27 15 C27 14 26 13 25 13 C24.5 13 24 13.2 23.5 13.6 C23.2 12.6 22.3 12 21.2 12 C20.8 12 20.4 12.1 20 12.3 C19.6 11.5 18.7 11 17.8 11 C17.4 11 17 11.1 16.6 11.3 L16.6 10 C16.6 9 15.6 8 14.6 8 C13.6 8 12.8 8.8 12.8 9.8 L12.8 12 C12.4 10.8 11.5 10 10.5 10 Z' fill='%23fdfbf7'/%3E%3Cpath d='M12 26 C14 26 18 26 21 26 C22 26 22.5 27.5 22 28.5 C21 29.5 14 29.5 11.5 28.5 C11 27.5 11.5 26 12 26 Z' fill='%2319c8b9'/%3E%3C/g%3E%3C/svg%3E") 14 14;
-  --animal-cursor-grabbing: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cg filter='drop-shadow(0 2px 3px rgba(80,50,20,0.35))'%3E%3Cpath d='M8 14 C7 14 6 15 6 16 L6 20 C6 24 9 27 13 28 L18 28 C22 28 25 25 25 21 L25 17 C25 15.5 23.8 14.5 22.5 14.5 C22 14.5 21.5 14.7 21 15 C20.5 14 19.5 13.5 18.5 13.5 C18 13.5 17.5 13.7 17 14 C16.5 13 15.5 12.5 14.5 12.5 C13.5 12.5 12.8 13 12.5 13.5 L12.5 13 C12.5 11.8 11.5 11 10.5 11 C9.5 11 8.5 11.8 8.5 13 Z' fill='%237a583e' stroke='%237a583e' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M8 14 C7 14 6 15 6 16 L6 20 C6 24 9 27 13 28 L18 28 C22 28 25 25 25 21 L25 17 C25 15.5 23.8 14.5 22.5 14.5 C22 14.5 21.5 14.7 21 15 C20.5 14 19.5 13.5 18.5 13.5 C18 13.5 17.5 13.7 17 14 C16.5 13 15.5 12.5 14.5 12.5 C13.5 12.5 12.8 13 12.5 13.5 L12.5 13 C12.5 11.8 11.5 11 10.5 11 C9.5 11 8.5 11.8 8.5 13 Z' fill='%23fdfbf7'/%3E%3Cpath d='M11 25 C13 25 17 25 20 25 C21 25 21.5 26.5 21 27.5 C20 28.5 13 28.5 10.5 27.5 C10 26.5 10.5 25 11 25 Z' fill='%2319c8b9'/%3E%3C/g%3E%3C/svg%3E") 14 14;
+  /* Animal Island UI Custom SVG Cursors (Brown Border & Warm Beige Fill) */
+  --animal-cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cg filter='drop-shadow(0 2px 3px rgba(80,50,20,0.4))'%3E%3Cpath d='M6 3 L20 17 L13.5 18 L18.5 28 L14.5 30 L9.5 20 L4 24 Z' fill='%23fdfbf7' stroke='%237a583e' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M7 6 L15 14 L12 15 Z' fill='%2319c8b9' opacity='0.9'/%3E%3C/g%3E%3C/svg%3E") 3 3;
+  --animal-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cg filter='drop-shadow(0 2px 4px rgba(80,50,20,0.4))'%3E%3Cpath d='M10 2 C8.8 2 8 2.8 8 4 L8 14 C7.2 13.2 6 12.8 4.8 13.5 C3.5 14.3 3.2 16 4 17.2 L9 24 C10.5 26 13 28 16 28 L19 28 C23 28 26 25 26 21 L26 15 C26 13.8 25 13 24 13 C23.5 13 23 13.2 22.5 13.6 C22.2 12.6 21.3 12 20.2 12 C19.8 12 19.4 12.1 19 12.3 C18.6 11.5 17.7 11 16.8 11 C16.4 11 16 11.1 15.6 11.3 L15.6 4 C15.6 2.8 14.8 2 13.6 2 C12.8 2 12.2 2.4 11.8 3 L11.8 4 C11.8 2.8 11 2 10 2 Z' fill='%23fdfbf7' stroke='%237a583e' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M11 25 C13 25 18 25 20 25 C21 25 21.5 26.5 21 27.5 C20 28.5 13 28.5 10.5 27.5 C10 26.5 10.5 25 11 25 Z' fill='%2319c8b9' stroke='%237a583e' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") 10 2;
+  --animal-cursor-grab: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cg filter='drop-shadow(0 2px 3px rgba(80,50,20,0.4))'%3E%3Cpath d='M9 10 C8 10 7 11 7 12 L7 17 C6 16.5 4.5 16.8 4 18 C3.5 19.2 4 20.5 5 21.5 L10 26 C12 28 15 29 18 29 L20 29 C24 29 27 26 27 22 L27 15 C27 14 26 13 25 13 C24.5 13 24 13.2 23.5 13.6 C23.2 12.6 22.3 12 21.2 12 C20.8 12 20.4 12.1 20 12.3 C19.6 11.5 18.7 11 17.8 11 C17.4 11 17 11.1 16.6 11.3 L16.6 10 C16.6 9 15.6 8 14.6 8 C13.6 8 12.8 8.8 12.8 9.8 L12.8 12 C12.4 10.8 11.5 10 10.5 10 Z' fill='%23fdfbf7' stroke='%237a583e' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M12 26 C14 26 18 26 21 26 C22 26 22.5 27.5 22 28.5 C21 29.5 14 29.5 11.5 28.5 C11 27.5 11.5 26 12 26 Z' fill='%2319c8b9' stroke='%237a583e' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") 14 14;
+  --animal-cursor-grabbing: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cg filter='drop-shadow(0 2px 3px rgba(80,50,20,0.4))'%3E%3Cpath d='M8 14 C7 14 6 15 6 16 L6 20 C6 24 9 27 13 28 L18 28 C22 28 25 25 25 21 L25 17 C25 15.5 23.8 14.5 22.5 14.5 C22 14.5 21.5 14.7 21 15 C20.5 14 19.5 13.5 18.5 13.5 C18 13.5 17.5 13.7 17 14 C16.5 13 15.5 12.5 14.5 12.5 C13.5 12.5 12.8 13 12.5 13.5 L12.5 13 C12.5 11.8 11.5 11 10.5 11 C9.5 11 8.5 11.8 8.5 13 Z' fill='%23fdfbf7' stroke='%237a583e' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M11 25 C13 25 17 25 20 25 C21 25 21.5 26.5 21 27.5 C20 28.5 13 28.5 10.5 27.5 C10 26.5 10.5 25 11 25 Z' fill='%2319c8b9' stroke='%237a583e' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") 14 14;
 
   /* Legacy Token Fallbacks for Full Compatibility */
   --bg-dark: #f8f8f0;
@@ -83,22 +83,23 @@
 }
 
 html, body {
-  cursor: var(--animal-cursor-default), auto;
+  cursor: var(--animal-cursor-default), auto !important;
 }
 
-button, a, input[type="button"], input[type="submit"], select, .clickable,
+button, a, input[type="button"], input[type="submit"], input[type="checkbox"], select, textarea, label, [role="button"], [tabindex], .clickable, .pointer,
 .backpack-tab, .modal-close-btn, .ac-pocket-slot, .quick-tool-btn, .hero-select-btn,
 .btn-equip-tool, .cloud-account-btn, .header-logout-btn, .hud-action-btn, .chat-send-btn,
-.ac-dialogue-choice-btn, .mode-btn, .tile-card, .btn-primary, .btn-secondary,
-.recipe-card, .ac-recipe-card, .btn-action, .auth-tab, [role="button"] {
+.ac-choice-btn, .mode-btn, .tile-card, .btn-primary, .btn-secondary, .layer-move-btn,
+.recipe-card, .ac-recipe-card, .btn-action, .auth-tab, .scale-btn, .cam-preset-btn,
+.layer-action-btn, .inspector-close-btn, .animal-checkbox-label, [data-tooltip] {
   cursor: var(--animal-cursor-pointer), pointer !important;
 }
 
-.codekit-block, .draggable, .scratch-block {
+.codekit-block, .draggable, .scratch-block, .grab {
   cursor: var(--animal-cursor-grab), grab !important;
 }
 
-.codekit-block:active, .draggable:active, .scratch-block:active, .dragging {
+.codekit-block:active, .draggable:active, .scratch-block:active, .dragging, .grabbing {
   cursor: var(--animal-cursor-grabbing), grabbing !important;
 }
 
@@ -974,34 +975,44 @@ canvas#game-canvas {
 .layer-order-buttons {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
 }
 
 .layer-move-btn {
-  background: #141c2a;
-  border: 1px solid #283548;
-  color: var(--text-main);
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 1.5px solid var(--animal-border, #c4b89e);
+  color: var(--animal-text, #794f27);
+  width: 22px;
+  height: 22px;
+  border-radius: var(--animal-radius-pill, 50px);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65rem;
-  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: var(--animal-cursor-pointer), pointer !important;
   transition: all 0.15s ease;
   padding: 0;
+  box-shadow: 0 2px 0 0 var(--animal-border, #c4b89e);
 }
 
 .layer-move-btn:hover:not(:disabled) {
-  background: #0284c7;
-  color: #fff;
-  border-color: #38bdf8;
+  background: var(--animal-primary, #19c8b9);
+  color: #ffffff;
+  border-color: var(--animal-primary-dark, #0f8e83);
+  box-shadow: 0 2px 0 0 var(--animal-primary-dark, #0f8e83);
+  transform: translateY(-1px);
+}
+
+.layer-move-btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: none;
 }
 
 .layer-move-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
+  opacity: 0.35;
+  cursor: not-allowed !important;
+  box-shadow: none;
 }
 
 /* =========================================
@@ -1010,8 +1021,8 @@ canvas#game-canvas {
 
 .tile-inspector-panel {
   display: none;
-  background: #0d121c;
-  border-bottom: 2px solid #1e293b;
+  background: var(--animal-bg-content, #f7f3df);
+  border-bottom: 2px solid var(--animal-border, #c4b89e);
   padding: 10px 12px;
   animation: inspectorSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -1031,7 +1042,7 @@ canvas#game-canvas {
   justify-content: space-between;
   margin-bottom: 8px;
   padding-bottom: 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1.5px solid var(--animal-border, #c4b89e);
 }
 
 .inspector-title {
@@ -1039,25 +1050,26 @@ canvas#game-canvas {
   align-items: center;
   gap: 6px;
   font-size: 0.78rem;
-  font-weight: 700;
-  color: #fef08a;
-  font-family: var(--font-mono);
+  font-weight: 800;
+  color: var(--animal-text, #794f27);
+  font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
 }
 
 .inspector-close-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 1px solid var(--animal-border, #c4b89e);
+  color: var(--animal-text-body, #725d42);
   font-size: 0.85rem;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 4px;
+  cursor: var(--animal-cursor-pointer), pointer !important;
+  padding: 2px 8px;
+  border-radius: var(--animal-radius-pill, 50px);
   transition: all 0.15s;
 }
 
 .inspector-close-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  background: #ea580c;
+  border-color: #c2410c;
+  color: #ffffff;
 }
 
 .inspector-layers-list {
@@ -1067,15 +1079,16 @@ canvas#game-canvas {
 }
 
 .inspector-layer-item {
-  background: #080b11;
-  border: 1px solid #1a2233;
-  border-radius: 6px;
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 1.5px solid var(--animal-border, #c4b89e);
+  border-radius: var(--animal-radius-sm, 12px);
   padding: 6px 8px;
+  box-shadow: 0 2px 0 0 var(--animal-border, #c4b89e);
   transition: border-color 0.15s ease;
 }
 
 .inspector-layer-item:hover {
-  border-color: #334155;
+  border-color: var(--animal-primary, #19c8b9);
 }
 
 .layer-item-header {
@@ -1091,7 +1104,7 @@ canvas#game-canvas {
   padding: 2px 6px;
   border-radius: 4px;
   border: 1px solid transparent;
-  font-family: var(--font-mono);
+  font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
 }
 
 .layer-item-actions {
@@ -1101,18 +1114,19 @@ canvas#game-canvas {
 }
 
 .layer-action-btn {
-  background: #151c28;
-  border: 1px solid #232d3f;
-  color: var(--text-muted);
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 1.5px solid var(--animal-border, #c4b89e);
+  color: var(--animal-text, #794f27);
   width: 22px;
   height: 22px;
-  border-radius: 4px;
+  border-radius: var(--animal-radius-pill, 50px);
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  cursor: var(--animal-cursor-pointer), pointer !important;
   transition: all 0.15s;
   padding: 0;
+  box-shadow: 0 2px 0 0 var(--animal-border, #c4b89e);
 }
 
 .layer-action-btn .ui-icon {
@@ -1121,15 +1135,15 @@ canvas#game-canvas {
 }
 
 .layer-action-btn:hover {
-  background: #1e293b;
-  color: var(--text-main);
-  border-color: #3b82f6;
+  background: var(--animal-primary, #19c8b9);
+  color: #ffffff;
+  border-color: var(--animal-primary-dark, #0f8e83);
 }
 
 .layer-action-btn.delete-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: #ef4444;
-  color: #ef4444;
+  background: #ea580c;
+  border-color: #c2410c;
+  color: #ffffff;
 }
 
 .layer-item-body {
@@ -1141,9 +1155,9 @@ canvas#game-canvas {
 .layer-item-preview {
   width: 32px;
   height: 32px;
-  background: #04060a;
-  border: 1px solid #1a2233;
-  border-radius: 4px;
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 1.5px solid var(--animal-border, #c4b89e);
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1158,9 +1172,9 @@ canvas#game-canvas {
 }
 
 .layer-item-preview.empty {
-  color: #475569;
+  color: #9f927d;
   font-size: 0.85rem;
-  font-family: var(--font-mono);
+  font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
 }
 
 .layer-item-info {
@@ -1170,15 +1184,15 @@ canvas#game-canvas {
 
 .layer-item-title {
   font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-main);
+  font-weight: 700;
+  color: var(--animal-text, #794f27);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .layer-item-body.empty .layer-item-title {
-  color: #64748b;
+  color: var(--animal-text-secondary, #9f927d);
   font-style: italic;
 }
 
@@ -1190,8 +1204,8 @@ canvas#game-canvas {
 
 /* Collider Editor Panel (Bottom of Drawer) */
 .collider-panel {
-  background: #0f131c;
-  border-top: 1px solid var(--border-color);
+  background: var(--animal-bg-card, #fdfbf7);
+  border-top: 2px solid var(--animal-border, #c4b89e);
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -1205,9 +1219,10 @@ canvas#game-canvas {
 }
 
 .collider-panel-header h4 {
-  font-size: 0.8rem;
-  color: var(--accent-gold);
-  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--animal-text, #794f27);
+  font-weight: 800;
+  font-family: var(--animal-font, 'Nunito', sans-serif);
 }
 
 .collider-toggle-label {
@@ -1215,19 +1230,21 @@ canvas#game-canvas {
   align-items: center;
   gap: 6px;
   font-size: 0.75rem;
-  color: var(--text-muted);
-  cursor: pointer;
+  color: var(--animal-text-body, #725d42);
+  font-weight: 700;
+  cursor: var(--animal-cursor-pointer), pointer !important;
 }
 
 /* Dynamic Character Scale Panel */
 .character-scale-panel {
-  background: #080b11;
-  border: 1px solid #1e293b;
-  border-radius: 6px;
+  background: var(--animal-bg-content, #f7f3df);
+  border: 1.5px solid var(--animal-border, #c4b89e);
+  border-radius: var(--animal-radius-sm, 12px);
   padding: 8px 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  box-shadow: 0 2px 0 0 var(--animal-border, #c4b89e);
 }
 
 .scale-panel-header {
@@ -1238,40 +1255,44 @@ canvas#game-canvas {
 }
 
 .scale-label {
-  font-size: 0.72rem;
-  color: #38bdf8;
-  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--animal-primary-dark, #0f8e83);
+  font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
+  font-weight: 800;
   white-space: nowrap;
 }
 
 .scale-preset-btns {
   display: flex;
-  gap: 3px;
+  gap: 4px;
 }
 
 .scale-btn {
-  background: #141c2a;
-  border: 1px solid #283548;
-  color: var(--text-muted);
-  font-size: 0.65rem;
-  padding: 2px 5px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: var(--font-mono);
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 1.5px solid var(--animal-border, #c4b89e);
+  color: var(--animal-text, #794f27);
+  font-size: 0.68rem;
+  padding: 3px 8px;
+  border-radius: var(--animal-radius-pill, 50px);
+  cursor: var(--animal-cursor-pointer), pointer !important;
+  font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
+  font-weight: 700;
   transition: all 0.15s ease;
+  box-shadow: 0 2px 0 0 var(--animal-border, #c4b89e);
 }
 
 .scale-btn:hover {
-  background: #1e293b;
-  color: var(--text-main);
-  border-color: #38bdf8;
+  background: var(--animal-primary-bg, #e6f9f6);
+  color: var(--animal-primary-dark, #0f8e83);
+  border-color: var(--animal-primary, #19c8b9);
 }
 
 .scale-btn.active {
-  background: #0284c7;
+  background: var(--animal-primary, #19c8b9);
   color: #ffffff;
-  border-color: #38bdf8;
-  font-weight: 700;
+  border-color: var(--animal-primary-dark, #0f8e83);
+  box-shadow: 0 2px 0 0 var(--animal-primary-dark, #0f8e83);
+  font-weight: 800;
 }
 
 .scale-slider-row {
@@ -1281,15 +1302,15 @@ canvas#game-canvas {
 
 .scale-slider-row input[type="range"] {
   width: 100%;
-  accent-color: #38bdf8;
-  height: 4px;
-  cursor: pointer;
+  accent-color: var(--animal-primary, #19c8b9);
+  height: 6px;
+  cursor: var(--animal-cursor-pointer), pointer !important;
 }
 
 /* Play Mode Global Camera Zoom Settings Panel in Drawer */
 .camera-settings-panel {
-  background: #090d14;
-  border-top: 1px solid var(--border-color);
+  background: var(--animal-bg-card, #fdfbf7);
+  border-top: 2px solid var(--animal-border, #c4b89e);
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
@@ -1306,9 +1327,10 @@ canvas#game-canvas {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--accent-gold);
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--animal-text, #794f27);
+  font-family: var(--animal-font, 'Nunito', sans-serif);
 }
 
 .camera-settings-title .ui-icon {
@@ -1318,13 +1340,13 @@ canvas#game-canvas {
 
 .camera-zoom-val {
   font-size: 0.75rem;
-  font-weight: 700;
-  color: #38bdf8;
-  font-family: var(--font-mono);
-  background: #0f172a;
-  padding: 2px 6px;
-  border-radius: 4px;
-  border: 1px solid #1e293b;
+  font-weight: 800;
+  color: var(--animal-primary-dark, #0f8e83);
+  font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
+  background: var(--animal-bg-content, #f7f3df);
+  padding: 2px 8px;
+  border-radius: var(--animal-radius-pill, 50px);
+  border: 1.5px solid var(--animal-border, #c4b89e);
 }
 
 .camera-settings-body {
@@ -1340,29 +1362,32 @@ canvas#game-canvas {
 
 .cam-preset-btn {
   flex: 1;
-  background: #141c2a;
-  border: 1px solid #283548;
-  color: var(--text-muted);
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 1.5px solid var(--animal-border, #c4b89e);
+  color: var(--animal-text, #794f27);
   font-size: 0.68rem;
-  padding: 3px 4px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: var(--font-mono);
+  padding: 4px 6px;
+  border-radius: var(--animal-radius-pill, 50px);
+  cursor: var(--animal-cursor-pointer), pointer !important;
+  font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
+  font-weight: 700;
   transition: all 0.15s ease;
   text-align: center;
+  box-shadow: 0 2px 0 0 var(--animal-border, #c4b89e);
 }
 
 .cam-preset-btn:hover {
-  background: #1e293b;
-  color: var(--text-main);
-  border-color: #38bdf8;
+  background: var(--animal-primary-bg, #e6f9f6);
+  color: var(--animal-primary-dark, #0f8e83);
+  border-color: var(--animal-primary, #19c8b9);
 }
 
 .cam-preset-btn.active {
-  background: #0284c7;
+  background: var(--animal-primary, #19c8b9);
   color: #ffffff;
-  border-color: #38bdf8;
-  font-weight: 700;
+  border-color: var(--animal-primary-dark, #0f8e83);
+  box-shadow: 0 2px 0 0 var(--animal-primary-dark, #0f8e83);
+  font-weight: 800;
 }
 
 .camera-slider-row {
@@ -1372,15 +1397,15 @@ canvas#game-canvas {
 
 .camera-slider-row input[type="range"] {
   width: 100%;
-  accent-color: #f59e0b;
-  height: 4px;
-  cursor: pointer;
+  accent-color: var(--animal-primary, #19c8b9);
+  height: 6px;
+  cursor: var(--animal-cursor-pointer), pointer !important;
 }
 
 .camera-settings-desc {
-  font-size: 0.62rem;
-  color: var(--text-muted);
-  line-height: 1.2;
+  font-size: 0.65rem;
+  color: var(--animal-text-body, #725d42);
+  line-height: 1.3;
 }
 
 .collider-inputs-grid {
@@ -1397,38 +1422,42 @@ canvas#game-canvas {
 
 .input-field label {
   font-size: 0.65rem;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
+  color: var(--animal-text-body, #725d42);
+  font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
+  font-weight: 700;
 }
 
 .input-field input {
-  background: #090c12;
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
+  background: var(--animal-bg-content, #f7f3df);
+  border: 1.5px solid var(--animal-border, #c4b89e);
+  color: var(--animal-text, #794f27);
   padding: 4px 6px;
-  border-radius: 4px;
-  font-family: var(--font-mono);
+  border-radius: var(--animal-radius-sm, 8px);
+  font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
   font-size: 0.75rem;
+  font-weight: 700;
   width: 100%;
 }
 
 .input-field input:focus {
   outline: none;
-  border-color: var(--accent-blue);
+  border-color: var(--animal-primary, #19c8b9);
+  box-shadow: 0 0 0 2px rgba(25, 200, 185, 0.25);
 }
 
 /* Bottom Status Bar */
 .status-bar {
   height: 28px;
-  background: #0b0e14;
-  border-top: 1px solid var(--border-color);
+  background: var(--animal-bg-card, #fdfbf7);
+  border-top: 2px solid var(--animal-border, #c4b89e);
   display: flex;
   align-items: center;
   justify-content: flex-end;
   padding: 0 16px;
-  font-family: var(--font-mono);
+  font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
   font-size: 0.75rem;
-  color: var(--text-muted);
+  font-weight: 700;
+  color: var(--animal-text, #794f27);
 }
 
 .status-group {
@@ -1438,7 +1467,8 @@ canvas#game-canvas {
 }
 
 .status-item span {
-  color: var(--accent-gold);
+  color: var(--animal-primary-dark, #0f8e83);
+  font-weight: 800;
 }
 
 /* Keyboard Hints in Play Mode (Animal Island Pill Bar) */
