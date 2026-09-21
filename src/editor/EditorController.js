@@ -20,6 +20,7 @@ export class EditorController {
     this.activeLayer = 'ground'; // 'ground', 'decor', 'solid'
     this.activeRotation = 0; // 0, 90, 180, 270
     this.activeFlipX = false; // Mirror horizontal
+    this.dragonPlacementLevel = 1; // Default level for placing dragons (1 to 100)
 
     // Collider Overlay Visibility
     this.showColliders = true;
@@ -80,6 +81,13 @@ export class EditorController {
   setFlipX(flip) {
     this.activeFlipX = !!flip;
     window.dispatchEvent(new CustomEvent('editor-flip-changed', { detail: { flipX: this.activeFlipX } }));
+  }
+
+  setDragonPlacementLevel(level) {
+    const parsed = parseInt(level, 10);
+    this.dragonPlacementLevel = isNaN(parsed) ? 1 : Math.max(1, Math.min(100, parsed));
+    window.dispatchEvent(new CustomEvent('dragon-placement-level-changed', { detail: { level: this.dragonPlacementLevel } }));
+    return this.dragonPlacementLevel;
   }
 
   undo() {
@@ -543,18 +551,21 @@ export class EditorController {
     if (this.activeTool === 'brush') {
       const meta = this.assetLoader.getTileMetadata(this.selectedTileId);
       if (meta) {
-        const targetLayer = this.activeLayer || meta.layer || 'decor';
+        const targetLayer = (meta.isInvisibleAsset || meta.layer === 'colliders') ? 'colliders' : (this.activeLayer || meta.layer || 'decor');
+        const isDragon = meta.isDragon || (this.selectedTileId && this.selectedTileId.startsWith('dragon_'));
+        const extraProps = isDragon ? { level: Math.max(1, Math.min(100, parseInt(this.dragonPlacementLevel, 10) || 1)) } : null;
+
         if ((meta.gridW && meta.gridW > 1) || (meta.gridH && meta.gridH > 1)) {
-          this.tileMap.placeMultiTile(targetLayer, tileX, tileY, meta, this.activeRotation, this.activeFlipX);
+          this.tileMap.placeMultiTile(targetLayer, tileX, tileY, meta, this.activeRotation, this.activeFlipX, null, null, extraProps);
         } else {
-          this.tileMap.setTile(targetLayer, tileX, tileY, this.selectedTileId, true, tileX, tileY, this.activeRotation, this.activeFlipX);
+          this.tileMap.setTile(targetLayer, tileX, tileY, this.selectedTileId, true, tileX, tileY, this.activeRotation, this.activeFlipX, null, null, extraProps);
         }
         this.onMapChange();
       }
     } else if (this.activeTool === 'fill') {
       if (this.selectedTileId === 'character-geralt') return;
       const meta = this.assetLoader.getTileMetadata(this.selectedTileId);
-      const targetLayer = this.activeLayer || meta?.layer || 'decor';
+      const targetLayer = (meta?.isInvisibleAsset || meta?.layer === 'colliders') ? 'colliders' : (this.activeLayer || meta?.layer || 'decor');
       this.floodFill(tileX, tileY, targetLayer, this.selectedTileId);
       this.onMapChange();
     } else if (this.activeTool === 'select') {

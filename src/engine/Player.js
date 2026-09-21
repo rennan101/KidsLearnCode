@@ -278,17 +278,18 @@ export class Player {
     const feet = this.getFeetBox(testPlayerX, testPlayerY);
     const tileSize = tileMap.tileSize;
 
-    const padding = 5;
+    const padding = 4;
     const startTileX = Math.floor(feet.x / tileSize) - padding;
     const endTileX = Math.ceil((feet.x + feet.w) / tileSize) + padding;
     const startTileY = Math.floor(feet.y / tileSize) - padding;
     const endTileY = Math.ceil((feet.y + feet.h) / tileSize) + padding;
 
-    const layersToCheck = tileMap.layerOrder || ['characters', 'solid', 'decor', 'ground'];
+    // Check all layers, with 'colliders', 'solid', and 'characters' prioritized
+    const layersToCheck = ['colliders', 'solid', 'characters', 'decor', 'ground', 'overhead'];
 
     for (const layerName of layersToCheck) {
       const layer = tileMap.layers[layerName];
-      if (!layer) continue;
+      if (!layer || layer.size === 0) continue;
 
       for (let ty = startTileY; ty <= endTileY; ty++) {
         for (let tx = startTileX; tx <= endTileX; tx++) {
@@ -300,39 +301,48 @@ export class Player {
           if (!col || !col.enabled) continue;
 
           const rotation = cell.rotation || 0;
-          const totalW = (meta.gridW || 1) * tileSize;
-          const totalH = (meta.gridH || 1) * tileSize;
+          const isRotated90or270 = (rotation === 90 || rotation === 270);
+          const baseGridW = meta.gridW || 1;
+          const baseGridH = meta.gridH || 1;
+          const totalW = (isRotated90or270 ? baseGridH : baseGridW) * tileSize;
+          const totalH = (isRotated90or270 ? baseGridW : baseGridH) * tileSize;
 
-          let relX = col.x || 0;
-          let relY = col.y || 0;
-          let boxW = col.w || tileSize;
-          let boxH = col.h || tileSize;
+          const boxesToTest = (Array.isArray(col.boxes) && col.boxes.length > 0)
+            ? col.boxes
+            : [{ x: col.x || 0, y: col.y || 0, w: col.w || tileSize, h: col.h || tileSize }];
 
-          if (rotation === 90) {
-            relX = totalH - (col.y + col.h);
-            relY = col.x;
-            boxW = col.h;
-            boxH = col.w;
-          } else if (rotation === 180) {
-            relX = totalW - (col.x + col.w);
-            relY = totalH - (col.y + col.h);
-          } else if (rotation === 270) {
-            relX = col.y;
-            relY = totalW - (col.x + col.w);
-            boxW = col.h;
-            boxH = col.w;
-          }
+          for (const b of boxesToTest) {
+            let relX = b.x || 0;
+            let relY = b.y || 0;
+            let boxW = b.w || tileSize;
+            let boxH = b.h || tileSize;
 
-          const worldBoxX = tx * tileSize + relX;
-          const worldBoxY = ty * tileSize + relY;
+            if (rotation === 90) {
+              relX = totalH - ((b.y || 0) + (b.h || tileSize));
+              relY = b.x || 0;
+              boxW = b.h || tileSize;
+              boxH = b.w || tileSize;
+            } else if (rotation === 180) {
+              relX = totalW - ((b.x || 0) + (b.w || tileSize));
+              relY = totalH - ((b.y || 0) + (b.h || tileSize));
+            } else if (rotation === 270) {
+              relX = b.y || 0;
+              relY = totalW - ((b.x || 0) + (b.w || tileSize));
+              boxW = b.h || tileSize;
+              boxH = b.w || tileSize;
+            }
 
-          if (
-            feet.x < worldBoxX + boxW &&
-            feet.x + feet.w > worldBoxX &&
-            feet.y < worldBoxY + boxH &&
-            feet.y + feet.h > worldBoxY
-          ) {
-            return true;
+            const worldBoxX = tx * tileSize + relX;
+            const worldBoxY = ty * tileSize + relY;
+
+            if (
+              feet.x < worldBoxX + boxW &&
+              feet.x + feet.w > worldBoxX &&
+              feet.y < worldBoxY + boxH &&
+              feet.y + feet.h > worldBoxY
+            ) {
+              return true;
+            }
           }
         }
       }

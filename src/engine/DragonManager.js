@@ -492,6 +492,35 @@ export class DragonManager {
     return { success: true, dragon: newDragon };
   }
 
+  recruitWildDragon(speciesData, level = 1) {
+    if (!speciesData) return { success: false, reason: 'Dragão inválido' };
+    const species = this.dragonCatalog.find(d => d.id === speciesData.id) || speciesData;
+
+    if (this.dragonParty.length >= 6) {
+      return { success: false, reason: 'Sua Bolsa de Dragões está cheia! (Máximo 6)' };
+    }
+
+    const lvl = Math.max(1, parseInt(level, 10) || 1);
+    const calculatedHp = 80 + (lvl - 1) * 20;
+
+    const newDragon = {
+      ...species,
+      level: lvl,
+      xp: 0,
+      maxXp: Math.round(100 * Math.pow(1.3, lvl - 1)),
+      hp: calculatedHp,
+      maxHp: calculatedHp,
+      energy: 100,
+      maxEnergy: 100,
+      bond: 60,
+      status: 'ready'
+    };
+
+    this.dragonParty.push(newDragon);
+    this.setActiveDragon(newDragon.id);
+    return { success: true, dragon: newDragon };
+  }
+
   // Update Game Loop AI & Combat Logic
   update(deltaTime, player, tileMap) {
     const dt = Math.min(deltaTime / 1000, 0.1);

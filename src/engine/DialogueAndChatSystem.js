@@ -655,6 +655,64 @@ export class DialogueAndChatSystem {
       this.startNPCDialogue(speakerMeta, pages, choices, null, npcData);
     }
   }
+
+  // Open conversation with a wild / placed Dragon entity
+  openDragonConversation(dragonData, dragonManager, callbacks = {}) {
+    if (!dragonData) return;
+    this.activeNpc = {
+      ...dragonData,
+      worldX: dragonData.worldX ?? (dragonData.tx ? dragonData.tx * 64 : 0),
+      worldY: dragonData.worldY ?? (dragonData.ty ? dragonData.ty * 64 : 0)
+    };
+
+    const level = dragonData.level || 1;
+    const speakerMeta = {
+      name: `${dragonData.name}`,
+      pitch: 620
+    };
+
+    const isPartyMember = dragonManager?.dragonParty?.some(d => d.id === dragonData.id);
+
+    const pages = [
+      `Você encontrou ${dragonData.name} (Nível ${level})!`,
+      `Elemento: ${dragonData.element || 'Místico'}\nHabilidade: ${dragonData.fieldMove || 'Voo Mágico'}\n\n${dragonData.desc || 'Um nobre dragão companheiro que habita os recantos da Ilha Lua.'}`
+    ];
+
+    const choices = [];
+
+    // Pet / bond choice
+    choices.push({
+      label: 'Acariciar Dragão',
+      action: () => {
+        soundFX.playPop(1.5);
+        if (callbacks.onPet) callbacks.onPet(dragonData);
+        this.closeNPCDialogue();
+      }
+    });
+
+    if (!isPartyMember && dragonManager) {
+      choices.push({
+        label: `Adicionar à Bolsa B (Nível ${level})`,
+        action: () => {
+          const res = dragonManager.recruitWildDragon ? dragonManager.recruitWildDragon(dragonData, level) : null;
+          if (res && res.success) {
+            soundFX.playFanfare();
+          } else {
+            soundFX.playPop(1.1);
+          }
+          if (callbacks.onRecruit) callbacks.onRecruit(dragonData, res);
+          this.closeNPCDialogue();
+        }
+      });
+    }
+
+    choices.push({
+      label: 'Observar em silêncio',
+      action: () => this.closeNPCDialogue()
+    });
+
+    this.startNPCDialogue(speakerMeta, pages, choices, null, dragonData);
+  }
 }
 
 export default DialogueAndChatSystem;

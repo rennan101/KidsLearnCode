@@ -709,6 +709,180 @@ canvas#game-canvas {
   box-shadow: 0 3px 0 0 var(--animal-primary-dark, #0f8e83);
 }
 
+/* Dragon Level Placement Configurator */
+.dragon-level-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px 14px;
+  background: var(--animal-bg-card, #fdfbf7);
+  border-bottom: 2px solid var(--animal-border, #c4b89e);
+  animation: acFadeIn 0.2s ease;
+}
+
+.dragon-level-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dragon-level-label {
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--animal-text-body, #725d42);
+}
+
+.dragon-level-current-badge {
+  background: var(--animal-accent-gold, #f59e0b);
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: var(--animal-radius-pill, 50px);
+  font-size: 0.74rem;
+  font-weight: 900;
+  box-shadow: 0 2px 0 0 #d97706;
+}
+
+.dragon-level-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dragon-lvl-step-btn {
+  background: var(--animal-bg, #f8f8f0);
+  color: var(--animal-text-body, #725d42);
+  border: 2px solid var(--animal-border, #c4b89e);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--animal-radius-pill, 50px);
+  font-weight: 900;
+  font-size: 1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 0 0 var(--animal-border, #c4b89e);
+  transition: all 0.15s ease;
+}
+
+.dragon-lvl-step-btn:hover {
+  background: var(--animal-primary-bg, #e6f9f6);
+  color: var(--animal-primary-dark, #0f8e83);
+  border-color: var(--animal-primary, #19c8b9);
+}
+
+.dragon-lvl-step-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 0 var(--animal-border, #c4b89e);
+}
+
+.dragon-lvl-input {
+  width: 52px;
+  height: 28px;
+  text-align: center;
+  border-radius: var(--animal-radius-pill, 50px);
+  border: 2px solid var(--animal-border, #c4b89e);
+  background: #fffdf5;
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-weight: 800;
+  font-size: 0.86rem;
+  color: var(--animal-text-body, #725d42);
+  outline: none;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.dragon-lvl-input:focus {
+  border-color: var(--animal-primary, #19c8b9);
+  background: #ffffff;
+}
+
+.dragon-lvl-presets {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.dragon-preset-btn {
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  border-radius: var(--animal-radius-pill, 50px);
+  border: 1.5px solid var(--animal-border, #c4b89e);
+  background: var(--animal-bg-card, #fdfbf7);
+  color: var(--animal-text-body, #725d42);
+  cursor: pointer;
+  box-shadow: 0 2px 0 0 var(--animal-border, #c4b89e);
+  transition: all 0.15s ease;
+}
+
+.dragon-preset-btn:hover,
+.dragon-preset-btn.active {
+  background: var(--animal-primary, #19c8b9);
+  color: #ffffff;
+  border-color: var(--animal-primary-dark, #0f8e83);
+  box-shadow: 0 2px 0 0 var(--animal-primary-dark, #0f8e83);
+}
+
+.inspector-dragon-level-box {
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: var(--animal-bg, #f8f8f0);
+  border: 1.5px solid var(--animal-border, #c4b89e);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.inspector-dragon-level-box label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--animal-text-body, #725d42);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.inspector-dragon-level-box input {
+  width: 48px;
+  height: 24px;
+  text-align: center;
+  border-radius: var(--animal-radius-pill, 50px);
+  border: 1.5px solid var(--animal-border, #c4b89e);
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--animal-text-body, #725d42);
+  background: #ffffff;
+  outline: none;
+}
+
+.inspector-lvl-save-btn {
+  padding: 3px 10px;
+  border-radius: var(--animal-radius-pill, 50px);
+  background: var(--animal-primary, #19c8b9);
+  color: #ffffff;
+  border: 1.5px solid var(--animal-primary-dark, #0f8e83);
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-weight: 800;
+  font-size: 0.74rem;
+  cursor: pointer;
+  box-shadow: 0 2px 0 0 var(--animal-primary-dark, #0f8e83);
+  transition: all 0.15s ease;
+}
+
+.inspector-lvl-save-btn:hover {
+  background: var(--animal-primary-light, #3dd4c6);
+}
+
+.inspector-lvl-save-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 0 var(--animal-primary-dark, #0f8e83);
+}
+
 .drawer-grid {
   flex: 1;
   overflow-y: auto;

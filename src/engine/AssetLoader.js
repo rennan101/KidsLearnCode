@@ -1,3 +1,12 @@
+import { DRAGON_CATALOG } from './DragonManager.js';
+
+export function generateDragonSVG(dragon) {
+  const body = dragon.color || '#38bdf8';
+  const accent = dragon.secondaryColor || '#fef08a';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><ellipse cx="32" cy="54" rx="20" ry="7" fill="rgba(0,0,0,0.22)"/><ellipse cx="14" cy="28" rx="10" ry="6" fill="${accent}" transform="rotate(-25 14 28)"/><ellipse cx="50" cy="28" rx="10" ry="6" fill="${accent}" transform="rotate(25 50 28)"/><ellipse cx="32" cy="36" rx="18" ry="15" fill="${body}"/><ellipse cx="32" cy="38" rx="11" ry="10" fill="${accent}"/><circle cx="32" cy="22" r="14" fill="${body}"/><polygon points="24,14 20,4 28,12" fill="${accent}"/><polygon points="40,14 44,4 36,12" fill="${accent}"/><circle cx="27" cy="21" r="3.2" fill="#1e293b"/><circle cx="37" cy="21" r="3.2" fill="#1e293b"/><circle cx="26" cy="20" r="1.2" fill="#ffffff"/><circle cx="36" cy="20" r="1.2" fill="#ffffff"/><circle cx="23" cy="25" r="2.5" fill="rgba(244,114,182,0.6)"/><circle cx="41" cy="25" r="2.5" fill="rgba(244,114,182,0.6)"/></svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
 // Asset manifest and loader for Geralt and complete RPG Tileset with all 170+ assets
 export class AssetLoader {
   constructor() {
@@ -2224,7 +2233,31 @@ export class AssetLoader {
                   "h": 16
             }
       }
-];
+    ];
+
+    // Register 10 Dragons in Overworld Tiles (Category: 'Dragons')
+    for (const dragon of DRAGON_CATALOG) {
+      this.overworldTiles.push({
+        id: dragon.id,
+        name: dragon.name,
+        category: 'Dragons',
+        layer: 'characters',
+        isCharacter: true,
+        isDragon: true,
+        characterType: 'dragon',
+        dragonData: dragon,
+        src: generateDragonSVG(dragon),
+        gridW: 1,
+        gridH: 1,
+        collider: {
+          enabled: true,
+          x: 16,
+          y: 36,
+          w: 32,
+          h: 22
+        }
+      });
+    }
 
     // Load custom colliders, scales & depth offsets from localStorage if user modified them
     this.COLLIDER_STORAGE_KEY = 'kidslean_rpg_custom_colliders_v1';
@@ -2719,7 +2752,14 @@ export class AssetLoader {
   }
 
   getImage(path) {
-    return this.images.get(path);
+    if (!path) return null;
+    let img = this.images.get(path);
+    if (!img && path.startsWith('data:image/')) {
+      img = new Image();
+      img.src = path;
+      this.images.set(path, img);
+    }
+    return img;
   }
 
   getTileMetadata(tileId) {

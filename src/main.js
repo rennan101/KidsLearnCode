@@ -7,7 +7,7 @@ import { Minimap } from './engine/Minimap.js';
 import { DayNightSystem } from './engine/DayNightSystem.js';
 import { DialogueAndChatSystem } from './engine/DialogueAndChatSystem.js';
 import { CraftingSystem } from './engine/CraftingSystem.js';
-import { DragonManager } from './engine/DragonManager.js';
+import { DragonManager, DRAGON_CATALOG } from './engine/DragonManager.js';
 import { BlocklyLuaSystem } from './engine/BlocklyLuaSystem.js';
 import { MultiplayerClient } from './engine/MultiplayerClient.js';
 import { CharacterRegistry, PLAYABLE_HEROES } from './engine/CharacterRegistry.js';
@@ -419,6 +419,21 @@ class RPGApplication {
           ? `${meta?.category || 'Geral'} • ${meta?.gridW || 1}x${meta?.gridH || 1}${rot ? ` • ${rot}°` : ''}${meta?.collider?.enabled ? ' • [COL]' : ''}`
           : defaultName;
 
+        const isDragon = hasTile && (data.tileId?.startsWith('dragon_') || meta?.isDragon || data.level !== undefined);
+        const dragonLevel = data?.level || 1;
+        const dragonLevelHtml = isDragon ? `
+          <div class="inspector-dragon-level-box">
+            <label>
+              <svg class="ui-icon gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              Nível:
+            </label>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <input type="number" class="inspector-dragon-lvl-input" value="${dragonLevel}" min="1" max="100" data-x="${x}" data-y="${y}" data-layer="${key}" />
+              <button type="button" class="inspector-lvl-save-btn" data-x="${x}" data-y="${y}" data-layer="${key}">Salvar</button>
+            </div>
+          </div>
+        ` : '';
+
         item.innerHTML = `
           <div class="layer-item-header">
             <span class="layer-item-badge" style="background: ${color}20; color: ${color}; border-color: ${color}50;">${label}</span>
@@ -470,9 +485,32 @@ class RPGApplication {
             <div class="layer-item-info">
               <div class="layer-item-title">${tileName}</div>
               <div class="layer-item-sub">${details}</div>
+              ${dragonLevelHtml}
             </div>
           </div>
         `;
+
+        // Bind dragon level save button
+        const lvlSaveBtn = item.querySelector('.inspector-lvl-save-btn');
+        const lvlInput = item.querySelector('.inspector-dragon-lvl-input');
+        if (lvlSaveBtn && lvlInput) {
+          const saveLevel = () => {
+            const newLvl = Math.max(1, Math.min(100, parseInt(lvlInput.value, 10) || 1));
+            lvlInput.value = newLvl;
+            const targetCell = this.tileMap.layers[key]?.get(this.tileMap.getKey(x, y));
+            if (targetCell) {
+              targetCell.level = newLvl;
+              soundFX?.playPop(1.2);
+              this.triggerAutoSave();
+              this.showToast(`Nível do dragão atualizado para Nv. ${newLvl}!`);
+            }
+          };
+          lvlSaveBtn.addEventListener('click', saveLevel);
+          lvlInput.addEventListener('change', saveLevel);
+          lvlInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') saveLevel();
+          });
+        }
 
         // Bind quick buttons
         const moveUpBtn = item.querySelector('.move-up-layer-btn');
@@ -805,8 +843,22 @@ class RPGApplication {
           const pDist = Math.hypot(clickedNpc.worldX - this.player.x, clickedNpc.worldY - this.player.y);
           if (pDist <= 140) {
             this.interactWithNPC(clickedNpc);
+            return;
           } else {
             this.showToast(`Aproxime-se de ${clickedNpc.name.split(',')[0]} para conversar.`);
+            return;
+          }
+        }
+
+        const clickedDragon = this.findNearbyDragon(worldPos.x - 32, worldPos.y - 32, 60);
+        if (clickedDragon) {
+          const pDist = Math.hypot(clickedDragon.worldX - this.player.x, clickedDragon.worldY - this.player.y);
+          if (pDist <= 140) {
+            this.interactWithDragon(clickedDragon);
+            return;
+          } else {
+            this.showToast(`Aproxime-se de ${clickedDragon.name} para interagir.`);
+            return;
           }
         }
       }
@@ -857,7 +909,14 @@ class RPGApplication {
             return;
           }
 
-          // 2. Check proximity to wild nests
+          // 2. Check proximity to placed wild dragons on TileMap
+          const nearbyDragon = this.findNearbyDragon(this.player.x, this.player.y, 90);
+          if (nearbyDragon) {
+            this.interactWithDragon(nearbyDragon);
+            return;
+          }
+
+          // 3. Check proximity to wild nests
           const nearbyNest = this.dragonManager.wildNests.find(n => {
             return Math.hypot(n.x - this.player.x, n.y - this.player.y) < 70;
           });
@@ -1343,7 +1402,54 @@ class RPGApplication {
   populateAssetDrawer() {
     const grid = document.getElementById('tile-drawer-grid');
     const tabsContainer = document.getElementById('category-tabs');
+    const dragonLvlSelector = document.getElementById('dragon-level-selector');
+    const dragonLvlInput = document.getElementById('input-dragon-level');
+    const dragonLvlBadge = document.getElementById('dragon-level-display-badge');
+    const btnLvlDec = document.getElementById('btn-dragon-lvl-dec');
+    const btnLvlInc = document.getElementById('btn-dragon-lvl-inc');
     if (!grid || !tabsContainer) return;
+
+    // Dragon Level Controls Setup
+    const updateDragonLevelUI = (lvl) => {
+      const clamped = Math.max(1, Math.min(100, parseInt(lvl, 10) || 1));
+      if (dragonLvlInput) dragonLvlInput.value = clamped;
+      if (dragonLvlBadge) dragonLvlBadge.innerText = `Nv. ${clamped}`;
+      this.editorController.setDragonPlacementLevel(clamped);
+
+      document.querySelectorAll('.dragon-preset-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.lvl, 10) === clamped);
+      });
+    };
+
+    if (dragonLvlInput) {
+      dragonLvlInput.addEventListener('input', (e) => updateDragonLevelUI(e.target.value));
+      dragonLvlInput.addEventListener('change', (e) => updateDragonLevelUI(e.target.value));
+    }
+    if (btnLvlDec) {
+      btnLvlDec.addEventListener('click', () => {
+        const cur = parseInt(dragonLvlInput?.value || 1, 10);
+        updateDragonLevelUI(cur - 1);
+      });
+    }
+    if (btnLvlInc) {
+      btnLvlInc.addEventListener('click', () => {
+        const cur = parseInt(dragonLvlInput?.value || 1, 10);
+        updateDragonLevelUI(cur + 1);
+      });
+    }
+    document.querySelectorAll('.dragon-preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lvl = parseInt(btn.dataset.lvl, 10);
+        updateDragonLevelUI(lvl);
+      });
+    });
+
+    const checkDragonSelectorVisibility = (tileId, activeCat) => {
+      const isDragon = (tileId && (tileId.startsWith('dragon_') || tileId.includes('dragon'))) || activeCat === 'Dragons';
+      if (dragonLvlSelector) {
+        dragonLvlSelector.style.display = isDragon ? 'flex' : 'none';
+      }
+    };
 
     const renderGrid = (filterCat = 'All') => {
       grid.innerHTML = '';
@@ -1379,7 +1485,7 @@ class RPGApplication {
         } else if (tile.isCharacter) {
           const badge = document.createElement('span');
           badge.className = 'character-badge';
-          badge.innerText = tile.characterType === 'player' ? 'SPAWN' : (tile.characterType === 'hero' ? 'HERÓI' : (tile.characterType === 'enemy' ? 'GUARDA' : 'NPC'));
+          badge.innerText = tile.characterType === 'player' ? 'SPAWN' : (tile.isDragon || tile.characterType === 'dragon' ? 'DRAGÃO' : (tile.characterType === 'hero' ? 'HERÓI' : (tile.characterType === 'enemy' ? 'GUARDA' : 'NPC')));
           card.appendChild(badge);
         }
 
@@ -1394,6 +1500,7 @@ class RPGApplication {
           document.querySelectorAll('.tile-card').forEach((c) => c.classList.remove('selected'));
           card.classList.add('selected');
           this.editorController.setSelectedTile(tile.id);
+          checkDragonSelectorVisibility(tile.id, document.querySelector('.cat-tab.active')?.dataset.cat);
 
           const statusTile = document.getElementById('status-tile');
           if (statusTile) statusTile.innerText = tile.name;
@@ -1418,10 +1525,12 @@ class RPGApplication {
         tabsContainer.querySelectorAll('.cat-tab').forEach((t) => t.classList.remove('active'));
         tab.classList.add('active');
         renderGrid(tab.dataset.cat);
+        checkDragonSelectorVisibility(this.editorController.selectedTileId, tab.dataset.cat);
       });
     });
 
     renderGrid('All');
+    checkDragonSelectorVisibility(this.editorController.selectedTileId, 'All');
   }
 
   triggerAutoSave() {
@@ -2535,6 +2644,68 @@ class RPGApplication {
       onOpenCrafting: () => {
         if (this.openCraftingModal) {
           this.openCraftingModal();
+        }
+      }
+    });
+  }
+
+  findNearbyDragon(worldX, worldY, radius = 100) {
+    if (!this.tileMap || !this.tileMap.layers) return null;
+
+    let nearest = null;
+    let minDistance = radius;
+
+    const layersToCheck = ['characters', 'solid', 'decor'];
+    for (const layerName of layersToCheck) {
+      const layer = this.tileMap.layers[layerName];
+      if (!layer) continue;
+
+      for (const [key, cell] of layer.entries()) {
+        const tileId = (typeof cell === 'object' && cell !== null) ? cell.tileId : (typeof cell === 'string' ? cell : null);
+        if (tileId && typeof tileId === 'string' && (tileId.startsWith('dragon_') || tileId.includes('dragon'))) {
+          const [tx, ty] = key.split(',').map(Number);
+          const dragonWorldX = tx * 64 + 32;
+          const dragonWorldY = ty * 64 + 32;
+          const dist = Math.hypot(dragonWorldX - (worldX + 32), dragonWorldY - (worldY + 32));
+          if (dist <= minDistance) {
+            minDistance = dist;
+            const meta = this.assetLoader.getTileMetadata(tileId);
+            const dragonData = meta?.dragonData || DRAGON_CATALOG.find(d => d.id === tileId) || {
+              id: tileId,
+              name: meta?.name || 'Dragão Selvagem',
+              element: 'Místico',
+              desc: 'Um dragão gracioso da Ilha Lua.'
+            };
+            const level = (typeof cell === 'object' && cell?.level) ? cell.level : 1;
+            nearest = {
+              ...dragonData,
+              level,
+              tx,
+              ty,
+              worldX: tx * 64,
+              worldY: ty * 64
+            };
+          }
+        }
+      }
+    }
+    return nearest;
+  }
+
+  interactWithDragon(dragon) {
+    if (!dragon) return;
+    this.player.isDialogueActive = true;
+    this.player.resetKeys();
+    this.activeDialogueNPC = dragon;
+    this.dialogueSystem.openDragonConversation(dragon, this.dragonManager, {
+      onPet: (d) => {
+        this.showToast(`Você acariciou ${d.name}! Ele soltou faíscas de alegria.`);
+      },
+      onRecruit: (d, res) => {
+        if (res && res.success) {
+          this.showToast(`✨ ${d.name} (Nv. ${d.level || 1}) entrou na sua Bolsa de Dragões!`);
+        } else {
+          this.showToast(res?.reason || 'Não foi possível recrutar o dragão.');
         }
       }
     });

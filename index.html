@@ -493,6 +493,7 @@
       <!-- Category Filter Tabs -->
       <div class="drawer-category-tabs" id="category-tabs">
         <button class="cat-tab active" data-cat="All">Todos</button>
+        <button class="cat-tab" data-cat="Dragons">Dragões</button>
         <button class="cat-tab" data-cat="Characters">Personagens</button>
         <button class="cat-tab" data-cat="Colliders">Colisores</button>
         <button class="cat-tab" data-cat="Water">Água (Animada)</button>
@@ -500,6 +501,30 @@
         <button class="cat-tab" data-cat="Nature">Natureza</button>
         <button class="cat-tab" data-cat="Structures">Estruturas</button>
         <button class="cat-tab" data-cat="Farming">Agricultura</button>
+      </div>
+
+      <!-- Dragon Level Placement Configurator (Shown when Dragons tab or a dragon tile is selected) -->
+      <div class="dragon-level-selector" id="dragon-level-selector" style="display: none;">
+        <div class="dragon-level-header">
+          <svg class="ui-icon gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <span class="dragon-level-label">Nível ao Inserir:</span>
+          <span class="dragon-level-current-badge" id="dragon-level-display-badge">Nv. 1</span>
+        </div>
+        <div class="dragon-level-controls">
+          <button type="button" id="btn-dragon-lvl-dec" class="dragon-lvl-step-btn" title="Diminuir nível">-</button>
+          <input type="number" id="input-dragon-level" class="dragon-lvl-input" value="1" min="1" max="100" />
+          <button type="button" id="btn-dragon-lvl-inc" class="dragon-lvl-step-btn" title="Aumentar nível">+</button>
+          <div class="dragon-lvl-presets">
+            <button type="button" class="dragon-preset-btn active" data-lvl="1">Lv 1</button>
+            <button type="button" class="dragon-preset-btn" data-lvl="5">Lv 5</button>
+            <button type="button" class="dragon-preset-btn" data-lvl="10">Lv 10</button>
+            <button type="button" class="dragon-preset-btn" data-lvl="25">Lv 25</button>
+            <button type="button" class="dragon-preset-btn" data-lvl="50">Lv 50</button>
+            <button type="button" class="dragon-preset-btn" data-lvl="100">Lv 100</button>
+          </div>
+        </div>
       </div>
 
       <!-- Tile Inspector Panel (Shows all layers at selected cell) -->
@@ -1016,7 +1041,7 @@
           </div>
           <div class="codekit-hint-box">
             <svg class="ui-icon" style="width: 13px; height: 13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-            <span>Arraste ou clique para adicionar à mesa</span>
+            <span>Arraste as peças para a mesa de montagem</span>
           </div>
         </div>
 

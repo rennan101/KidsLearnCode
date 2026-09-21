@@ -11,7 +11,8 @@
     "decor",
     "solid",
     "characters",
-    "overhead"
+    "overhead",
+    "colliders"
   ],
   "layers": {
     "ground": {

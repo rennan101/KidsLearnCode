@@ -927,21 +927,6 @@ export class ScratchBlockEngine {
         this.draggedBlockTemplate = null;
       });
 
-      // Click to add directly to workspace
-      card.addEventListener('click', () => {
-        const newBlock = this.instantiateBlock(tmpl);
-        this.blocksInWorkspace.push(newBlock);
-        this.renderWorkspace();
-        this.renderPalette(); // Update palette count immediately
-        this.updateCodePreview();
-        soundFX.playSnap();
-
-        const lastBlockEl = this.workspaceEl?.querySelector('.codekit-block:last-child');
-        if (lastBlockEl) this.spawnSnapDroplets(lastBlockEl);
-
-        if (this.onBlockAdded) this.onBlockAdded(newBlock);
-      });
-
       this.paletteEl.appendChild(card);
     });
   }
@@ -997,7 +982,7 @@ export class ScratchBlockEngine {
             <polyline points="8 6 2 12 8 18"></polyline>
           </svg>
           <span class="placeholder-title">Mesa de Montagem Pronta</span>
-          <span class="placeholder-desc">Arraste as peças da paleta à esquerda ou clique nelas para montar seu código!</span>
+          <span class="placeholder-desc">Arraste as peças da paleta à esquerda para montar seu código!</span>
         </div>
         <div class="tutorial-ghost-container" id="tutorial-ghost-container">
           <div class="tutorial-ghost-track">

@@ -90,7 +90,7 @@ export class TileMap {
     this.spawnPoint = { x: Math.round(x), y: Math.round(y) };
   }
 
-  setTile(layerName, x, y, tileId, isRoot = true, rootX = x, rootY = y, rotation = 0, flipX = false, collider = null, depthOffset = null) {
+  setTile(layerName, x, y, tileId, isRoot = true, rootX = x, rootY = y, rotation = 0, flipX = false, collider = null, depthOffset = null, extraProps = null) {
     const layer = this.layers[layerName];
     if (!layer) return;
 
@@ -117,12 +117,17 @@ export class TileMap {
       } else if (existing && existing.tileId === tileId && existing.depthOffset !== undefined) {
         cellData.depthOffset = existing.depthOffset;
       }
+      if (extraProps && extraProps.level !== undefined) {
+        cellData.level = extraProps.level;
+      } else if (existing && existing.tileId === tileId && existing.level !== undefined) {
+        cellData.level = existing.level;
+      }
       layer.set(key, cellData);
     }
   }
 
   // Multi-tile placement placing root and occupation references across grid area (accounting for rotation, flipX, and custom collider)
-  placeMultiTile(layerName, startX, startY, tileMeta, rotation = 0, flipX = false, collider = null, depthOffset = null) {
+  placeMultiTile(layerName, startX, startY, tileMeta, rotation = 0, flipX = false, collider = null, depthOffset = null, extraProps = null) {
     const baseW = tileMeta.gridW || 1;
     const baseH = tileMeta.gridH || 1;
     const isRotated90or270 = (rotation === 90 || rotation === 270);
@@ -134,7 +139,7 @@ export class TileMap {
         const tx = startX + dx;
         const ty = startY + dy;
         const isRoot = (dx === 0 && dy === 0);
-        this.setTile(layerName, tx, ty, tileMeta.id, isRoot, startX, startY, rotation, flipX, isRoot ? collider : null, isRoot ? depthOffset : null);
+        this.setTile(layerName, tx, ty, tileMeta.id, isRoot, startX, startY, rotation, flipX, isRoot ? collider : null, isRoot ? depthOffset : null, isRoot ? extraProps : null);
       }
     }
   }
@@ -332,6 +337,133 @@ export class TileMap {
         ctx.fillText(tagText, destX + occW / 2, destY + occH / 2);
         ctx.restore();
       }
+      return;
+    }
+
+    // Special Dragon Entity Canvas Renderer with Level Badge
+    if (tileMeta.isDragon || cell.tileId.startsWith('dragon_')) {
+      const dragonData = tileMeta.dragonData || {};
+      const bodyColor = dragonData.color || '#38bdf8';
+      const accentColor = dragonData.secondaryColor || '#fef08a';
+      const level = cell.level || 1;
+
+      ctx.save();
+      const isFlipped = !!cell.flipX;
+      if (isFlipped) {
+        ctx.translate(destX + occW, destY);
+        ctx.scale(-1, 1);
+      } else {
+        ctx.translate(destX, destY);
+      }
+
+      // 1. Shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+      ctx.beginPath();
+      ctx.ellipse(32, 54, 18, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 2. Wings with subtle animation
+      const wingFlap = Math.sin((Date.now() / 200) + (x * 2 + y * 3)) * 4;
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.ellipse(14, 28 + wingFlap, 11, 7, -Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(50, 28 - wingFlap, 11, 7, Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 3. Body & Belly
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.ellipse(32, 36, 17, 15, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.ellipse(32, 38, 10, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 4. Head & Horns
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.arc(32, 22, 13, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.moveTo(25, 14);
+      ctx.lineTo(21, 5);
+      ctx.lineTo(29, 12);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(39, 14);
+      ctx.lineTo(43, 5);
+      ctx.lineTo(35, 12);
+      ctx.fill();
+
+      // 5. Big Eyes & Sparkles
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.arc(27, 21, 3, 0, Math.PI * 2);
+      ctx.arc(37, 21, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(26, 20, 1.1, 0, Math.PI * 2);
+      ctx.arc(36, 20, 1.1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 6. Rosy cheeks
+      ctx.fillStyle = 'rgba(244, 114, 182, 0.65)';
+      ctx.beginPath();
+      ctx.arc(23, 25, 2.4, 0, Math.PI * 2);
+      ctx.arc(41, 25, 2.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+
+      // 7. Overhead Level Badge (Animal Island UI 3D Pill, not flipped)
+      ctx.save();
+      const lvlText = `Nv. ${level}`;
+      ctx.font = 'bold 11px "Nunito", sans-serif';
+      const textMetrics = ctx.measureText(lvlText);
+      const badgeW = Math.max(38, textMetrics.width + 12);
+      const badgeH = 17;
+      const badgeX = destX + 32 - badgeW / 2;
+      const badgeY = destY - 8;
+
+      // Badge shadow 3D
+      ctx.fillStyle = '#d97706';
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(badgeX, badgeY + 2, badgeW, badgeH, 8);
+      } else {
+        ctx.rect(badgeX, badgeY + 2, badgeW, badgeH);
+      }
+      ctx.fill();
+
+      // Badge body
+      ctx.fillStyle = '#fffdf5';
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 8);
+      } else {
+        ctx.rect(badgeX, badgeY, badgeW, badgeH);
+      }
+      ctx.fill();
+
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#7a583e';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(lvlText, destX + 32, badgeY + badgeH / 2);
+      ctx.restore();
+
       return;
     }
 
