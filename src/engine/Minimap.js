@@ -138,6 +138,9 @@ export class Minimap {
         if (this.camera) {
           this.camera.x = targetWorldX - this.camera.viewportWidth / 2;
           this.camera.y = targetWorldY - this.camera.viewportHeight / 2;
+        }
+      });
+
       // Wheel to zoom expanded map
       this.expandedCanvas.addEventListener('wheel', (e) => {
         e.preventDefault();
