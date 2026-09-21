@@ -3749,33 +3749,83 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
 }
 
 .codekit-mentor-role {
-  font-family: var(--animal-font, 'Nunito', sans-serif);
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.25);
-  padding: 2px 10px;
+  display: none !important;
+}
+
+.codekit-live-badge {
+  display: none !important;
+}
+
+/* Prominent Unlocked Item Highlight Pill */
+.codekit-unlock-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 2px solid #7a583e;
   border-radius: var(--animal-radius-pill, 50px);
+  padding: 3px 12px 3px 4px;
+  box-shadow: 0 3px 0 0 #5c3c26;
+  margin-left: 4px;
+}
+
+.codekit-unlock-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--animal-primary-bg, #e6f9f6);
+  border: 1.5px solid var(--animal-primary, #19c8b9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--animal-primary-dark, #0f8e83);
+  flex-shrink: 0;
+}
+
+.codekit-unlock-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.codekit-unlock-label {
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: var(--animal-text, #794f27);
+  white-space: nowrap;
+}
+
+/* Naive Icon Reward Badges (XP & Moedas) */
+.codekit-reward-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 6px;
 }
 
 .codekit-badge {
   font-family: var(--animal-font, 'Nunito', sans-serif);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 800;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: var(--animal-radius-pill, 50px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.codekit-badge.unlock {
-  background: #ffffff;
-  color: var(--animal-primary-dark, #0f8e83);
-  box-shadow: 0 2px 0 0 rgba(0, 0, 0, 0.15);
-}
-
-.codekit-badge.reward {
+.codekit-badge.reward-xp {
   background: #fef3c7;
   color: #92400e;
   border: 1.5px solid #fde68a;
+  box-shadow: 0 2px 0 0 #d97706;
+}
+
+.codekit-badge.reward-gold {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1.5px solid #fcd34d;
+  box-shadow: 0 2px 0 0 #d97706;
 }
 
 .codekit-mission-desc {
@@ -4472,9 +4522,16 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
   background: var(--animal-bg, #f8f8f0) !important;
   border-radius: 0 !important;
   z-index: 1000 !important;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.crafting-modal.full-screen-modal[style*="display: none"] {
+  display: none !important;
+}
+
+.crafting-modal.full-screen-modal[style*="display: flex"] {
   display: flex !important;
-  align-items: stretch !important;
-  justify-content: stretch !important;
 }
 
 .full-screen-card {

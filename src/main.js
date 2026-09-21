@@ -3030,26 +3030,31 @@ class RPGApplication {
 
     const titleEl = document.getElementById('coding-studio-title');
     const mentorNameEl = document.getElementById('coding-mentor-name');
-    const mentorRoleEl = document.getElementById('coding-mentor-role');
     const lessonDesc = document.getElementById('lesson-desc');
-    const rewardBadge = document.getElementById('lesson-reward-badge');
-    const unlockBadge = document.getElementById('lesson-unlock-target');
+    const unlockIconEl = document.getElementById('lesson-unlock-icon');
+    const unlockNameEl = document.getElementById('lesson-unlock-name');
+    const xpTextEl = document.getElementById('lesson-xp-text');
+    const goldTextEl = document.getElementById('lesson-gold-text');
     const codeEditor = document.getElementById('lua-code-editor');
     const consoleOut = document.getElementById('lua-console-output');
 
     if (customOptions) {
-      if (titleEl) titleEl.innerText = customOptions.title || 'Bancada DIY de Montagem';
+      if (titleEl) titleEl.innerText = customOptions.title || 'Estúdio de Códigos';
       if (mentorNameEl) mentorNameEl.innerText = customOptions.mentor || 'Bancada DIY';
-      if (mentorRoleEl) mentorRoleEl.innerText = customOptions.mentorRole || 'Criação Rápida';
       if (lessonDesc) lessonDesc.innerText = customOptions.description || 'Encaixe o bloco no tabuleiro para fabricar o item!';
-      if (rewardBadge) rewardBadge.innerText = customOptions.reward || 'Salva na Bolsa';
-      if (unlockBadge) unlockBadge.innerText = customOptions.unlock || 'Novo Item';
+      if (xpTextEl) xpTextEl.innerText = '+100 XP';
+      if (goldTextEl) goldTextEl.innerText = '+50 Moedas';
+      if (unlockNameEl) unlockNameEl.innerText = customOptions.unlock || 'Novo Item';
+      if (unlockIconEl) {
+        const iconKey = customOptions.iconKey || this.inventorySystem.inferIconKey(customOptions.unlockId || 'crate');
+        unlockIconEl.innerHTML = this.getItemSvgIcon(iconKey);
+      }
       if (codeEditor) codeEditor.value = customOptions.starterLua || '';
       if (this.scratchEngine) {
         this.scratchEngine.loadLessonBlocks(customOptions.blocks || null, customOptions.starterLua || '', null);
       }
       if (consoleOut) {
-        consoleOut.innerText = `> Bancada DIY pronta!\n> Arraste a peça para a área de montagem e clique em 'Montar & Fabricar'.`;
+        consoleOut.innerText = `> Estúdio de Códigos pronto!\n> Arraste a peça para a área de montagem e clique em 'Montar & Fabricar'.`;
       }
     } else {
       let lesson = null;
@@ -3064,12 +3069,16 @@ class RPGApplication {
       }
 
       if (lesson) {
-        if (titleEl) titleEl.innerText = `Desafio: ${lesson.title}`;
+        if (titleEl) titleEl.innerText = 'Estúdio de Códigos';
         if (mentorNameEl) mentorNameEl.innerText = lesson.mentor || 'Mestre da Ilha';
-        if (mentorRoleEl) mentorRoleEl.innerText = lesson.mentorRole || 'Guia de Código';
         if (lessonDesc) lessonDesc.innerText = lesson.description;
-        if (rewardBadge) rewardBadge.innerText = `+${lesson.rewardXP} XP / +${lesson.rewardGold} Moedas`;
-        if (unlockBadge) unlockBadge.innerText = `Desbloqueia: ${lesson.unlockedAssetName || 'Item Especial'}`;
+        if (xpTextEl) xpTextEl.innerText = `+${lesson.rewardXP} XP`;
+        if (goldTextEl) goldTextEl.innerText = `+${lesson.rewardGold} Moedas`;
+        if (unlockNameEl) unlockNameEl.innerText = lesson.unlockedAssetName || 'Item Especial';
+        if (unlockIconEl) {
+          const iconKey = lesson.unlockedAssetId || this.inventorySystem.inferIconKey(lesson.unlockedAssetId);
+          unlockIconEl.innerHTML = this.getItemSvgIcon(iconKey);
+        }
         if (codeEditor) codeEditor.value = lesson.starterLua;
         if (this.scratchEngine) {
           this.scratchEngine.loadLessonBlocks(lesson.blocks, lesson.starterLua, lesson);

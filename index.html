@@ -842,7 +842,7 @@
             <polyline points="16 18 22 12 16 6"></polyline>
             <polyline points="8 6 2 12 8 18"></polyline>
           </svg>
-          <span id="coding-studio-title">Estúdio de Blocos Code Kit</span>
+          <span id="coding-studio-title">Estúdio de Códigos</span>
         </div>
         <button id="btn-close-coding" class="modal-close-btn" title="Fechar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       </div>
@@ -858,9 +858,26 @@
           <div class="codekit-mission-details">
             <div class="codekit-badges-row">
               <span id="coding-mentor-name" class="codekit-mentor-name">Bambu, o Engenheiro</span>
-              <span id="coding-mentor-role" class="codekit-mentor-role">Guia da Ilha</span>
-              <span id="lesson-unlock-target" class="codekit-badge unlock">Desbloqueia: Cadeira de Madeira</span>
-              <span id="lesson-reward-badge" class="codekit-badge reward">+100 XP / +50 Moedas</span>
+              
+              <!-- Prominent Unlocked Item Highlight with Large Icon -->
+              <div id="lesson-unlock-target" class="codekit-unlock-pill" title="Item Desbloqueado">
+                <div class="codekit-unlock-icon" id="lesson-unlock-icon">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <span class="codekit-unlock-label" id="lesson-unlock-name">Cadeira de Madeira</span>
+              </div>
+
+              <!-- Naive Icon Rewards (XP & Moedas) -->
+              <div class="codekit-reward-badges">
+                <span id="lesson-reward-xp" class="codekit-badge reward-xp">
+                  <svg class="ui-icon" viewBox="0 0 24 24" width="15" height="15" fill="#f59e0b" stroke="#b45309" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  <span id="lesson-xp-text">+100 XP</span>
+                </span>
+                <span id="lesson-reward-gold" class="codekit-badge reward-gold">
+                  <svg class="ui-icon" viewBox="0 0 24 24" width="15" height="15" fill="#fbbf24" stroke="#b45309" stroke-width="1.5"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M9 9.5h6a1.5 1.5 0 0 1 0 3H9a1.5 1.5 0 0 0 0 3h6"></path></svg>
+                  <span id="lesson-gold-text">+50 Moedas</span>
+                </span>
+              </div>
             </div>
             <p id="lesson-desc" class="codekit-mission-desc">Arraste a peça para a mesa de montagem e veja a transformação do código Lua em tempo real ao lado!</p>
           </div>
@@ -907,7 +924,6 @@
               <svg class="ui-icon" style="width: 15px; height: 15px; color: #f59e0b;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
               <span>Código Lua (Tempo Real)</span>
             </div>
-            <span class="codekit-live-badge">Sincronizado</span>
           </div>
 
           <!-- Code View Area (Syntax Highlighted) -->
