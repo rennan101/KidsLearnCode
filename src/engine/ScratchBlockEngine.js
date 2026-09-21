@@ -469,38 +469,86 @@ export class ScratchBlockEngine {
     };
   }
 
-  // Visual droplet splash on snap (Animal Island Checkbox Style)
+  // Visual droplet splash on snap across the full block width (Animal Island Checkbox Style)
   spawnSnapDroplets(element) {
     if (!element || typeof document === 'undefined') return;
     const rect = element.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+
     const container = document.createElement('div');
     container.className = 'animal-snap-droplet-container';
-    container.style.left = `${rect.left + rect.width / 2}px`;
-    container.style.top = `${rect.top + 14}px`;
 
-    const dropletCount = 6;
-    const colors = ['#19c8b9', '#3dd4c6', '#14b8a6', '#5eead4', '#2dd4bf', '#0f8e83'];
+    // Animal Island mint, cyan, turquoise and warm golden accent palette
+    const colors = ['#19c8b9', '#3dd4c6', '#0f8e83', '#5eead4', '#2dd4bf', '#f59e0b', '#38bdf8'];
+    
+    // Number of droplets scales gracefully with the width of the snapped block
+    const numPoints = Math.max(10, Math.min(22, Math.round(rect.width / 24)));
 
-    for (let i = 0; i < dropletCount; i++) {
+    // 1. Top Edge Droplets (spread across full width, shooting upwards & outwards)
+    for (let i = 0; i <= numPoints; i++) {
+      const t = i / numPoints; // 0 to 1 across width
+      const x = rect.left + t * rect.width;
+      const y = rect.top + 2;
+
       const droplet = document.createElement('div');
       droplet.className = 'animal-snap-droplet';
-      const angle = (i / dropletCount) * Math.PI * 2;
-      const distance = 26 + Math.random() * 14;
+      droplet.style.left = `${x}px`;
+      droplet.style.top = `${y}px`;
+
+      // Angle spreads from -135deg (top-left) to -45deg (top-right)
+      const angle = (-135 + t * 90) * (Math.PI / 180);
+      const distance = 26 + Math.random() * 24;
       const dx = Math.cos(angle) * distance;
       const dy = Math.sin(angle) * distance;
+      const size = 8 + Math.random() * 6;
+      const delay = Math.random() * 0.08;
 
-      droplet.style.setProperty('--splash-dx', `${dx}px`);
-      droplet.style.setProperty('--splash-dy', `${dy}px`);
+      droplet.style.width = `${size}px`;
+      droplet.style.height = `${size}px`;
+      droplet.style.setProperty('--splash-dx', `${dx.toFixed(1)}px`);
+      droplet.style.setProperty('--splash-dy', `${dy.toFixed(1)}px`);
       droplet.style.background = colors[i % colors.length];
+      droplet.style.animationDelay = `${delay.toFixed(3)}s`;
+
+      container.appendChild(droplet);
+    }
+
+    // 2. Bottom Edge Droplets (spread across full width, shooting downwards & outwards)
+    const bottomPoints = Math.max(6, Math.round(numPoints * 0.7));
+    for (let i = 0; i <= bottomPoints; i++) {
+      const t = i / bottomPoints;
+      const x = rect.left + t * rect.width;
+      const y = rect.bottom - 2;
+
+      const droplet = document.createElement('div');
+      droplet.className = 'animal-snap-droplet';
+      droplet.style.left = `${x}px`;
+      droplet.style.top = `${y}px`;
+
+      const angle = (135 - t * 90) * (Math.PI / 180);
+      const distance = 22 + Math.random() * 20;
+      const dx = Math.cos(angle) * distance;
+      const dy = Math.sin(angle) * distance;
+      const size = 7 + Math.random() * 5;
+      const delay = 0.02 + Math.random() * 0.08;
+
+      droplet.style.width = `${size}px`;
+      droplet.style.height = `${size}px`;
+      droplet.style.setProperty('--splash-dx', `${dx.toFixed(1)}px`);
+      droplet.style.setProperty('--splash-dy', `${dy.toFixed(1)}px`);
+      droplet.style.background = colors[(i + 2) % colors.length];
+      droplet.style.animationDelay = `${delay.toFixed(3)}s`;
+
       container.appendChild(droplet);
     }
 
     document.body.appendChild(container);
     element.classList.add('snap-glow-active');
+
     setTimeout(() => {
       element.classList.remove('snap-glow-active');
       container.remove();
-    }, 600);
+    }, 1150);
   }
 
   // Helper to collect all template IDs currently in workspace (including nested containers)
