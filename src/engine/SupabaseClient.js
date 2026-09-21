@@ -84,7 +84,7 @@ export class SupabaseClient {
   // Autenticação (Login / Cadastro / Guest)
   // ==========================================
 
-  async signUp(email, password, nickname = 'Aventureiro') {
+  async signUp(email, password, nickname = 'Aventureiro', extraData = {}) {
     if (!this.client) {
       return { 
         success: false, 
@@ -97,7 +97,7 @@ export class SupabaseClient {
         email,
         password,
         options: {
-          data: { nickname }
+          data: { nickname, ...extraData }
         }
       });
 

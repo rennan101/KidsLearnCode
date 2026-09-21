@@ -1458,6 +1458,10 @@ class RPGApplication {
     const nicknameInput = document.getElementById('auth-nickname');
     const emailInput = document.getElementById('auth-email');
     const passwordInput = document.getElementById('auth-password');
+    const ageContainer = document.getElementById('auth-age-verification-container');
+    const over18Checkbox = document.getElementById('auth-over-18');
+    const parentEmailContainer = document.getElementById('auth-parent-email-container');
+    const parentEmailInput = document.getElementById('auth-parent-email');
     const submitBtn = document.getElementById('btn-submit-auth');
     const guestBtn = document.getElementById('btn-guest-auth');
     const signoutBtn = document.getElementById('btn-signout-auth');
@@ -1511,11 +1515,18 @@ class RPGApplication {
       modal.style.display = 'none';
     });
 
+    over18Checkbox?.addEventListener('change', () => {
+      if (parentEmailContainer) {
+        parentEmailContainer.style.display = over18Checkbox.checked ? 'none' : 'flex';
+      }
+    });
+
     tabLogin?.addEventListener('click', () => {
       mode = 'login';
       tabLogin.classList.add('active');
       tabSignup.classList.remove('active');
       if (nicknameInput) nicknameInput.style.display = 'none';
+      if (ageContainer) ageContainer.style.display = 'none';
       if (submitBtnLabel) submitBtnLabel.innerText = 'Entrar';
     });
 
@@ -1524,6 +1535,10 @@ class RPGApplication {
       tabSignup.classList.add('active');
       tabLogin.classList.remove('active');
       if (nicknameInput) nicknameInput.style.display = 'block';
+      if (ageContainer) ageContainer.style.display = 'flex';
+      if (parentEmailContainer) {
+        parentEmailContainer.style.display = (over18Checkbox && over18Checkbox.checked) ? 'none' : 'flex';
+      }
       if (submitBtnLabel) submitBtnLabel.innerText = 'Criar Conta';
     });
 
@@ -1537,12 +1552,27 @@ class RPGApplication {
         return;
       }
 
+      let extraData = {};
+      if (mode === 'signup') {
+        const isOver18 = over18Checkbox ? over18Checkbox.checked : false;
+        let parentEmail = '';
+        if (!isOver18) {
+          parentEmail = parentEmailInput ? parentEmailInput.value.trim() : '';
+          const isValidEmail = parentEmail.length > 5 && parentEmail.includes('@') && parentEmail.includes('.');
+          if (!isValidEmail) {
+            this.showToast('Conforme o ECA, informe um e-mail válido do responsável legal para criar a conta.');
+            return;
+          }
+        }
+        extraData = { isOver18, parentEmail: isOver18 ? null : parentEmail };
+      }
+
       submitBtn.disabled = true;
       if (submitBtnLabel) submitBtnLabel.innerText = 'Conectando...';
 
       let res;
       if (mode === 'signup') {
-        res = await this.supabaseClient.signUp(email, password, nickname);
+        res = await this.supabaseClient.signUp(email, password, nickname, extraData);
       } else {
         res = await this.supabaseClient.signIn(email, password);
       }

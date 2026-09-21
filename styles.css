@@ -122,11 +122,11 @@ body {
   flex-shrink: 0;
 }
 
-/* Loading Overlay */
+/* Loading Overlay (Animal Island UI) */
 #loading-screen {
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at center, #151c2a 0%, #06080d 100%);
+  background: radial-gradient(circle at center, #fdfbf7 0%, #e8f4f8 100%);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -136,52 +136,79 @@ body {
 
 .loader-card {
   text-align: center;
-  max-width: 420px;
+  max-width: 440px;
   width: 90%;
-  padding: 32px;
-  background: rgba(20, 31, 51, 0.96);
-  border: 2px solid var(--animal-primary);
-  border-radius: 24px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(25, 200, 185, 0.2);
+  padding: 34px 28px;
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 3.5px solid var(--animal-border-wood, #7a583e);
+  border-radius: 28px;
+  box-shadow: 0 20px 50px rgba(60, 45, 30, 0.25), inset 0 2px 0 rgba(255, 255, 255, 0.9);
 }
 
 .loader-card h1 {
-  font-family: var(--animal-font-title);
-  font-size: 1.85rem;
+  font-family: var(--animal-font-title, 'Cinzel', serif);
+  font-size: 1.95rem;
   letter-spacing: 2px;
-  color: var(--accent-gold);
+  color: var(--animal-text, #794f27);
   margin-bottom: 8px;
+  font-weight: 800;
 }
 
 .loader-card p {
-  color: var(--text-muted);
-  font-size: 0.9rem;
+  color: var(--animal-text-body, #725d42);
+  font-size: 0.92rem;
+  font-weight: 600;
   margin-bottom: 24px;
-  font-family: var(--animal-font);
+  font-family: var(--animal-font, 'Nunito', sans-serif);
 }
 
-.progress-bar {
-  height: 10px;
-  background: #0f172a;
-  border-radius: 20px;
+/* Animal Island UI Progress Bar */
+.animal-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.animal-progress-track {
+  flex: 1;
+  height: 22px;
+  background: #f0e6ce;
+  border: 2.5px solid var(--animal-border-wood, #7a583e);
+  border-radius: var(--animal-radius-pill, 50px);
   overflow: hidden;
-  margin-bottom: 12px;
-  border: 1px solid #1e293b;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(60, 45, 30, 0.18);
 }
 
-.progress-fill {
+.animal-progress-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, var(--animal-primary), var(--animal-accent-gold));
-  transition: width 0.15s ease;
-  border-radius: 20px;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--animal-primary, #19c8b9),
+    var(--animal-primary, #19c8b9) 12px,
+    var(--animal-primary-hover, #3dd4c6) 12px,
+    var(--animal-primary-hover, #3dd4c6) 24px
+  );
+  border-radius: var(--animal-radius-pill, 50px);
+  transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.4);
 }
 
-.progress-text {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--accent-gold);
-  font-weight: 700;
+.animal-progress-badge {
+  min-width: 54px;
+  padding: 4px 10px;
+  background: var(--animal-primary, #19c8b9);
+  color: #ffffff;
+  border: 2px solid var(--animal-primary-dark, #0f8e83);
+  border-radius: var(--animal-radius-pill, 50px);
+  font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 2px 0 0 var(--animal-primary-dark, #0f8e83);
+  flex-shrink: 0;
 }
 
 /* App Header / Top Navbar (Animal Island Floating Pill Bar) */
@@ -1776,7 +1803,7 @@ canvas#game-canvas {
 }
 
 /* =========================================
-   Animal Island NPC Floating Dialogue Modal
+   Animal Island UI Game Dialogue Modal (异形弹窗)
    ========================================= */
 
 .ac-dialogue-modal {
@@ -1790,17 +1817,17 @@ canvas#game-canvas {
   pointer-events: none;
 }
 
+.ac-dialogue-box.animal-game-modal,
 .ac-dialogue-box {
-  background: #fdfbf7;
-  border: 3.5px solid #7a583e;
-  border-radius: 28px;
-  width: 620px;
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 3.5px solid var(--animal-border-wood, #7a583e);
+  border-radius: 36px 36px 36px 12px;
+  width: 640px;
   max-width: 92vw;
-  padding: 18px 22px;
+  padding: 24px 28px 20px 28px;
   display: flex;
-  gap: 16px;
   box-shadow: 
-    0 16px 40px rgba(60, 45, 30, 0.35),
+    0 18px 45px rgba(60, 45, 30, 0.35),
     inset 0 2px 0 rgba(255, 255, 255, 0.9);
   animation: acPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   position: absolute;
@@ -1818,7 +1845,7 @@ canvas#game-canvas {
   height: 0;
   border-left: 14px solid transparent;
   border-right: 14px solid transparent;
-  border-top: 18px solid #7a583e;
+  border-top: 18px solid var(--animal-border-wood, #7a583e);
 }
 
 .ac-dialogue-box::before {
@@ -1831,7 +1858,7 @@ canvas#game-canvas {
   height: 0;
   border-left: 11px solid transparent;
   border-right: 11px solid transparent;
-  border-top: 14px solid #fdfbf7;
+  border-top: 14px solid var(--animal-bg-card, #fdfbf7);
   z-index: 1;
 }
 
@@ -1840,71 +1867,84 @@ canvas#game-canvas {
   100% { transform: scale(1) translateY(0); opacity: 1; }
 }
 
+.animal-modal-avatar,
 .ac-portrait-wrapper {
-  width: 82px;
-  height: 82px;
+  position: absolute;
+  top: -30px;
+  left: -16px;
+  width: 86px;
+  height: 86px;
   background: #ffffff;
-  border: 3px solid var(--animal-primary);
+  border: 3.5px solid var(--animal-border-wood, #7a583e);
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(25, 200, 185, 0.25), inset 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 16px rgba(80, 50, 20, 0.25);
+  z-index: 10;
 }
 
+.animal-modal-avatar img,
 .ac-portrait-wrapper img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
+.ac-name-ribbon {
+  position: absolute;
+  top: -16px;
+  left: 78px;
+  background: linear-gradient(180deg, var(--animal-primary, #19c8b9), var(--animal-primary-dark, #0f8e83));
+  color: #ffffff;
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 4px 22px;
+  border-radius: var(--animal-radius-pill, 50px);
+  border: 2.5px solid var(--animal-border-wood, #7a583e);
+  box-shadow: 0 3px 0 0 #5c3c26, 0 4px 10px rgba(15, 142, 131, 0.3);
+  z-index: 11;
+  letter-spacing: 0.5px;
+}
+
+.animal-modal-body,
 .ac-text-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-}
-
-.ac-name-tag {
-  align-self: flex-start;
-  background: linear-gradient(135deg, var(--animal-primary), var(--animal-primary-dark));
-  color: #ffffff;
-  font-family: var(--animal-font);
-  font-weight: 800;
-  font-size: 0.88rem;
-  padding: 4px 16px;
-  border-radius: 50px;
-  border: 1px solid #3dd4c6;
-  box-shadow: 0 2px 6px rgba(25, 200, 185, 0.3);
+  gap: 8px;
+  margin-left: 56px;
 }
 
 .ac-bubble-text {
-  font-family: var(--animal-font);
-  font-size: 1.02rem;
-  font-weight: 600;
-  color: #794f27;
-  line-height: 1.45;
-  min-height: 44px;
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--animal-text, #794f27);
+  line-height: 1.5;
+  min-height: 48px;
+  word-break: break-word;
 }
 
 .ac-choices {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .ac-choice-btn {
-  background: linear-gradient(135deg, var(--animal-primary), var(--animal-primary-dark));
-  border: 1px solid #3dd4c6;
-  border-radius: 50px;
+  background: linear-gradient(135deg, var(--animal-primary, #19c8b9), var(--animal-primary-dark, #0f8e83));
+  border: 1px solid var(--animal-primary-hover, #3dd4c6);
+  border-radius: var(--animal-radius-pill, 50px);
   color: #ffffff;
-  font-family: var(--animal-font);
+  font-family: var(--animal-font, 'Nunito', sans-serif);
   font-size: 0.88rem;
   font-weight: 800;
-  padding: 7px 18px;
+  padding: 8px 20px;
   cursor: pointer;
   transition: all 0.15s ease;
   box-shadow: 0 3px 0 0 #0b6961, 0 4px 10px rgba(25, 200, 185, 0.3);
@@ -1921,6 +1961,23 @@ canvas#game-canvas {
 .ac-choice-btn:active {
   transform: translateY(2px);
   box-shadow: 0 1px 0 0 #0b6961;
+}
+
+.animal-dialogue-indicator {
+  position: absolute;
+  bottom: 12px;
+  right: 18px;
+  color: var(--animal-primary, #19c8b9);
+  animation: animalBounce 0.8s infinite alternate ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+@keyframes animalBounce {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(5px); }
 }
 
 /* =========================================
@@ -4131,4 +4188,156 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
   width: 16px;
   height: 16px;
 }
+
+/* =========================================
+   ANIMAL ISLAND UI TOOLTIP SYSTEM
+   ========================================= */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: 6px 14px;
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 2px solid var(--animal-border-wood, #7a583e);
+  color: var(--animal-text, #794f27);
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(80, 50, 20, 0.22);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+  z-index: 1000;
+}
+
+[data-tooltip]::after {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid var(--animal-border-wood, #7a583e);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+  z-index: 1001;
+}
+
+[data-tooltip]:hover::before,
+[data-tooltip]:focus-visible::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Tooltip variants */
+.animal-tooltip {
+  display: inline-block;
+  padding: 6px 14px;
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 2px solid var(--animal-border-wood, #7a583e);
+  color: var(--animal-text, #794f27);
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-size: 0.8rem;
+  font-weight: 800;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(80, 50, 20, 0.22);
+}
+
+/* =========================================
+   ANIMAL ISLAND UI CHECKBOX (Squircle & Glow)
+   ========================================= */
+.animal-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--animal-text, #794f27);
+  position: relative;
+}
+
+.animal-checkbox-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.animal-checkbox-custom {
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  border: 2px solid var(--animal-border-wood, #7a583e);
+  background: var(--animal-bg-card, #fdfbf7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 3px 0 0 var(--animal-border, #c4b89e);
+  flex-shrink: 0;
+}
+
+.animal-checkbox-custom svg {
+  opacity: 0;
+  transform: scale(0.4);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #ffffff;
+}
+
+.animal-checkbox-input:checked + .animal-checkbox-custom {
+  background: var(--animal-primary, #19c8b9);
+  border-color: var(--animal-primary-dark, #0f8e83);
+  box-shadow: 0 3px 0 0 var(--animal-primary-dark, #0f8e83);
+}
+
+.animal-checkbox-input:checked + .animal-checkbox-custom svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.animal-checkbox-label:hover .animal-checkbox-custom {
+  border-color: var(--animal-primary, #19c8b9);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 0 var(--animal-border, #c4b89e);
+}
+
+.animal-checkbox-input:focus-visible + .animal-checkbox-custom {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.8), 0 3px 0 0 var(--animal-border, #c4b89e);
+}
+
+.animal-checkbox-input:checked:focus-visible + .animal-checkbox-custom {
+  box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.8), 0 3px 0 0 var(--animal-primary-dark, #0f8e83);
+}
+
+.animal-checkbox-text {
+  line-height: 1.3;
+}
+
 

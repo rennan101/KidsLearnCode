@@ -240,10 +240,12 @@ export class DialogueAndChatSystem {
     const textEl = document.getElementById('ac-dialogue-text');
     const portraitEl = document.getElementById('ac-dialogue-portrait');
     const choicesEl = document.getElementById('ac-dialogue-choices');
+    const indicatorEl = document.getElementById('ac-dialogue-indicator');
 
     if (!modalEl || !textEl) return;
 
     modalEl.style.display = 'flex';
+    if (indicatorEl) indicatorEl.style.display = 'none';
     if (nameEl) nameEl.innerText = speakerMeta.name || 'Morador';
     if (portraitEl) {
       portraitEl.onerror = () => {
@@ -273,6 +275,7 @@ export class DialogueAndChatSystem {
       } else {
         clearInterval(this.typewriterTimer);
         this.activeDialogue.isFinished = true;
+        if (indicatorEl) indicatorEl.style.display = 'flex';
         this.renderChoices(choicesEl, choices, onComplete);
       }
     }, 48);
@@ -339,6 +342,8 @@ export class DialogueAndChatSystem {
   closeNPCDialogue() {
     clearInterval(this.typewriterTimer);
     const modalEl = document.getElementById('ac-dialogue-modal');
+    const indicatorEl = document.getElementById('ac-dialogue-indicator');
+    if (indicatorEl) indicatorEl.style.display = 'none';
     if (modalEl) modalEl.style.display = 'none';
     this.activeDialogue = null;
     this.activeNpc = null;

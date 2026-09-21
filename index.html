@@ -12,15 +12,17 @@
 </head>
 <body>
 
-  <!-- Asset Preloading Screen -->
+  <!-- Asset Preloading Screen (Animal Island UI Progress) -->
   <div id="loading-screen">
     <div class="loader-card">
-      <h1>Universo</h1>
-      <p>Carregando o mundo de Ilha Lua, heróis, dragões e tiles...</p>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progress-fill"></div>
+      <h1>Ilha Lua</h1>
+      <p>Carregando o mundo de aventuras, heróis e dragões...</p>
+      <div class="animal-progress-wrap">
+        <div class="animal-progress-track">
+          <div class="animal-progress-fill" id="progress-fill" style="width: 0%;"></div>
+        </div>
+        <div class="animal-progress-badge" id="progress-text">0%</div>
       </div>
-      <div class="progress-text" id="progress-text">0%</div>
     </div>
   </div>
 
@@ -569,16 +571,21 @@
     </button>
   </div>
 
-  <!-- Animal Crossing NPC Dialogue Modal -->
+  <!-- Animal Island UI Game Irregular Dialogue Modal (异形弹窗 game) -->
   <div class="ac-dialogue-modal" id="ac-dialogue-modal" style="display: none;">
-    <div class="ac-dialogue-box">
-      <div class="ac-portrait-wrapper">
+    <div class="ac-dialogue-box animal-game-modal">
+      <div class="ac-portrait-wrapper animal-modal-avatar">
         <img id="ac-dialogue-portrait" src="assets/characters/char_wolf_hunter_m/portrait.jpg" alt="Speaker">
       </div>
-      <div class="ac-text-content">
-        <div class="ac-name-tag" id="ac-dialogue-name">Dr. Arquimedes</div>
+      <div class="ac-name-ribbon" id="ac-dialogue-name">Dr. Arquimedes</div>
+      <div class="ac-text-content animal-modal-body">
         <div class="ac-bubble-text" id="ac-dialogue-text">Olá, pequeno aventureiro! Bem-vindo à Ilha Lua!</div>
         <div class="ac-choices" id="ac-dialogue-choices"></div>
+      </div>
+      <div class="animal-dialogue-indicator" id="ac-dialogue-indicator" style="display: none;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
       </div>
     </div>
   </div>
@@ -996,6 +1003,27 @@
             <input type="text" id="auth-nickname" placeholder="Seu Apelido de Morador" style="display: none; background: var(--animal-bg, #f8f8f0); color: var(--animal-text, #794f27); border: 2px solid var(--animal-border, #c4b89e); border-radius: 50px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; outline: none;">
             <input type="email" id="auth-email" placeholder="E-mail" style="background: var(--animal-bg, #f8f8f0); color: var(--animal-text, #794f27); border: 2px solid var(--animal-border, #c4b89e); border-radius: 50px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; outline: none;">
             <input type="password" id="auth-password" placeholder="Senha" style="background: var(--animal-bg, #f8f8f0); color: var(--animal-text, #794f27); border: 2px solid var(--animal-border, #c4b89e); border-radius: 50px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; outline: none;">
+
+            <!-- Age Verification & Brazilian ECA Compliance (Only on Signup) -->
+            <div id="auth-age-verification-container" style="display: none; flex-direction: column; gap: 8px; margin-top: 4px;">
+              <label class="animal-checkbox-label">
+                <input type="checkbox" id="auth-over-18" class="animal-checkbox-input">
+                <span class="animal-checkbox-custom">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+                <span class="animal-checkbox-text">Tenho mais de 18 anos</span>
+              </label>
+
+              <!-- Parent Email input (required for minors under ECA) -->
+              <div id="auth-parent-email-container" style="display: flex; flex-direction: column; gap: 4px; padding-left: 2px;">
+                <input type="email" id="auth-parent-email" placeholder="E-mail do Pai / Mãe ou Responsável" style="background: var(--animal-bg, #f8f8f0); color: var(--animal-text, #794f27); border: 2px solid var(--animal-border, #c4b89e); border-radius: 50px; padding: 10px 16px; font-size: 0.88rem; font-weight: 600; outline: none;">
+                <span style="font-size: 0.72rem; color: var(--animal-text-body, #725d42); line-height: 1.3; padding: 0 8px;">
+                  Conforme o ECA (Lei 8.069/90), menores de 18 anos precisam da autorização do responsável legal.
+                </span>
+              </div>
+            </div>
           </div>
 
           <div style="display: flex; gap: 10px; margin-top: 4px;">
