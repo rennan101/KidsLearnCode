@@ -2403,22 +2403,50 @@ class RPGApplication {
     const closeBtn = document.getElementById('btn-close-backpack');
     const quickBackpackBtn = document.getElementById('btn-open-backpack');
     const tabsContainer = document.getElementById('backpack-tabs');
-    const pocketGrid = document.getElementById('backpack-items-grid');
-    const detailIcon = document.getElementById('pocket-detail-icon');
-    const detailName = document.getElementById('pocket-detail-name');
-    const detailDesc = document.getElementById('pocket-detail-desc');
-    const detailActions = document.getElementById('pocket-detail-actions');
-    const btnPlace = document.getElementById('btn-pocket-place');
     const walletGold = document.getElementById('pocket-wallet-gold');
     const walletXp = document.getElementById('pocket-wallet-xp');
 
     let selectedItem = null;
+    let selectedTool = null;
+    let selectedEgg = null;
+    let selectedDragon = null;
     let currentTab = 'items';
 
-    const renderItemsTab = () => {
-      if (!pocketGrid) return;
-      pocketGrid.innerHTML = '';
+    const updateWalletBar = () => {
+      const goldItem = this.inventorySystem.items.find(i => i.id === 'gold_coin');
+      if (walletGold) walletGold.innerText = goldItem ? `${goldItem.count}` : '0';
+      if (walletXp) walletXp.innerText = `Nv. 1 (100 XP)`;
+    };
 
+    // ==========================================
+    // TAB 1: ITENS
+    // ==========================================
+    const itemsGrid = document.getElementById('backpack-items-grid');
+    const itemDetailIcon = document.getElementById('pocket-detail-icon');
+    const itemDetailName = document.getElementById('pocket-detail-name');
+    const itemDetailDesc = document.getElementById('pocket-detail-desc');
+    const itemDetailActions = document.getElementById('pocket-detail-actions');
+    const btnPlaceItem = document.getElementById('btn-pocket-place');
+
+    const updateItemDetailPanel = (item) => {
+      if (!item) {
+        if (itemDetailName) itemDetailName.innerText = 'Selecione um item';
+        if (itemDetailDesc) itemDetailDesc.innerText = 'Clique em um dos bolsos para ver detalhes e opções.';
+        if (itemDetailIcon) itemDetailIcon.innerHTML = `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
+        if (itemDetailActions) itemDetailActions.style.display = 'none';
+        return;
+      }
+
+      const iconSvg = this.getItemSvgIcon(item.iconKey || this.inventorySystem.inferIconKey(item.id));
+      if (itemDetailIcon) itemDetailIcon.innerHTML = iconSvg;
+      if (itemDetailName) itemDetailName.innerText = `${item.name} (x${item.count})`;
+      if (itemDetailDesc) itemDetailDesc.innerText = item.desc || 'Item coletado ou fabricado na ilha.';
+      if (itemDetailActions) itemDetailActions.style.display = 'flex';
+    };
+
+    const renderItemsTab = () => {
+      if (!itemsGrid) return;
+      itemsGrid.innerHTML = '';
       const slots = this.inventorySystem.getPocketSlots(20);
 
       slots.forEach((item, slotIndex) => {
@@ -2437,44 +2465,24 @@ class RPGApplication {
           slotEl.addEventListener('click', () => {
             selectedItem = item;
             renderItemsTab();
-            updateDetailPanel(item);
+            updateItemDetailPanel(item);
           });
         } else {
           slotEl.title = `Bolso Vazio ${slotIndex + 1}`;
           slotEl.addEventListener('click', () => {
             selectedItem = null;
             renderItemsTab();
-            updateDetailPanel(null);
+            updateItemDetailPanel(null);
           });
         }
 
-        pocketGrid.appendChild(slotEl);
+        itemsGrid.appendChild(slotEl);
       });
 
-      // Update Wallet
-      const goldItem = this.inventorySystem.items.find(i => i.id === 'gold_coin');
-      if (walletGold) walletGold.innerText = goldItem ? `${goldItem.count}` : '0';
-      if (walletXp) walletXp.innerText = `Nv. 1 (100 XP)`;
+      updateWalletBar();
     };
 
-    const updateDetailPanel = (item) => {
-      if (!item) {
-        if (detailName) detailName.innerText = 'Selecione um item';
-        if (detailDesc) detailDesc.innerText = 'Clique em um dos 20 bolsos para ver detalhes e ações.';
-        if (detailIcon) detailIcon.innerHTML = `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
-        if (detailActions) detailActions.style.display = 'none';
-        return;
-      }
-
-      const iconSvg = this.getItemSvgIcon(item.iconKey || this.inventorySystem.inferIconKey(item.id));
-      if (detailIcon) detailIcon.innerHTML = iconSvg;
-      if (detailName) detailName.innerText = `${item.name} (x${item.count})`;
-      if (detailDesc) detailDesc.innerText = item.desc || 'Item coletado ou fabricado na ilha.';
-      if (detailActions) detailActions.style.display = 'flex';
-    };
-
-    // "Colocar no Chão" Action
-    btnPlace?.addEventListener('click', () => {
+    btnPlaceItem?.addEventListener('click', () => {
       if (!selectedItem) return;
       const dirDeltas = { north: { dx: 0, dy: -1 }, south: { dx: 0, dy: 1 }, west: { dx: -1, dy: 0 }, east: { dx: 1, dy: 0 } };
       const delta = dirDeltas[this.player.direction] || { dx: 0, dy: 1 };
@@ -2483,7 +2491,6 @@ class RPGApplication {
       const targetX = pTx + delta.dx;
       const targetY = pTy + delta.dy;
 
-      // Deduct 1 from inventory
       const itemName = selectedItem.name;
       this.inventorySystem.removeItem(selectedItem.id, 1);
       this.tileMap.setTile('solid', targetX, targetY, 'crate');
@@ -2495,191 +2502,378 @@ class RPGApplication {
         selectedItem = null;
       }
       renderItemsTab();
-      updateDetailPanel(selectedItem);
+      updateItemDetailPanel(selectedItem);
     });
 
-    const updateWalletBar = () => {
-      const goldItem = this.inventorySystem.items.find(i => i.id === 'gold_coin');
-      if (walletGold) walletGold.innerText = goldItem ? `${goldItem.count}` : '0';
-      if (walletXp) walletXp.innerText = `Nv. 1 (100 XP)`;
-    };
+    // ==========================================
+    // TAB 2: FERRAMENTAS
+    // ==========================================
+    const toolsGrid = document.getElementById('backpack-tools-grid');
+    const toolDetailIcon = document.getElementById('pocket-tools-icon');
+    const toolDetailName = document.getElementById('pocket-tools-name');
+    const toolDetailDesc = document.getElementById('pocket-tools-desc');
+    const toolDetailStats = document.getElementById('pocket-tools-stats');
+    const toolDetailActions = document.getElementById('pocket-tools-actions');
+    const btnEquipTool = document.getElementById('btn-pocket-equip-tool');
+    const btnEquipLabel = document.getElementById('btn-pocket-equip-label');
 
-    const renderToolsTab = () => {
-      const list = document.getElementById('backpack-tools-list');
-      if (!list) return;
-      list.innerHTML = '';
-      const tools = this.inventorySystem.getTools();
-      const equipped = this.inventorySystem.getEquippedTool();
-
-      tools.forEach(tool => {
-        const isEquipped = equipped?.id === tool.id;
-        const card = document.createElement('div');
-        card.className = 'tool-card';
-        const iconSvg = this.getItemSvgIcon(tool.iconKey || tool.id);
-
-        card.innerHTML = `
-          <div class="tool-info">
-            <div class="ac-tab-avatar-circle">${iconSvg}</div>
-            <div class="tool-details">
-              <h4>${tool.name} ${isEquipped ? '<span style="font-size: 0.72rem; color: #34d399; font-weight: 700; background: #064e3b; padding: 1px 8px; border-radius: 10px;">Equipado</span>' : ''}</h4>
-              <p>${tool.desc} • Poder: ${tool.power}x</p>
-              <div class="durability-bar-wrapper">
-                <div class="durability-label">
-                  <span>Durabilidade</span>
-                  <span>${tool.durability || 100}%</span>
-                </div>
-                <div class="durability-bar">
-                  <div class="durability-fill" style="width: ${tool.durability || 100}%"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <button class="btn-equip-tool ${isEquipped ? 'equipped' : ''}" data-id="${tool.id}">
-            ${isEquipped ? 'Equipado' : 'Equipar'}
-          </button>
-        `;
-
-        card.querySelector('.btn-equip-tool')?.addEventListener('click', () => {
-          if (!isEquipped) {
-            this.inventorySystem.equipTool(tool.id);
-            this.player.spawnCraftPoof();
-            this.showToast(`${tool.name} equipado com sucesso!`);
-            renderToolsTab();
-          }
-        });
-
-        list.appendChild(card);
-      });
-      updateWalletBar();
-    };
-
-    const renderEggsTab = () => {
-      const list = document.getElementById('backpack-eggs-list');
-      if (!list) return;
-      list.innerHTML = '';
-      const eggs = this.inventorySystem.getEggs();
-
-      if (eggs.length === 0) {
-        list.innerHTML = `
-          <div style="text-align: center; padding: 36px 20px; color: #94a3b8; grid-column: 1 / -1;">
-            <svg class="ui-icon" style="width: 44px; height: 44px; margin-bottom: 8px; color: #00a896;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="13" rx="7" ry="9"/></svg>
-            <p style="font-size: 0.9rem; font-weight: 600; color: #cbd5e1;">Nenhum ovo no seu ninho</p>
-            <p style="font-size: 0.78rem; margin-top: 4px;">Explore a Ilha Lua e use 'E' perto de ninhos selvagens para coletar novos ovos de dragão!</p>
-          </div>
-        `;
-        updateWalletBar();
+    const updateToolDetailPanel = (tool) => {
+      if (!tool) {
+        if (toolDetailName) toolDetailName.innerText = 'Selecione uma ferramenta';
+        if (toolDetailDesc) toolDetailDesc.innerText = 'Clique em uma ferramenta para equipar e ver detalhes.';
+        if (toolDetailIcon) toolDetailIcon.innerHTML = `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>`;
+        if (toolDetailStats) toolDetailStats.style.display = 'none';
+        if (toolDetailActions) toolDetailActions.style.display = 'none';
         return;
       }
 
-      eggs.forEach(egg => {
-        const card = document.createElement('div');
-        card.className = 'egg-card';
-        const pct = Math.round((egg.warmth / egg.maxWarmth) * 100);
-        const iconSvg = this.getItemSvgIcon(egg.iconKey || 'egg_solar');
+      const equipped = this.inventorySystem.getEquippedTool();
+      const isEquipped = equipped?.id === tool.id;
+      const iconSvg = this.getItemSvgIcon(tool.iconKey || tool.id);
 
-        card.innerHTML = `
-          <div class="egg-info">
-            <div class="ac-tab-avatar-circle" style="border-color: #f59e0b; color: #f59e0b;">${iconSvg}</div>
-            <div class="egg-details">
-              <h4>${egg.name}</h4>
-              <p>${egg.desc}</p>
-              <div class="warmth-bar-wrapper">
-                <div class="warmth-label">
-                  <span>Calor do Ninho</span>
-                  <span>${pct}%</span>
-                </div>
-                <div class="warmth-bar">
-                  <div class="warmth-fill" style="width: ${pct}%"></div>
-                </div>
-              </div>
+      if (toolDetailIcon) toolDetailIcon.innerHTML = iconSvg;
+      if (toolDetailName) toolDetailName.innerText = `${tool.name} ${isEquipped ? '(Equipado)' : ''}`;
+      if (toolDetailDesc) toolDetailDesc.innerText = `${tool.desc} • Poder: ${tool.power}x`;
+
+      if (toolDetailStats) {
+        const durability = tool.durability || 100;
+        toolDetailStats.style.display = 'block';
+        toolDetailStats.innerHTML = `
+          <div class="ac-pocket-progress-wrap">
+            <div class="ac-pocket-progress-label">
+              <span>Durabilidade</span>
+              <span>${durability}%</span>
+            </div>
+            <div class="ac-pocket-progress-bar">
+              <div class="ac-pocket-progress-fill" style="width: ${durability}%;"></div>
             </div>
           </div>
-          <button class="btn-warm-egg" data-id="${egg.id}">
-            Aquecer (+25%)
-          </button>
         `;
+      }
 
-        card.querySelector('.btn-warm-egg')?.addEventListener('click', () => {
-          const res = this.inventorySystem.warmEgg(egg.id, 25);
-          if (res.success) {
-            if (res.hatched) {
-              this.dragonManager.adoptHatchedDragon(egg.speciesId);
-              this.inventorySystem.removeEgg(egg.id);
-              this.player.spawnCraftPoof();
-              this.showToast(`O ${egg.name} chocou! Um novo dragão se juntou ao seu grupo!`);
-              renderEggsTab();
-            } else {
-              this.player.spawnCraftPoof();
-              this.showToast(`Você aqueceu o ${egg.name}! Calor: ${res.warmth}%`);
-              renderEggsTab();
-            }
-          }
-        });
+      if (toolDetailActions) {
+        toolDetailActions.style.display = 'flex';
+        if (btnEquipLabel) btnEquipLabel.innerText = isEquipped ? 'Equipado' : 'Equipar Ferramenta';
+        if (btnEquipTool) {
+          btnEquipTool.classList.toggle('secondary', isEquipped);
+        }
+      }
+    };
 
-        list.appendChild(card);
-      });
+    const renderToolsTab = () => {
+      if (!toolsGrid) return;
+      toolsGrid.innerHTML = '';
+
+      const tools = this.inventorySystem.getTools();
+      const equipped = this.inventorySystem.getEquippedTool();
+      const slotsCount = 20;
+
+      for (let i = 0; i < slotsCount; i++) {
+        const tool = tools[i] || null;
+        const isEquipped = tool && equipped?.id === tool.id;
+        const isSelected = selectedTool?.id === tool?.id && tool;
+
+        const slotEl = document.createElement('div');
+        slotEl.className = `ac-pocket-slot ${tool ? 'filled' : 'empty'} ${isSelected ? 'selected' : ''} ${isEquipped ? 'equipped' : ''}`;
+        slotEl.dataset.slot = i;
+
+        if (tool) {
+          const iconSvg = this.getItemSvgIcon(tool.iconKey || tool.id);
+          slotEl.innerHTML = `
+            <div class="ac-pocket-slot-icon">${iconSvg}</div>
+            ${isEquipped ? `<span class="ac-pocket-slot-badge" style="background: #10b981; border-color: #34d399;">Ativo</span>` : ''}
+          `;
+          slotEl.title = `${tool.name}${isEquipped ? ' (Equipado)' : ''}`;
+
+          slotEl.addEventListener('click', () => {
+            selectedTool = tool;
+            renderToolsTab();
+            updateToolDetailPanel(tool);
+          });
+        } else {
+          slotEl.title = `Bolso Vazio ${i + 1}`;
+          slotEl.addEventListener('click', () => {
+            selectedTool = null;
+            renderToolsTab();
+            updateToolDetailPanel(null);
+          });
+        }
+
+        toolsGrid.appendChild(slotEl);
+      }
+
       updateWalletBar();
     };
 
+    btnEquipTool?.addEventListener('click', () => {
+      if (!selectedTool) return;
+      this.inventorySystem.equipTool(selectedTool.id);
+      this.player.spawnCraftPoof();
+      this.showToast(`${selectedTool.name} equipado com sucesso!`);
+      renderToolsTab();
+      updateToolDetailPanel(selectedTool);
+    });
+
+    // ==========================================
+    // TAB 3: OVOS
+    // ==========================================
+    const eggsGrid = document.getElementById('backpack-eggs-grid');
+    const eggDetailIcon = document.getElementById('pocket-eggs-icon');
+    const eggDetailName = document.getElementById('pocket-eggs-name');
+    const eggDetailDesc = document.getElementById('pocket-eggs-desc');
+    const eggDetailStats = document.getElementById('pocket-eggs-stats');
+    const eggDetailActions = document.getElementById('pocket-eggs-actions');
+    const btnWarmEgg = document.getElementById('btn-pocket-warm-egg');
+    const btnWarmLabel = document.getElementById('btn-pocket-warm-label');
+
+    const updateEggDetailPanel = (egg) => {
+      if (!egg) {
+        if (eggDetailName) eggDetailName.innerText = 'Selecione um ovo';
+        if (eggDetailDesc) eggDetailDesc.innerText = 'Escolha um ovo de dragão para aquecer no ninho e acelerar a eclosão.';
+        if (eggDetailIcon) eggDetailIcon.innerHTML = `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="13" rx="7" ry="9"></ellipse></svg>`;
+        if (eggDetailStats) eggDetailStats.style.display = 'none';
+        if (eggDetailActions) eggDetailActions.style.display = 'none';
+        return;
+      }
+
+      const pct = Math.min(100, Math.round((egg.warmth / egg.maxWarmth) * 100));
+      const iconSvg = this.getItemSvgIcon(egg.iconKey || 'egg_solar');
+
+      if (eggDetailIcon) eggDetailIcon.innerHTML = iconSvg;
+      if (eggDetailName) eggDetailName.innerText = egg.name;
+      if (eggDetailDesc) eggDetailDesc.innerText = egg.desc;
+
+      if (eggDetailStats) {
+        eggDetailStats.style.display = 'block';
+        eggDetailStats.innerHTML = `
+          <div class="ac-pocket-progress-wrap">
+            <div class="ac-pocket-progress-label">
+              <span>Calor do Ninho</span>
+              <span>${pct}%</span>
+            </div>
+            <div class="ac-pocket-progress-bar">
+              <div class="ac-pocket-progress-fill" style="width: ${pct}%; background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
+            </div>
+          </div>
+        `;
+      }
+
+      if (eggDetailActions) {
+        eggDetailActions.style.display = 'flex';
+        if (btnWarmLabel) {
+          btnWarmLabel.innerText = pct >= 100 ? 'Chocar Dragão!' : 'Aquecer (+25%)';
+        }
+      }
+    };
+
+    const renderEggsTab = () => {
+      if (!eggsGrid) return;
+      eggsGrid.innerHTML = '';
+
+      const eggs = this.inventorySystem.getEggs();
+      const slotsCount = 20;
+
+      for (let i = 0; i < slotsCount; i++) {
+        const egg = eggs[i] || null;
+        const isSelected = selectedEgg?.id === egg?.id && egg;
+        const pct = egg ? Math.min(100, Math.round((egg.warmth / egg.maxWarmth) * 100)) : 0;
+
+        const slotEl = document.createElement('div');
+        slotEl.className = `ac-pocket-slot ${egg ? 'filled' : 'empty'} ${isSelected ? 'selected' : ''}`;
+        slotEl.dataset.slot = i;
+
+        if (egg) {
+          const iconSvg = this.getItemSvgIcon(egg.iconKey || 'egg_solar');
+          slotEl.innerHTML = `
+            <div class="ac-pocket-slot-icon" style="color: #f59e0b;">${iconSvg}</div>
+            <span class="ac-pocket-slot-badge" style="background: #b45309; border-color: #f59e0b;">${pct}%</span>
+          `;
+          slotEl.title = `${egg.name} (Calor: ${pct}%)`;
+
+          slotEl.addEventListener('click', () => {
+            selectedEgg = egg;
+            renderEggsTab();
+            updateEggDetailPanel(egg);
+          });
+        } else {
+          slotEl.title = `Bolso Vazio ${i + 1}`;
+          slotEl.addEventListener('click', () => {
+            selectedEgg = null;
+            renderEggsTab();
+            updateEggDetailPanel(null);
+          });
+        }
+
+        eggsGrid.appendChild(slotEl);
+      }
+
+      updateWalletBar();
+    };
+
+    btnWarmEgg?.addEventListener('click', () => {
+      if (!selectedEgg) return;
+      const res = this.inventorySystem.warmEgg(selectedEgg.id, 25);
+      if (res.success) {
+        if (res.hatched) {
+          this.dragonManager.adoptHatchedDragon(selectedEgg.speciesId);
+          this.inventorySystem.removeEgg(selectedEgg.id);
+          this.player.spawnCraftPoof();
+          this.showToast(`O ${selectedEgg.name} chocou! Um novo dragão se juntou ao seu grupo!`);
+          selectedEgg = null;
+          renderEggsTab();
+          updateEggDetailPanel(null);
+        } else {
+          this.player.spawnCraftPoof();
+          this.showToast(`Você aqueceu o ${selectedEgg.name}! Calor: ${res.warmth}%`);
+          renderEggsTab();
+          updateEggDetailPanel(selectedEgg);
+        }
+      }
+    });
+
+    // ==========================================
+    // TAB 4: DRAGÕES
+    // ==========================================
+    const dragonsGrid = document.getElementById('backpack-dragons-grid');
+    const dragonDetailIcon = document.getElementById('pocket-dragons-icon');
+    const dragonDetailName = document.getElementById('pocket-dragons-name');
+    const dragonDetailDesc = document.getElementById('pocket-dragons-desc');
+    const dragonDetailStats = document.getElementById('pocket-dragons-stats');
+    const dragonDetailActions = document.getElementById('pocket-dragons-actions');
+    const btnMountDragon = document.getElementById('btn-pocket-mount-dragon');
+    const btnMountLabel = document.getElementById('btn-pocket-mount-label');
+    const btnFollowDragon = document.getElementById('btn-pocket-follow-dragon');
+    const btnFollowLabel = document.getElementById('btn-pocket-follow-label');
+
+    const updateDragonDetailPanel = (drag) => {
+      if (!drag) {
+        if (dragonDetailName) dragonDetailName.innerText = 'Selecione um dragão';
+        if (dragonDetailDesc) dragonDetailDesc.innerText = 'Escolha um dragão do seu grupo para montar ou acompanhar sua exploração.';
+        if (dragonDetailIcon) dragonDetailIcon.innerHTML = `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+        if (dragonDetailStats) dragonDetailStats.style.display = 'none';
+        if (dragonDetailActions) dragonDetailActions.style.display = 'none';
+        return;
+      }
+
+      const activeDragon = this.dragonManager.getActiveDragon();
+      const isMounted = this.dragonManager.isMounted();
+      const isActive = activeDragon?.id === drag.id;
+
+      if (dragonDetailIcon) {
+        dragonDetailIcon.innerHTML = `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+      }
+      if (dragonDetailName) {
+        dragonDetailName.innerText = `${drag.name} (Nv. ${drag.level})`;
+      }
+      if (dragonDetailDesc) {
+        dragonDetailDesc.innerText = `Elemento: ${drag.element} • Habilidade: ${drag.fieldMove || 'Voo Rápido'}`;
+      }
+
+      if (dragonDetailStats) {
+        dragonDetailStats.style.display = 'block';
+        dragonDetailStats.innerHTML = `
+          <div class="ac-pocket-stat-row">
+            <span class="ac-pocket-stat-label">Vida (HP)</span>
+            <span class="ac-pocket-stat-val">${drag.hp}/${drag.maxHp}</span>
+          </div>
+          <div class="ac-pocket-stat-row">
+            <span class="ac-pocket-stat-label">Amizade</span>
+            <span class="ac-pocket-stat-val">${drag.bond}%</span>
+          </div>
+        `;
+      }
+
+      if (dragonDetailActions) {
+        dragonDetailActions.style.display = 'flex';
+        if (btnMountLabel) {
+          btnMountLabel.innerText = isActive && isMounted ? 'Desmontar' : 'Montar Dragão';
+        }
+        if (btnMountDragon) {
+          btnMountDragon.className = `ac-pocket-action-btn ${isActive && isMounted ? 'danger' : ''}`;
+        }
+        if (btnFollowLabel) {
+          btnFollowLabel.innerText = isActive && !isMounted ? 'Acompanhando' : 'Acompanhar';
+        }
+      }
+    };
+
     const renderDragonsTab = () => {
-      const list = document.getElementById('backpack-dragons-list');
-      if (!list) return;
-      list.innerHTML = '';
+      if (!dragonsGrid) return;
+      dragonsGrid.innerHTML = '';
 
       const party = this.dragonManager.getParty();
       const activeDragon = this.dragonManager.getActiveDragon();
       const isMounted = this.dragonManager.isMounted();
+      const slotsCount = 20;
 
-      party.forEach((drag) => {
-        const item = document.createElement('div');
-        item.className = 'dragon-party-item';
-        const isActive = activeDragon?.id === drag.id;
+      for (let i = 0; i < slotsCount; i++) {
+        const drag = party[i] || null;
+        const isActive = drag && activeDragon?.id === drag.id;
+        const isSelected = selectedDragon?.id === drag?.id && drag;
 
-        item.innerHTML = `
-          <div class="dragon-info">
-            <div class="ac-tab-avatar-circle" style="border-color: #38bdf8; color: #38bdf8;">
+        const slotEl = document.createElement('div');
+        slotEl.className = `ac-pocket-slot ${drag ? 'filled' : 'empty'} ${isSelected ? 'selected' : ''} ${isActive ? 'equipped' : ''}`;
+        slotEl.dataset.slot = i;
+
+        if (drag) {
+          slotEl.innerHTML = `
+            <div class="ac-pocket-slot-icon" style="color: #38bdf8;">
               <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
             </div>
-            <div class="dragon-details">
-              <h4>${drag.name} <span style="font-size: 0.72rem; color: #f59e0b; background: #162436; padding: 2px 7px; border-radius: 8px;">Lv.${drag.level}</span></h4>
-              <p><strong>${drag.element}</strong> • HP: ${drag.hp}/${drag.maxHp} • Amizade: ${drag.bond}%</p>
-              <p style="color: #94a3b8; font-size: 0.72rem;">Especial: ${drag.fieldMove} • Esquiva: ${drag.dodgeAbility}</p>
-            </div>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
-            <button class="mount-btn btn-toggle-mount" data-id="${drag.id}" style="${isActive && isMounted ? 'background: linear-gradient(135deg, #ef4444, #b91c1c); border-color: #f87171;' : ''}">
-              ${isActive && isMounted ? 'Desmontar' : 'Montar'}
-            </button>
-            <button class="mount-btn btn-toggle-follow" data-id="${drag.id}" style="background: ${isActive && !isMounted ? '#059669' : '#1e293b'}; border-color: ${isActive && !isMounted ? '#34d399' : '#334155'}; font-size: 0.72rem; padding: 4px 10px;">
-              ${isActive && !isMounted ? 'Acompanhando' : 'Acompanhar'}
-            </button>
-          </div>
-        `;
+            <span class="ac-pocket-slot-badge" style="background: #0369a1; border-color: #38bdf8;">Nv.${drag.level}</span>
+          `;
+          slotEl.title = `${drag.name} (Nv.${drag.level})${isActive ? (isMounted ? ' - Montado' : ' - Acompanhando') : ''}`;
 
-        item.querySelector('.btn-toggle-mount')?.addEventListener('click', () => {
-          this.dragonManager.setActiveDragon(drag.id);
-          if (isActive && isMounted) {
-            this.dragonManager.setMode('follow');
-            this.showToast(`Você desmontou de ${drag.name}.`);
-          } else {
-            this.dragonManager.setMode('mounted');
-            this.showToast(`Você montou em ${drag.name}! (+Velocidade de Corrida)`);
-          }
-          renderDragonsTab();
-        });
+          slotEl.addEventListener('click', () => {
+            selectedDragon = drag;
+            renderDragonsTab();
+            updateDragonDetailPanel(drag);
+          });
+        } else {
+          slotEl.title = `Bolso Vazio ${i + 1}`;
+          slotEl.addEventListener('click', () => {
+            selectedDragon = null;
+            renderDragonsTab();
+            updateDragonDetailPanel(null);
+          });
+        }
 
-        item.querySelector('.btn-toggle-follow')?.addEventListener('click', () => {
-          this.dragonManager.setActiveDragon(drag.id);
-          this.dragonManager.setMode('follow');
-          this.showToast(`${drag.name} agora está te acompanhando!`);
-          renderDragonsTab();
-        });
+        dragonsGrid.appendChild(slotEl);
+      }
 
-        list.appendChild(item);
-      });
       updateWalletBar();
     };
 
+    btnMountDragon?.addEventListener('click', () => {
+      if (!selectedDragon) return;
+      const activeDragon = this.dragonManager.getActiveDragon();
+      const isMounted = this.dragonManager.isMounted();
+      const isActive = activeDragon?.id === selectedDragon.id;
+
+      this.dragonManager.setActiveDragon(selectedDragon.id);
+      if (isActive && isMounted) {
+        this.dragonManager.setMode('follow');
+        this.showToast(`Você desmontou de ${selectedDragon.name}.`);
+      } else {
+        this.dragonManager.setMode('mounted');
+        this.showToast(`Você montou em ${selectedDragon.name}! (+Velocidade)`);
+      }
+      renderDragonsTab();
+      updateDragonDetailPanel(selectedDragon);
+    });
+
+    btnFollowDragon?.addEventListener('click', () => {
+      if (!selectedDragon) return;
+      this.dragonManager.setActiveDragon(selectedDragon.id);
+      this.dragonManager.setMode('follow');
+      this.showToast(`${selectedDragon.name} agora está te acompanhando!`);
+      renderDragonsTab();
+      updateDragonDetailPanel(selectedDragon);
+    });
+
+    // ==========================================
+    // TAB SWITCHER
+    // ==========================================
     const switchTab = (tabName) => {
       currentTab = tabName;
       document.querySelectorAll('.backpack-tab').forEach(t => {
@@ -2689,13 +2883,22 @@ class RPGApplication {
       const contents = ['items', 'tools', 'eggs', 'dragons'];
       contents.forEach(name => {
         const el = document.getElementById(`tab-content-${name}`);
-        if (el) el.style.display = (name === tabName) ? (name === 'items' ? 'flex' : 'block') : 'none';
+        if (el) el.style.display = (name === tabName) ? 'flex' : 'none';
       });
 
-      if (tabName === 'items') renderItemsTab();
-      if (tabName === 'tools') renderToolsTab();
-      if (tabName === 'eggs') renderEggsTab();
-      if (tabName === 'dragons') renderDragonsTab();
+      if (tabName === 'items') {
+        renderItemsTab();
+        updateItemDetailPanel(selectedItem);
+      } else if (tabName === 'tools') {
+        renderToolsTab();
+        updateToolDetailPanel(selectedTool);
+      } else if (tabName === 'eggs') {
+        renderEggsTab();
+        updateEggDetailPanel(selectedEgg);
+      } else if (tabName === 'dragons') {
+        renderDragonsTab();
+        updateDragonDetailPanel(selectedDragon);
+      }
     };
 
     tabsContainer?.querySelectorAll('.backpack-tab').forEach(tab => {
@@ -2726,7 +2929,7 @@ class RPGApplication {
         if (isVisible) {
           modal.style.display = 'none';
         } else {
-          this.openBackpackModal(e.key.toLowerCase() === 'b' ? 'items' : 'items');
+          this.openBackpackModal('items');
         }
       }
     });

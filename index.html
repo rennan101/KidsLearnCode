@@ -639,7 +639,7 @@
             <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
             <line x1="12" y1="22.08" x2="12" y2="12"></line>
           </svg>
-          <span>Bolsa (Itens)</span>
+          <span>Itens</span>
         </button>
         <button class="backpack-tab" data-tab="tools">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -651,27 +651,22 @@
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <ellipse cx="12" cy="13" rx="7" ry="9"></ellipse>
           </svg>
-          <span>Ovos de Dragão</span>
+          <span>Ovos</span>
         </button>
         <button class="backpack-tab" data-tab="dragons">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
           </svg>
-          <span>Meus Dragões</span>
+          <span>Dragões</span>
         </button>
       </div>
 
-      <!-- Tab 1: Animal Crossing 20 Pockets Grid + Detail Panel -->
+      <!-- Tab 1: Itens (20 Circular Pockets Grid + Detail Panel) -->
       <div class="backpack-tab-content active" id="tab-content-items" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
         <div class="ac-pocket-layout">
-          <!-- 20 Circular Pocket Slots -->
           <div class="ac-pocket-grid-wrapper">
-            <div class="ac-pocket-grid" id="backpack-items-grid">
-              <!-- Rendered dynamically by main.js -->
-            </div>
+            <div class="ac-pocket-grid" id="backpack-items-grid"></div>
           </div>
-
-          <!-- Item Details & Action Card -->
           <div class="ac-pocket-detail-card" id="pocket-detail-card">
             <div class="ac-pocket-detail-icon" id="pocket-detail-icon">
               <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -680,7 +675,7 @@
             </div>
             <div class="ac-pocket-detail-text">
               <h4 id="pocket-detail-name">Selecione um item</h4>
-              <p id="pocket-detail-desc">Clique em um dos 20 bolsos para ver detalhes e ações.</p>
+              <p id="pocket-detail-desc">Clique em um dos bolsos para ver detalhes e opções.</p>
             </div>
             <div class="ac-pocket-actions" id="pocket-detail-actions" style="display: none;">
               <button class="ac-pocket-action-btn btn-place-world" id="btn-pocket-place">
@@ -694,24 +689,97 @@
         </div>
       </div>
 
-      <!-- Tab 2: Tools Content -->
-      <div class="backpack-tab-content" id="tab-content-tools" style="display: none; flex: 1; min-height: 0; padding: 16px; overflow-y: auto;">
-        <div class="tools-list ac-tools-grid" id="backpack-tools-list">
-          <!-- Populated dynamically by main.js -->
+      <!-- Tab 2: Ferramentas (20 Circular Pockets Grid + Detail Panel) -->
+      <div class="backpack-tab-content" id="tab-content-tools" style="display: none; flex: 1; flex-direction: column; min-height: 0;">
+        <div class="ac-pocket-layout">
+          <div class="ac-pocket-grid-wrapper">
+            <div class="ac-pocket-grid" id="backpack-tools-grid"></div>
+          </div>
+          <div class="ac-pocket-detail-card" id="pocket-tools-detail-card">
+            <div class="ac-pocket-detail-icon" id="pocket-tools-icon">
+              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+              </svg>
+            </div>
+            <div class="ac-pocket-detail-text">
+              <h4 id="pocket-tools-name">Selecione uma ferramenta</h4>
+              <p id="pocket-tools-desc">Clique em uma ferramenta para equipar e ver sua durabilidade.</p>
+              <div id="pocket-tools-stats" style="display: none; width: 100%; margin-top: 8px;"></div>
+            </div>
+            <div class="ac-pocket-actions" id="pocket-tools-actions" style="display: none;">
+              <button class="ac-pocket-action-btn" id="btn-pocket-equip-tool">
+                <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span id="btn-pocket-equip-label">Equipar</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Tab 3: Eggs & Incubation Content -->
-      <div class="backpack-tab-content" id="tab-content-eggs" style="display: none; flex: 1; min-height: 0; padding: 16px; overflow-y: auto;">
-        <div class="eggs-list ac-eggs-grid" id="backpack-eggs-list">
-          <!-- Populated dynamically by main.js -->
+      <!-- Tab 3: Ovos (20 Circular Pockets Grid + Detail Panel) -->
+      <div class="backpack-tab-content" id="tab-content-eggs" style="display: none; flex: 1; flex-direction: column; min-height: 0;">
+        <div class="ac-pocket-layout">
+          <div class="ac-pocket-grid-wrapper">
+            <div class="ac-pocket-grid" id="backpack-eggs-grid"></div>
+          </div>
+          <div class="ac-pocket-detail-card" id="pocket-eggs-detail-card">
+            <div class="ac-pocket-detail-icon" id="pocket-eggs-icon" style="border-color: #f59e0b; color: #f59e0b;">
+              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <ellipse cx="12" cy="13" rx="7" ry="9"></ellipse>
+              </svg>
+            </div>
+            <div class="ac-pocket-detail-text">
+              <h4 id="pocket-eggs-name">Nenhum ovo selecionado</h4>
+              <p id="pocket-eggs-desc">Selecione um ovo para aquecer no ninho e chocar novos dragões.</p>
+              <div id="pocket-eggs-stats" style="display: none; width: 100%; margin-top: 8px;"></div>
+            </div>
+            <div class="ac-pocket-actions" id="pocket-eggs-actions" style="display: none;">
+              <button class="ac-pocket-action-btn" id="btn-pocket-warm-egg">
+                <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+                <span id="btn-pocket-warm-label">Aquecer (+25%)</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Tab 4: Dragons & Mounts Content -->
-      <div class="backpack-tab-content" id="tab-content-dragons" style="display: none; flex: 1; min-height: 0; padding: 16px; overflow-y: auto;">
-        <div class="dragon-body ac-dragons-grid" id="backpack-dragons-list">
-          <!-- Populated dynamically by main.js -->
+      <!-- Tab 4: Dragões (20 Circular Pockets Grid + Detail Panel) -->
+      <div class="backpack-tab-content" id="tab-content-dragons" style="display: none; flex: 1; flex-direction: column; min-height: 0;">
+        <div class="ac-pocket-layout">
+          <div class="ac-pocket-grid-wrapper">
+            <div class="ac-pocket-grid" id="backpack-dragons-grid"></div>
+          </div>
+          <div class="ac-pocket-detail-card" id="pocket-dragons-detail-card">
+            <div class="ac-pocket-detail-icon" id="pocket-dragons-icon" style="border-color: #38bdf8; color: #38bdf8;">
+              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </div>
+            <div class="ac-pocket-detail-text">
+              <h4 id="pocket-dragons-name">Selecione um dragão</h4>
+              <p id="pocket-dragons-desc">Escolha um dragão do seu grupo para montar ou acompanhar sua exploração.</p>
+              <div id="pocket-dragons-stats" style="display: none; width: 100%; margin-top: 8px;"></div>
+            </div>
+            <div class="ac-pocket-actions" id="pocket-dragons-actions" style="display: none;">
+              <button class="ac-pocket-action-btn" id="btn-pocket-mount-dragon">
+                <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <span id="btn-pocket-mount-label">Montar</span>
+              </button>
+              <button class="ac-pocket-action-btn secondary" id="btn-pocket-follow-dragon">
+                <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                </svg>
+                <span id="btn-pocket-follow-label">Acompanhar</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
