@@ -4123,14 +4123,14 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
 }
 
 .tutorial-ghost-actor {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   display: flex;
   align-items: center;
   pointer-events: none;
   animation: ghostDemonstrationAnim 3.8s cubic-bezier(0.25, 1, 0.35, 1) infinite;
-  z-index: 20;
+  z-index: 100005;
 }
 
 .ghost-demonstration-card {
@@ -4170,28 +4170,28 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
 
 @keyframes ghostDemonstrationAnim {
   0% {
-    transform: translate(var(--start-x, -280px), var(--start-y, 40px)) scale(0.85);
+    transform: translate(var(--start-x, 80px), var(--start-y, 220px)) scale(0.85);
     opacity: 0;
   }
   12% {
-    transform: translate(var(--start-x, -280px), var(--start-y, 40px)) scale(1.08) rotate(-4deg);
+    transform: translate(var(--start-x, 80px), var(--start-y, 220px)) scale(1.08) rotate(-4deg);
     opacity: 1;
   }
   28% {
-    transform: translate(var(--start-x, -280px), var(--start-y, 40px)) scale(1.02) rotate(-2deg);
+    transform: translate(var(--start-x, 80px), var(--start-y, 220px)) scale(1.02) rotate(-2deg);
     opacity: 1;
   }
   65% {
-    transform: translate(var(--end-x, 80px), var(--end-y, 40px)) scale(1.04) rotate(0deg);
+    transform: translate(var(--end-x, 420px), var(--end-y, 220px)) scale(1.04) rotate(0deg);
     opacity: 1;
   }
   78% {
-    transform: translate(var(--end-x, 80px), var(--end-y, 40px)) scale(0.96) rotate(0deg);
+    transform: translate(var(--end-x, 420px), var(--end-y, 220px)) scale(0.96) rotate(0deg);
     opacity: 1;
     filter: drop-shadow(0 0 14px rgba(25, 200, 185, 0.85));
   }
   92%, 100% {
-    transform: translate(var(--end-x, 80px), var(--end-y, 40px)) scale(0.9) rotate(0deg);
+    transform: translate(var(--end-x, 420px), var(--end-y, 220px)) scale(0.9) rotate(0deg);
     opacity: 0;
   }
 }

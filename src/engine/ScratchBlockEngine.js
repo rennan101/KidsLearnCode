@@ -718,33 +718,21 @@ export class ScratchBlockEngine {
               <span>Solte a peça aqui</span>
             </div>
           </div>
-          <div class="tutorial-ghost-actor">
-            <div class="codekit-block ghost-demonstration-card" style="background: ${cat.color}; box-shadow: inset 0 -3px 0 ${cat.darkColor}, 0 6px 16px rgba(0,0,0,0.25);">
-              <div class="puzzle-tab"></div>
-              <div class="codekit-block-header">
-                <span class="codekit-block-cat-dot" style="background: ${cat.accentColor};"></span>
-                <span class="codekit-block-label">${ghostLabel}</span>
-              </div>
-              <div class="puzzle-notch"></div>
-            </div>
-            <div class="tutorial-ghost-hand">
-              <svg class="tutorial-hand-svg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74a4.5 4.5 0 0 0-9 0c0 1.56.79 2.93 2 3.74zm9.84 4.63-4.54-2.26A2 2 0 0 0 13.4 13.5H13v-6a1.5 1.5 0 0 0-3 0v10.74l-3.44-.72a1.5 1.5 0 0 0-1.57.65l-.79 1.18 5.4 5.4c.56.56 1.33.88 2.12.88H18a3 3 0 0 0 3-3v-4.24a2 2 0 0 0-1.16-1.82z"/>
-              </svg>
-              <span class="tutorial-hand-tip">Encaixar Bloco</span>
-            </div>
-          </div>
         </div>
       `;
       this.workspaceEl.appendChild(placeholder);
+      this.ensureGhostOverlay(cat, ghostLabel);
       requestAnimationFrame(() => {
         this.updateGhostAnimationCoordinates();
       });
       setTimeout(() => {
         this.updateGhostAnimationCoordinates();
-      }, 80);
+      }, 100);
       return;
     }
+
+    // When workspace has blocks, remove ghost demonstration overlay
+    this.removeGhostOverlay();
 
     const tree = document.createElement('div');
     tree.className = 'codekit-block-tree';
@@ -757,26 +745,66 @@ export class ScratchBlockEngine {
     this.workspaceEl.appendChild(tree);
   }
 
+  removeGhostOverlay() {
+    const existing = document.getElementById('tutorial-ghost-actor-overlay');
+    if (existing) existing.remove();
+  }
+
+  ensureGhostOverlay(cat, ghostLabel) {
+    let overlay = document.getElementById('tutorial-ghost-actor-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'tutorial-ghost-actor-overlay';
+      overlay.className = 'tutorial-ghost-actor';
+      document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = `
+      <div class="codekit-block ghost-demonstration-card" style="background: ${cat.color}; box-shadow: inset 0 -3px 0 ${cat.darkColor}, 0 8px 24px rgba(0,0,0,0.35);">
+        <div class="puzzle-tab"></div>
+        <div class="codekit-block-header">
+          <span class="codekit-block-cat-dot" style="background: ${cat.accentColor};"></span>
+          <span class="codekit-block-label">${ghostLabel}</span>
+        </div>
+        <div class="puzzle-notch"></div>
+      </div>
+      <div class="tutorial-ghost-hand">
+        <svg class="tutorial-hand-svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74a4.5 4.5 0 0 0-9 0c0 1.56.79 2.93 2 3.74zm9.84 4.63-4.54-2.26A2 2 0 0 0 13.4 13.5H13v-6a1.5 1.5 0 0 0-3 0v10.74l-3.44-.72a1.5 1.5 0 0 0-1.57.65l-.79 1.18 5.4 5.4c.56.56 1.33.88 2.12.88H18a3 3 0 0 0 3-3v-4.24a2 2 0 0 0-1.16-1.82z"/>
+        </svg>
+        <span class="tutorial-hand-tip">Encaixar Bloco</span>
+      </div>
+    `;
+    this.updateGhostAnimationCoordinates();
+  }
+
   // Update real x and y coordinates of the ghost hand from the left palette block into the center dropzone
   updateGhostAnimationCoordinates() {
-    if (!this.workspaceEl) return;
-    const ghostActor = this.workspaceEl.querySelector('.tutorial-ghost-actor');
-    const targetSlot = this.workspaceEl.querySelector('.tutorial-ghost-target-zone');
+    const ghostActor = document.getElementById('tutorial-ghost-actor-overlay');
+    const targetSlot = this.workspaceEl?.querySelector('.tutorial-ghost-target-zone');
     const paletteBlock = this.paletteEl?.querySelector('.palette-block');
-    const container = this.workspaceEl.querySelector('.tutorial-ghost-container');
 
-    if (!ghostActor || !targetSlot || !container) return;
+    if (!ghostActor || !targetSlot) {
+      if (ghostActor && (!targetSlot || this.blocksInWorkspace.length > 0)) {
+        this.removeGhostOverlay();
+      }
+      return;
+    }
+
+    const codingModal = document.getElementById('coding-modal') || document.getElementById('coding-studio-modal');
+    if (codingModal && (codingModal.style.display === 'none' || getComputedStyle(codingModal).display === 'none')) {
+      this.removeGhostOverlay();
+      return;
+    }
 
     const paletteRect = paletteBlock ? paletteBlock.getBoundingClientRect() : (this.paletteEl ? this.paletteEl.getBoundingClientRect() : null);
     const targetRect = targetSlot.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
 
-    if (paletteRect && paletteRect.width > 0 && containerRect.width > 0) {
-      const startX = (paletteRect.left + paletteRect.width / 2) - (containerRect.left + containerRect.width / 2);
-      const startY = (paletteRect.top + paletteRect.height / 2) - (containerRect.top + 50);
+    if (paletteRect && paletteRect.width > 0 && targetRect.width > 0) {
+      const startX = paletteRect.left + (paletteRect.width / 2) - 80;
+      const startY = paletteRect.top + (paletteRect.height / 2) - 20;
 
-      const endX = (targetRect.left + targetRect.width / 2) - (containerRect.left + containerRect.width / 2);
-      const endY = (targetRect.top + targetRect.height / 2) - (containerRect.top + 50);
+      const endX = targetRect.left + (targetRect.width / 2) - 80;
+      const endY = targetRect.top + (targetRect.height / 2) - 20;
 
       ghostActor.style.setProperty('--start-x', `${Math.round(startX)}px`);
       ghostActor.style.setProperty('--start-y', `${Math.round(startY)}px`);

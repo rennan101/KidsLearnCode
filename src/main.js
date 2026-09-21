@@ -3392,6 +3392,7 @@ class RPGApplication {
     closeBtn?.addEventListener('click', () => {
       soundFX.playPop(0.85);
       modal.style.display = 'none';
+      this.scratchEngine?.removeGhostOverlay();
     });
 
     // Run code & execute physical item crafting / inventory deposit

@@ -18,7 +18,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'prop_chair_wood',
     unlockedAssetName: 'Cadeira de Madeira Rústica',
     unlockedCategory: 'furniture',
-    description: 'Use o bloco \'Definir material = carvalho\' e conecte o bloco \'Fabricar Móvel\' para criar sua primeira cadeira de madeira!',
+    description: "Passo 1: Encaixe o bloco 'Definir material = carvalho'.\nPasso 2: Encaixe abaixo o bloco 'Fabricar Móvel' para criar sua primeira Cadeira de Madeira!",
     starterBlocks: [
       { type: 'set_var', name: 'material', value: 'carvalho' },
       { type: 'call_action', action: 'fabricar_movel', param: '"prop_chair_wood", material' }
@@ -39,7 +39,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'prop_table_crafting',
     unlockedAssetName: 'Mesa de Trabalho / Estudos',
     unlockedCategory: 'furniture',
-    description: 'Use o bloco \'Definir tampo = madeira_macica\' e encaixe o bloco \'Fabricar Mesa\' com 4 pernas para seus estudos!',
+    description: "Passo 1: Encaixe o bloco 'Definir tampo = madeira_macica'.\nPasso 2: Encaixe abaixo o bloco 'Fabricar Mesa' com 4 pernas para montar a Mesa de Estudos!",
     starterBlocks: [
       { type: 'set_var', name: 'tampo', value: 'madeira_macica' },
       { type: 'call_action', action: 'fabricar_mesa', param: 'tampo, 4' }
@@ -60,7 +60,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'prop_bed_straw',
     unlockedAssetName: 'Cama Rústica de Palha e Peles',
     unlockedCategory: 'furniture',
-    description: 'Use o bloco condicional \'Se palha >= 5 Então\' e encaixe \'Fabricar Cama\' para criar uma cama quentinha de palha!',
+    description: "Passo 1: Encaixe o bloco de condição 'Se palha >= 5 Então'.\nPasso 2: Encaixe dentro dele a ação 'Fabricar Cama' para montar uma Cama Rústica de Palha!",
     starterBlocks: [
       { type: 'if_cond', condition: 'palha >= 5', thenAction: 'fabricar_cama("prop_bed_straw")', elseAction: 'coletar_palha()' }
     ],
@@ -80,7 +80,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'prop_bed_canopy',
     unlockedAssetName: 'Cama Real com Dossel',
     unlockedCategory: 'furniture',
-    description: 'Use a condição \'Se madeira >= 8 e veludo >= 2 Então\' e encaixe \'Fabricar Cama Nobre\' para criar a Cama Real com Dossel!',
+    description: "Passo 1: Encaixe a condição 'Se madeira >= 8 e veludo >= 2 Então'.\nPasso 2: Encaixe dentro dela o bloco 'Fabricar Cama Nobre' para forjar a Cama Real com Dossel!",
     starterBlocks: [
       { type: 'if_cond', condition: 'madeira >= 8 e veludo >= 2', thenAction: 'fabricar_cama_nobre("prop_bed_canopy")', elseAction: 'coletar_tecidos()' }
     ],
@@ -100,7 +100,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'prop_tent_adventurer',
     unlockedAssetName: 'Tenda de Acampamento',
     unlockedCategory: 'furniture',
-    description: 'Use o laço \'Para i = 1 até 4 Faça\' para fixar as 4 estacas e depois encaixe \'Erguer Lona\' para montar a tenda!',
+    description: "Passo 1: Encaixe o laço 'Para i = 1 até 4 Faça'.\nPasso 2: Encaixe a ação 'Fixar Estaca' dentro do laço.\nPasso 3: Encaixe 'Erguer Lona' logo abaixo para montar a Tenda de Acampamento!",
     starterBlocks: [
       { type: 'for_loop', count: 4, action: 'fixar_estaca(i)' },
       { type: 'call_action', action: 'erguer_lona', param: '""' }
@@ -121,7 +121,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'prop_house_cottage',
     unlockedAssetName: 'Casa Pequena de Enxaimel',
     unlockedCategory: 'furniture',
-    description: 'Use o bloco \'Criar Função construir_casa\' com fundação, tijolos e telhado, e depois chame a função para construir sua casa!',
+    description: "Passo 1: Encaixe a definição 'Função construir_casa(estilo)'.\nPasso 2: Encaixe dentro dela as etapas: 'Erguer Fundação', 'Assentar Tijolos' e 'Montar Telhado'.\nPasso 3: Encaixe abaixo a chamada 'construir_casa(\"enxaimel\")' para construir a casa!",
     starterBlocks: [
       { type: 'def_func', name: 'construir_casa', param: 'estilo' },
       { type: 'call_func', name: 'construir_casa', param: '"enxaimel"' }
@@ -146,7 +146,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'tool_shovel_iron',
     unlockedAssetName: 'Pá de Ferro Rústica',
     unlockedCategory: 'tools',
-    description: 'Use o bloco \'Definir metal = ferro_puro\' e encaixe \'Forjar Ferramenta\' para forjar sua Pá de Ferro!',
+    description: "Passo 1: Encaixe o bloco 'Definir metal = ferro_puro'.\nPasso 2: Encaixe abaixo a ação 'Forjar Ferramenta' para forjar sua Pá de Ferro Rústica!",
     starterBlocks: [
       { type: 'set_var', name: 'metal', value: 'ferro_puro' },
       { type: 'call_action', action: 'forjar_ferramenta', param: '"tool_shovel_iron", metal' }
@@ -167,7 +167,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'tool_axe_woodcutter',
     unlockedAssetName: 'Machado de Lenhador',
     unlockedCategory: 'tools',
-    description: 'Use a condição \'Se peso_lamina >= 3 Então\' e encaixe \'Forjar Machado\' para criar seu Machado de Lenhador!',
+    description: "Passo 1: Encaixe a condição 'Se peso_lamina >= 3 Então'.\nPasso 2: Encaixe dentro dela o bloco 'Forjar Machado' para criar seu Machado de Lenhador!",
     starterBlocks: [
       { type: 'if_cond', condition: 'peso_lamina >= 3', thenAction: 'forjar_machado("tool_axe_woodcutter")', elseAction: 'ajustar_peso()' }
     ],
@@ -187,7 +187,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'tool_pickaxe_miner',
     unlockedAssetName: 'Picareta de Mineração',
     unlockedCategory: 'tools',
-    description: 'Use a condição \'Se ferro >= 5 Então\' e encaixe \'Forjar Picareta\' para liberar sua Picareta de Mineração!',
+    description: "Passo 1: Encaixe a condição 'Se ferro >= 5 Então'.\nPasso 2: Encaixe dentro dela o bloco 'Forjar Picareta' para liberar sua Picareta de Mineração!",
     starterBlocks: [
       { type: 'if_cond', condition: 'ferro >= 5', thenAction: 'forjar_picareta("tool_pickaxe_miner")', elseAction: 'fundir_minerios()' }
     ],
@@ -207,7 +207,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'nature_rock_boulder',
     unlockedAssetName: 'Formação de Rocha Mineral',
     unlockedCategory: 'nature',
-    description: 'Use o bloco \'Definir tipo_rocha = veio_mineral\' e encaixe \'Materializar Rocha\' para criar formações rochosas na ilha!',
+    description: "Passo 1: Encaixe o bloco 'Definir tipo_rocha = veio_mineral'.\nPasso 2: Encaixe abaixo o bloco 'Materializar Rocha' para criar formações de rocha mineral!",
     starterBlocks: [
       { type: 'set_var', name: 'tipo_rocha', value: 'veio_mineral' },
       { type: 'call_action', action: 'materializar_rocha', param: '"nature_rock_boulder", tipo_rocha' }
@@ -232,7 +232,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'tool_watering_can',
     unlockedAssetName: 'Regador de Cobre',
     unlockedCategory: 'tools',
-    description: 'Use o bloco \'Definir capacidade = 10\' e encaixe \'Forjar Regador\' para cultivar as plantações da ilha!',
+    description: "Passo 1: Encaixe o bloco 'Definir capacidade = 10'.\nPasso 2: Encaixe abaixo o bloco 'Forjar Regador' para obter o Regador de Cobre!",
     starterBlocks: [
       { type: 'set_var', name: 'capacidade', value: 10 },
       { type: 'call_action', action: 'forjar_regador', param: '"tool_watering_can", capacidade' }
@@ -253,7 +253,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'seed_wheat_packet',
     unlockedAssetName: 'Saco de Sementes de Trigo',
     unlockedCategory: 'nature',
-    description: 'Defina o pacote de sementes e use o bloco \'Embalar Sementes\' para preparar seu saco de trigo dourado!',
+    description: "Passo 1: Encaixe o bloco 'Definir pacote = seed_wheat_packet'.\nPasso 2: Encaixe abaixo o bloco 'Embalar Sementes' para preparar o Saco de Sementes de Trigo!",
     starterBlocks: [
       { type: 'set_var', name: 'pacote', value: '{"seed_wheat_packet", "nutritivo"}' },
       { type: 'call_action', action: 'embalar_sementes', param: 'pacote[1]' }
@@ -274,7 +274,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'nature_berry_bush',
     unlockedAssetName: 'Arbusto com Frutas Vermelhas',
     unlockedCategory: 'nature',
-    description: 'Use o laço \'Para i = 1 até 3 Faça\' para brotar amoras e depois encaixe \'Plantar Arbusto\' na ilha!',
+    description: "Passo 1: Encaixe o laço 'Para i = 1 até 3 Faça'.\nPasso 2: Encaixe 'Brotar Amora' dentro do laço.\nPasso 3: Encaixe 'Plantar Arbusto' logo abaixo para cultivar o Arbusto de Frutas!",
     starterBlocks: [
       { type: 'for_loop', count: 3, action: 'brotar_amora(i)' },
       { type: 'call_action', action: 'plantar_arbusto', param: '"nature_berry_bush"' }
@@ -295,7 +295,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'nature_oak_tree',
     unlockedAssetName: 'Árvore de Carvalho (Adulta)',
     unlockedCategory: 'nature',
-    description: 'Crie a regra \'Plantar Carvalho\' com o estágio da copa e execute para cultivar um imponente Carvalho Antigo!',
+    description: "Passo 1: Encaixe a definição 'Função plantar_carvalho(estagio)'.\nPasso 2: Encaixe 'Expandir Copa' dentro da função.\nPasso 3: Encaixe abaixo a chamada 'plantar_carvalho(3)' para cultivar o Carvalho Antigo!",
     starterBlocks: [
       { type: 'def_func', name: 'plantar_carvalho', param: 'estagio' },
       { type: 'call_func', name: 'plantar_carvalho', param: '3' }
@@ -316,7 +316,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'nature_pine_tree',
     unlockedAssetName: 'Pinheiro Nórdico (Adulto)',
     unlockedCategory: 'nature',
-    description: 'Use o bloco \'Plantar Pinheiro\' com a cor esmeralda para reflorestar as colinas da ilha!',
+    description: "Passo 1: Encaixe o bloco 'Plantar Pinheiro' com cor 'esmeralda' e tamanho 4 para reflorestar as colinas com Pinheiros Nórdicos!",
     starterBlocks: [
       { type: 'call_action', action: 'plantar_pinheiro', param: '"nature_pine_tree", "esmeralda", 4' }
     ],
@@ -340,7 +340,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'struct_fence_wood_segment',
     unlockedAssetName: 'Cerca de Madeira Rústica',
     unlockedCategory: 'structures',
-    description: 'Use o laço \'Para i = 1 até 4 Faça\' para fincar os 4 segmentos de cerca e cercar seu quintal!',
+    description: "Passo 1: Encaixe o laço 'Para i = 1 até 4 Faça'.\nPasso 2: Encaixe 'Fincar Cerca' dentro do laço para alinhar os 4 módulos da Cerca de Madeira!",
     starterBlocks: [
       { type: 'for_loop', count: 4, action: 'fincar_cerca("struct_fence_wood_segment", i)' }
     ],
@@ -360,7 +360,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'struct_fence_wood_gate',
     unlockedAssetName: 'Portão de Cerca de Madeira',
     unlockedCategory: 'structures',
-    description: 'Use a condição \'Se trinco == "articulado" Então\' e encaixe \'Montar Portão\' para criar uma passagem segura!',
+    description: "Passo 1: Encaixe a condição 'Se trinco == \"articulado\" Então'.\nPasso 2: Encaixe dentro dela o bloco 'Montar Portão' para criar um Portão de Cerca seguro!",
     starterBlocks: [
       { type: 'if_cond', condition: 'trinco == "articulado"', thenAction: 'montar_portao("struct_fence_wood_gate")', elseAction: 'ajustar_dobradica()' }
     ],
@@ -380,7 +380,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'struct_bridge_wood_horiz',
     unlockedAssetName: 'Ponte de Madeira (Horizontal)',
     unlockedCategory: 'structures',
-    description: 'Crie a regra \'Construir Ponte Horizontal\' com 2 módulos de vão e execute para atravessar o rio!',
+    description: "Passo 1: Encaixe a definição 'Função construir_ponte_h(vao)'.\nPasso 2: Encaixe 'Estender Vigas Horizontais' dentro da função.\nPasso 3: Encaixe abaixo a chamada 'construir_ponte_h(2)' para atravessar o rio com a Ponte Horizontal!",
     starterBlocks: [
       { type: 'def_func', name: 'construir_ponte_h', param: 'vao' },
       { type: 'call_func', name: 'construir_ponte_h', param: '2' }
@@ -401,7 +401,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'struct_bridge_wood_vert',
     unlockedAssetName: 'Ponte de Madeira (Vertical)',
     unlockedCategory: 'structures',
-    description: 'Use a regra \'Calcular Vão Vertical\' e encaixe o bloco \'Montar Ponte Vertical\' para ligar o norte ao sul!',
+    description: "Passo 1: Encaixe a definição 'Função calcular_vao_v(altura)'.\nPasso 2: Encaixe abaixo o bloco 'Montar Ponte Vertical' com o retorno da função para erguer a Ponte Vertical!",
     starterBlocks: [
       { type: 'def_func', name: 'calcular_vao_v', param: 'altura' },
       { type: 'call_action', action: 'montar_ponte_v', param: '"struct_bridge_wood_vert", calcular_vao_v(2)' }
@@ -426,7 +426,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'tool_fishing_rod',
     unlockedAssetName: 'Vara de Pescar de Bambu',
     unlockedCategory: 'tools',
-    description: 'Selecione o bambu flexível na lista e use o bloco \'Montar Vara\' para começar a pescar nos mares!',
+    description: "Passo 1: Encaixe o bloco 'Definir varas = bambu_flexivel'.\nPasso 2: Encaixe abaixo o bloco 'Montar Vara' para obter a Vara de Pescar de Bambu!",
     starterBlocks: [
       { type: 'set_var', name: 'varas', value: '{"linha_seda", "bambu_flexivel"}' },
       { type: 'call_action', action: 'montar_vara', param: '"tool_fishing_rod", varas[2]' }
@@ -447,7 +447,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'tool_bug_net',
     unlockedAssetName: 'Rede de Captura',
     unlockedCategory: 'tools',
-    description: 'Use o bloco \'Definir malha = fina_encantada\' e encaixe \'Tecer Rede\' para capturar borboletas e insetos!',
+    description: "Passo 1: Encaixe o bloco 'Definir malha = fina_encantada'.\nPasso 2: Encaixe abaixo o bloco 'Tecer Rede' para criar a Rede de Captura de Insetos!",
     starterBlocks: [
       { type: 'set_var', name: 'malha', value: 'fina_encantada' },
       { type: 'call_action', action: 'tecer_rede', param: '"tool_bug_net", malha' }
@@ -468,7 +468,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'tile_animated_water_flow',
     unlockedAssetName: 'Ladrilho de Água Cristalina',
     unlockedCategory: 'animated',
-    description: 'Use o laço \'Para i = 1 até 8 Faça\' para animar os 8 frames de água e criar um rio cristalino!',
+    description: "Passo 1: Encaixe o laço 'Para i = 1 até 8 Faça'.\nPasso 2: Encaixe 'Animar Ondulação' dentro do laço para criar o Ladrilho de Água Cristalina animado!",
     starterBlocks: [
       { type: 'for_loop', count: 8, action: 'animar_ondulacao("tile_animated_water_flow", i)' }
     ],
@@ -488,7 +488,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'tile_animated_waterfall',
     unlockedAssetName: 'Queda d\'Água / Cachoeira',
     unlockedCategory: 'animated',
-    description: 'Crie a regra \'Gerar Cachoeira\' com 2 metros de altura e invoque para criar uma bela cascata d\'água!',
+    description: "Passo 1: Encaixe a definição 'Função gerar_cachoeira(altura)'.\nPasso 2: Encaixe 'Fluxo Vertical' dentro da função.\nPasso 3: Encaixe abaixo a chamada 'gerar_cachoeira(2)' para criar a Queda d'Água / Cachoeira!",
     starterBlocks: [
       { type: 'def_func', name: 'gerar_cachoeira', param: 'altura' },
       { type: 'call_func', name: 'gerar_cachoeira', param: '2' }
@@ -513,7 +513,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'tile_ground_dirt_track',
     unlockedAssetName: 'Trilha de Terra Batida',
     unlockedCategory: 'ground',
-    description: 'Use o bloco \'Definir solo = terra_dourada\' e encaixe \'Assentar Piso\' para abrir caminhos na vila!',
+    description: "Passo 1: Encaixe o bloco 'Definir solo = terra_dourada'.\nPasso 2: Encaixe abaixo o bloco 'Assentar Piso' para liberar a Trilha de Terra Batida!",
     starterBlocks: [
       { type: 'set_var', name: 'solo', value: 'terra_dourada' },
       { type: 'call_action', action: 'assentar_piso', param: '"tile_ground_dirt_track", solo' }
@@ -534,7 +534,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'tile_ground_cobblestone',
     unlockedAssetName: 'Caminho de Paralelepípedo',
     unlockedCategory: 'ground',
-    description: 'Use o laço \'Para i = 1 até 4 Faça\' para encaixar 4 paralelepípedos com musgo no piso!',
+    description: "Passo 1: Encaixe o laço 'Para i = 1 até 4 Faça'.\nPasso 2: Encaixe 'Encaixar Paralelepípedo' dentro do laço para criar o Caminho de Paralelepípedo!",
     starterBlocks: [
       { type: 'for_loop', count: 4, action: 'encaixar_paralelepipedo("tile_ground_cobblestone", i)' }
     ],
@@ -554,7 +554,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'tile_ground_wood_planks',
     unlockedAssetName: 'Tabuado de Madeira Rústica',
     unlockedCategory: 'ground',
-    description: 'Use a condição \'Se tipo_madeira == "carvalho" Então\' e encaixe \'Pregar Tabuado\' para criar pisos de madeira!',
+    description: "Passo 1: Encaixe a condição 'Se tipo_madeira == \"carvalho\" Então'.\nPasso 2: Encaixe dentro dela o bloco 'Pregar Tabuado' para liberar o Tabuado de Madeira Rústica!",
     starterBlocks: [
       { type: 'if_cond', condition: 'tipo_madeira == "carvalho"', thenAction: 'pregar_tabuado("tile_ground_wood_planks")', elseAction: 'lixar_madeira()' }
     ],
@@ -574,7 +574,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'tile_ground_flower_grass',
     unlockedAssetName: 'Grama Florida Silvestre',
     unlockedCategory: 'ground',
-    description: 'Defina as pétalas azuis e use o bloco \'Semear Grama Florida\' para florir os campos da ilha!',
+    description: "Passo 1: Encaixe o bloco 'Definir flores = petala_azul'.\nPasso 2: Encaixe abaixo o bloco 'Semear Grama Florida' para florir os campos com Grama Florida Silvestre!",
     starterBlocks: [
       { type: 'set_var', name: 'flores', value: '{ azul = "petala_azul", ouro = "petala_amarela" }' },
       { type: 'call_action', action: 'semear_grama_florida', param: '"tile_ground_flower_grass", flores.azul' }
@@ -595,7 +595,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'tile_ground_sand_beach',
     unlockedAssetName: 'Areia Dourada de Praia',
     unlockedCategory: 'ground',
-    description: 'Crie a regra \'Criar Praia\' e encaixe \'Espalhar Areia Dourada\' para formar a praia paradisíaca!',
+    description: "Passo 1: Encaixe a definição 'Função criar_praia()'.\nPasso 2: Encaixe 'Espalhar Areia Dourada' dentro da função.\nPasso 3: Encaixe abaixo a chamada 'criar_praia()' para liberar a Areia Dourada de Praia!",
     starterBlocks: [
       { type: 'def_func', name: 'criar_praia', param: '' },
       { type: 'call_func', name: 'criar_praia', param: '""' }
@@ -616,7 +616,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'tile_ground_stone_mosaic',
     unlockedAssetName: 'Mosaico Real de Pedra',
     unlockedCategory: 'ground',
-    description: 'Defina o padrão geométrico azul e use o bloco \'Polir Mosaico\' para assentar o Mosaico Real!',
+    description: "Passo 1: Encaixe o bloco 'Definir padrao = geometrico_azul'.\nPasso 2: Encaixe abaixo o bloco 'Polir Mosaico' para assentar o nobre Mosaico Real de Pedra!",
     starterBlocks: [
       { type: 'set_var', name: 'padrao', value: 'geometrico_azul' },
       { type: 'call_action', action: 'polir_mosaico', param: '"tile_ground_stone_mosaic", padrao' }
@@ -641,7 +641,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'struct_lantern_post',
     unlockedAssetName: 'Poste de Iluminação Medieval',
     unlockedCategory: 'structures',
-    description: 'Use a condição \'Se horario >= 18 Então\' e encaixe \'Acender Poste\' para iluminar as noites da vila!',
+    description: "Passo 1: Encaixe a condição 'Se horario >= 18 Então'.\nPasso 2: Encaixe dentro dela o bloco 'Acender Poste' para iluminar as noites com o Poste Medieval!",
     starterBlocks: [
       { type: 'if_cond', condition: 'horario >= 18', thenAction: 'acender_poste("struct_lantern_post")', elseAction: 'apagar_poste()' }
     ],
@@ -661,7 +661,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'struct_water_well',
     unlockedAssetName: 'Poço de Pedra da Vila',
     unlockedCategory: 'structures',
-    description: 'Crie a regra \'Cavar Poço\' e use o bloco \'Erguer Poço de Pedra\' para garantir água fresca a todos!',
+    description: "Passo 1: Encaixe a definição 'Função cavar_poco()'.\nPasso 2: Encaixe 'Erguer Poço de Pedra' dentro da função.\nPasso 3: Encaixe abaixo a chamada 'cavar_poco()' para construir o Poço de Pedra da Vila!",
     starterBlocks: [
       { type: 'def_func', name: 'cavar_poco', param: '' },
       { type: 'call_func', name: 'cavar_poco', param: '""' }
@@ -682,7 +682,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'struct_stairs_wood',
     unlockedAssetName: 'Escada de Madeira Nobre',
     unlockedCategory: 'structures',
-    description: 'Use o laço \'Para i = 1 até 4 Faça\' para entalhar os 4 degraus da sua Escada de Madeira Nobre!',
+    description: "Passo 1: Encaixe o laço 'Para i = 1 até 4 Faça'.\nPasso 2: Encaixe 'Talhar Degrau' dentro do laço para entalhar os 4 degraus da Escada de Madeira Nobre!",
     starterBlocks: [
       { type: 'for_loop', count: 4, action: 'talhar_degrau("struct_stairs_wood", i)' }
     ],
@@ -702,7 +702,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'struct_ramp_stone',
     unlockedAssetName: 'Rampa de Pedra / Acesso',
     unlockedCategory: 'structures',
-    description: 'Crie a regra \'Nivelar Rampa\' de 0 a 1 e use o bloco \'Esculpir Rampa\' para subir colinas!',
+    description: "Passo 1: Encaixe a definição 'Função nivelar_rampa(origem, destino)'.\nPasso 2: Encaixe 'Esculpir Rampa' dentro da função.\nPasso 3: Encaixe abaixo a chamada 'nivelar_rampa(0, 1)' para construir a Rampa de Pedra / Acesso!",
     starterBlocks: [
       { type: 'def_func', name: 'nivelar_rampa', param: 'origem, destino' },
       { type: 'call_func', name: 'nivelar_rampa', param: '0, 1' }
@@ -727,7 +727,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'feature_lua_terminal',
     unlockedAssetName: 'Grimório & Terminal Lua',
     unlockedCategory: 'tools',
-    description: 'Defina energia_astral = 100 e use o bloco \'Canalizar Energia\' para despertar o Grimório de Códigos Lua!',
+    description: "Passo 1: Encaixe o bloco 'Definir energia_astral = 100'.\nPasso 2: Encaixe abaixo o bloco 'Canalizar' para despertar o Grimório & Terminal Lua!",
     starterBlocks: [
       { type: 'set_var', name: 'energia_astral', value: 100 },
       { type: 'call_action', action: 'canalizar', param: 'energia_astral' }
@@ -748,7 +748,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'prop_animated_campfire',
     unlockedAssetName: 'Fogueira de Acampamento',
     unlockedCategory: 'animated',
-    description: 'Use o laço \'Para i = 1 até 6 Faça\' para animar as labaredas e acender a Fogueira de Acampamento!',
+    description: "Passo 1: Encaixe o laço 'Para i = 1 até 6 Faça'.\nPasso 2: Encaixe 'Acender Chama' dentro do laço para acender as chamas da Fogueira de Acampamento!",
     starterBlocks: [
       { type: 'for_loop', count: 6, action: 'acender_chama("prop_animated_campfire", i)' }
     ],
@@ -768,7 +768,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'tile_animated_lava_bubble',
     unlockedAssetName: 'Ladrilho de Lava Vulcânica',
     unlockedCategory: 'animated',
-    description: 'Use a condição \'Se temperatura >= 1000 Então\' e encaixe \'Borbulhar Magma\' para criar o solo vulcânico!',
+    description: "Passo 1: Encaixe a condição 'Se temperatura >= 1000 Então'.\nPasso 2: Encaixe dentro dela o bloco 'Borbulhar Magma' para ativar o Ladrilho de Lava Vulcânica animado!",
     starterBlocks: [
       { type: 'if_cond', condition: 'temperatura >= 1000', thenAction: 'borbulhar_magma("tile_animated_lava_bubble")', elseAction: 'esfriar_rocha()' }
     ],
@@ -792,7 +792,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'prop_dragon_incubator',
     unlockedAssetName: 'Ninho Incubador de Dragão',
     unlockedCategory: 'furniture',
-    description: 'Crie a regra \'Criar Ninho\' e encaixe \'Tecer Ninho Aquecido\' para abrigar e chocar ovos de dragão!',
+    description: "Passo 1: Encaixe a definição 'Função criar_ninho()'.\nPasso 2: Encaixe 'Tecer Ninho Aquecido' dentro da função.\nPasso 3: Encaixe abaixo a chamada 'criar_ninho()' para forjar o Ninho Incubador de Dragão!",
     starterBlocks: [
       { type: 'def_func', name: 'criar_ninho', param: '' },
       { type: 'call_func', name: 'criar_ninho', param: '""' }
@@ -813,7 +813,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'dragon_whistle_call',
     unlockedAssetName: 'Apito de Chamado de Dragão',
     unlockedCategory: 'tools',
-    description: 'Defina frequencia = 440 e encaixe \'Entalhar Apito\' para chamar seu dragão companheiro a qualquer hora!',
+    description: "Passo 1: Encaixe o bloco 'Definir frequencia = 440'.\nPasso 2: Encaixe abaixo o bloco 'Entalhar Apito' para criar o Apito de Chamado de Dragão!",
     starterBlocks: [
       { type: 'set_var', name: 'frequencia', value: 440 },
       { type: 'call_action', action: 'entalhar_apito', param: '"dragon_whistle_call", frequencia' }
@@ -834,7 +834,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'dragon_egg_earth',
     unlockedAssetName: 'Ovo de Dragão Terrestre',
     unlockedCategory: 'dragons',
-    description: 'Use a condição \'Se casca == "rocha_solida" Então\' e encaixe \'Imbuir Cristal\' para chocar o Dragão Terrestre!',
+    description: "Passo 1: Encaixe a condição 'Se casca == \"rocha_solida\" Então'.\nPasso 2: Encaixe dentro dela o bloco 'Imbuir Cristal Terra' para chocar o Ovo de Dragão Terrestre!",
     starterBlocks: [
       { type: 'if_cond', condition: 'casca == "rocha_solida"', thenAction: 'imbuir_cristal_terra("dragon_egg_earth")', elseAction: 'aguardar_energia()' }
     ],
@@ -854,7 +854,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'dragon_egg_tide',
     unlockedAssetName: 'Ovo de Dragão Aquático',
     unlockedCategory: 'dragons',
-    description: 'Selecione a pérola azul na lista e use o bloco \'Polir Ovo\' para despertar o Dragão Aquático!',
+    description: "Passo 1: Encaixe o bloco 'Definir escamas = perola_azul'.\nPasso 2: Encaixe abaixo o bloco 'Polir Ovo' para despertar o Ovo de Dragão Aquático!",
     starterBlocks: [
       { type: 'set_var', name: 'escamas', value: '{"perola_azul", "espuma_mar"}' },
       { type: 'call_action', action: 'polir_ovo_tide', param: '"dragon_egg_tide", escamas[1]' }
@@ -875,7 +875,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'dragon_egg_wind',
     unlockedAssetName: 'Ovo de Dragão Voador',
     unlockedCategory: 'dragons',
-    description: 'Crie a regra \'Despertar Vento\' e encaixe \'Canalizar Voo Sagrado\' para libertar o Dragão Alado nos céus!',
+    description: "Passo 1: Encaixe a definição 'Função despertar_vento(tipo)'.\nPasso 2: Encaixe 'Canalizar Voo Sagrado' dentro da função.\nPasso 3: Encaixe abaixo a chamada 'despertar_vento(\"celeste\")' para consagrar o Ovo de Dragão Voador!",
     starterBlocks: [
       { type: 'def_func', name: 'despertar_vento', param: 'tipo' },
       { type: 'call_func', name: 'despertar_vento', param: '"celeste"' }
