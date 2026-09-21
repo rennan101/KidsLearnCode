@@ -1205,13 +1205,15 @@ class RPGApplication {
         this.updateSaveIndicator('error');
       }
 
-      // Sincroniza em segundo plano com a Nuvem Supabase e transmite para outros jogadores online
+      // Sincroniza em segundo plano com a Nuvem Supabase quando o usuário está autenticado
       if (this.supabaseClient) {
-        if (!this.supabaseClient.user?.isGuest) {
+        if (!this.supabaseClient.user?.isGuest && this.supabaseClient.isValidUUID?.(this.supabaseClient.user?.id)) {
           this.supabaseClient.saveCloudGame(payload);
         }
-        // Sempre salva o mapa online compartilhado e transmite via broadcast para outros players
-        this.supabaseClient.saveGlobalWorldMap(mapData);
+        // Salva o mapa online compartilhado e transmite via broadcast apenas em saves intencionais / modo edição
+        if (instant && this.mode === 'edit') {
+          this.supabaseClient.saveGlobalWorldMap(mapData);
+        }
       }
     } catch (err) {
       console.warn('Failed to auto-save to StorageManager:', err);

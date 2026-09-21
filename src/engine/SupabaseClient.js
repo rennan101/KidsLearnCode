@@ -226,15 +226,23 @@ export class SupabaseClient {
   // Saves na Nuvem (PostgreSQL game_saves & Global World Map)
   // ==========================================
 
+  // Global map uses a fixed UUID to comply with Postgres UUID constraints
+  static GLOBAL_MAP_UUID = '00000000-0000-0000-0000-000000000001';
+
+  isValidUUID(id) {
+    if (!id || typeof id !== 'string') return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  }
+
   async saveGlobalWorldMap(mapData) {
     if (!this.client || !mapData) {
       return { success: false, reason: 'offline_or_invalid_map' };
     }
 
     try {
-      // 1. Tenta salvar na tabela game_saves como registro global
+      // 1. Tenta salvar na tabela game_saves usando UUID global válido
       const payload = {
-        user_id: 'global_community_world_map',
+        user_id: SupabaseClient.GLOBAL_MAP_UUID,
         map_data: mapData,
         player_data: { x: mapData.spawnPoint?.x || 320, y: mapData.spawnPoint?.y || 320 },
         inventory_data: {},
@@ -243,16 +251,18 @@ export class SupabaseClient {
         updated_at: new Date().toISOString()
       };
 
-      await this.client
+      const { error } = await this.client
         .from('game_saves')
         .upsert(payload, { onConflict: 'user_id' });
 
       // 2. Dispara broadcast em tempo real para todos os clientes conectados
       this.broadcastMapUpdate(mapData);
 
+      if (error) {
+        return { success: false, error: error.message };
+      }
       return { success: true };
     } catch (err) {
-      console.warn('[SupabaseClient] Erro ao salvar mapa online:', err.message);
       // Mesmo se o banco falhar, emite via Realtime broadcast para outros players online
       this.broadcastMapUpdate(mapData);
       return { success: false, error: err.message };
@@ -266,8 +276,8 @@ export class SupabaseClient {
       const { data, error } = await this.client
         .from('game_saves')
         .select('map_data, updated_at')
-        .eq('user_id', 'global_community_world_map')
-        .single();
+        .eq('user_id', SupabaseClient.GLOBAL_MAP_UUID)
+        .maybeSingle();
 
       if (error || !data || !data.map_data) return null;
 
@@ -276,13 +286,12 @@ export class SupabaseClient {
         updatedAt: new Date(data.updated_at).getTime()
       };
     } catch (err) {
-      console.warn('[SupabaseClient] Erro ao carregar mapa global online:', err.message);
       return null;
     }
   }
 
   async saveCloudGame(payload) {
-    if (!this.client || this.user?.isGuest) {
+    if (!this.client || !this.user || this.user.isGuest || !this.isValidUUID(this.user.id)) {
       return { success: false, reason: 'guest_or_offline' };
     }
 
@@ -299,7 +308,7 @@ export class SupabaseClient {
           updated_at: new Date().toISOString()
         }, { onConflict: 'user_id' });
 
-      if (error) throw error;
+      if (error) return { success: false, error: error.message };
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
@@ -307,7 +316,7 @@ export class SupabaseClient {
   }
 
   async loadCloudGame() {
-    if (!this.client || this.user?.isGuest) {
+    if (!this.client || !this.user || this.user.isGuest || !this.isValidUUID(this.user.id)) {
       return null;
     }
 
@@ -316,7 +325,7 @@ export class SupabaseClient {
         .from('game_saves')
         .select('*')
         .eq('user_id', this.user.id)
-        .single();
+        .maybeSingle();
 
       if (error || !data) return null;
 
@@ -330,7 +339,6 @@ export class SupabaseClient {
         savedAt: new Date(data.updated_at).getTime()
       };
     } catch (err) {
-      console.warn('[SupabaseClient] Erro ao carregar save da nuvem:', err.message);
       return null;
     }
   }

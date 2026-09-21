@@ -6,11 +6,11 @@
  */
 
 export const BLOCK_CATEGORIES = {
-  variables: { id: 'variables', name: 'Variáveis & Valores', color: '#FF8C1A', darkColor: '#d97706', accentColor: '#ffedd5' },
-  actions: { id: 'actions', name: 'Ações de Criação', color: '#3B82F6', darkColor: '#2563eb', accentColor: '#dbeafe' },
-  conditions: { id: 'conditions', name: 'Lógica & Condições', color: '#10B981', darkColor: '#059669', accentColor: '#d1fae5' },
-  loops: { id: 'loops', name: 'Repetição (Loops)', color: '#FFAB19', darkColor: '#d97706', accentColor: '#fef3c7' },
-  functions: { id: 'functions', name: 'Funções & Regras', color: '#9966FF', darkColor: '#7c3aed', accentColor: '#ede9fe' }
+  variables: { id: 'variables', name: 'Variáveis & Valores', color: '#EA580C', darkColor: '#C2410C', accentColor: '#ffedd5' },
+  actions: { id: 'actions', name: 'Ações de Criação', color: '#0284C7', darkColor: '#0369A1', accentColor: '#e0f2fe' },
+  conditions: { id: 'conditions', name: 'Lógica & Condições', color: '#059669', darkColor: '#047857', accentColor: '#d1fae5' },
+  loops: { id: 'loops', name: 'Repetição (Loops)', color: '#7C3AED', darkColor: '#6D28D9', accentColor: '#ede9fe' },
+  functions: { id: 'functions', name: 'Funções & Regras', color: '#DB2777', darkColor: '#BE185D', accentColor: '#fce7f3' }
 };
 
 export class ScratchBlockEngine {

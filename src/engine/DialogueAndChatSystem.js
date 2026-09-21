@@ -246,6 +246,10 @@ export class DialogueAndChatSystem {
     modalEl.style.display = 'flex';
     if (nameEl) nameEl.innerText = speakerMeta.name || 'Morador';
     if (portraitEl) {
+      portraitEl.onerror = () => {
+        portraitEl.onerror = null;
+        portraitEl.src = 'assets/characters/char_wolf_hunter_m/portrait.jpg';
+      };
       portraitEl.src = speakerMeta.portraitUrl || 'assets/characters/char_wolf_hunter_m/portrait.jpg';
     }
     if (choicesEl) choicesEl.innerHTML = '';
