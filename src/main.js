@@ -880,7 +880,7 @@ class RPGApplication {
       btnPlay.classList.add('active');
       btnEdit.classList.remove('active');
       editorTools.style.display = 'none';
-      playHint.style.display = 'flex';
+      if (playHint) playHint.style.display = 'flex';
       assetDrawer.classList.add('collapsed');
       assetDrawer.style.display = 'none';
       btnToggleDrawer.style.display = 'none';
@@ -908,7 +908,7 @@ class RPGApplication {
       btnEdit.classList.add('active');
       btnPlay.classList.remove('active');
       editorTools.style.display = 'flex';
-      playHint.style.display = 'none';
+      if (playHint) playHint.style.display = 'none';
       assetDrawer.style.display = 'flex';
       assetDrawer.classList.remove('collapsed');
       btnToggleDrawer.style.display = 'flex';

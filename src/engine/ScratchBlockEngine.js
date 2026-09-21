@@ -187,12 +187,8 @@ export class ScratchBlockEngine {
       this.initDefaultBlockCatalog();
     }
 
+    // Challenges start empty so the student builds the code themselves
     this.blocksInWorkspace = [];
-    if (starterLua) {
-      this.parseStarterLuaToBlocks(starterLua);
-    } else if (this.availableBlocks.length > 0) {
-      this.blocksInWorkspace.push(this.instantiateBlock(this.availableBlocks[0]));
-    }
 
     this.renderPalette();
     this.renderWorkspace();
@@ -608,12 +604,30 @@ export class ScratchBlockEngine {
       const placeholder = document.createElement('div');
       placeholder.className = 'codekit-workspace-placeholder';
       placeholder.innerHTML = `
-        <svg class="ui-icon" style="width: 42px; height: 42px; color: #725d42;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="16 18 22 12 16 6"></polyline>
-          <polyline points="8 6 2 12 8 18"></polyline>
-        </svg>
-        <span class="placeholder-title">Mesa de Montagem Vazia</span>
-        <span class="placeholder-desc">Arraste ou clique nas peças da paleta à esquerda para montar seu código</span>
+        <div class="codekit-empty-hero">
+          <svg class="ui-icon" style="width: 44px; height: 44px; color: var(--animal-primary-dark, #0f8e83);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          <span class="placeholder-title">Mesa de Montagem Pronta</span>
+          <span class="placeholder-desc">Arraste os blocos da esquerda ou clique neles para montar seu código!</span>
+        </div>
+        <div class="tutorial-drag-guide" id="tutorial-drag-guide">
+          <div class="tutorial-drag-track">
+            <div class="tutorial-drag-target-zone">
+              <svg class="ui-icon" style="width: 20px; height: 20px; color: #19c8b9;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"></path>
+              </svg>
+              <span>Solte o bloco aqui</span>
+            </div>
+          </div>
+          <div class="tutorial-drag-hand">
+            <svg class="tutorial-hand-svg" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74a4.5 4.5 0 0 0-9 0c0 1.56.79 2.93 2 3.74zm9.84 4.63-4.54-2.26A2 2 0 0 0 13.4 13.5H13v-6a1.5 1.5 0 0 0-3 0v10.74l-3.44-.72a1.5 1.5 0 0 0-1.57.65l-.79 1.18 5.4 5.4c.56.56 1.33.88 2.12.88H18a3 3 0 0 0 3-3v-4.24a2 2 0 0 0-1.16-1.82z"/>
+            </svg>
+            <span class="tutorial-hand-tip">Arraste para a mesa</span>
+          </div>
+        </div>
       `;
       this.workspaceEl.appendChild(placeholder);
       return;

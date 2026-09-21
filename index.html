@@ -277,29 +277,6 @@
         <button id="btn-quick-mount" class="quick-mount-btn" title="Montar / Desmontar [R]">
           <span id="quick-mount-label">[R]</span>
         </button>
-      </div>
-
-      <!-- Play Mode HUD Hint -->
-      <div class="play-hud-hint" id="play-hint">
-        <span>Mover: <span class="key-badge">W</span> <span class="key-badge">A</span> <span class="key-badge">S</span> <span class="key-badge">D</span></span>
-        <span>|</span>
-        <span>Herói: <span class="key-badge">P</span></span>
-        <span>|</span>
-        <span>Mochila: <span class="key-badge">B</span></span>
-        <span>|</span>
-        <span>Montar: <span class="key-badge">R</span></span>
-        <span>|</span>
-        <span>Esquiva: <span class="key-badge">1</span></span>
-        <span>|</span>
-        <span>Código Lua: <span class="key-badge">K</span></span>
-        <span>|</span>
-        <span>Interagir: <span class="key-badge">E</span></span>
-        <span>|</span>
-        <span>Craft: <span class="key-badge">C</span></span>
-        <span>|</span>
-        <span>Chat: <span class="key-badge">Enter</span></span>
-      </div>
-
       <!-- Circular RPG Minimap (Top Right) -->
       <div class="minimap-hud" id="minimap-hud">
         <div class="minimap-bezel">
@@ -565,7 +542,26 @@
 
   <!-- Bottom Status Bar -->
   <footer class="status-bar">
-    <div class="status-item">FPS: <span id="status-fps">60</span></div>
+    <div class="status-shortcuts" id="status-shortcuts">
+      <span class="status-shortcut-item">Mover <span class="status-key">WASD</span></span>
+      <span class="status-sep">•</span>
+      <span class="status-shortcut-item">Herói <span class="status-key">P</span></span>
+      <span class="status-sep">•</span>
+      <span class="status-shortcut-item">Mochila <span class="status-key">B</span></span>
+      <span class="status-sep">•</span>
+      <span class="status-shortcut-item">Montar <span class="status-key">R</span></span>
+      <span class="status-sep">•</span>
+      <span class="status-shortcut-item">Esquiva <span class="status-key">1</span></span>
+      <span class="status-sep">•</span>
+      <span class="status-shortcut-item">Código Lua <span class="status-key">K</span></span>
+      <span class="status-sep">•</span>
+      <span class="status-shortcut-item">Interagir <span class="status-key">E</span></span>
+      <span class="status-sep">•</span>
+      <span class="status-shortcut-item">Craft <span class="status-key">C</span></span>
+      <span class="status-sep">•</span>
+      <span class="status-shortcut-item">Chat <span class="status-key">Enter</span></span>
+    </div>
+    <div class="status-fps-item"><span id="status-fps">60</span> FPS</div>
   </footer>
 
   <!-- In-Game Chat Input Bar (Press Enter to Chat) -->
