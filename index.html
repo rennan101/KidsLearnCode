@@ -38,20 +38,21 @@
   </div>
 
   <!-- Top App Navigation Bar -->
-  <!-- Top App Navigation Bar -->
   <header class="app-header">
-    <!-- Left Section: Character Profile, XP & Level, Gold, Backpack & Logout -->
+    <!-- Left Section: Character Profile, XP Progress Bar, Gold, Backpack & Logout -->
     <div class="header-left-bar">
       <div class="header-hero-bar" id="header-hero-bar">
-        <!-- Hero / Character Profile Button -->
+        <!-- Hero / Character Profile Button with Level & XP Progress Bar -->
         <button id="btn-hero-profile" class="hero-profile-btn" title="Trocar Herói / Perfil do Personagem [P]">
           <img id="header-hero-avatar" src="assets/characters/char_wolf_hunter_m/portrait.jpg" alt="Avatar do Herói" class="hero-avatar-mini">
           <div class="hero-header-info">
-            <span id="header-hero-name" class="hero-header-name">Lobo Caçador</span>
-            <div class="hero-header-stats">
+            <div class="hero-header-top">
+              <span id="header-hero-name" class="hero-header-name">Lobo Caçador</span>
               <span id="header-hero-level" class="hero-header-level">Nv. 1</span>
-              <span class="hero-header-sep">•</span>
-              <span id="header-hero-xp" class="hero-header-xp">100 XP</span>
+            </div>
+            <div class="hero-xp-track" title="Progresso de Nível de XP">
+              <div class="hero-xp-fill" id="header-xp-fill" style="width: 50%;"></div>
+              <span id="header-hero-xp" class="hero-xp-text">100/200 XP</span>
             </div>
           </div>
         </button>
@@ -1138,11 +1139,11 @@
           </button>
         </div>
 
-        <!-- Login / Register Form Tabs -->
+        <!-- Login / Register Form Tabs (Borderless Container) -->
         <div id="auth-form-container" style="display: flex; flex-direction: column; gap: 14px;">
-          <div class="backpack-tabs ac-pocket-tabs" style="padding: 0; background: transparent; border-bottom: none; gap: 8px;">
-            <button type="button" id="auth-tab-login" class="backpack-tab active" style="flex: 1; padding: 8px 0; font-weight: 800; justify-content: center; border-radius: 50px;">Entrar</button>
-            <button type="button" id="auth-tab-signup" class="backpack-tab" style="flex: 1; padding: 8px 0; font-weight: 800; justify-content: center; border-radius: 50px;">Criar Conta</button>
+          <div class="auth-mode-tabs" id="auth-mode-tabs">
+            <button type="button" id="auth-tab-login" class="auth-mode-tab active">Entrar</button>
+            <button type="button" id="auth-tab-signup" class="auth-mode-tab">Criar Conta</button>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -1185,9 +1186,6 @@
               Sair
             </button>
           </div>
-          <button type="button" id="btn-guest-auth" class="codekit-btn-secondary" style="width: 100%; border-radius: 50px; font-weight: 800; padding: 10px 0; margin-top: 2px;">
-            Jogar como Convidado (Modo Livre)
-          </button>
         </div>
       </div>
     </div>

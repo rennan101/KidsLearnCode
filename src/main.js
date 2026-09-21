@@ -171,6 +171,12 @@ class RPGApplication {
     // Load saved map & game state from IndexedDB (with multi-key migration/fallback)
     await this.loadGameFromStorage().catch(e => console.warn('loadGameFromStorage error:', e));
 
+    // Exibe a tela de login / criação de conta como primeira coisa se não autenticado
+    const authModal = document.getElementById('auth-modal');
+    if (authModal && (!this.supabaseClient?.user || this.supabaseClient.user.isGuest)) {
+      authModal.style.display = 'flex';
+    }
+
     // Sync player collider and position with loaded data
     this.player.syncCollider(this.assetLoader);
     if (this.tileMap.spawnPoint) {
@@ -1146,21 +1152,26 @@ class RPGApplication {
   updateGlobalWalletPills() {
     const goldCount = this.blocklySystem?.playerGold !== undefined ? this.blocklySystem.playerGold : 150;
     const xpCount = this.blocklySystem?.playerXP !== undefined ? this.blocklySystem.playerXP : 0;
-    const playerLevel = Math.max(1, Math.floor(xpCount / 200) + 1);
+    const xpPerLevel = 200;
+    const playerLevel = Math.max(1, Math.floor(xpCount / xpPerLevel) + 1);
+    const currentLevelXP = xpCount % xpPerLevel;
+    const xpPercent = Math.min(100, Math.round((currentLevelXP / xpPerLevel) * 100));
 
     // 1. Header Hero Bar elements (Top-Left)
     const headerGold = document.getElementById('header-hero-gold');
     const headerXp = document.getElementById('header-hero-xp');
+    const headerXpFill = document.getElementById('header-xp-fill');
     const headerLevel = document.getElementById('header-hero-level');
     if (headerGold) headerGold.innerText = `${goldCount}`;
-    if (headerXp) headerXp.innerText = `${xpCount} XP`;
+    if (headerXp) headerXp.innerText = `${currentLevelXP}/${xpPerLevel} XP`;
+    if (headerXpFill) headerXpFill.style.width = `${xpPercent}%`;
     if (headerLevel) headerLevel.innerText = `Nv. ${playerLevel}`;
 
     // 2. Backpack Wallet Pills
     const pocketGold = document.getElementById('pocket-wallet-gold');
     const pocketXp = document.getElementById('pocket-wallet-xp');
     if (pocketGold) pocketGold.innerText = `${goldCount}`;
-    if (pocketXp) pocketXp.innerText = `Nv. ${playerLevel} (${xpCount} XP)`;
+    if (pocketXp) pocketXp.innerText = `Nv. ${playerLevel} (${currentLevelXP}/${xpPerLevel} XP)`;
 
     // 3. DIY Workbench Wallet Pills
     const diyGold = document.getElementById('diy-wallet-gold');
@@ -1718,6 +1729,11 @@ class RPGApplication {
     const submitBtnLabel = document.getElementById('btn-submit-auth-label');
 
     closeBtn?.addEventListener('click', () => {
+      const user = this.supabaseClient.user;
+      if (!user || user.isGuest) {
+        this.showToast('Por favor, entre ou crie sua conta para jogar na Ilha Lua!');
+        return;
+      }
       modal.style.display = 'none';
     });
 
@@ -1818,17 +1834,11 @@ class RPGApplication {
       }
     });
 
-    guestBtn?.addEventListener('click', () => {
-      this.supabaseClient.signOut();
-      refreshAuthUI();
-      this.showToast('Modo Offline ativado.');
-      modal.style.display = 'none';
-    });
-
     signoutBtn?.addEventListener('click', async () => {
       await this.supabaseClient.signOut();
       refreshAuthUI();
       this.showToast('Desconectado da conta.');
+      modal.style.display = 'flex';
     });
   }
 
@@ -2366,7 +2376,7 @@ class RPGApplication {
     const sendMsg = () => {
       const text = chatInput.value.trim();
       if (text.length > 0) {
-        this.dialogueSystem.addSpeechBubble('player', text, { x: this.player.x, y: this.player.y });
+        this.dialogueSystem.addSpeechBubble('player', text, { x: this.player.x, y: this.player.y }, true);
         if (this.multiplayerClient) {
           this.multiplayerClient.sendChatMessage(text, this.player, this.player.heroData?.name || 'Aventureiro');
         }

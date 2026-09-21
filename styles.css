@@ -2504,6 +2504,12 @@ canvas#game-canvas {
   color: var(--animal-text, #794f27);
 }
 
+.hero-header-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .hero-header-stats {
   display: flex;
   align-items: center;
@@ -2517,6 +2523,7 @@ canvas#game-canvas {
 .hero-header-level {
   color: var(--animal-accent-orange, #ea580c);
   font-weight: 800;
+  font-size: 0.72rem;
 }
 
 .hero-header-sep {
@@ -2526,6 +2533,90 @@ canvas#game-canvas {
 
 .hero-header-xp {
   color: var(--animal-primary-dark, #0f8e83);
+}
+
+.hero-xp-track {
+  position: relative;
+  width: 95px;
+  height: 12px;
+  background: #f7f3df;
+  border: 1.5px solid var(--animal-border, #c4b89e);
+  border-radius: 50px;
+  overflow: hidden;
+  margin-top: 2px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+}
+
+.hero-xp-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #19c8b9, #3dd4c6);
+  border-radius: 50px;
+  transition: width 0.35s ease;
+}
+
+.hero-xp-text {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  text-align: center;
+  font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: #794f27;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.85);
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* Borderless Auth Mode Tabs */
+.auth-mode-tabs {
+  display: flex;
+  background: transparent;
+  padding: 0;
+  border: none;
+  gap: 10px;
+  margin: 0 0 6px 0;
+}
+
+.auth-mode-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  background: var(--animal-bg, #f8f8f0);
+  border: 2px solid var(--animal-border, #c4b89e);
+  border-radius: 50px;
+  color: var(--animal-text-secondary, #9f927d);
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 3px 0 0 var(--animal-border, #c4b89e);
+}
+
+.auth-mode-tab:hover {
+  color: var(--animal-text, #794f27);
+  background: var(--animal-primary-bg, #e6f9f6);
+  border-color: var(--animal-primary, #19c8b9);
+}
+
+.auth-mode-tab.active {
+  background: var(--animal-primary, #19c8b9);
+  border-color: var(--animal-primary, #19c8b9);
+  color: #ffffff;
+  box-shadow: 0 4px 0 0 var(--animal-primary-dark, #0f8e83);
+}
+
+.auth-mode-tab:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 var(--animal-primary-dark, #0f8e83);
 }
 
 /* Header Gold Pill */

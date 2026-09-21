@@ -40,7 +40,7 @@ export class SoundFX {
       osc.frequency.setValueAtTime(startFreq, now);
       osc.frequency.exponentialRampToValueAtTime(endFreq, now + 0.038);
 
-      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.setValueAtTime(0.22, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
 
       osc.connect(gain);
@@ -68,7 +68,7 @@ export class SoundFX {
       osc.frequency.setValueAtTime(320, now);
       osc.frequency.exponentialRampToValueAtTime(540, now + 0.04);
 
-      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.setValueAtTime(0.28, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
 
       osc.connect(gain);
@@ -94,7 +94,7 @@ export class SoundFX {
       osc1.type = 'sine';
       osc1.frequency.setValueAtTime(800, now);
       osc1.frequency.exponentialRampToValueAtTime(220, now + 0.035);
-      gain1.gain.setValueAtTime(0.12, now);
+      gain1.gain.setValueAtTime(0.35, now);
       gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
 
       osc1.connect(gain1);
@@ -108,7 +108,7 @@ export class SoundFX {
       osc2.type = 'triangle';
       osc2.frequency.setValueAtTime(440, now + 0.015);
       osc2.frequency.exponentialRampToValueAtTime(660, now + 0.06);
-      gain2.gain.setValueAtTime(0.08, now + 0.015);
+      gain2.gain.setValueAtTime(0.25, now + 0.015);
       gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
 
       osc2.connect(gain2);
@@ -136,7 +136,7 @@ export class SoundFX {
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, noteStart);
 
-        gain.gain.setValueAtTime(0.09, noteStart);
+        gain.gain.setValueAtTime(0.28, noteStart);
         gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.18);
 
         osc.connect(gain);
