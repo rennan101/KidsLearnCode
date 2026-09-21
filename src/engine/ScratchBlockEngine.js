@@ -431,6 +431,7 @@ export class ScratchBlockEngine {
         this.blocksInWorkspace.push(newBlock);
         this.renderWorkspace();
         this.updateCodePreview();
+        if (this.onBlockAdded) this.onBlockAdded(newBlock);
       });
 
       this.paletteEl.appendChild(card);
@@ -458,6 +459,7 @@ export class ScratchBlockEngine {
         this.blocksInWorkspace.push(newBlock);
         this.renderWorkspace();
         this.updateCodePreview();
+        if (this.onBlockAdded) this.onBlockAdded(newBlock);
       }
     });
   }

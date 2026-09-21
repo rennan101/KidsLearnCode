@@ -16,6 +16,7 @@ import { StorageManager } from './engine/StorageManager.js';
 import { SupabaseClient } from './engine/SupabaseClient.js';
 import { securityManager } from './engine/SecurityManager.js';
 import { ScratchBlockEngine } from './engine/ScratchBlockEngine.js';
+import { TutorialManager } from './engine/TutorialManager.js';
 
 
 class RPGApplication {
@@ -37,6 +38,13 @@ class RPGApplication {
     this.blocklySystem = new BlocklyLuaSystem();
     this.scratchEngine = new ScratchBlockEngine();
     this.multiplayerClient = new MultiplayerClient();
+    this.tutorialManager = new TutorialManager(this);
+
+    if (this.scratchEngine) {
+      this.scratchEngine.onBlockAdded = () => {
+        this.tutorialManager?.onBlockAddedToWorkspace();
+      };
+    }
 
     this.assetLoader = new AssetLoader();
     this.tileMap = new TileMap();
@@ -60,6 +68,7 @@ class RPGApplication {
       this.player.isDialogueActive = true;
       this.player.resetKeys();
       this.activeDialogueNPC = npc;
+      this.tutorialManager?.onNPCDialogueOpened(npc?.id);
     };
     this.dialogueSystem.onDialogueClose = () => {
       this.player.isDialogueActive = false;
@@ -172,6 +181,9 @@ class RPGApplication {
 
     // Start game loop
     requestAnimationFrame((t) => this.gameLoop(t));
+
+    // Start Interactive Kid-Friendly Tutorial
+    this.tutorialManager?.startTutorial();
   }
 
   setupWindowResize() {
@@ -1750,6 +1762,8 @@ class RPGApplication {
     }
 
     if (this.mode === 'play') {
+      this.tutorialManager?.update(this.camera, this.player);
+
       // NPC Dialogue Camera Zoom and Anchor Positioning
       if (this.player.isDialogueActive && this.activeDialogueNPC) {
         const targetZoom = 1.55;
@@ -2569,6 +2583,7 @@ class RPGApplication {
       this.player.spawnCraftPoof();
       this.triggerAutoSave();
       this.showToast(`${itemName} colocado no chão da ilha!`);
+      this.tutorialManager?.onItemPlacedOnGround();
 
       if (selectedItem.count <= 0) {
         selectedItem = null;
@@ -2983,6 +2998,7 @@ class RPGApplication {
       if (!modal) return;
       modal.style.display = 'flex';
       switchTab(initialTab);
+      this.tutorialManager?.onBackpackOpened();
     };
 
     closeBtn?.addEventListener('click', () => {
@@ -3064,6 +3080,7 @@ class RPGApplication {
     }
 
     modal.style.display = 'flex';
+    this.tutorialManager?.onCodingModalOpened();
   }
 
   setupCodingStudioUI() {
@@ -3115,6 +3132,7 @@ class RPGApplication {
 
       if (res.success) {
         this.showToast(res.message, 4500);
+        this.tutorialManager?.onCodingChallengeCompleted();
 
         if (res.unlockedAssetId && this.craftingSystem) {
           this.craftingSystem.unlockRecipe(res.unlockedAssetId);
