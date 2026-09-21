@@ -2989,6 +2989,26 @@ canvas#game-canvas {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+.ac-wallet-pill.mini {
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid var(--animal-border, #c4b89e);
+  box-shadow: 0 2px 0 0 var(--animal-border, #c4b89e);
+}
+
+.ac-wallet-pill.mini .ui-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.header-wallet-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .ac-wallet-label {
   color: #8a7b66;
   font-weight: 700;
@@ -4104,14 +4124,13 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
 
 .tutorial-ghost-actor {
   position: absolute;
-  top: 50%;
-  left: 0%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
   display: flex;
   align-items: center;
   pointer-events: none;
-  animation: ghostDemonstrationAnim 3.2s cubic-bezier(0.35, 0, 0.25, 1) infinite;
-  z-index: 10;
+  animation: ghostDemonstrationAnim 3.8s cubic-bezier(0.25, 1, 0.35, 1) infinite;
+  z-index: 20;
 }
 
 .ghost-demonstration-card {
@@ -4151,34 +4170,28 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
 
 @keyframes ghostDemonstrationAnim {
   0% {
-    left: -20%;
-    transform: translate(-50%, -50%) scale(0.85);
+    transform: translate(var(--start-x, -280px), var(--start-y, 40px)) scale(0.85);
     opacity: 0;
   }
-  15% {
-    left: -5%;
-    transform: translate(-50%, -50%) scale(1.08) rotate(-4deg);
+  12% {
+    transform: translate(var(--start-x, -280px), var(--start-y, 40px)) scale(1.08) rotate(-4deg);
     opacity: 1;
   }
-  30% {
-    left: 5%;
-    transform: translate(-50%, -50%) scale(1) rotate(-2deg);
+  28% {
+    transform: translate(var(--start-x, -280px), var(--start-y, 40px)) scale(1.02) rotate(-2deg);
     opacity: 1;
   }
   65% {
-    left: 75%;
-    transform: translate(-50%, -50%) scale(1.04) rotate(0deg);
+    transform: translate(var(--end-x, 80px), var(--end-y, 40px)) scale(1.04) rotate(0deg);
     opacity: 1;
   }
   78% {
-    left: 75%;
-    transform: translate(-50%, -50%) scale(0.95) rotate(0deg);
+    transform: translate(var(--end-x, 80px), var(--end-y, 40px)) scale(0.96) rotate(0deg);
     opacity: 1;
-    filter: drop-shadow(0 0 12px rgba(25, 200, 185, 0.8));
+    filter: drop-shadow(0 0 14px rgba(25, 200, 185, 0.85));
   }
   92%, 100% {
-    left: 78%;
-    transform: translate(-50%, -50%) scale(0.9);
+    transform: translate(var(--end-x, 80px), var(--end-y, 40px)) scale(0.9) rotate(0deg);
     opacity: 0;
   }
 }
@@ -4425,20 +4438,30 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
 }
 
 /* ==========================================================================
-   Live Side-by-Side Code Viewer & Execution Console (Right Column)
+   Live Side-by-Side Code Viewer & Execution Console (Right Column) - Light Theme
    ========================================================================== */
+
+.codekit-code-actions.top-actions {
+  padding: 10px 14px;
+  background: var(--animal-bg-content, #f7f3df);
+  border-bottom: 2px solid var(--animal-border, #c4b89e);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
 
 .codekit-code-viewer-wrap {
   flex: 1;
-  min-height: 160px;
-  background: #1e1e1e !important;
-  overflow-x: auto;
+  min-height: 280px;
+  background: var(--animal-bg-card, #fdfbf7) !important;
+  overflow-x: hidden;
   overflow-y: auto;
-  max-height: 250px;
   border-bottom: 2px solid var(--animal-border, #c4b89e);
   font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.82rem;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.45);
+  font-size: 0.85rem;
+  box-shadow: inset 0 2px 6px rgba(121, 79, 39, 0.06);
 }
 
 .codekit-code-viewer-wrap::-webkit-scrollbar {
@@ -4447,88 +4470,97 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
 }
 
 .codekit-code-viewer-wrap::-webkit-scrollbar-track {
-  background: #1e1e1e;
+  background: var(--animal-bg, #f8f8f0);
 }
 
 .codekit-code-viewer-wrap::-webkit-scrollbar-thumb {
-  background: #424242;
+  background: var(--animal-border, #c4b89e);
   border-radius: 4px;
 }
 
 .codekit-code-viewer-wrap::-webkit-scrollbar-thumb:hover {
-  background: #4f4f4f;
+  background: var(--animal-text-secondary, #9f927d);
 }
 
 .codekit-syntax-display {
   display: flex;
   flex-direction: column;
-  padding: 10px 0;
-  min-width: 100%;
-  width: max-content;
+  padding: 12px 10px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .codekit-code-line {
   display: flex;
-  align-items: center;
-  padding: 2px 0;
-  line-height: 1.55;
+  align-items: flex-start;
+  padding: 3px 0;
+  line-height: 1.6;
   transition: background 0.1s ease;
-  white-space: pre;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .codekit-code-line:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(25, 200, 185, 0.08);
+  border-radius: 4px;
 }
 
 .codekit-line-num {
-  width: 38px;
-  min-width: 38px;
-  color: #6e7681;
-  font-size: 0.74rem;
+  width: 32px;
+  min-width: 32px;
+  color: #9f927d;
+  font-size: 0.76rem;
+  font-weight: 700;
   text-align: right;
-  padding-right: 12px;
+  padding-right: 10px;
   margin-right: 10px;
-  border-right: 1px solid #333842;
+  border-right: 1.5px solid var(--animal-border, #c4b89e);
   user-select: none;
+  flex-shrink: 0;
 }
 
 .codekit-line-code {
-  color: #d4d4d4;
+  color: #44301d;
   font-weight: 600;
-  padding-right: 16px;
-  white-space: pre;
+  padding-right: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  flex: 1;
+  min-width: 0;
 }
 
-/* VS Code Dark Modern Syntax Token Colors */
+/* Light / Warm Animal Island UI Syntax Token Colors */
 .tok-keyword {
-  color: #c586c0;
-  font-weight: 700;
+  color: #7c3aed;
+  font-weight: 800;
 }
 
 .tok-fn {
-  color: #dcdcaa;
-  font-weight: 700;
+  color: #0284c7;
+  font-weight: 800;
 }
 
 .tok-string {
-  color: #ce9178;
-  font-weight: 500;
+  color: #c2410c;
+  font-weight: 700;
 }
 
 .tok-num {
-  color: #b5cea8;
-  font-weight: 600;
+  color: #059669;
+  font-weight: 800;
 }
 
 .tok-comment {
-  color: #6a9955;
+  color: #65a30d;
   font-style: italic;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .tok-operator {
-  color: #d4d4d4;
-  font-weight: 600;
+  color: #794f27;
+  font-weight: 800;
 }
 
 /* Console Output */
@@ -4968,14 +5000,14 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
   pointer-events: none;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 18px;
+  gap: 8px;
+  padding: 10px 22px;
   border-radius: 50px;
   font-family: var(--animal-font, 'Nunito', sans-serif);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 800;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3), 0 3px 0 rgba(0, 0, 0, 0.15);
-  animation: rewardFlyArc 1.2s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 4px 0 rgba(0, 0, 0, 0.2);
+  animation: rewardFlyArc 2.2s cubic-bezier(0.2, 0.85, 0.25, 1) forwards;
 }
 
 .reward-flight-badge.badge-xp {
@@ -4991,27 +5023,48 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
 }
 
 .reward-flight-badge svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   color: #ffffff;
 }
 
 @keyframes rewardFlyArc {
   0% {
-    transform: translate(0, 0) scale(0.6);
+    transform: translate(0, 0) scale(0.5);
     opacity: 0;
   }
-  20% {
-    transform: translate(0, -25px) scale(1.2);
+  15% {
+    transform: translate(0, -35px) scale(1.28);
+    opacity: 1;
+    filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.8));
+  }
+  30% {
+    transform: translate(0, -25px) scale(1.15);
     opacity: 1;
   }
-  80% {
+  75% {
     opacity: 1;
   }
   100% {
     transform: translate(var(--fly-dx, 0px), var(--fly-dy, -300px)) scale(0.35);
     opacity: 0;
   }
+}
+
+/* Screen Rumble / Screen Shake Effect on Success / Crafting */
+@keyframes screenRumbleAnim {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  15% { transform: translate(-4px, 3px) rotate(-0.6deg); }
+  30% { transform: translate(5px, -3px) rotate(0.6deg); }
+  45% { transform: translate(-3px, -2px) rotate(-0.3deg); }
+  60% { transform: translate(3px, 3px) rotate(0.3deg); }
+  75% { transform: translate(-2px, 1px) rotate(-0.1deg); }
+  90% { transform: translate(1px, -1px) rotate(0.1deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.screen-rumble {
+  animation: screenRumbleAnim 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
 }
 
 /* Pocket Slot Hover Pop Animation */

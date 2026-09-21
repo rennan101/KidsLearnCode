@@ -1143,19 +1143,47 @@ class RPGApplication {
     }, 4000);
   }
 
+  updateGlobalWalletPills() {
+    const goldCount = this.blocklySystem?.playerGold !== undefined ? this.blocklySystem.playerGold : 150;
+    const xpCount = this.blocklySystem?.playerXP !== undefined ? this.blocklySystem.playerXP : 100;
+
+    // 1. Backpack Wallet Pills
+    const pocketGold = document.getElementById('pocket-wallet-gold');
+    const pocketXp = document.getElementById('pocket-wallet-xp');
+    if (pocketGold) pocketGold.innerText = `${goldCount}`;
+    if (pocketXp) pocketXp.innerText = `Nv. 1 (${xpCount} XP)`;
+
+    // 2. DIY Workbench Wallet Pills
+    const diyGold = document.getElementById('diy-wallet-gold');
+    const diyXp = document.getElementById('diy-wallet-xp');
+    if (diyGold) diyGold.innerText = `${goldCount}`;
+    if (diyXp) diyXp.innerText = `${xpCount}`;
+  }
+
   triggerRewardFlight(xp = 100, gold = 50) {
     if (typeof document === 'undefined') return;
 
     // Origin: Center of screen / modal
     const startX = window.innerWidth / 2;
-    const startY = window.innerHeight / 2 + 40;
+    const startY = window.innerHeight / 2 + 30;
 
-    // Destination: Passport bar or avatar at top
-    const passportBar = document.getElementById('passport-bar') || document.querySelector('.player-profile-pill') || document.querySelector('.bottom-shortcut-bar');
-    let targetX = 60;
-    let targetY = 40;
+    // Destination: Target visible DIY wallet, backpack wallet or top header
+    let targetX = window.innerWidth - 140;
+    let targetY = 50;
 
-    if (passportBar) {
+    const diyWallet = document.getElementById('diy-wallet-group');
+    const pocketWallet = document.querySelector('.ac-wallet-bar');
+    const passportBar = document.getElementById('header-hero-bar');
+
+    if (diyWallet && diyWallet.offsetParent !== null) {
+      const rect = diyWallet.getBoundingClientRect();
+      targetX = rect.left + rect.width / 2;
+      targetY = rect.top + rect.height / 2;
+    } else if (pocketWallet && pocketWallet.offsetParent !== null) {
+      const rect = pocketWallet.getBoundingClientRect();
+      targetX = rect.left + rect.width / 2;
+      targetY = rect.top + rect.height / 2;
+    } else if (passportBar) {
       const rect = passportBar.getBoundingClientRect();
       targetX = rect.left + 50;
       targetY = rect.top + 20;
@@ -1164,12 +1192,21 @@ class RPGApplication {
     const flyDx = targetX - startX;
     const flyDy = targetY - startY;
 
+    // Screen rumble / shake effect on active card or viewport
+    const activeCard = document.querySelector('.crafting-modal[style*="display: flex"] .crafting-card') || document.querySelector('.expanded-map-card') || document.querySelector('.app-body');
+    if (activeCard) {
+      activeCard.classList.remove('screen-rumble');
+      void activeCard.offsetWidth; // Force reflow
+      activeCard.classList.add('screen-rumble');
+      setTimeout(() => activeCard.classList.remove('screen-rumble'), 650);
+    }
+
     // 1. XP Badge
     const xpBadge = document.createElement('div');
     xpBadge.className = 'reward-flight-badge badge-xp';
-    xpBadge.style.left = `${startX - 75}px`;
+    xpBadge.style.left = `${startX - 90}px`;
     xpBadge.style.top = `${startY}px`;
-    xpBadge.style.setProperty('--fly-dx', `${flyDx}px`);
+    xpBadge.style.setProperty('--fly-dx', `${flyDx - 40}px`);
     xpBadge.style.setProperty('--fly-dy', `${flyDy}px`);
     xpBadge.innerHTML = `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1181,11 +1218,11 @@ class RPGApplication {
     // 2. Gold Badge
     const goldBadge = document.createElement('div');
     goldBadge.className = 'reward-flight-badge badge-gold';
-    goldBadge.style.left = `${startX + 35}px`;
+    goldBadge.style.left = `${startX + 20}px`;
     goldBadge.style.top = `${startY}px`;
-    goldBadge.style.setProperty('--fly-dx', `${flyDx}px`);
+    goldBadge.style.setProperty('--fly-dx', `${flyDx + 20}px`);
     goldBadge.style.setProperty('--fly-dy', `${flyDy}px`);
-    goldBadge.style.animationDelay = '0.12s';
+    goldBadge.style.animationDelay = '0.15s';
     goldBadge.innerHTML = `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="9"></circle>
@@ -1199,9 +1236,10 @@ class RPGApplication {
 
     setTimeout(() => {
       soundFX.playPop(1.3);
+      this.updateGlobalWalletPills();
       xpBadge.remove();
       goldBadge.remove();
-    }, 1300);
+    }, 2200);
   }
 
   populateAssetDrawer() {
@@ -2386,6 +2424,7 @@ class RPGApplication {
 
     this.openCraftingModal = () => {
       if (!craftingModal || !recipeList) return;
+      this.updateGlobalWalletPills();
       craftingModal.style.display = 'flex';
       recipeList.innerHTML = '';
 
@@ -2436,12 +2475,18 @@ class RPGApplication {
             this.inventorySystem.addItem(rec.assetId, 1, { name: rec.name });
             this.player.spawnCraftPoof();
             this.showToast(`${rec.name} fabricado e guardado na sua Bolsa!`);
+            this.triggerCelebrationConfetti();
+            this.triggerRewardFlight(40, 0);
           });
           if (res.success) {
             this.inventorySystem.addItem(rec.assetId, 1, { name: rec.name });
             this.player.spawnCraftPoof();
             this.showToast(`${rec.name} guardado na sua Bolsa!`);
-            craftingModal.style.display = 'none';
+            this.triggerCelebrationConfetti();
+            this.triggerRewardFlight(40, 0);
+            setTimeout(() => {
+              craftingModal.style.display = 'none';
+            }, 1200);
           } else {
             this.showToast(res.reason || 'Materiais insuficientes!');
           }
@@ -3243,6 +3288,12 @@ class RPGApplication {
 
     modal.style.display = 'flex';
     this.tutorialManager?.onCodingModalOpened();
+    requestAnimationFrame(() => {
+      this.scratchEngine?.updateGhostAnimationCoordinates();
+    });
+    setTimeout(() => {
+      this.scratchEngine?.updateGhostAnimationCoordinates();
+    }, 120);
   }
 
   setupCodingStudioUI() {
@@ -3363,10 +3414,10 @@ class RPGApplication {
         this.showToast(res.message, 4500);
         this.tutorialManager?.onCodingChallengeCompleted();
 
-        // Trigger celebratory confetti and floating reward badges
+        // Trigger celebratory confetti and floating reward badges with screen rumble
         this.triggerCelebrationConfetti();
         const currentLesson = this.blocklySystem.getCurrentLesson();
-        const xpAmount = currentLesson?.rewardXp || 100;
+        const xpAmount = currentLesson?.rewardXP || 100;
         const goldAmount = currentLesson?.rewardGold || 50;
         this.triggerRewardFlight(xpAmount, goldAmount);
 
@@ -3380,12 +3431,12 @@ class RPGApplication {
         this.player.spawnCraftPoof();
         this.triggerAutoSave();
 
-        // Auto close after 1.8 seconds of visual celebration
+        // Auto close after 2.4 seconds of visual celebration
         setTimeout(() => {
           if (modal.style.display !== 'none') {
             modal.style.display = 'none';
           }
-        }, 1800);
+        }, 2400);
       } else {
         soundFX.playPop(0.7);
         this.showToast(res.message, 4000);

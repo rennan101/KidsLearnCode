@@ -689,6 +689,12 @@ export class ScratchBlockEngine {
         </div>
       `;
       this.workspaceEl.appendChild(placeholder);
+      requestAnimationFrame(() => {
+        this.updateGhostAnimationCoordinates();
+      });
+      setTimeout(() => {
+        this.updateGhostAnimationCoordinates();
+      }, 80);
       return;
     }
 
@@ -701,6 +707,34 @@ export class ScratchBlockEngine {
     });
 
     this.workspaceEl.appendChild(tree);
+  }
+
+  // Update real x and y coordinates of the ghost hand from the left palette block into the center dropzone
+  updateGhostAnimationCoordinates() {
+    if (!this.workspaceEl) return;
+    const ghostActor = this.workspaceEl.querySelector('.tutorial-ghost-actor');
+    const targetSlot = this.workspaceEl.querySelector('.tutorial-ghost-target-zone');
+    const paletteBlock = this.paletteEl?.querySelector('.palette-block');
+    const container = this.workspaceEl.querySelector('.tutorial-ghost-container');
+
+    if (!ghostActor || !targetSlot || !container) return;
+
+    const paletteRect = paletteBlock ? paletteBlock.getBoundingClientRect() : (this.paletteEl ? this.paletteEl.getBoundingClientRect() : null);
+    const targetRect = targetSlot.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    if (paletteRect && paletteRect.width > 0 && containerRect.width > 0) {
+      const startX = (paletteRect.left + paletteRect.width / 2) - (containerRect.left + containerRect.width / 2);
+      const startY = (paletteRect.top + paletteRect.height / 2) - (containerRect.top + 50);
+
+      const endX = (targetRect.left + targetRect.width / 2) - (containerRect.left + containerRect.width / 2);
+      const endY = (targetRect.top + targetRect.height / 2) - (containerRect.top + 50);
+
+      ghostActor.style.setProperty('--start-x', `${Math.round(startX)}px`);
+      ghostActor.style.setProperty('--start-y', `${Math.round(startY)}px`);
+      ghostActor.style.setProperty('--end-x', `${Math.round(endX)}px`);
+      ghostActor.style.setProperty('--end-y', `${Math.round(endY)}px`);
+    }
   }
 
   // Mentor help auto-snap assistant with smooth flying ghost block animation

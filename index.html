@@ -606,7 +606,27 @@
           </svg>
           <span>Bancada de Criação DIY da Ilha</span>
         </div>
-        <button id="btn-close-crafting" class="modal-close-btn" title="Fechar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <!-- Persistent Wallet/XP Pills in DIY Crafting Bench -->
+          <div class="ac-wallet-pill-group header-wallet-group" id="diy-wallet-group">
+            <div class="ac-wallet-pill mini" id="diy-wallet-coins-pill">
+              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M12 7v10M9 9h6a1.5 1.5 0 0 1 0 3H9a1.5 1.5 0 0 0 0 3h6"></path>
+              </svg>
+              <span class="ac-wallet-label">Moedas:</span>
+              <span class="ac-wallet-val" id="diy-wallet-gold">150</span>
+            </div>
+            <div class="ac-wallet-pill mini" id="diy-wallet-xp-pill">
+              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              <span class="ac-wallet-label">XP:</span>
+              <span class="ac-wallet-val" id="diy-wallet-xp">100</span>
+            </div>
+          </div>
+          <button id="btn-close-crafting" class="modal-close-btn" title="Fechar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
       </div>
       <div class="ac-diy-subbar">
         <span>Escolha uma receita desbloqueada para fabricar e guardar na sua Bolsa</span>
@@ -977,6 +997,17 @@
 
         <!-- 3. Right: Live Side-by-Side Code View & Output Console -->
         <div class="codekit-code-col">
+          <!-- Code Action Buttons (Topo) -->
+          <div class="codekit-code-actions top-actions">
+            <button id="btn-reset-lua" class="codekit-btn-secondary">Restaurar</button>
+            <button id="btn-run-lua" class="codekit-btn-primary">
+              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>Executar &amp; Fabricar</span>
+            </button>
+          </div>
+
           <div class="codekit-col-header">
             <div class="codekit-col-title">
               <svg class="ui-icon" style="width: 15px; height: 15px; color: #f59e0b;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
@@ -1001,17 +1032,6 @@
             <div id="lua-console-output" class="codekit-console-output">
               &gt; Aguardando montagem do código...
             </div>
-          </div>
-
-          <!-- Code Action Buttons -->
-          <div class="codekit-code-actions">
-            <button id="btn-reset-lua" class="codekit-btn-secondary">Restaurar</button>
-            <button id="btn-run-lua" class="codekit-btn-primary">
-              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-              </svg>
-              <span>Executar &amp; Fabricar</span>
-            </button>
           </div>
         </div>
       </div>
