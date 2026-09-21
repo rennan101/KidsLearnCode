@@ -61,6 +61,12 @@
   --animal-shadow-btn-wood: 0 4px 0 0 #5c3c26, 0 6px 14px rgba(92, 60, 38, 0.35);
   --animal-shadow-card: 0 12px 32px rgba(80, 55, 30, 0.18), 0 2px 6px rgba(80, 55, 30, 0.08);
 
+  /* Animal Island UI Custom SVG Cursors (Animal Crossing Style) */
+  --animal-cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cg filter='drop-shadow(0 2px 3px rgba(80,50,20,0.35))'%3E%3Cpath d='M6 3 L20 17 L13.5 18 L18.5 28 L14.5 30 L9.5 20 L4 24 Z' fill='%237a583e' stroke='%237a583e' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M6 3 L20 17 L13.5 18 L18.5 28 L14.5 30 L9.5 20 L4 24 Z' fill='%23fdfbf7'/%3E%3Cpath d='M7 6 L15 14 L12 15 Z' fill='%2319c8b9' opacity='0.85'/%3E%3C/g%3E%3C/svg%3E") 3 3;
+  --animal-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cg filter='drop-shadow(0 2px 4px rgba(80,50,20,0.35))'%3E%3Cpath d='M10 2 C8.8 2 8 2.8 8 4 L8 14 C7.2 13.2 6 12.8 4.8 13.5 C3.5 14.3 3.2 16 4 17.2 L9 24 C10.5 26 13 28 16 28 L19 28 C23 28 26 25 26 21 L26 15 C26 13.8 25 13 24 13 C23.5 13 23 13.2 22.5 13.6 C22.2 12.6 21.3 12 20.2 12 C19.8 12 19.4 12.1 19 12.3 C18.6 11.5 17.7 11 16.8 11 C16.4 11 16 11.1 15.6 11.3 L15.6 4 C15.6 2.8 14.8 2 13.6 2 C12.8 2 12.2 2.4 11.8 3 L11.8 4 C11.8 2.8 11 2 10 2 Z' fill='%237a583e' stroke='%237a583e' stroke-width='2.2' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M10 2 C8.8 2 8 2.8 8 4 L8 14 C7.2 13.2 6 12.8 4.8 13.5 C3.5 14.3 3.2 16 4 17.2 L9 24 C10.5 26 13 28 16 28 L19 28 C23 28 26 25 26 21 L26 15 C26 13.8 25 13 24 13 C23.5 13 23 13.2 22.5 13.6 C22.2 12.6 21.3 12 20.2 12 C19.8 12 19.4 12.1 19 12.3 C18.6 11.5 17.7 11 16.8 11 C16.4 11 16 11.1 15.6 11.3 L15.6 4 C15.6 2.8 14.8 2 13.6 2 C12.8 2 12.2 2.4 11.8 3 L11.8 4 C11.8 2.8 11 2 10 2 Z' fill='%23fdfbf7'/%3E%3Cpath d='M11 25 C13 25 18 25 20 25 C21 25 21.5 26.5 21 27.5 C20 28.5 13 28.5 10.5 27.5 C10 26.5 10.5 25 11 25 Z' fill='%2319c8b9'/%3E%3C/g%3E%3C/svg%3E") 10 2;
+  --animal-cursor-grab: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cg filter='drop-shadow(0 2px 3px rgba(80,50,20,0.35))'%3E%3Cpath d='M9 10 C8 10 7 11 7 12 L7 17 C6 16.5 4.5 16.8 4 18 C3.5 19.2 4 20.5 5 21.5 L10 26 C12 28 15 29 18 29 L20 29 C24 29 27 26 27 22 L27 15 C27 14 26 13 25 13 C24.5 13 24 13.2 23.5 13.6 C23.2 12.6 22.3 12 21.2 12 C20.8 12 20.4 12.1 20 12.3 C19.6 11.5 18.7 11 17.8 11 C17.4 11 17 11.1 16.6 11.3 L16.6 10 C16.6 9 15.6 8 14.6 8 C13.6 8 12.8 8.8 12.8 9.8 L12.8 12 C12.4 10.8 11.5 10 10.5 10 Z' fill='%237a583e' stroke='%237a583e' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M9 10 C8 10 7 11 7 12 L7 17 C6 16.5 4.5 16.8 4 18 C3.5 19.2 4 20.5 5 21.5 L10 26 C12 28 15 29 18 29 L20 29 C24 29 27 26 27 22 L27 15 C27 14 26 13 25 13 C24.5 13 24 13.2 23.5 13.6 C23.2 12.6 22.3 12 21.2 12 C20.8 12 20.4 12.1 20 12.3 C19.6 11.5 18.7 11 17.8 11 C17.4 11 17 11.1 16.6 11.3 L16.6 10 C16.6 9 15.6 8 14.6 8 C13.6 8 12.8 8.8 12.8 9.8 L12.8 12 C12.4 10.8 11.5 10 10.5 10 Z' fill='%23fdfbf7'/%3E%3Cpath d='M12 26 C14 26 18 26 21 26 C22 26 22.5 27.5 22 28.5 C21 29.5 14 29.5 11.5 28.5 C11 27.5 11.5 26 12 26 Z' fill='%2319c8b9'/%3E%3C/g%3E%3C/svg%3E") 14 14;
+  --animal-cursor-grabbing: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cg filter='drop-shadow(0 2px 3px rgba(80,50,20,0.35))'%3E%3Cpath d='M8 14 C7 14 6 15 6 16 L6 20 C6 24 9 27 13 28 L18 28 C22 28 25 25 25 21 L25 17 C25 15.5 23.8 14.5 22.5 14.5 C22 14.5 21.5 14.7 21 15 C20.5 14 19.5 13.5 18.5 13.5 C18 13.5 17.5 13.7 17 14 C16.5 13 15.5 12.5 14.5 12.5 C13.5 12.5 12.8 13 12.5 13.5 L12.5 13 C12.5 11.8 11.5 11 10.5 11 C9.5 11 8.5 11.8 8.5 13 Z' fill='%237a583e' stroke='%237a583e' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M8 14 C7 14 6 15 6 16 L6 20 C6 24 9 27 13 28 L18 28 C22 28 25 25 25 21 L25 17 C25 15.5 23.8 14.5 22.5 14.5 C22 14.5 21.5 14.7 21 15 C20.5 14 19.5 13.5 18.5 13.5 C18 13.5 17.5 13.7 17 14 C16.5 13 15.5 12.5 14.5 12.5 C13.5 12.5 12.8 13 12.5 13.5 L12.5 13 C12.5 11.8 11.5 11 10.5 11 C9.5 11 8.5 11.8 8.5 13 Z' fill='%23fdfbf7'/%3E%3Cpath d='M11 25 C13 25 17 25 20 25 C21 25 21.5 26.5 21 27.5 C20 28.5 13 28.5 10.5 27.5 C10 26.5 10.5 25 11 25 Z' fill='%2319c8b9'/%3E%3C/g%3E%3C/svg%3E") 14 14;
+
   /* Legacy Token Fallbacks for Full Compatibility */
   --bg-dark: #090c12;
   --bg-panel: #141f33;
@@ -74,6 +80,26 @@
   --text-muted: #94a3b8;
   --font-sans: 'Nunito', 'Outfit', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+}
+
+html, body {
+  cursor: var(--animal-cursor-default), auto;
+}
+
+button, a, input[type="button"], input[type="submit"], select, .clickable,
+.backpack-tab, .modal-close-btn, .ac-pocket-slot, .quick-tool-btn, .hero-select-btn,
+.btn-equip-tool, .cloud-account-btn, .header-logout-btn, .hud-action-btn, .chat-send-btn,
+.ac-dialogue-choice-btn, .mode-btn, .tile-card, .btn-primary, .btn-secondary,
+.recipe-card, .ac-recipe-card, .btn-action, .auth-tab, [role="button"] {
+  cursor: var(--animal-cursor-pointer), pointer !important;
+}
+
+.codekit-block, .draggable, .scratch-block {
+  cursor: var(--animal-cursor-grab), grab !important;
+}
+
+.codekit-block:active, .draggable:active, .scratch-block:active, .dragging {
+  cursor: var(--animal-cursor-grabbing), grabbing !important;
 }
 
 body {

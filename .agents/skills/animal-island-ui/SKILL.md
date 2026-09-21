@@ -68,6 +68,12 @@ The `animal-island-ui` design system is inspired by the cozy, hand-drawn island 
   --animal-shadow-card: 0 12px 32px rgba(80, 55, 30, 0.15), 0 2px 6px rgba(80, 55, 30, 0.08);
   --animal-shadow-floating: 0 20px 40px rgba(0, 0, 0, 0.45);
 
+  /* Custom Animal Crossing Cursors */
+  --animal-cursor-default: url("data:image/svg+xml,...") 3 3;
+  --animal-cursor-pointer: url("data:image/svg+xml,...") 10 2;
+  --animal-cursor-grab: url("data:image/svg+xml,...") 14 14;
+  --animal-cursor-grabbing: url("data:image/svg+xml,...") 14 14;
+
   /* Motion & Easing */
   --animal-ease: cubic-bezier(0.4, 0, 0.2, 1);
   --animal-duration: 0.2s;
@@ -79,9 +85,10 @@ The `animal-island-ui` design system is inspired by the cozy, hand-drawn island 
 1. **Warm Palette**: Earth-brown text (`#794f27` / `#725d42`) on warm parchment (`#f8f8f0` / `#fdfbf7`) with mint-teal (`#19c8b9`) and gold accents. Never pure black text (`#000000`).
 2. **Generous Radii**: 12px minimum for containers, 18–24px for cards, and **50px pill shapes** for buttons, input bars, and badges.
 3. **Tactile 3D Depth**: Primary interactive buttons feature a 4px solid base shadow (`0 4px 0 0 [dark-tone]`) that compresses on `:active` (`transform: translateY(3px); box-shadow: 0 1px 0 0 [dark-tone]`).
-4. **Ribbons & Badges**: Distinctive swallowtail header ribbons and curved pill badges with contrasting borders.
-5. **Clean SVG Icons**: Strict adherence to `GEMINI.md` — 100% inline `<svg>` icons, 0 emojis across all UI components.
-6. **No Background Blur**: Fast, crisp, high-contrast modal backdrops (`rgba(20, 15, 10, 0.7)`).
+4. **Custom Game Cursors**: Animal Crossing style gloved hand pointer (`--animal-cursor-pointer`), arrow pointer (`--animal-cursor-default`), and grab hands (`--animal-cursor-grab / grabbing`).
+5. **Ribbons & Badges**: Distinctive swallowtail header ribbons and curved pill badges with contrasting borders.
+6. **Clean SVG Icons**: Strict adherence to `GEMINI.md` — 100% inline `<svg>` icons, 0 emojis across all UI components.
+7. **No Background Blur**: Fast, crisp, high-contrast modal backdrops (`rgba(20, 15, 10, 0.7)`).
 
 ## 3. UI Component Guide for KidsLearnCode Play Mode
 
@@ -92,3 +99,4 @@ The `animal-island-ui` design system is inspired by the cozy, hand-drawn island 
 - **Code Kit Challenge Studio**: 3-column mint/slate card with puzzle blocks and real-time Lua code viewer.
 - **In-Game Chat Bar**: Cozy pill input bar (`#19c8b9` / `#fdfbf7`) with send button.
 - **Mini-Map Frame**: Smooth rounded circular/pill frame with compass points and island status.
+- **Custom Cursors**: Cozy gloved hand pointer on all interactive controls and rounded arrow pointer on canvas/body.
