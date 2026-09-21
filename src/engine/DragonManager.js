@@ -310,7 +310,9 @@ export class DragonManager {
 
   canActiveDragonFly() {
     const active = this.getActiveDragon();
-    return !!(active && (active.category === 'fly' || active.category === 'mythic' || active.canFly));
+    // Apenas dragões voadores ('fly') e míticos ('mythic') possuem asas e capacidade de voo.
+    // Dragões terrestres ('land') e aquáticos ('water') não podem voar.
+    return !!(active && (active.category === 'fly' || active.category === 'mythic'));
   }
 
   ascendFlight(amount = 25) {
@@ -743,6 +745,18 @@ export class DragonManager {
     ctx.ellipse(drawX + 24, this.y + 44, shadowScaleX, shadowScaleY, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
+
+    // 1b. Aquatic Swimming Wave Ripples for Water Dragons
+    if (dragon.category === 'water' && isMounted) {
+      ctx.save();
+      const wavePhase = (this.floatTimer * 3.5) % (Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.ellipse(drawX + 24, this.y + 44, 22 + Math.sin(wavePhase) * 4, 9 + Math.cos(wavePhase) * 2, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
 
     // Invulnerability flashing when dodging
     if (this.isDodging && Math.floor(this.floatTimer * 20) % 2 === 0) {

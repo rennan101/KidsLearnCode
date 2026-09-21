@@ -214,12 +214,33 @@ export class Player {
       return;
     }
 
-    // Quando montado no dragão, o herói SEMPRE corre na velocidade do dragão (+corrida rápida)
-    // A pé, o herói caminha no ritmo normal constante (sem sprint manual)
-    this.isSprinting = !!this.isMounted;
-    if (this.isMounted) {
-      const mountMultiplier = this.mountSpeedMultiplier || 1.8;
-      this.speed = this.baseSpeed * mountMultiplier;
+    // Sistema de Velocidade Dinâmica Conforme Montaria & Terreno (Água vs Terra vs Voo)
+    const activeDragon = this.dragonManager?.getActiveDragon();
+    const isMounted = this.isMounted && !!activeDragon;
+    this.isSprinting = isMounted;
+
+    if (isMounted) {
+      const category = activeDragon.category;
+      const flightAlt = this.dragonManager.flightAltitude || 0;
+      const onWater = tileMap ? tileMap.isWaterAt(this.x + 32, this.y + 56, assetLoader) : false;
+
+      let speedMult = activeDragon.mountSpeedMultiplier || 1.8;
+
+      if (category === 'water') {
+        // Dragão aquático: rápido e ágil na água (2.0x), mas lento na terra (0.72x) e sem poder voar
+        speedMult = onWater ? 2.0 : 0.72;
+      } else if (category === 'fly') {
+        // Dragão voador: ágil em voo (2.0x), mas lento na terra quando pousado (0.75x) e não nada
+        speedMult = flightAlt > 10 ? 2.0 : 0.75;
+      } else if (category === 'land') {
+        // Dragão terrestre: ágil e robusto na terra (1.75x), não nada e não voa
+        speedMult = 1.75;
+      } else if (category === 'mythic') {
+        // Dragão mítico (Astra): supremo em todos os terrenos e no ar (2.1x)
+        speedMult = 2.1;
+      }
+
+      this.speed = this.baseSpeed * speedMult;
     } else {
       this.speed = this.baseSpeed;
     }
@@ -278,11 +299,13 @@ export class Player {
   checkCollision(testPlayerX, testPlayerY, tileMap, assetLoader) {
     if (!tileMap || !assetLoader) return false;
 
-    // Se montado em dragão voador, ajusta colisão conforme altitude
-    const isMountedFly = this.isMounted && this.dragonManager?.canActiveDragonFly();
+    const activeDragon = this.dragonManager?.getActiveDragon();
+    const isMounted = this.isMounted && !!activeDragon;
+    const isMountedFly = isMounted && this.dragonManager?.canActiveDragonFly();
+    const isMountedWater = isMounted && (activeDragon.category === 'water' || activeDragon.category === 'mythic');
     const flightAlt = isMountedFly ? (this.dragonManager.flightAltitude || 0) : 0;
 
-    // Se voo alto (>= 60), sobrevoa todos os colisores de terreno e obstáculos do mapa
+    // Se voo alto (>= 60), sobrevoa todos os colisores de terreno e obstáculos do mapa (montanhas, rochas, árvores)
     if (flightAlt >= 60) {
       return false;
     }
@@ -299,7 +322,7 @@ export class Player {
     // Determina camadas a checar conforme a altitude de voo
     let layersToCheck = ['colliders', 'solid', 'characters', 'decor', 'ground', 'overhead'];
     if (flightAlt >= 30) {
-      // Voo médio: sobrevoa decor, ground e solid terrestre regular
+      // Voo médio: sobrevoa montanhas, sólidos terrestres, construções e árvores
       layersToCheck = ['colliders'];
     } else if (flightAlt >= 15) {
       // Voo rasante: sobrevoa água e arbustos (ground e decor)
@@ -314,6 +337,16 @@ export class Player {
         for (let tx = startTileX; tx <= endTileX; tx++) {
           const cell = layer.get(tileMap.getKey(tx, ty));
           if (!cell) continue;
+
+          // Se montado em dragão aquático, ignora colisores e tiles de água para nadar livremente
+          if (isMountedWater) {
+            const isWaterTile = cell.tileId === 'water-animated' || 
+              (cell.tileId && (cell.tileId.includes('water') || cell.tileId.includes('ocean') || cell.tileId.includes('river')));
+            const isCellOnWater = tileMap.isWaterAt(tx * tileSize + 32, ty * tileSize + 32, assetLoader);
+            if (isWaterTile || isCellOnWater) {
+              continue; // Dragão aquático ignora colisão na água
+            }
+          }
 
           const isInvisibleCollider = (cell.tileId && cell.tileId.startsWith('invisible-collider')) || (cell.tileId && cell.tileId.includes('invisible'));
           if (cell.isRoot === false && !isInvisibleCollider) continue;

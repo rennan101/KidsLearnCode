@@ -150,6 +150,33 @@ export class TileMap {
     return layer.get(this.getKey(x, y)) || null;
   }
 
+  // Check if world coordinate is over water (for water dragons, swimming and terrain filtering)
+  isWaterAt(worldX, worldY, assetLoader = null) {
+    const tx = Math.floor(worldX / this.tileSize);
+    const ty = Math.floor(worldY / this.tileSize);
+    const key = this.getKey(tx, ty);
+
+    const groundCell = this.layers.ground?.get(key);
+    if (groundCell && groundCell.tileId) {
+      const id = groundCell.tileId.toLowerCase();
+      if (id === 'water-animated' || id.includes('water') || id.includes('ocean') || id.includes('river')) {
+        return true;
+      }
+      if (assetLoader) {
+        const meta = assetLoader.getTileMetadata(groundCell.tileId);
+        if (meta && (meta.category === 'Water' || meta.isWater)) return true;
+      }
+    }
+
+    const decorCell = this.layers.decor?.get(key);
+    if (decorCell && decorCell.tileId) {
+      const id = decorCell.tileId.toLowerCase();
+      if (id.includes('water') || id.includes('ocean')) return true;
+    }
+
+    return false;
+  }
+
   // Move an asset (single or multi-tile) placed at (x, y) from fromLayer to toLayer
   moveTileLayer(x, y, fromLayer, toLayer, assetLoader = null) {
     if (!this.layers[fromLayer] || !this.layers[toLayer] || fromLayer === toLayer) return false;
