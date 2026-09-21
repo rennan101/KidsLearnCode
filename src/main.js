@@ -279,7 +279,7 @@ class RPGApplication {
           if (this.tileMap.moveLayer(layerId, 'up')) {
             this.triggerAutoSave();
             this.renderLayerManagerList();
-            this.showToast(`⬆️ Camada "${def.label}" movida para cima na hierarquia visual!`);
+            this.showToast(`Camada "${def.label}" movida para cima na hierarquia visual!`);
             // Refresh inspector if open
             if (this.editorController.selectedGridCell) {
               const { x, y } = this.editorController.selectedGridCell;
@@ -292,7 +292,7 @@ class RPGApplication {
           if (this.tileMap.moveLayer(layerId, 'down')) {
             this.triggerAutoSave();
             this.renderLayerManagerList();
-            this.showToast(`⬇️ Camada "${def.label}" movida para baixo na hierarquia visual!`);
+            this.showToast(`Camada "${def.label}" movida para baixo na hierarquia visual!`);
             // Refresh inspector if open
             if (this.editorController.selectedGridCell) {
               const { x, y } = this.editorController.selectedGridCell;
@@ -983,7 +983,7 @@ class RPGApplication {
     // Undo / Redo Buttons
     document.getElementById('btn-undo')?.addEventListener('click', () => {
       if (this.editorController.undo()) {
-        this.showToast('↩️ Ação desfeita (Undo)');
+        this.showToast('Ação desfeita (Undo)');
       }
     });
 

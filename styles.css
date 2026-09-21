@@ -7,18 +7,73 @@
 }
 
 :root {
+  /* ==========================================================================
+     Animal Island UI Design Tokens (Animal Crossing: New Horizons Inspired)
+     ========================================================================== */
+  --animal-font: 'Nunito', 'Outfit', 'Noto Sans SC', sans-serif;
+  --animal-font-title: 'Cinzel', 'Nunito', serif;
+  --animal-font-mono: 'JetBrains Mono', monospace;
+
+  /* Primary Mint-Teal Colors */
+  --animal-primary: #19c8b9;
+  --animal-primary-hover: #3dd4c6;
+  --animal-primary-active: #11a89b;
+  --animal-primary-bg: #e6f9f6;
+  --animal-primary-dark: #0f8e83;
+
+  /* Accent Colors */
+  --animal-accent-gold: #f59e0b;
+  --animal-accent-orange: #ea580c;
+  --animal-accent-wood: #7a583e;
+  --animal-accent-leaf: #34d399;
+
+  /* Text (Earth-Brown & Warm Neutral - Never Pure Black) */
+  --animal-text: #794f27;
+  --animal-text-body: #725d42;
+  --animal-text-secondary: #9f927d;
+  --animal-text-muted: #8a7b66;
+  --animal-text-disabled: #c4b89e;
+  --animal-text-white: #ffffff;
+
+  /* Backgrounds (Warm Parchment & Cozy Dark Slate) */
+  --animal-bg: #f8f8f0;
+  --animal-bg-card: #fdfbf7;
+  --animal-bg-content: #f7f3df;
+  --animal-bg-dark: #090c12;
+  --animal-bg-dark-card: #141f33;
+  --animal-bg-overlay: rgba(20, 15, 10, 0.72);
+
+  /* Borders */
+  --animal-border: #c4b89e;
+  --animal-border-hover: #a89878;
+  --animal-border-wood: #7a583e;
+  --animal-border-mint: #3dd4c6;
+
+  /* Radius */
+  --animal-radius-sm: 12px;
+  --animal-radius-md: 18px;
+  --animal-radius-lg: 24px;
+  --animal-radius-pill: 50px;
+  --animal-radius-circle: 50%;
+
+  /* 3D Shadows & Depth */
+  --animal-shadow-btn-primary: 0 4px 0 0 #0f8e83, 0 6px 14px rgba(17, 168, 155, 0.35);
+  --animal-shadow-btn-wood: 0 4px 0 0 #5c3c26, 0 6px 14px rgba(92, 60, 38, 0.35);
+  --animal-shadow-card: 0 12px 32px rgba(80, 55, 30, 0.18), 0 2px 6px rgba(80, 55, 30, 0.08);
+
+  /* Legacy Token Fallbacks for Full Compatibility */
   --bg-dark: #090c12;
-  --bg-panel: #141923;
-  --bg-panel-hover: #1c2331;
-  --border-color: #252e40;
+  --bg-panel: #141f33;
+  --bg-panel-hover: #1e293b;
+  --border-color: #253347;
   --accent-gold: #f59e0b;
-  --accent-blue: #3b82f6;
+  --accent-blue: #19c8b9;
   --accent-emerald: #10b981;
   --accent-danger: #ef4444;
-  --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
-  --font-sans: 'Cinzel', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --font-sans: 'Nunito', 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 body {
@@ -58,81 +113,68 @@ body {
   max-width: 420px;
   width: 90%;
   padding: 32px;
-  background: rgba(20, 25, 35, 0.95);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.8);
-  backdrop-filter: blur(12px);
+  background: rgba(20, 31, 51, 0.96);
+  border: 2px solid var(--animal-primary);
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(25, 200, 185, 0.2);
 }
 
 .loader-card h1 {
-  font-size: 1.75rem;
+  font-family: var(--animal-font-title);
+  font-size: 1.85rem;
   letter-spacing: 2px;
   color: var(--accent-gold);
   margin-bottom: 8px;
-  text-transform: uppercase;
 }
 
 .loader-card p {
   color: var(--text-muted);
   font-size: 0.9rem;
   margin-bottom: 24px;
+  font-family: var(--animal-font);
 }
 
 .progress-bar {
-  height: 8px;
-  background: #1c2436;
-  border-radius: 4px;
+  height: 10px;
+  background: #0f172a;
+  border-radius: 20px;
   overflow: hidden;
   margin-bottom: 12px;
+  border: 1px solid #1e293b;
 }
 
 .progress-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #3b82f6, #10b981);
+  background: linear-gradient(90deg, var(--animal-primary), var(--animal-accent-gold));
   transition: width 0.15s ease;
+  border-radius: 20px;
 }
 
 .progress-text {
   font-family: var(--font-mono);
   font-size: 0.8rem;
   color: var(--accent-gold);
+  font-weight: 700;
 }
 
-/* App Header / Top Navbar */
+/* App Header / Top Navbar (Animal Island Floating Pill Bar) */
 header.app-header {
-  height: 52px;
-  background: var(--bg-panel);
-  border-bottom: 1px solid var(--border-color);
+  height: 56px;
+  background: #141f33;
+  border-bottom: 2px solid #1e293b;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 18px;
   z-index: 50;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .brand-section {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.brand-badge {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #000;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  letter-spacing: 1px;
-}
-
-.brand-title {
-  font-weight: 700;
-  font-size: 1.05rem;
-  letter-spacing: 0.5px;
-  color: var(--text-main);
 }
 
 /* Auto-Save Indicator Badge */
@@ -142,17 +184,17 @@ header.app-header {
   gap: 6px;
   font-size: 0.75rem;
   font-family: var(--font-mono);
-  padding: 3px 8px;
-  border-radius: 20px;
-  background: #090c12;
-  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: 50px;
+  background: #0f172a;
+  border: 1.5px solid var(--border-color);
   color: var(--text-muted);
   transition: all 0.2s ease;
 }
 
 .save-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #10b981;
 }
@@ -167,18 +209,18 @@ header.app-header {
 }
 
 .save-status.saved {
-  color: #10b981;
-  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.4);
 }
 
 .save-status.saving {
   color: #f59e0b;
-  border-color: rgba(245, 158, 11, 0.3);
+  border-color: rgba(245, 158, 11, 0.4);
 }
 
 .save-status.error {
   color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.4);
 }
 
 @keyframes pulse {
@@ -186,35 +228,47 @@ header.app-header {
   100% { opacity: 1; transform: scale(1.2); }
 }
 
-/* Mode Switch Tabs */
+/* Mode Switch Tabs (Animal Island 3D Pill Toggle) */
 .mode-toggle {
   display: flex;
-  background: #090c12;
-  padding: 3px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
+  background: #0b111e;
+  padding: 4px;
+  border-radius: 50px;
+  border: 1.5px solid #1e293b;
   gap: 4px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .mode-btn {
-  padding: 6px 14px;
+  padding: 6px 16px;
   border: none;
   background: transparent;
-  color: var(--text-muted);
-  border-radius: 6px;
+  color: #94a3b8;
+  border-radius: 50px;
+  font-family: var(--animal-font);
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
+}
+
+.mode-btn:hover {
+  color: #ffffff;
 }
 
 .mode-btn.active {
-  background: var(--accent-blue);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  background: linear-gradient(135deg, #19c8b9, #0f8e83);
+  color: #ffffff;
+  box-shadow: 0 3px 0 0 #0b6961, 0 4px 10px rgba(25, 200, 185, 0.4);
+  transform: translateY(-1px);
+}
+
+.mode-btn.active:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 #0b6961;
 }
 
 /* Header Actions */
@@ -492,15 +546,15 @@ canvas#game-canvas {
   bottom: 48px;
   left: 50%;
   transform: translateX(-50%) translateY(20px);
-  background: rgba(20, 25, 35, 0.96);
-  border: 1.5px solid var(--accent-gold);
-  color: var(--text-main);
-  padding: 10px 22px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.85), 0 0 20px rgba(245, 158, 11, 0.35);
-  backdrop-filter: blur(10px);
+  background: rgba(253, 251, 247, 0.98);
+  border: 2.5px solid var(--animal-primary);
+  color: #794f27;
+  padding: 10px 24px;
+  border-radius: 50px;
+  font-family: var(--animal-font);
+  font-size: 0.90rem;
+  font-weight: 800;
+  box-shadow: 0 12px 32px rgba(80, 55, 30, 0.25), 0 0 20px rgba(25, 200, 185, 0.3);
   z-index: 500;
   opacity: 0;
   pointer-events: none;
@@ -1342,32 +1396,38 @@ canvas#game-canvas {
   color: var(--accent-gold);
 }
 
-/* Keyboard Hints in Play Mode */
+/* Keyboard Hints in Play Mode (Animal Island Pill Bar) */
 .play-hud-hint {
   position: absolute;
   bottom: 16px;
   left: 16px;
-  background: rgba(11, 14, 20, 0.9);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 8px 14px;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  backdrop-filter: blur(8px);
+  background: rgba(20, 31, 51, 0.94);
+  border: 2px solid var(--animal-primary);
+  border-radius: 50px;
+  padding: 8px 18px;
+  font-family: var(--animal-font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #cbd5e1;
   pointer-events: none;
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(25, 200, 185, 0.25);
 }
 
 .key-badge {
-  background: #252e40;
-  color: #fff;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: var(--font-mono);
-  font-weight: bold;
+  background: #0b111e;
+  color: var(--animal-primary);
+  border: 1.5px solid #223147;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-family: var(--animal-font-mono);
+  font-weight: 800;
+  font-size: 0.76rem;
+  box-shadow: 0 2px 0 0 #05080e;
+  display: inline-block;
 }
 
 /* =========================================
@@ -1627,20 +1687,24 @@ canvas#game-canvas {
    ANIMAL CROSSING CHAT INPUT BAR & BALLOONS
    ========================================= */
 
+/* ==========================================================================
+   Animal Island UI Chat Input Bar & NPC Floating Dialogue Balloons
+   ========================================================================== */
+
 .game-chat-bar {
   position: absolute;
-  bottom: 52px;
+  bottom: 56px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 80;
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 3px solid #7c5c43;
-  border-radius: 30px;
-  padding: 6px 14px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(245, 158, 11, 0.3);
+  gap: 10px;
+  background: rgba(253, 251, 247, 0.98);
+  border: 3px solid #7a583e;
+  border-radius: 50px;
+  padding: 6px 16px;
+  box-shadow: 0 12px 32px rgba(80, 55, 30, 0.25), 0 0 20px rgba(25, 200, 185, 0.2);
   animation: chatSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1653,38 +1717,48 @@ canvas#game-canvas {
   background: transparent;
   border: none;
   outline: none;
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #3b281c;
+  font-family: var(--animal-font);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #794f27;
   width: 380px;
   max-width: 70vw;
 }
 
 #game-chat-input::placeholder {
-  color: #a38f78;
-  font-style: italic;
+  color: #9f927d;
+  font-weight: 500;
 }
 
 .chat-send-btn {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: #fff;
-  border: 2px solid #047857;
-  border-radius: 20px;
-  padding: 6px 14px;
-  font-size: 0.8rem;
-  font-weight: 700;
+  background: linear-gradient(135deg, var(--animal-primary), var(--animal-primary-dark));
+  color: #ffffff;
+  border: 1px solid #3dd4c6;
+  border-radius: 50px;
+  padding: 6px 16px;
+  font-family: var(--animal-font);
+  font-size: 0.82rem;
+  font-weight: 800;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   transition: all 0.15s ease;
+  box-shadow: 0 3px 0 0 #0b6961, 0 4px 8px rgba(25, 200, 185, 0.3);
 }
 
 .chat-send-btn:hover {
-  transform: scale(1.05);
-  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 0 #0b6961, 0 6px 12px rgba(25, 200, 185, 0.45);
+}
+
+.chat-send-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 #0b6961;
 }
 
 /* =========================================
-   ANIMAL CROSSING NPC DIALOGUE MODAL
+   Animal Island NPC Floating Dialogue Modal
    ========================================= */
 
 .ac-dialogue-modal {
@@ -1700,16 +1774,16 @@ canvas#game-canvas {
 
 .ac-dialogue-box {
   background: #fdfbf7;
-  border: 4px solid #7a583e;
+  border: 3.5px solid #7a583e;
   border-radius: 28px;
   width: 620px;
   max-width: 92vw;
-  padding: 16px 20px;
+  padding: 18px 22px;
   display: flex;
   gap: 16px;
   box-shadow: 
-    0 15px 40px rgba(0, 0, 0, 0.6),
-    inset 0 2px 0 rgba(255, 255, 255, 0.8);
+    0 16px 40px rgba(60, 45, 30, 0.35),
+    inset 0 2px 0 rgba(255, 255, 255, 0.9);
   animation: acPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   position: absolute;
   pointer-events: auto;
@@ -1749,17 +1823,17 @@ canvas#game-canvas {
 }
 
 .ac-portrait-wrapper {
-  width: 84px;
-  height: 84px;
-  background: #eadecb;
-  border: 3px solid #7a583e;
-  border-radius: 20px;
+  width: 82px;
+  height: 82px;
+  background: #ffffff;
+  border: 3px solid var(--animal-primary);
+  border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(25, 200, 185, 0.25), inset 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .ac-portrait-wrapper img {
@@ -1777,23 +1851,23 @@ canvas#game-canvas {
 
 .ac-name-tag {
   align-self: flex-start;
-  background: #4a8b71;
+  background: linear-gradient(135deg, var(--animal-primary), var(--animal-primary-dark));
   color: #ffffff;
-  font-family: 'Cinzel', serif;
-  font-weight: 700;
-  font-size: 0.85rem;
-  padding: 3px 12px;
-  border-radius: 12px;
-  border: 2px solid #2d5a49;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  font-family: var(--animal-font);
+  font-weight: 800;
+  font-size: 0.88rem;
+  padding: 4px 16px;
+  border-radius: 50px;
+  border: 1px solid #3dd4c6;
+  box-shadow: 0 2px 6px rgba(25, 200, 185, 0.3);
 }
 
 .ac-bubble-text {
-  font-family: 'Outfit', sans-serif;
-  font-size: 1rem;
+  font-family: var(--animal-font);
+  font-size: 1.02rem;
   font-weight: 600;
-  color: #3b281c;
-  line-height: 1.4;
+  color: #794f27;
+  line-height: 1.45;
   min-height: 44px;
 }
 
@@ -1805,23 +1879,30 @@ canvas#game-canvas {
 }
 
 .ac-choice-btn {
-  background: #fff8eb;
-  border: 2px solid #b48a60;
-  border-radius: 16px;
-  color: #4a3424;
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 700;
-  padding: 6px 14px;
+  background: linear-gradient(135deg, var(--animal-primary), var(--animal-primary-dark));
+  border: 1px solid #3dd4c6;
+  border-radius: 50px;
+  color: #ffffff;
+  font-family: var(--animal-font);
+  font-size: 0.88rem;
+  font-weight: 800;
+  padding: 7px 18px;
   cursor: pointer;
   transition: all 0.15s ease;
+  box-shadow: 0 3px 0 0 #0b6961, 0 4px 10px rgba(25, 200, 185, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .ac-choice-btn:hover {
-  background: #f59e0b;
-  color: #000;
-  border-color: #d97706;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 0 #0b6961, 0 6px 14px rgba(25, 200, 185, 0.45);
+}
+
+.ac-choice-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 #0b6961;
 }
 
 /* =========================================
@@ -2111,35 +2192,37 @@ canvas#game-canvas {
 .header-hero-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .hero-profile-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #090c12;
-  border: 1px solid var(--border-color);
-  padding: 4px 10px;
-  border-radius: 20px;
-  color: var(--text-main);
+  gap: 10px;
+  background: #0b111e;
+  border: 1.5px solid #1e293b;
+  padding: 4px 14px 4px 6px;
+  border-radius: 50px;
+  color: #f8fafc;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .hero-profile-btn:hover {
-  border-color: var(--accent-gold);
-  background: #141923;
+  border-color: var(--animal-primary);
+  background: #141f33;
   transform: translateY(-1px);
 }
 
 .hero-avatar-mini {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: 2px solid var(--accent-gold);
+  border: 2px solid var(--animal-accent-gold);
   object-fit: cover;
   background: #000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .hero-header-info {
@@ -2149,37 +2232,94 @@ canvas#game-canvas {
 }
 
 .hero-header-name {
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-family: var(--animal-font);
+  font-size: 0.82rem;
+  font-weight: 800;
   color: #fef08a;
   line-height: 1.1;
 }
 
 .hero-header-passive {
+  font-family: var(--animal-font);
   font-size: 0.68rem;
+  font-weight: 600;
   color: #94a3b8;
 }
 
 .backpack-quick-btn {
-  background: linear-gradient(135deg, #1e293b, #0f172a);
-  border: 1px solid #334155;
-  color: #38bdf8;
-  padding: 6px 14px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 0.8rem;
+  background: linear-gradient(135deg, #19c8b9, #0f8e83);
+  border: 1px solid #3dd4c6;
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-family: var(--animal-font);
+  font-weight: 800;
+  font-size: 0.82rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  box-shadow: 0 3px 0 0 #0b6961, 0 4px 10px rgba(25, 200, 185, 0.35);
 }
 
 .backpack-quick-btn:hover {
-  border-color: #38bdf8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 0 #0b6961, 0 6px 14px rgba(25, 200, 185, 0.5);
+}
+
+.backpack-quick-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 #0b6961;
+}
+
+.cloud-account-btn {
+  background: #0b111e;
+  border: 1.5px solid #1e293b;
+  color: #cbd5e1;
+  padding: 7px 14px;
+  border-radius: 50px;
+  font-family: var(--animal-font);
+  font-size: 0.80rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cloud-account-btn:hover {
+  border-color: var(--animal-primary);
   color: #ffffff;
-  transform: scale(1.05);
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+.cloud-dot.online {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 6px #34d399;
+}
+
+.header-logout-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.header-logout-btn:hover {
+  background: #dc2626;
+  border-color: #ef4444;
+  color: #ffffff;
 }
 
 /* ==========================================================================
@@ -2406,44 +2546,66 @@ canvas#game-canvas {
 
 .ac-pocket-action-btn {
   width: 100%;
-  background: linear-gradient(135deg, #00a896, #028072);
-  border: 1px solid #34d399;
+  background: linear-gradient(135deg, var(--animal-primary), var(--animal-primary-dark));
+  border: 1px solid #3dd4c6;
   color: #ffffff;
-  padding: 8px 12px;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 0.8rem;
+  padding: 9px 16px;
+  border-radius: 50px;
+  font-family: var(--animal-font);
+  font-weight: 800;
+  font-size: 0.84rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   transition: all 0.15s ease;
-  box-shadow: 0 4px 12px rgba(0, 168, 150, 0.35);
+  box-shadow: 0 4px 0 0 #0b6961, 0 6px 14px rgba(25, 200, 185, 0.35);
 }
 
 .ac-pocket-action-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0, 168, 150, 0.5);
+  box-shadow: 0 5px 0 0 #0b6961, 0 8px 18px rgba(25, 200, 185, 0.5);
+}
+
+.ac-pocket-action-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 #0b6961;
 }
 
 .ac-pocket-action-btn.secondary {
   background: #1e293b;
   border-color: #334155;
   color: #e2e8f0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 0 0 #0f172a, 0 6px 14px rgba(0, 0, 0, 0.35);
 }
 
 .ac-pocket-action-btn.secondary:hover {
   background: #334155;
   border-color: #475569;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 0 0 #0f172a, 0 8px 18px rgba(0, 0, 0, 0.5);
+}
+
+.ac-pocket-action-btn.secondary:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 #0f172a;
 }
 
 .ac-pocket-action-btn.danger {
   background: linear-gradient(135deg, #ef4444, #dc2626);
   border-color: #f87171;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+  box-shadow: 0 4px 0 0 #991b1b, 0 6px 14px rgba(239, 68, 68, 0.35);
+}
+
+.ac-pocket-action-btn.danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 0 0 #991b1b, 0 8px 18px rgba(239, 68, 68, 0.5);
+}
+
+.ac-pocket-action-btn.danger:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 #991b1b;
 }
 
 .ac-pocket-slot.equipped {
