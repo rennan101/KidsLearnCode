@@ -1766,6 +1766,126 @@ canvas#game-canvas {
   font-weight: 700;
 }
 
+/* ==========================================================================
+   ANIMAL ISLAND UI (ACNH) BOTTOM-LEFT CLOCK WIDGET (PT-BR)
+   ========================================================================== */
+.ac-time-widget {
+  position: fixed;
+  bottom: 22px;
+  left: 22px;
+  z-index: 85;
+  background: rgba(253, 251, 247, 0.95);
+  border: 3px solid #7a583e;
+  border-radius: 22px;
+  box-shadow: 0 4px 0 0 #5c3c26, 0 10px 24px rgba(60, 45, 30, 0.22);
+  padding: 8px 16px 8px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  user-select: none;
+  pointer-events: auto;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+}
+
+.ac-time-widget:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 0 #5c3c26, 0 14px 28px rgba(60, 45, 30, 0.28);
+}
+
+.ac-time-top-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ac-time-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ea580c;
+  color: #ffffff;
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-weight: 900;
+  font-size: 0.78rem;
+  padding: 2px 8px;
+  border-radius: 50px;
+  box-shadow: 0 2px 0 0 #c2410c;
+  line-height: 1.2;
+}
+
+.ac-time-calendar-icon {
+  width: 12px;
+  height: 12px;
+  stroke: #ffffff;
+}
+
+.ac-time-weekday-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #6fba2c;
+  color: #ffffff;
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-weight: 900;
+  font-size: 0.78rem;
+  padding: 2px 9px;
+  border-radius: 50px;
+  box-shadow: 0 2px 0 0 #4d821e;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.ac-time-cycle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 2px;
+}
+
+.ac-time-bottom-row {
+  display: flex;
+  align-items: center;
+}
+
+.ac-time-digits-wrapper {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.ac-time-digits {
+  font-family: 'Outfit', 'Nunito', sans-serif;
+  font-weight: 900;
+  font-size: 2.2rem;
+  line-height: 1;
+  color: #794f27;
+  letter-spacing: -0.5px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.ac-time-period {
+  font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
+  font-weight: 800;
+  font-size: 0.76rem;
+  color: #725d42;
+  background: #f7f3df;
+  border: 1.5px solid #c4b89e;
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+  .ac-time-widget {
+    bottom: 14px;
+    left: 14px;
+    padding: 6px 12px;
+    border-radius: 16px;
+  }
+  .ac-time-digits {
+    font-size: 1.7rem;
+  }
+}
+
 /* =========================================
    EXPANDED TACTICAL RPG MAP MODAL
    ========================================= */
@@ -4075,11 +4195,12 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
 }
 
 .codekit-mentor-name {
-  font-family: var(--animal-font, 'Nunito', sans-serif);
-  font-size: 1rem;
+  font-family: var(--animal-font-title, 'Cinzel', serif);
+  font-size: 1.08rem;
+  letter-spacing: 0.5px;
   font-weight: 800;
   color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 .codekit-mentor-role {
@@ -4639,6 +4760,164 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
   outline: none;
   cursor: pointer;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* ==========================================================================
+   Animal Island Custom Visual Dropdown (Icon-Centric Block Selectors)
+   ========================================================================== */
+.codekit-custom-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.codekit-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: #ffffff;
+  border: 1.5px solid var(--animal-border, #c4b89e);
+  border-radius: var(--animal-radius-pill, 50px);
+  padding: 3px 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 0 0 rgba(0, 0, 0, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.codekit-select-trigger:hover {
+  transform: scale(1.05);
+  border-color: var(--animal-primary, #19c8b9);
+  box-shadow: 0 3px 0 0 var(--animal-primary-dark, #0f8e83);
+}
+
+.codekit-select-trigger:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.15);
+}
+
+.codekit-select-curr-icon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.codekit-select-curr-icon svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.codekit-select-caret {
+  color: var(--animal-text-body, #725d42);
+  transition: transform 0.2s ease;
+}
+
+.codekit-select-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 100;
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 2.5px solid var(--animal-border-wood, #7a583e);
+  border-radius: 16px;
+  padding: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 180px;
+  box-shadow: 0 10px 24px rgba(60, 45, 30, 0.35), 0 3px 0 0 #5c3c26;
+  animation: codekitPopMenu 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes codekitPopMenu {
+  0% { transform: scale(0.85) translateY(-6px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.codekit-select-opt-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--animal-radius-pill, 50px);
+  background: #ffffff;
+  border: 2px solid var(--animal-border, #c4b89e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 2px 0 0 #c4b89e;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.codekit-select-opt-btn:hover {
+  transform: translateY(-2px) scale(1.12);
+  border-color: var(--animal-primary, #19c8b9);
+  background: var(--animal-primary-bg, #e6f9f6);
+  box-shadow: 0 4px 0 0 var(--animal-primary-dark, #0f8e83);
+}
+
+.codekit-select-opt-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 0 var(--animal-primary-dark, #0f8e83);
+}
+
+.codekit-select-opt-btn.is-active {
+  background: var(--animal-primary-bg, #e6f9f6);
+  border-color: var(--animal-primary-dark, #0f8e83);
+  box-shadow: 0 2px 0 0 var(--animal-primary-dark, #0f8e83);
+}
+
+.codekit-opt-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.codekit-opt-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Palette Icon Badges */
+.codekit-palette-icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: #ffffff;
+  border-radius: var(--animal-radius-pill, 50px);
+  border: 1.5px solid var(--animal-border, #c4b89e);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  vertical-align: middle;
+  padding: 2px;
+  margin: 0 2px;
+}
+
+.codekit-palette-icon-badge svg {
+  width: 14px;
+  height: 14px;
+}
+
+.codekit-palette-text-badge {
+  display: inline-block;
+  background: #ffffff;
+  color: var(--animal-text, #794f27);
+  font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: var(--animal-radius-pill, 50px);
+  border: 1px solid var(--animal-border, #c4b89e);
+  vertical-align: middle;
+  margin: 0 2px;
 }
 
 .block-delete-btn {

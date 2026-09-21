@@ -432,23 +432,6 @@ export class Minimap {
       ctx.stroke();
     }
 
-    // 4. Time badge in the bottom center of minimap
-    ctx.save();
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-    ctx.strokeStyle = isDay ? '#f59e0b' : '#6366f1';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.roundRect(cx - 40, cy + radius - 24, 80, 18, 9);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = isDay ? '#fef08a' : '#c7d2fe';
-    ctx.font = 'bold 9px "JetBrains Mono", monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const apText = nightBonus > 0 ? `${currentAP}+${nightBonus} AP` : `${currentAP}/${maxAP} AP`;
-    ctx.fillText(`${formatted} ${apText}`, cx, cy + radius - 15);
-    ctx.restore();
   }
 
   renderTileLayer(ctx, layerName, focusX, focusY, scale, minTileX, maxTileX, minTileY, maxTileY, isEditor) {

@@ -15,6 +15,193 @@ export const BLOCK_CATEGORIES = {
   functions: { id: 'functions', name: 'Funções & Regras', color: '#DB2777', darkColor: '#BE185D', accentColor: '#fce7f3' }
 };
 
+/**
+ * Visual Item/Option Resolver for Blocks (Icons instead of raw text strings)
+ */
+export function getBlockOptionVisual(val) {
+  if (val === undefined || val === null || val === '') {
+    return { icon: '', label: '', color: '#64748b', bg: '#f1f5f9' };
+  }
+  const str = String(val).toLowerCase().replace(/["']/g, '').trim();
+
+  // 1. Materials & Woods
+  if (str === 'carvalho' || str === 'madeira' || str === 'wood' || str === 'madeira_macica' || str === 'palha') {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6c0-1.66 3.58-3 8-3s8 1.34 8 3v12c0 1.66-3.58 3-8 3s-8-1.34-8-3V6z"/><ellipse cx="12" cy="6" rx="8" ry="3"/></svg>`,
+      label: str.replace(/_/g, ' '),
+      color: '#d97706',
+      bg: '#fef3c7'
+    };
+  }
+  if (str === 'pinheiro' || str === 'pine') {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 19 21 5 21 12 2"/><line x1="12" y1="21" x2="12" y2="23"/></svg>`,
+      label: 'Pinheiro',
+      color: '#059669',
+      bg: '#d1fae5'
+    };
+  }
+  if (str === 'ferro' || str === 'ferro_puro' || str === 'iron' || str.includes('metal')) {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 2 18 2 22 8 12 22 2 8 6 2"/></svg>`,
+      label: 'Ferro',
+      color: '#0284c7',
+      bg: '#e0f2fe'
+    };
+  }
+  if (str === 'ouro' || str === 'gold') {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9h6a1.5 1.5 0 0 1 0 3H9a1.5 1.5 0 0 0 0 3h6"/></svg>`,
+      label: 'Ouro',
+      color: '#d97706',
+      bg: '#fef3c7'
+    };
+  }
+  if (str === 'cobre') {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/></svg>`,
+      label: 'Cobre',
+      color: '#ea580c',
+      bg: '#ffedd5'
+    };
+  }
+  if (str === 'cristal') {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 12 22 2 8.5 12 2"/></svg>`,
+      label: 'Cristal',
+      color: '#8b5cf6',
+      bg: '#ede9fe'
+    };
+  }
+
+  // 2. Furniture & Props
+  if (str.includes('chair') || str.includes('cadeira')) {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 11v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"/><path d="M5 18v2M19 18v2"/></svg>`,
+      label: 'Cadeira',
+      color: '#d97706',
+      bg: '#fef3c7'
+    };
+  }
+  if (str.includes('table') || str.includes('mesa')) {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#7a583e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="4" rx="1"/><path d="M4 10v10M20 10v10M8 10v6M16 10v6"/></svg>`,
+      label: 'Mesa',
+      color: '#7a583e',
+      bg: '#f5ebe0'
+    };
+  }
+  if (str.includes('bed') || str.includes('cama')) {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/></svg>`,
+      label: 'Cama',
+      color: '#6366f1',
+      bg: '#e0e7ff'
+    };
+  }
+  if (str.includes('tent') || str.includes('tenda')) {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21L12 3 5 21M12 3v18M9 21l3-6 3 6"/></svg>`,
+      label: 'Tenda',
+      color: '#10b981',
+      bg: '#d1fae5'
+    };
+  }
+  if (str.includes('house') || str.includes('cottage') || str.includes('casa')) {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+      label: 'Casa',
+      color: '#ea580c',
+      bg: '#ffedd5'
+    };
+  }
+
+  // 3. Tools
+  if (str.includes('shovel') || str.includes('pa')) {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22l8-8M9 13l2 2M13 9l2 2M15 7l4 4-6 6-4-4 6-6z"/></svg>`,
+      label: 'Pá',
+      color: '#0284c7',
+      bg: '#e0f2fe'
+    };
+  }
+  if (str.includes('axe') || str.includes('machado')) {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-4 4-6-6 4-4z"/><path d="M5 21l9-9"/></svg>`,
+      label: 'Machado',
+      color: '#ef4444',
+      bg: '#fee2e2'
+    };
+  }
+  if (str.includes('pickaxe') || str.includes('picareta')) {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+      label: 'Picareta',
+      color: '#0284c7',
+      bg: '#e0f2fe'
+    };
+  }
+  if (str.includes('watering_can') || str.includes('regador')) {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h12v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9z"/><path d="M16 14l5-3v-2l-5 3M8 6h4v4H8z"/></svg>`,
+      label: 'Regador',
+      color: '#10b981',
+      bg: '#d1fae5'
+    };
+  }
+  if (str.includes('rod') || str.includes('pesca')) {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20L20 4M20 4v8M20 12c0 2-2 4-4 4"/></svg>`,
+      label: 'Vara de Pesca',
+      color: '#06b6d4',
+      bg: '#cffafe'
+    };
+  }
+  if (str.includes('net') || str.includes('rede')) {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M12 14v8M9 22h6"/></svg>`,
+      label: 'Rede',
+      color: '#10b981',
+      bg: '#d1fae5'
+    };
+  }
+
+  // 4. Nature & Flora
+  if (str.includes('bush') || str.includes('arbusto') || str.includes('berry') || str.includes('wheat') || str.includes('trigo')) {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12A10 10 0 0 1 12 2z"/><path d="M12 2c0 5.52 4.48 10 10 10"/></svg>`,
+      label: 'Planta',
+      color: '#10b981',
+      bg: '#d1fae5'
+    };
+  }
+  if (str.includes('tree') || str.includes('arvore') || str.includes('oak')) {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-6M12 16a6 6 0 1 0-6-6c0 1.25.38 2.42 1.04 3.4M12 16a6 6 0 1 1 6-6c0 1.25-.38 2.42-1.04 3.4"/></svg>`,
+      label: 'Árvore',
+      color: '#047857',
+      bg: '#d1fae5'
+    };
+  }
+
+  // 5. Ground / Tiles
+  if (str.includes('dirt') || str.includes('piso') || str.includes('ground') || str.includes('tile') || str.includes('stone') || str.includes('cobblestone')) {
+    return {
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
+      label: 'Piso',
+      color: '#b45309',
+      bg: '#fef3c7'
+    };
+  }
+
+  return {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg>`,
+    label: str,
+    color: '#64748b',
+    bg: '#f1f5f9'
+  };
+}
+
 export class ScratchBlockEngine {
   constructor(options = {}) {
     this.workspaceEl = options.workspaceEl || null;
@@ -613,7 +800,19 @@ export class ScratchBlockEngine {
       card.style.setProperty('--block-dark', cat.darkColor);
       card.setAttribute('draggable', 'true');
 
-      let displayLabel = tmpl.label.replace(/\[([A-Z_]+)\]/g, '●');
+      let displayLabel = tmpl.label;
+      const phMatches = tmpl.label.match(/\[([A-Z_]+)\]/g) || [];
+      phMatches.forEach((ph) => {
+        const fieldKey = ph.replace(/\[|\]/g, '');
+        const defaultVal = tmpl.defaultValues?.[fieldKey] !== undefined ? tmpl.defaultValues[fieldKey] : '';
+        const optList = tmpl.options && tmpl.options[fieldKey];
+        if (optList && optList.length > 0) {
+          const vis = getBlockOptionVisual(defaultVal);
+          displayLabel = displayLabel.replace(ph, `<span class="codekit-palette-icon-badge" title="${defaultVal}">${vis.icon}</span>`);
+        } else {
+          displayLabel = displayLabel.replace(ph, `<span class="codekit-palette-text-badge">${defaultVal || '●'}</span>`);
+        }
+      });
 
       card.innerHTML = `
         <div class="puzzle-tab"></div>
@@ -906,12 +1105,29 @@ export class ScratchBlockEngine {
       const optList = block.options && block.options[fieldKey];
 
       if (optList && optList.length > 0) {
-        let optHtml = `<select class="block-input-select" data-field="${fieldKey}">`;
+        const curVis = getBlockOptionVisual(currentVal);
+        let optOptionsHtml = '';
         optList.forEach(opt => {
-          optHtml += `<option value="${opt}" ${opt === currentVal ? 'selected' : ''}>${opt}</option>`;
+          const optVis = getBlockOptionVisual(opt);
+          optOptionsHtml += `
+            <button type="button" class="codekit-select-opt-btn ${opt === currentVal ? 'is-active' : ''}" data-val="${opt}" title="${opt}">
+              <span class="codekit-opt-icon">${optVis.icon}</span>
+            </button>
+          `;
         });
-        optHtml += `</select>`;
-        labelHtml = labelHtml.replace(ph, optHtml);
+
+        const selectHtml = `
+          <div class="codekit-custom-select" data-field="${fieldKey}">
+            <button type="button" class="codekit-select-trigger" title="${currentVal}">
+              <span class="codekit-select-curr-icon">${curVis.icon}</span>
+              <svg class="codekit-select-caret" viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="codekit-select-menu" style="display: none;">
+              ${optOptionsHtml}
+            </div>
+          </div>
+        `;
+        labelHtml = labelHtml.replace(ph, selectHtml);
       } else {
         const isNumeric = (fieldKey === 'COUNT' || fieldKey === 'START' || fieldKey === 'END' || fieldKey === 'POS' || (!isNaN(Number(currentVal)) && String(currentVal).trim() !== '' && !isNaN(parseFloat(currentVal))));
         if (isNumeric) {
@@ -948,7 +1164,7 @@ export class ScratchBlockEngine {
     }
 
     // Input change events
-    el.querySelectorAll('.block-input-text, .block-input-select').forEach((input) => {
+    el.querySelectorAll('.block-input-text').forEach((input) => {
       input.addEventListener('input', (e) => {
         const key = input.dataset.field;
         block.values[key] = e.target.value;
@@ -960,6 +1176,36 @@ export class ScratchBlockEngine {
         this.updateCodePreview();
       });
       input.addEventListener('mousedown', (e) => e.stopPropagation());
+    });
+
+    // Custom Visual Dropdown events
+    el.querySelectorAll('.codekit-custom-select').forEach((selectWrapper) => {
+      const fieldKey = selectWrapper.dataset.field;
+      const trigger = selectWrapper.querySelector('.codekit-select-trigger');
+      const menu = selectWrapper.querySelector('.codekit-select-menu');
+
+      trigger?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        soundFX.playPop(1.1);
+        document.querySelectorAll('.codekit-select-menu').forEach(m => {
+          if (m !== menu) m.style.display = 'none';
+        });
+        menu.style.display = (menu.style.display === 'none' || !menu.style.display) ? 'flex' : 'none';
+      });
+
+      menu?.querySelectorAll('.codekit-select-opt-btn').forEach((optBtn) => {
+        optBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const chosenVal = optBtn.dataset.val;
+          block.values[fieldKey] = chosenVal;
+          soundFX.playPop(1.2);
+          menu.style.display = 'none';
+          this.renderWorkspace();
+          this.updateCodePreview();
+        });
+      });
+
+      selectWrapper.addEventListener('mousedown', (e) => e.stopPropagation());
     });
 
     // Delete button returns block to palette

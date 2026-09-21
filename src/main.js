@@ -128,6 +128,7 @@ class RPGApplication {
       safeCall(this.setupCodingStudioUI, 'setupCodingStudioUI');
       safeCall(this.setupQuickMountButton, 'setupQuickMountButton');
       safeCall(this.setupNetworkDisconnectionMonitor, 'setupNetworkDisconnectionMonitor');
+      safeCall(this.setupTimeWidget, 'setupTimeWidget');
       safeCall(this.bindDOMEvents, 'bindDOMEvents');
 
       // Ativa proteções de segurança
@@ -184,7 +185,7 @@ class RPGApplication {
 
     // Sync player collider and position with loaded data
     this.player.syncCollider(this.assetLoader);
-    if (this.tileMap.spawnPoint) {
+    if ((this.player.x === undefined || this.player.y === undefined || isNaN(this.player.x) || isNaN(this.player.y)) && this.tileMap.spawnPoint) {
       this.player.setSpawn(this.tileMap.spawnPoint.x, this.tileMap.spawnPoint.y);
     }
     this.camera.follow(this.player.x + 32, this.player.y + 32, 1.0);
@@ -847,9 +848,11 @@ class RPGApplication {
       }
     });
 
-    // Mouse wheel zoom in Play & Editor Mode (smooth zoom)
+    // Mouse wheel zoom in Editor Mode only (disabled in Play Mode per user request)
     this.canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
+      if (this.mode === 'play') return;
+
       const rect = this.canvas.getBoundingClientRect();
       const mouseScreenX = e.clientX - rect.left;
       const mouseScreenY = e.clientY - rect.top;
@@ -1511,9 +1514,12 @@ class RPGApplication {
 
         // 2. Restaurar Player
         if (data.player) {
-          if (data.player.x !== undefined && data.player.y !== undefined) {
+          if (data.player.x !== undefined && data.player.y !== undefined && !isNaN(data.player.x) && !isNaN(data.player.y)) {
             this.player.x = data.player.x;
             this.player.y = data.player.y;
+            if (this.camera) {
+              this.camera.follow(this.player.x + 32, this.player.y + 32, 1.0);
+            }
           }
           if (data.player.scale) {
             this.player.setScale(data.player.scale);
@@ -1788,6 +1794,7 @@ class RPGApplication {
     });
 
     headerLogoutBtn?.addEventListener('click', async () => {
+      await this.saveGameToStorage(true);
       await this.supabaseClient.signOut();
       refreshAuthUI();
       this.showToast('Você saiu da conta.');
@@ -1961,6 +1968,7 @@ class RPGApplication {
     });
 
     signoutBtn?.addEventListener('click', async () => {
+      await this.saveGameToStorage(true);
       await this.supabaseClient.signOut();
       refreshAuthUI();
       this.showToast('Desconectado da conta.');
@@ -2668,7 +2676,15 @@ class RPGApplication {
         // "Montar com Blocos" -> Opens Scratch studio configured for this recipe
         item.querySelector('.ac-btn-diy-blocks')?.addEventListener('click', () => {
           craftingModal.style.display = 'none';
-          const starterCode = `-- Criando ${rec.name}\nfabricar_movel("${rec.assetId}", "carvalho")`;
+          let actionCall = `fabricar_movel("${rec.assetId}", material)`;
+          if (rec.id.startsWith('tool_') || rec.assetId.startsWith('tool_')) {
+            actionCall = `forjar_ferramenta("${rec.assetId}", "ferro")`;
+          } else if (rec.id.startsWith('nature_') || rec.assetId.startsWith('nature_')) {
+            actionCall = `plantar_arbusto("${rec.assetId}")`;
+          } else if (rec.id.startsWith('tile_') || rec.assetId.startsWith('tile_')) {
+            actionCall = `assentar_piso("${rec.assetId}")`;
+          }
+          const starterCode = `-- Criando ${rec.name}\nlocal material = "carvalho"\n${actionCall}`;
           this.openCodingChallengeModal(null, {
             title: `Bancada DIY: ${rec.name}`,
             mentor: 'Bancada DIY',
@@ -2676,6 +2692,8 @@ class RPGApplication {
             description: `Encaixe o bloco na área de montagem para fabricar ${rec.name} e guardar na sua Bolsa.`,
             reward: 'Item Pronto',
             unlock: rec.name,
+            unlockId: rec.assetId,
+            recipeId: rec.id,
             starterLua: starterCode
           });
         });
@@ -2858,6 +2876,58 @@ class RPGApplication {
     const savedHero = localStorage.getItem('kidslearn_active_hero') || 'char_wolf_hunter_m';
     this.player.setHero(savedHero);
     this.updateHeroHeaderBadge(savedHero);
+  }
+
+  setupTimeWidget() {
+    this.updateTimeWidget();
+    if (this.dayNightSystem) {
+      this.dayNightSystem.subscribe(() => this.updateTimeWidget());
+    }
+    // Periodic refresh to keep minute digits and date synchronized
+    setInterval(() => this.updateTimeWidget(), 5000);
+  }
+
+  updateTimeWidget() {
+    if (!this.dayNightSystem) return;
+    const info = this.dayNightSystem.getCurrentDateTimeInfo();
+
+    const widget = document.getElementById('ac-time-widget');
+    if (!widget) return;
+
+    const dateTextEl = document.getElementById('ac-time-date-text');
+    const weekdayTextEl = document.getElementById('ac-time-weekday-text');
+    const digitsEl = document.getElementById('ac-time-digits');
+    const periodEl = document.getElementById('ac-time-period');
+    const cycleIconEl = document.getElementById('ac-time-cycle-icon');
+
+    if (dateTextEl) dateTextEl.textContent = info.dateFormatted;
+    if (weekdayTextEl) weekdayTextEl.textContent = `${info.weekday}.`;
+    if (digitsEl) digitsEl.textContent = info.formatted;
+    if (periodEl) periodEl.textContent = info.period;
+
+    if (cycleIconEl) {
+      if (info.isDay) {
+        cycleIconEl.innerHTML = `
+          <svg class="ac-time-sun-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#f59e0b" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        `;
+      } else {
+        cycleIconEl.innerHTML = `
+          <svg class="ac-time-moon-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#818cf8" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        `;
+      }
+    }
   }
 
   setupBackpackUI() {
@@ -3445,7 +3515,17 @@ class RPGApplication {
       }
       if (codeEditor) codeEditor.value = customOptions.starterLua || '';
       if (this.scratchEngine) {
-        this.scratchEngine.loadLessonBlocks(customOptions.blocks || null, customOptions.starterLua || '', null);
+        this.scratchEngine.loadLessonBlocks(
+          customOptions.blocks || null,
+          customOptions.starterLua || '',
+          {
+            id: customOptions.recipeId || 'diy_recipe',
+            title: customOptions.title || 'Bancada DIY',
+            starterLua: customOptions.starterLua || '',
+            unlockedAssetId: customOptions.unlockId || 'prop_chair_wood',
+            unlockedAssetName: customOptions.unlock || 'Item'
+          }
+        );
       }
       if (consoleOut) {
         consoleOut.innerText = `> Estúdio de Códigos pronto!\n> Arraste a peça para a área de montagem e clique em 'Montar & Fabricar'.`;

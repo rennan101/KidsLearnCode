@@ -67,6 +67,67 @@ export class DayNightSystem {
     }
   }
 
+  // Get full Date, Weekday, Time and Period information (Animal Island UI / Animal Crossing in PT-BR)
+  getCurrentDateTimeInfo() {
+    const timeInfo = this.getCurrentTime();
+    let day = 1;
+    let month = 1;
+    let weekdayStr = 'SEG';
+    let fullWeekdayStr = 'Segunda-feira';
+    const period = timeInfo.hours >= 12 ? 'PM' : 'AM';
+    const hours12 = timeInfo.hours % 12 || 12;
+
+    const weekdays = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+    const weekdaysFull = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+
+    try {
+      const now = new Date();
+      const formatter = new Intl.DateTimeFormat('pt-BR', {
+        timeZone: this.timeZone,
+        day: 'numeric',
+        month: 'numeric'
+      });
+      const parts = formatter.formatToParts(now);
+      const dayPart = parts.find(p => p.type === 'day')?.value;
+      const monthPart = parts.find(p => p.type === 'month')?.value;
+
+      // Calculate Day of Week in target timezone
+      const weekdayFormatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: this.timeZone,
+        weekday: 'short'
+      });
+      const enWeekday = weekdayFormatter.format(now).toUpperCase();
+      const enMap = { 'SUN': 0, 'MON': 1, 'TUE': 2, 'WED': 3, 'THU': 4, 'FRI': 5, 'SAT': 6 };
+      const dayIdx = enMap[enWeekday] !== undefined ? enMap[enWeekday] : now.getDay();
+
+      weekdayStr = weekdays[dayIdx] || 'SEG';
+      fullWeekdayStr = weekdaysFull[dayIdx] || 'Segunda-feira';
+      day = dayPart ? parseInt(dayPart, 10) : now.getDate();
+      month = monthPart ? parseInt(monthPart, 10) : (now.getMonth() + 1);
+    } catch {
+      const now = new Date();
+      day = now.getDate();
+      month = now.getMonth() + 1;
+      const dayIdx = now.getDay();
+      weekdayStr = weekdays[dayIdx] || 'SEG';
+      fullWeekdayStr = weekdaysFull[dayIdx] || 'Segunda-feira';
+    }
+
+    return {
+      ...timeInfo,
+      day,
+      month,
+      dateFormatted: `${day}/${month}`,
+      weekday: weekdayStr,
+      fullWeekday: fullWeekdayStr,
+      period,
+      hours12,
+      formatted12: `${hours12}:${String(timeInfo.minutes).padStart(2, '0')}`,
+      isDay: this.isDay(),
+      isNight: this.isNight()
+    };
+  }
+
   // Day: 06:00 to 17:00 (Brasília)
   // Night: 17:01 to 05:59 (Brasília)
   isDay() {

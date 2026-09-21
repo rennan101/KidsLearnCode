@@ -12,9 +12,6 @@ export class EditorController {
     // Undo / Redo Manager (50 states)
     this.undoManager = new UndoRedoManager(this.tileMap, () => {
       this.onMapChange();
-      if (this.tileMap.spawnPoint && this.player) {
-        this.player.setSpawn(this.tileMap.spawnPoint.x, this.tileMap.spawnPoint.y);
-      }
     });
 
     // Active tool: 'brush', 'fill', 'spawn', 'eraser', 'eyedropper', 'collider'
