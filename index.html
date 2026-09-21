@@ -827,88 +827,114 @@
   </div>
 
   <!-- Educational Scratch Puzzle Blocks & Lua Coding Studio Modal (ACNH 1-Block Challenge Studio) -->
+  <!-- Educational Scratch / CodeKit Visual Blocks & Lua Live Studio Modal -->
   <div class="crafting-modal ac-coding-modal" id="coding-modal" style="display: none;">
-    <div class="crafting-card ac-puzzle-studio-card" style="width: 860px; max-width: 95vw; height: 84vh; display: flex; flex-direction: column;">
+    <div class="crafting-card codekit-studio-card" style="width: 1120px; max-width: 96vw; height: 86vh; display: flex; flex-direction: column;">
       <!-- ACNH Mint Header -->
       <div class="crafting-header ac-header-mint">
         <div class="crafting-title">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
           </svg>
-          <span id="coding-studio-title">Bancada DIY com Blocos</span>
+          <span id="coding-studio-title">Estúdio de Blocos Code Kit</span>
         </div>
         <button id="btn-close-coding" class="modal-close-btn" title="Fechar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       </div>
 
-      <!-- Focused Challenge Mission Card (Single Objective) -->
-      <div class="ac-puzzle-mission-bar">
-        <div class="ac-puzzle-mission-info">
-          <div class="ac-tab-avatar-circle" id="lesson-mentor-avatar" style="width: 44px; height: 44px; border-color: #00a896; color: #00a896;">
+      <!-- Focused Challenge Mission Bar -->
+      <div class="codekit-mission-bar">
+        <div class="codekit-mission-info">
+          <div class="codekit-mentor-avatar" id="lesson-mentor-avatar">
             <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
             </svg>
           </div>
-          <div>
-            <div class="ac-puzzle-badges-row">
-              <span id="lesson-unlock-target" class="scratch-unlock-badge">Criação: Cadeira de Madeira</span>
-              <span id="lesson-reward-badge" class="scratch-reward-badge">+100 XP / +50 Moedas</span>
+          <div class="codekit-mission-details">
+            <div class="codekit-badges-row">
+              <span id="coding-mentor-name" class="codekit-mentor-name">Bambu, o Engenheiro</span>
+              <span id="coding-mentor-role" class="codekit-mentor-role">Guia da Ilha</span>
+              <span id="lesson-unlock-target" class="codekit-badge unlock">Desbloqueia: Cadeira de Madeira</span>
+              <span id="lesson-reward-badge" class="codekit-badge reward">+100 XP / +50 Moedas</span>
             </div>
-            <p id="lesson-desc" class="ac-puzzle-desc">Monte a peça necessária e configure o material para fabricar seu item.</p>
+            <p id="lesson-desc" class="codekit-mission-desc">Arraste a peça para a mesa de montagem e veja a transformação do código Lua em tempo real ao lado!</p>
           </div>
         </div>
       </div>
 
-      <!-- Main 2-Column Kid-Friendly Puzzle Layout (1 Block Tray on Left, Assembly Dropzone on Right) -->
-      <div class="ac-puzzle-main-layout">
-        <!-- 1. Left: Single Challenge Block Tray -->
-        <div class="ac-puzzle-palette-col">
-          <div class="ac-puzzle-col-header">
-            <svg class="ui-icon" style="width: 16px; height: 16px; color: #00a896;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
-            <span>Peça do Desafio</span>
+      <!-- 3-Column Code Kit Layout: Palette (Left) | Workspace Canvas (Center) | Live Code View (Right) -->
+      <div class="codekit-main-layout">
+        <!-- 1. Left: Blocks Palette / Toolbox -->
+        <div class="codekit-palette-col">
+          <div class="codekit-col-header">
+            <div class="codekit-col-title">
+              <svg class="ui-icon" style="width: 15px; height: 15px; color: #00a896;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+              <span>Paleta de Blocos</span>
+            </div>
           </div>
-          <div id="scratch-palette" class="ac-puzzle-palette-items">
-            <!-- Populated with ONLY the single block needed for this specific lesson -->
+          <div id="scratch-palette" class="codekit-palette-items">
+            <!-- Populated with blocks -->
           </div>
-          <div class="ac-puzzle-hint-box">
-            <span>Dica: Arraste a peça ou clique nela para encaixar na bancada.</span>
+          <div class="codekit-hint-box">
+            <svg class="ui-icon" style="width: 13px; height: 13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <span>Arraste ou clique para adicionar à mesa</span>
           </div>
         </div>
 
-        <!-- 2. Right: Assembly Workspace Dropzone & Recipe Preview -->
-        <div class="ac-puzzle-workspace-col">
-          <div class="ac-puzzle-col-header">
-            <span>Mesa de Montagem DIY</span>
-            <button id="btn-clear-workspace" class="ac-mini-btn" title="Limpar peças">Limpar</button>
-          </div>
-          <div id="scratch-workspace" class="ac-puzzle-workspace-dropzone">
-            <!-- Dropzone for assembling the block -->
-          </div>
-
-          <!-- Recipe Book Preview & Console -->
-          <div class="ac-puzzle-recipe-preview">
-            <div class="ac-recipe-book-header">
-              <svg class="ui-icon" style="width: 14px; height: 14px; color: #7a583e;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-              <span>Livro de Receitas da Ilha</span>
+        <!-- 2. Center: Large Workspace Canvas -->
+        <div class="codekit-workspace-col">
+          <div class="codekit-col-header">
+            <div class="codekit-col-title">
+              <svg class="ui-icon" style="width: 15px; height: 15px; color: #38bdf8;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+              <span>Mesa de Montagem (Workspace)</span>
             </div>
-            <textarea id="lua-code-editor" class="ac-puzzle-lua-textarea" readonly spellcheck="false"></textarea>
-            <div id="lua-console-output" class="ac-puzzle-console-output">
-              > Encaixe a peça e clique em "Montar & Fabricar Item".
-            </div>
+            <button id="btn-clear-workspace" class="codekit-mini-btn" title="Limpar peças">Limpar Mesa</button>
+          </div>
+          <div id="scratch-workspace" class="codekit-workspace-canvas">
+            <!-- Dropzone for assembling the blocks -->
           </div>
         </div>
-      </div>
 
-      <!-- Action Footer -->
-      <div class="ac-puzzle-footer-bar">
-        <button id="btn-reset-lua" class="scratch-btn-secondary">Restaurar Peça</button>
-        <button id="btn-run-lua" class="scratch-btn-primary">
-          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-          </svg>
-          <span>Montar & Fabricar Item</span>
-        </button>
+        <!-- 3. Right: Live Side-by-Side Code View & Output Console -->
+        <div class="codekit-code-col">
+          <div class="codekit-col-header">
+            <div class="codekit-col-title">
+              <svg class="ui-icon" style="width: 15px; height: 15px; color: #f59e0b;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+              <span>Código Lua (Tempo Real)</span>
+            </div>
+            <span class="codekit-live-badge">Sincronizado</span>
+          </div>
+
+          <!-- Code View Area (Syntax Highlighted) -->
+          <div class="codekit-code-viewer-wrap">
+            <div id="codekit-syntax-display" class="codekit-syntax-display">
+              <!-- Rendered with live syntax spans and line numbers -->
+            </div>
+            <textarea id="lua-code-editor" style="display: none;" readonly spellcheck="false"></textarea>
+          </div>
+
+          <!-- Output Terminal / Console -->
+          <div class="codekit-console-wrap">
+            <div class="codekit-console-header">
+              <svg class="ui-icon" style="width: 13px; height: 13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+              <span>Terminal de Execução</span>
+            </div>
+            <div id="lua-console-output" class="codekit-console-output">
+              &gt; Aguardando montagem do código...
+            </div>
+          </div>
+
+          <!-- Code Action Buttons -->
+          <div class="codekit-code-actions">
+            <button id="btn-reset-lua" class="codekit-btn-secondary">Restaurar</button>
+            <button id="btn-run-lua" class="codekit-btn-primary">
+              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>Executar &amp; Fabricar</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

@@ -3005,12 +3005,14 @@ class RPGApplication {
     const paletteEl = document.getElementById('scratch-palette');
     const workspaceEl = document.getElementById('scratch-workspace');
 
+    const syntaxDisplayEl = document.getElementById('codekit-syntax-display');
+
     if (!modal || !codeEditor) return;
 
     if (this.scratchEngine) {
       if (paletteEl) this.scratchEngine.setPaletteContainer(paletteEl);
       if (workspaceEl) this.scratchEngine.setWorkspaceContainer(workspaceEl);
-      if (codeEditor) this.scratchEngine.setCodeOutputContainer(codeEditor);
+      if (codeEditor) this.scratchEngine.setCodeOutputContainer(codeEditor, syntaxDisplayEl);
     }
 
     // Clear Workspace Button
