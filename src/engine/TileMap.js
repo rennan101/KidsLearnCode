@@ -145,6 +145,36 @@ export class TileMap {
     return layer.get(this.getKey(x, y)) || null;
   }
 
+  // Move an asset (single or multi-tile) placed at (x, y) from fromLayer to toLayer
+  moveTileLayer(x, y, fromLayer, toLayer, assetLoader = null) {
+    if (!this.layers[fromLayer] || !this.layers[toLayer] || fromLayer === toLayer) return false;
+
+    const cell = this.getTile(fromLayer, x, y);
+    if (!cell) return false;
+
+    const rootX = (cell.rootX !== undefined) ? cell.rootX : x;
+    const rootY = (cell.rootY !== undefined) ? cell.rootY : y;
+    const rootCell = this.getTile(fromLayer, rootX, rootY) || cell;
+    const tileMeta = assetLoader ? assetLoader.getTileMetadata(rootCell.tileId) : null;
+    const rotation = rootCell.rotation || 0;
+    const flipX = !!rootCell.flipX;
+    const collider = rootCell.collider || null;
+    const depthOffset = (rootCell.depthOffset !== undefined) ? rootCell.depthOffset : null;
+    const tileId = rootCell.tileId;
+
+    // 1. Delete from old layer
+    this.deleteTile(rootX, rootY, fromLayer, assetLoader);
+
+    // 2. Place in new layer
+    if (tileMeta && ((tileMeta.gridW && tileMeta.gridW > 1) || (tileMeta.gridH && tileMeta.gridH > 1))) {
+      this.placeMultiTile(toLayer, rootX, rootY, tileMeta, rotation, flipX, collider, depthOffset);
+    } else {
+      this.setTile(toLayer, rootX, rootY, tileId, true, rootX, rootY, rotation, flipX, collider, depthOffset);
+    }
+
+    return true;
+  }
+
   // Erases from top to bottom according to dynamic layer order
   deleteTile(x, y, activeLayer = 'all', assetLoader = null) {
     // 1. If activeLayer is 'all', check if there is an invisible barrier/collider at this cell first

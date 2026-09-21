@@ -383,7 +383,8 @@ class RPGApplication {
       };
 
       // Top to bottom inspection matching visual hierarchy
-      const displayLayers = [...(this.tileMap.layerOrder || ['ground', 'decor', 'solid', 'characters', 'overhead', 'colliders'])].reverse();
+      const baseOrder = this.tileMap.layerOrder || ['ground', 'decor', 'solid', 'characters', 'overhead', 'colliders'];
+      const displayLayers = [...baseOrder].reverse();
 
       displayLayers.forEach((key) => {
         const def = defs[key] || { label: key, color: '#94a3b8', desc: '' };
@@ -397,6 +398,12 @@ class RPGApplication {
         const data = layers[key];
         const hasTile = !!data;
         const meta = data?.meta;
+
+        const currentIdx = baseOrder.indexOf(key);
+        const canMoveUp = currentIdx < baseOrder.length - 1;
+        const canMoveDown = currentIdx > 0;
+        const targetUpLayer = canMoveUp ? baseOrder[currentIdx + 1] : null;
+        const targetDownLayer = canMoveDown ? baseOrder[currentIdx - 1] : null;
 
         let previewHtml = '';
         if (hasTile && meta) {
@@ -417,6 +424,20 @@ class RPGApplication {
             <span class="layer-item-badge" style="background: ${color}20; color: ${color}; border-color: ${color}50;">${label}</span>
             <div class="layer-item-actions">
               ${hasTile ? `
+                ${canMoveUp ? `
+                  <button class="layer-action-btn move-up-layer-btn" title="Subir asset para camada ${defs[targetUpLayer]?.label || targetUpLayer}" data-x="${x}" data-y="${y}" data-from="${key}" data-to="${targetUpLayer}">
+                    <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="18 15 12 9 6 15"></polyline>
+                    </svg>
+                  </button>
+                ` : ''}
+                ${canMoveDown ? `
+                  <button class="layer-action-btn move-down-layer-btn" title="Descer asset para camada ${defs[targetDownLayer]?.label || targetDownLayer}" data-x="${x}" data-y="${y}" data-from="${key}" data-to="${targetDownLayer}">
+                    <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </button>
+                ` : ''}
                 <button class="layer-action-btn rotate-layer-btn" title="Girar este tile (+90°)" data-x="${x}" data-y="${y}" data-layer="${key}" data-tile="${data.tileId}">
                   <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
@@ -454,6 +475,46 @@ class RPGApplication {
         `;
 
         // Bind quick buttons
+        const moveUpBtn = item.querySelector('.move-up-layer-btn');
+        if (moveUpBtn) {
+          moveUpBtn.addEventListener('click', () => {
+            const fromLayer = moveUpBtn.dataset.from;
+            const toLayer = moveUpBtn.dataset.to;
+            const tx = parseInt(moveUpBtn.dataset.x, 10);
+            const ty = parseInt(moveUpBtn.dataset.y, 10);
+
+            this.editorController.recordState();
+            const success = this.tileMap.moveTileLayer(tx, ty, fromLayer, toLayer, this.assetLoader);
+            if (success) {
+              soundFX?.playPop(1.1);
+              this.triggerAutoSave();
+              this.editorController.inspectTileAt(tx, ty);
+              const toLabel = defs[toLayer]?.label || toLayer;
+              this.showToast(`Asset movido para ${toLabel}!`);
+            }
+          });
+        }
+
+        const moveDownBtn = item.querySelector('.move-down-layer-btn');
+        if (moveDownBtn) {
+          moveDownBtn.addEventListener('click', () => {
+            const fromLayer = moveDownBtn.dataset.from;
+            const toLayer = moveDownBtn.dataset.to;
+            const tx = parseInt(moveDownBtn.dataset.x, 10);
+            const ty = parseInt(moveDownBtn.dataset.y, 10);
+
+            this.editorController.recordState();
+            const success = this.tileMap.moveTileLayer(tx, ty, fromLayer, toLayer, this.assetLoader);
+            if (success) {
+              soundFX?.playPop(0.9);
+              this.triggerAutoSave();
+              this.editorController.inspectTileAt(tx, ty);
+              const toLabel = defs[toLayer]?.label || toLayer;
+              this.showToast(`Asset movido para ${toLabel}!`);
+            }
+          });
+        }
+
         const rotateBtn = item.querySelector('.rotate-layer-btn');
         if (rotateBtn) {
           rotateBtn.addEventListener('click', () => {

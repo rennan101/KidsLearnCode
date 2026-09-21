@@ -25,7 +25,7 @@ export function getBlockOptionVisual(val) {
   const str = String(val).toLowerCase().replace(/["']/g, '').trim();
 
   // 1. Materials & Woods
-  if (str === 'carvalho' || str === 'madeira' || str === 'wood' || str === 'madeira_macica' || str === 'palha') {
+  if (str === 'material' || str === 'tampo' || str === 'mat' || str === 'carvalho' || str === 'madeira' || str === 'wood' || str === 'madeira_macica' || str === 'palha') {
     return {
       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6c0-1.66 3.58-3 8-3s8 1.34 8 3v12c0 1.66-3.58 3-8 3s-8-1.34-8-3V6z"/><ellipse cx="12" cy="6" rx="8" ry="3"/></svg>`,
       label: str.replace(/_/g, ' '),
@@ -507,28 +507,105 @@ export class ScratchBlockEngine {
         if (!seenBlockIds.has(blockId)) {
           seenBlockIds.add(blockId);
 
-          let friendlyLabel = `${actName.replace(/_/g, ' ')}: [ARGS]`;
-          if (actName === 'fabricar_movel') friendlyLabel = `Fabricar Móvel: [ARGS]`;
-          else if (actName === 'forjar_ferramenta') friendlyLabel = `Forjar Ferramenta: [ARGS]`;
-          else if (actName === 'fabricar_mesa') friendlyLabel = `Fabricar Mesa: [ARGS]`;
-          else if (actName === 'fabricar_cama') friendlyLabel = `Fabricar Cama: [ARGS]`;
-          else if (actName === 'fixar_estaca') friendlyLabel = `Fixar Estaca na Posição [ARGS]`;
-          else if (actName === 'erguer_lona') friendlyLabel = `Erguer Lona de Acampamento`;
-          else if (actName === 'assentar_piso') friendlyLabel = `Assentar Piso: [ARGS]`;
-          else if (actName === 'plantar_arbusto') friendlyLabel = `Plantar na Ilha: [ARGS]`;
+          if (actName === 'fabricar_movel') {
+            const parts = rawArgs.split(',').map(s => s.trim());
+            const itemVal = parts[0] ? parts[0].replace(/^["']|["']$/g, '') : assetId;
+            const matVal = parts[1] || 'material';
 
-          derived.push({
-            id: blockId,
-            category: 'actions',
-            type: 'statement',
-            label: friendlyLabel,
-            defaultValues: { ARGS: rawArgs },
-            toLua: (b) => {
-              const args = b.values.ARGS !== undefined ? b.values.ARGS : rawArgs;
-              return `${actName}(${args})`;
-            }
-          });
+            derived.push({
+              id: blockId,
+              category: 'actions',
+              type: 'statement',
+              label: `Fabricar Móvel: [ITEM] de [MAT]`,
+              defaultValues: { ITEM: itemVal, MAT: matVal },
+              options: {
+                ITEM: [itemVal, 'prop_chair_wood', 'prop_table_crafting', 'prop_bed_straw', 'prop_bed_canopy', 'prop_tent_adventurer', 'prop_house_cottage'],
+                MAT: [matVal, 'material', 'carvalho', 'pinheiro', 'madeira_macica', 'ferro']
+              },
+              toLua: (b) => {
+                const it = b.values.ITEM || itemVal;
+                const mt = b.values.MAT || matVal;
+                return `fabricar_movel("${it}", ${mt})`;
+              }
+            });
+          } else if (actName === 'fabricar_mesa') {
+            const parts = rawArgs.split(',').map(s => s.trim());
+            const tampoVal = parts[0] || 'tampo';
+            const pernasVal = parts[1] || '4';
+
+            derived.push({
+              id: blockId,
+              category: 'actions',
+              type: 'statement',
+              label: `Fabricar Mesa: [TAMPO] com [PERNAS] pernas`,
+              defaultValues: { TAMPO: tampoVal, PERNAS: pernasVal },
+              options: {
+                TAMPO: [tampoVal, 'tampo', 'madeira_macica', 'carvalho', 'pinheiro'],
+                PERNAS: ['4', '3', '6']
+              },
+              toLua: (b) => {
+                const tp = b.values.TAMPO || tampoVal;
+                const pr = b.values.PERNAS || pernasVal;
+                return `fabricar_mesa(${tp}, ${pr})`;
+              }
+            });
+          } else if (actName === 'forjar_ferramenta') {
+            const parts = rawArgs.split(',').map(s => s.trim());
+            const toolVal = parts[0] ? parts[0].replace(/^["']|["']$/g, '') : 'tool_shovel_iron';
+
+            derived.push({
+              id: blockId,
+              category: 'actions',
+              type: 'statement',
+              label: `Forjar Ferramenta: [TOOL]`,
+              defaultValues: { TOOL: toolVal },
+              options: {
+                TOOL: [toolVal, 'tool_shovel_iron', 'tool_axe_woodcutter', 'tool_pickaxe_miner', 'tool_watering_can', 'tool_fishing_rod', 'tool_bug_net']
+              },
+              toLua: (b) => `forjar_ferramenta("${b.values.TOOL || toolVal}", "ferro")`
+            });
+          } else if (actName === 'plantar_arbusto') {
+            const bushVal = rawArgs.replace(/^["']|["']$/g, '') || 'nature_berry_bush';
+            derived.push({
+              id: blockId,
+              category: 'actions',
+              type: 'statement',
+              label: `Plantar na Ilha: [ARBUSTO]`,
+              defaultValues: { ARBUSTO: bushVal },
+              options: {
+                ARBUSTO: [bushVal, 'nature_berry_bush', 'nature_wheat_crop', 'nature_flower_red', 'nature_tree_oak']
+              },
+              toLua: (b) => `plantar_arbusto("${b.values.ARBUSTO || bushVal}")`
+            });
+          } else if (actName === 'assentar_piso') {
+            const pisoVal = rawArgs.replace(/^["']|["']$/g, '') || 'tile_ground_dirt_track';
+            derived.push({
+              id: blockId,
+              category: 'actions',
+              type: 'statement',
+              label: `Assentar Piso: [PISO]`,
+              defaultValues: { PISO: pisoVal },
+              options: {
+                PISO: [pisoVal, 'tile_ground_dirt_track', 'tile_ground_stone_path', 'tile_ground_wood_deck']
+              },
+              toLua: (b) => `assentar_piso("${b.values.PISO || pisoVal}")`
+            });
+          } else {
+            let friendlyLabel = `${actName.replace(/_/g, ' ')}: [ARGS]`;
+            derived.push({
+              id: blockId,
+              category: 'actions',
+              type: 'statement',
+              label: friendlyLabel,
+              defaultValues: { ARGS: rawArgs },
+              toLua: (b) => {
+                const args = b.values.ARGS !== undefined ? b.values.ARGS : rawArgs;
+                return `${actName}(${args})`;
+              }
+            });
+          }
         }
+        return;
       }
     });
 
@@ -634,7 +711,21 @@ export class ScratchBlockEngine {
       const actName = actionMatch[1];
       const args = actionMatch[2];
       const tmpl = this.availableBlocks.find(b => b.id.includes(actName) || b.category === 'actions') || this.availableBlocks[0];
-      return this.instantiateBlock(tmpl, { ARGS: args, ITEM: args.replace(/^["']|["']$/g, ''), VAL: args.replace(/^["']|["']$/g, '') });
+      const parts = args.split(',').map(s => s.trim());
+      const itemVal = parts[0] ? parts[0].replace(/^["']|["']$/g, '') : '';
+      const matVal = parts[1] ? parts[1].replace(/^["']|["']$/g, '') : 'material';
+
+      return this.instantiateBlock(tmpl, {
+        ARGS: args,
+        ITEM: itemVal,
+        MAT: matVal,
+        TAMPO: parts[0] ? parts[0].replace(/^["']|["']$/g, '') : 'tampo',
+        PERNAS: parts[1] ? parts[1].replace(/^["']|["']$/g, '') : '4',
+        TOOL: itemVal,
+        ARBUSTO: itemVal,
+        PISO: itemVal,
+        VAL: itemVal
+      });
     }
 
     return null;

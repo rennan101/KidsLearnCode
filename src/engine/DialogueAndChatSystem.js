@@ -339,10 +339,9 @@ export class DialogueAndChatSystem {
     const pageText = this.dialoguePages[this.currentPageIndex] || '';
     const totalPages = this.dialoguePages.length;
 
-    // Update name ribbon with page indicator if multi-page
+    // Update name ribbon (Clean character name only, Animal Crossing Style)
     if (nameEl) {
-      const baseName = this.speakerMeta.name || 'Morador';
-      nameEl.innerText = totalPages > 1 ? `${baseName} (${this.currentPageIndex + 1}/${totalPages})` : baseName;
+      nameEl.innerText = this.speakerMeta.name || 'Morador';
     }
 
     if (indicatorEl) indicatorEl.style.display = 'none';
@@ -444,32 +443,8 @@ export class DialogueAndChatSystem {
 
   // Update floating dialogue box position above the NPC on screen
   updateDialoguePosition(camera) {
-    if (!this.activeDialogue || !this.activeNpc || !camera) return;
-    const modalEl = document.getElementById('ac-dialogue-modal');
-    const boxEl = modalEl?.querySelector('.ac-dialogue-box');
-    if (!modalEl || !boxEl || modalEl.style.display === 'none') return;
-
-    const screenPos = camera.worldToScreen(this.activeNpc.worldX + 32, this.activeNpc.worldY);
-    if (!screenPos) return;
-
-    const boxW = boxEl.offsetWidth || 620;
-    const boxH = boxEl.offsetHeight || 140;
-    const pad = 16;
-    const halfW = boxW / 2;
-
-    const targetX = screenPos.x;
-    const targetY = screenPos.y - 30; // Float 30px above NPC head
-
-    const clampedX = Math.max(halfW + pad, Math.min(window.innerWidth - halfW - pad, targetX));
-    const clampedY = Math.max(boxH + pad, Math.min(window.innerHeight - pad, targetY));
-
-    boxEl.style.position = 'absolute';
-    boxEl.style.left = `${clampedX}px`;
-    boxEl.style.top = `${clampedY}px`;
-    boxEl.style.transform = 'translate(-50%, -100%)';
-
-    const tailOffset = Math.max(-halfW + 40, Math.min(halfW - 40, targetX - clampedX));
-    boxEl.style.setProperty('--tail-offset-x', `${tailOffset}px`);
+    // In Animal Crossing, the main dialogue balloon is anchored at the bottom-center of the screen
+    // Camera smoothly zooms in on the speaking NPC while balloon stays comfortably positioned at bottom.
   }
 
   renderChoices(container, choices, onComplete) {

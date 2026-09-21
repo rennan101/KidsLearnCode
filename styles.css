@@ -1214,6 +1214,13 @@ canvas#game-canvas {
   border-color: var(--animal-primary-dark, #0f8e83);
 }
 
+.layer-action-btn.move-up-layer-btn:hover,
+.layer-action-btn.move-down-layer-btn:hover {
+  background: #3b82f6;
+  border-color: #1d4ed8;
+  color: #ffffff;
+}
+
 .layer-action-btn.delete-btn:hover {
   background: #ea580c;
   border-color: #c2410c;
@@ -2075,15 +2082,18 @@ canvas#game-canvas {
   box-shadow: 0 1px 0 0 #0b6961;
 }
 
-/* =========================================
-   Animal Island UI Game Dialogue Modal (异形弹窗)
-   ========================================= */
+/* ==========================================================================
+   Animal Crossing (ACNH) Bottom Dialogue Balloon & Floating Name Pill
+   ========================================================================== */
 
 .ac-dialogue-modal {
   position: fixed;
   inset: 0;
   z-index: 150;
   display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 32px;
   background: transparent;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -2092,95 +2102,59 @@ canvas#game-canvas {
 
 .ac-dialogue-box.animal-game-modal,
 .ac-dialogue-box {
-  background: var(--animal-bg-card, #fdfbf7);
-  border: 3.5px solid var(--animal-border-wood, #7a583e);
-  border-radius: 36px 36px 36px 12px;
-  width: 640px;
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fffdf5;
+  border: 3.5px solid #f2e9d8;
+  border-radius: 38px;
+  width: 760px;
   max-width: 92vw;
-  padding: 24px 28px 20px 28px;
+  min-height: 120px;
+  padding: 26px 36px 24px 36px;
   display: flex;
-  box-shadow: 
-    0 18px 45px rgba(60, 45, 30, 0.35),
-    inset 0 2px 0 rgba(255, 255, 255, 0.9);
-  animation: acPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  position: absolute;
-  pointer-events: auto;
-}
-
-/* Animal Crossing pointer tail pointing down to NPC */
-.ac-dialogue-box::after {
-  content: '';
-  position: absolute;
-  bottom: -18px;
-  left: calc(50% + var(--tail-offset-x, 0px));
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 14px solid transparent;
-  border-right: 14px solid transparent;
-  border-top: 18px solid var(--animal-border-wood, #7a583e);
-}
-
-.ac-dialogue-box::before {
-  content: '';
-  position: absolute;
-  bottom: -13px;
-  left: calc(50% + var(--tail-offset-x, 0px));
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 11px solid transparent;
-  border-right: 11px solid transparent;
-  border-top: 14px solid var(--animal-bg-card, #fdfbf7);
-  z-index: 1;
-}
-
-@keyframes acPop {
-  0% { transform: scale(0.9) translateY(20px); opacity: 0; }
-  100% { transform: scale(1) translateY(0); opacity: 1; }
-}
-
-.animal-modal-avatar,
-.ac-portrait-wrapper {
-  position: absolute;
-  top: -30px;
-  left: -16px;
-  width: 86px;
-  height: 86px;
-  background: #ffffff;
-  border: 3.5px solid var(--animal-border-wood, #7a583e);
-  border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
-  box-shadow: 0 6px 16px rgba(80, 50, 20, 0.25);
-  z-index: 10;
+  box-shadow: 
+    0 16px 36px rgba(45, 30, 15, 0.22),
+    0 4px 12px rgba(45, 30, 15, 0.08),
+    inset 0 2px 0 rgba(255, 255, 255, 0.9);
+  animation: acBalloonPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+  cursor: pointer;
 }
 
-.animal-modal-avatar img,
-.ac-portrait-wrapper img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+@keyframes acBalloonPop {
+  0% { transform: translateX(-50%) scale(0.92) translateY(16px); opacity: 0; }
+  100% { transform: translateX(-50%) scale(1) translateY(0); opacity: 1; }
 }
 
+/* Character Name Badge Floating Above Balloon */
 .ac-name-ribbon {
   position: absolute;
-  top: -16px;
-  left: 78px;
-  background: linear-gradient(180deg, var(--animal-primary, #19c8b9), var(--animal-primary-dark, #0f8e83));
+  top: -18px;
+  left: 36px;
+  background: linear-gradient(180deg, #5b71ea 0%, #4355c7 100%);
   color: #ffffff;
-  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-family: var(--animal-font, 'Nunito', 'Outfit', sans-serif);
   font-weight: 800;
-  font-size: 0.95rem;
-  padding: 4px 22px;
-  border-radius: var(--animal-radius-pill, 50px);
-  border: 2.5px solid var(--animal-border-wood, #7a583e);
-  box-shadow: 0 3px 0 0 #5c3c26, 0 4px 10px rgba(15, 142, 131, 0.3);
+  font-size: 1.05rem;
+  padding: 5px 24px;
+  border-radius: 50px;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 4px 0 0 #2f3b92, 0 6px 14px rgba(47, 59, 146, 0.25);
   z-index: 11;
   letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Avatar / Portrait Wrapper Hidden per Animal Crossing Style */
+.animal-modal-avatar,
+.ac-portrait-wrapper {
+  display: none !important;
 }
 
 .animal-modal-body,
@@ -2188,25 +2162,28 @@ canvas#game-canvas {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-left: 56px;
+  gap: 10px;
+  margin-left: 0;
+  width: 100%;
 }
 
 .ac-bubble-text {
-  font-family: var(--animal-font, 'Nunito', sans-serif);
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--animal-text, #794f27);
-  line-height: 1.5;
+  font-family: var(--animal-font, 'Nunito', 'Outfit', sans-serif);
+  font-size: 1.22rem;
+  font-weight: 800;
+  color: #5a422e;
+  line-height: 1.55;
   min-height: 48px;
   word-break: break-word;
+  letter-spacing: -0.2px;
 }
 
 .ac-choices {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 6px;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
 }
 
 .ac-choice-btn {
@@ -2215,9 +2192,9 @@ canvas#game-canvas {
   border-radius: var(--animal-radius-pill, 50px);
   color: var(--animal-text, #794f27) !important;
   font-family: var(--animal-font, 'Nunito', sans-serif);
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   font-weight: 800;
-  padding: 8px 20px;
+  padding: 7px 20px;
   cursor: pointer;
   transition: all 0.15s ease;
   box-shadow: 0 4px 0 0 var(--animal-border-wood, #7a583e) !important;
@@ -2239,16 +2216,41 @@ canvas#game-canvas {
   box-shadow: 0 1px 0 0 var(--animal-border-wood, #7a583e) !important;
 }
 
+/* Centered Downward Bobbing Triangle Indicator */
 .animal-dialogue-indicator {
   position: absolute;
-  bottom: 12px;
-  right: 18px;
-  color: var(--animal-primary, #19c8b9);
-  animation: animalBounce 0.8s infinite alternate ease-in-out;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #f59e0b;
+  animation: acIndicatorBounce 0.65s infinite alternate ease-in-out;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
+}
+
+@keyframes acIndicatorBounce {
+  0% { transform: translateX(-50%) translateY(0); }
+  100% { transform: translateX(-50%) translateY(4px); }
+}
+
+@media (max-width: 768px) {
+  .ac-dialogue-box.animal-game-modal,
+  .ac-dialogue-box {
+    bottom: 20px;
+    padding: 22px 20px 20px 20px;
+    border-radius: 28px;
+  }
+  .ac-name-ribbon {
+    top: -16px;
+    left: 20px;
+    font-size: 0.95rem;
+    padding: 4px 18px;
+  }
+  .ac-bubble-text {
+    font-size: 1.05rem;
+  }
 }
 
 @keyframes animalBounce {
@@ -4722,8 +4724,8 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
 .codekit-block-label {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
-  white-space: nowrap;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
@@ -4739,7 +4741,8 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
   border: none;
   outline: none;
   width: auto;
-  max-width: 90px;
+  min-width: 45px;
+  max-width: 140px;
   text-align: center;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
