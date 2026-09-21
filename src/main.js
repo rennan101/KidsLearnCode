@@ -3211,6 +3211,17 @@ class RPGApplication {
       if (helpModal) helpModal.style.display = 'none';
     });
 
+    const btnDemonstrateHelp = document.getElementById('btn-demonstrate-help');
+    btnDemonstrateHelp?.addEventListener('click', () => {
+      soundFX.playPop(1.1);
+      if (helpModal) helpModal.style.display = 'none';
+      if (this.scratchEngine) {
+        this.scratchEngine.snapNextBlockWithAnimation(() => {
+          this.showToast('Dica do Mentor: Peça encaixada na mesa de montagem!', 3000);
+        });
+      }
+    });
+
     closeBtn?.addEventListener('click', () => {
       soundFX.playPop(0.85);
       modal.style.display = 'none';

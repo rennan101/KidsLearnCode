@@ -129,9 +129,8 @@ export class ScratchBlockEngine {
         id: 'loop_for',
         category: 'loops',
         type: 'container',
-        label: 'Repetir [COUNT] Vezes:',
+        label: 'Para i = 1 até [COUNT] Faça:',
         defaultValues: { COUNT: '4' },
-        options: { COUNT: ['2', '3', '4', '5', '8', '10'] },
         children: [],
         toLua: (b, engine) => {
           const inner = engine.transpileBlockList(b.children || [], '  ');
@@ -267,6 +266,7 @@ export class ScratchBlockEngine {
       const forMatch = line.match(/^para\s+([a-zA-Z_]\w*)\s*=\s*(\d+)\s*,\s*(\d+)\s+faca$/);
       if (forMatch) {
         const varI = forMatch[1];
+        const countStart = forMatch[2];
         const countEnd = forMatch[3];
         const blockId = `loop_for_${idx}`;
         if (!seenBlockIds.has(blockId)) {
@@ -275,13 +275,12 @@ export class ScratchBlockEngine {
             id: blockId,
             category: 'loops',
             type: 'container',
-            label: `Repetir de 1 até [COUNT] Vezes:`,
+            label: `Para ${varI} = ${countStart} até [COUNT] Faça:`,
             defaultValues: { COUNT: countEnd },
-            options: { COUNT: ['2', '3', '4', '5', '8', '10', '12'] },
             children: [],
             toLua: (b, engine) => {
               const inner = engine.transpileBlockList(b.children || [], '  ');
-              return `para ${varI} = 1, ${b.values.COUNT || countEnd} faca\n${inner || '  -- acao do laco\n'}fim`;
+              return `para ${varI} = ${countStart}, ${b.values.COUNT || countEnd} faca\n${inner || '  -- acao do laco\n'}fim`;
             }
           });
         }
@@ -601,6 +600,10 @@ export class ScratchBlockEngine {
     this.workspaceEl.innerHTML = '';
 
     if (this.blocksInWorkspace.length === 0) {
+      const firstTmpl = this.availableBlocks && this.availableBlocks[0];
+      const cat = firstTmpl ? (BLOCK_CATEGORIES[firstTmpl.category] || BLOCK_CATEGORIES.actions) : BLOCK_CATEGORIES.actions;
+      const ghostLabel = firstTmpl ? firstTmpl.label.replace(/\[([A-Z_]+)\]/g, '●') : 'Definir Material';
+
       const placeholder = document.createElement('div');
       placeholder.className = 'codekit-workspace-placeholder';
       placeholder.innerHTML = `
@@ -610,22 +613,32 @@ export class ScratchBlockEngine {
             <polyline points="8 6 2 12 8 18"></polyline>
           </svg>
           <span class="placeholder-title">Mesa de Montagem Pronta</span>
-          <span class="placeholder-desc">Arraste os blocos da esquerda ou clique neles para montar seu código!</span>
+          <span class="placeholder-desc">Arraste as peças da paleta à esquerda ou clique nelas para montar seu código!</span>
         </div>
-        <div class="tutorial-drag-guide" id="tutorial-drag-guide">
-          <div class="tutorial-drag-track">
-            <div class="tutorial-drag-target-zone">
-              <svg class="ui-icon" style="width: 20px; height: 20px; color: #19c8b9;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="tutorial-ghost-container" id="tutorial-ghost-container">
+          <div class="tutorial-ghost-track">
+            <div class="tutorial-ghost-target-zone">
+              <svg class="ui-icon" style="width: 18px; height: 18px; color: #19c8b9;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 5v14M5 12h14"></path>
               </svg>
-              <span>Solte o bloco aqui</span>
+              <span>Solte a peça aqui</span>
             </div>
           </div>
-          <div class="tutorial-drag-hand">
-            <svg class="tutorial-hand-svg" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74a4.5 4.5 0 0 0-9 0c0 1.56.79 2.93 2 3.74zm9.84 4.63-4.54-2.26A2 2 0 0 0 13.4 13.5H13v-6a1.5 1.5 0 0 0-3 0v10.74l-3.44-.72a1.5 1.5 0 0 0-1.57.65l-.79 1.18 5.4 5.4c.56.56 1.33.88 2.12.88H18a3 3 0 0 0 3-3v-4.24a2 2 0 0 0-1.16-1.82z"/>
-            </svg>
-            <span class="tutorial-hand-tip">Arraste para a mesa</span>
+          <div class="tutorial-ghost-actor">
+            <div class="codekit-block ghost-demonstration-card" style="background: ${cat.color}; box-shadow: inset 0 -3px 0 ${cat.darkColor}, 0 6px 16px rgba(0,0,0,0.25);">
+              <div class="puzzle-tab"></div>
+              <div class="codekit-block-header">
+                <span class="codekit-block-cat-dot" style="background: ${cat.accentColor};"></span>
+                <span class="codekit-block-label">${ghostLabel}</span>
+              </div>
+              <div class="puzzle-notch"></div>
+            </div>
+            <div class="tutorial-ghost-hand">
+              <svg class="tutorial-hand-svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74a4.5 4.5 0 0 0-9 0c0 1.56.79 2.93 2 3.74zm9.84 4.63-4.54-2.26A2 2 0 0 0 13.4 13.5H13v-6a1.5 1.5 0 0 0-3 0v10.74l-3.44-.72a1.5 1.5 0 0 0-1.57.65l-.79 1.18 5.4 5.4c.56.56 1.33.88 2.12.88H18a3 3 0 0 0 3-3v-4.24a2 2 0 0 0-1.16-1.82z"/>
+              </svg>
+              <span class="tutorial-hand-tip">Encaixar Bloco</span>
+            </div>
           </div>
         </div>
       `;
@@ -642,6 +655,70 @@ export class ScratchBlockEngine {
     });
 
     this.workspaceEl.appendChild(tree);
+  }
+
+  // Mentor help auto-snap assistant with smooth flying ghost block animation
+  snapNextBlockWithAnimation(onComplete = null) {
+    if (!this.availableBlocks || this.availableBlocks.length === 0) return;
+
+    // Determine the next template needed
+    const nextIdx = Math.min(this.blocksInWorkspace.length, this.availableBlocks.length - 1);
+    const nextTmpl = this.availableBlocks[nextIdx];
+    if (!nextTmpl) return;
+
+    const cat = BLOCK_CATEGORIES[nextTmpl.category] || BLOCK_CATEGORIES.actions;
+    const ghostLabel = nextTmpl.label.replace(/\[([A-Z_]+)\]/g, '●');
+
+    // Source rect from palette if available
+    const paletteCards = this.paletteEl?.querySelectorAll('.palette-block');
+    const startCard = paletteCards && paletteCards[nextIdx] ? paletteCards[nextIdx] : paletteCards?.[0];
+    const startRect = startCard ? startCard.getBoundingClientRect() : { left: 120, top: 220, width: 160, height: 44 };
+    const wsRect = this.workspaceEl ? this.workspaceEl.getBoundingClientRect() : { left: 450, top: 220, width: 260, height: 200 };
+
+    const flyingGhost = document.createElement('div');
+    flyingGhost.className = 'tutorial-fly-ghost';
+    flyingGhost.style.left = `${startRect.left}px`;
+    flyingGhost.style.top = `${startRect.top}px`;
+    flyingGhost.innerHTML = `
+      <div class="codekit-block ghost-flying-card" style="background: ${cat.color}; box-shadow: inset 0 -3px 0 ${cat.darkColor}, 0 8px 24px rgba(0,0,0,0.3);">
+        <div class="puzzle-tab"></div>
+        <div class="codekit-block-header">
+          <span class="codekit-block-cat-dot" style="background: ${cat.accentColor};"></span>
+          <span class="codekit-block-label">${ghostLabel}</span>
+        </div>
+        <div class="puzzle-notch"></div>
+      </div>
+      <div class="tutorial-flying-hand">
+        <svg class="tutorial-hand-svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74a4.5 4.5 0 0 0-9 0c0 1.56.79 2.93 2 3.74zm9.84 4.63-4.54-2.26A2 2 0 0 0 13.4 13.5H13v-6a1.5 1.5 0 0 0-3 0v10.74l-3.44-.72a1.5 1.5 0 0 0-1.57.65l-.79 1.18 5.4 5.4c.56.56 1.33.88 2.12.88H18a3 3 0 0 0 3-3v-4.24a2 2 0 0 0-1.16-1.82z"/>
+        </svg>
+      </div>
+    `;
+    document.body.appendChild(flyingGhost);
+    soundFX.playPickUp();
+
+    // Fly smoothly across
+    requestAnimationFrame(() => {
+      flyingGhost.style.transition = 'all 0.65s cubic-bezier(0.25, 1, 0.5, 1)';
+      flyingGhost.style.left = `${wsRect.left + 35}px`;
+      flyingGhost.style.top = `${wsRect.top + 35 + (this.blocksInWorkspace.length * 48)}px`;
+      flyingGhost.style.transform = 'scale(1.04)';
+    });
+
+    setTimeout(() => {
+      flyingGhost.remove();
+      const newBlock = this.instantiateBlock(nextTmpl);
+      this.blocksInWorkspace.push(newBlock);
+      this.renderWorkspace();
+      this.updateCodePreview();
+      soundFX.playSnap();
+
+      const lastBlockEl = this.workspaceEl?.querySelector('.codekit-block:last-child');
+      if (lastBlockEl) this.spawnSnapSparkles(lastBlockEl);
+
+      if (this.onBlockAdded) this.onBlockAdded(newBlock);
+      if (onComplete) onComplete(newBlock);
+    }, 680);
   }
 
   createWorkspaceBlockElement(block, parentArray, index) {
@@ -669,7 +746,12 @@ export class ScratchBlockEngine {
         optHtml += `</select>`;
         labelHtml = labelHtml.replace(ph, optHtml);
       } else {
-        labelHtml = labelHtml.replace(ph, `<input type="text" class="block-input-text" data-field="${fieldKey}" value="${currentVal}" />`);
+        const isNumeric = (fieldKey === 'COUNT' || fieldKey === 'START' || fieldKey === 'END' || fieldKey === 'POS' || (!isNaN(Number(currentVal)) && String(currentVal).trim() !== '' && !isNaN(parseFloat(currentVal))));
+        if (isNumeric) {
+          labelHtml = labelHtml.replace(ph, `<input type="number" step="1" min="1" class="block-input-text block-input-number" data-field="${fieldKey}" value="${currentVal}" />`);
+        } else {
+          labelHtml = labelHtml.replace(ph, `<input type="text" class="block-input-text" data-field="${fieldKey}" value="${currentVal}" />`);
+        }
       }
     });
 

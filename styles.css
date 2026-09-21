@@ -4062,55 +4062,79 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
   line-height: 1.4;
 }
 
-/* Animated Drag-and-Drop Tutorial Hand */
-.tutorial-drag-guide {
+/* Animated Drag-and-Drop Tutorial Ghost Hand */
+.tutorial-ghost-container {
   position: relative;
   width: 100%;
-  margin-top: 6px;
+  margin-top: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  min-height: 110px;
+  overflow: visible;
 }
 
-.tutorial-drag-track {
+.tutorial-ghost-track {
   width: 100%;
-  padding: 10px 14px;
-  background: rgba(25, 200, 185, 0.1);
+  padding: 16px 14px;
+  background: rgba(25, 200, 185, 0.08);
   border: 2px dashed var(--animal-primary, #19c8b9);
-  border-radius: 14px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
+  position: relative;
+  box-sizing: border-box;
 }
 
-.tutorial-drag-target-zone {
+.tutorial-ghost-target-zone {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 800;
   color: var(--animal-primary-dark, #0f8e83);
+  padding: 7px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1.5px solid rgba(25, 200, 185, 0.4);
+  box-shadow: 0 2px 6px rgba(15, 142, 131, 0.1);
 }
 
-.tutorial-drag-hand {
+.tutorial-ghost-actor {
   position: absolute;
   top: 50%;
-  left: 20%;
+  left: 0%;
   transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
-  gap: 6px;
   pointer-events: none;
-  animation: handDragAnim 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  z-index: 5;
+  animation: ghostDemonstrationAnim 3.2s cubic-bezier(0.35, 0, 0.25, 1) infinite;
+  z-index: 10;
+}
+
+.ghost-demonstration-card {
+  padding: 5px 12px;
+  border-radius: 8px;
+  transform: rotate(-2deg);
+  opacity: 0.95;
+}
+
+.tutorial-ghost-hand {
+  position: absolute;
+  bottom: -18px;
+  right: -14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .tutorial-hand-svg {
   width: 32px;
   height: 32px;
   color: #ea580c;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
 }
 
 .tutorial-hand-tip {
@@ -4125,37 +4149,82 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
   white-space: nowrap;
 }
 
-@keyframes handDragAnim {
+@keyframes ghostDemonstrationAnim {
   0% {
-    left: -15%;
-    transform: translate(-50%, -50%) scale(0.9);
+    left: -20%;
+    transform: translate(-50%, -50%) scale(0.85);
     opacity: 0;
   }
   15% {
     left: -5%;
-    transform: translate(-50%, -50%) scale(1.1);
+    transform: translate(-50%, -50%) scale(1.08) rotate(-4deg);
     opacity: 1;
   }
-  25% {
-    left: -5%;
-    transform: translate(-50%, -50%) scale(0.95);
+  30% {
+    left: 5%;
+    transform: translate(-50%, -50%) scale(1) rotate(-2deg);
     opacity: 1;
   }
   65% {
-    left: 65%;
-    transform: translate(-50%, -50%) scale(1);
+    left: 75%;
+    transform: translate(-50%, -50%) scale(1.04) rotate(0deg);
     opacity: 1;
   }
-  80% {
-    left: 65%;
-    transform: translate(-50%, -50%) scale(0.85);
+  78% {
+    left: 75%;
+    transform: translate(-50%, -50%) scale(0.95) rotate(0deg);
     opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(25, 200, 185, 0.8));
   }
-  95%, 100% {
-    left: 70%;
-    transform: translate(-50%, -50%) scale(0.8);
+  92%, 100% {
+    left: 78%;
+    transform: translate(-50%, -50%) scale(0.9);
     opacity: 0;
   }
+}
+
+/* Flying Ghost Assistant (Mentor Help Drag) */
+.tutorial-fly-ghost {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+.ghost-flying-card {
+  padding: 6px 14px;
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  animation: ghostPulseGlow 0.8s ease-in-out infinite alternate;
+}
+
+.tutorial-flying-hand {
+  position: absolute;
+  bottom: -16px;
+  right: -12px;
+}
+
+@keyframes ghostPulseGlow {
+  0% {
+    filter: brightness(1) drop-shadow(0 0 4px rgba(25, 200, 185, 0.4));
+  }
+  100% {
+    filter: brightness(1.15) drop-shadow(0 0 14px rgba(25, 200, 185, 0.9));
+  }
+}
+
+.block-input-number {
+  width: 52px !important;
+  text-align: center;
+  font-weight: 800;
+  -moz-appearance: textfield;
+}
+
+.block-input-number::-webkit-outer-spin-button,
+.block-input-number::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .codekit-block-tree {
