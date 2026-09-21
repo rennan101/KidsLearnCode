@@ -1386,6 +1386,8 @@ class RPGApplication {
         },
         codingProgress: {
           completedLessons: Array.from(this.blocklySystem.completedLessons),
+          unlockedAssets: Array.from(this.blocklySystem.unlockedAssets),
+          unlockedRecipes: Array.from(this.craftingSystem.unlockedRecipeIds),
           playerXP: this.blocklySystem.playerXP,
           playerGold: this.blocklySystem.playerGold
         },
@@ -1549,10 +1551,28 @@ class RPGApplication {
           }
         }
 
-        // 5. Restaurar Progresso de Código Blockly / Lua
+        // 5. Restaurar Progresso de Código Blockly / Lua e Receitas Desbloqueadas
         if (data.codingProgress) {
           if (data.codingProgress.completedLessons && Array.isArray(data.codingProgress.completedLessons)) {
             this.blocklySystem.completedLessons = new Set(data.codingProgress.completedLessons);
+            this.blocklySystem.syncUnlockedAssetsFromCompletedLessons();
+            this.blocklySystem.completedLessons.forEach(lessonId => {
+              const lesson = this.blocklySystem.lessons.find(l => l.id === lessonId);
+              if (lesson?.unlockedAssetId) {
+                this.craftingSystem.unlockRecipe(lesson.unlockedAssetId);
+              }
+            });
+          }
+          if (data.codingProgress.unlockedAssets && Array.isArray(data.codingProgress.unlockedAssets)) {
+            data.codingProgress.unlockedAssets.forEach(id => {
+              this.blocklySystem.unlockedAssets.add(id);
+              this.craftingSystem.unlockRecipe(id);
+            });
+          }
+          if (data.codingProgress.unlockedRecipes && Array.isArray(data.codingProgress.unlockedRecipes)) {
+            data.codingProgress.unlockedRecipes.forEach(id => {
+              this.craftingSystem.unlockRecipe(id);
+            });
           }
           if (data.codingProgress.playerXP !== undefined) {
             this.blocklySystem.playerXP = data.codingProgress.playerXP;
@@ -2551,8 +2571,34 @@ class RPGApplication {
       craftingModal.style.display = 'flex';
       recipeList.innerHTML = '';
 
-      const recipes = this.craftingSystem.getRecipes();
-      recipes.forEach((rec) => {
+      // Filtra para exibir exclusivamente receitas que o jogador desbloqueou nas missões de código
+      const allRecipes = this.craftingSystem.getRecipes();
+      const unlockedRecipes = allRecipes.filter(rec => 
+        this.craftingSystem.isRecipeUnlocked(rec.id) ||
+        this.craftingSystem.isRecipeUnlocked(rec.assetId) ||
+        this.blocklySystem?.isAssetUnlocked?.(rec.assetId) ||
+        this.blocklySystem?.isAssetUnlocked?.(rec.id)
+      );
+
+      if (unlockedRecipes.length === 0) {
+        recipeList.innerHTML = `
+          <div style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 36px 16px; gap: 12px; color: var(--animal-text-body, #725d42);">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--animal-bg-content, #f7f3df); border: 2px solid var(--animal-border, #c4b89e); display: flex; align-items: center; justify-content: center;">
+              <svg class="ui-icon" style="width: 28px; height: 28px; color: var(--animal-text-muted, #8a7b66);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <h4 style="margin: 0; font-family: var(--animal-font-title, 'Cinzel', serif); font-size: 1.12rem; color: var(--animal-text, #794f27);">Nenhuma Receita Desbloqueada</h4>
+            <p style="margin: 0; font-size: 0.86rem; max-width: 330px; line-height: 1.45; font-weight: 600;">
+              Converse com os moradores da ilha e conclua missões no <strong>Estúdio de Códigos</strong> para liberar receitas para fabricação nesta bancada!
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      unlockedRecipes.forEach((rec) => {
         const item = document.createElement('div');
         item.className = 'ac-diy-recipe-card';
         const iconSvg = this.getItemSvgIcon(rec.iconKey || this.inventorySystem.inferIconKey(rec.id));

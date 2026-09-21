@@ -947,6 +947,15 @@ export class BlocklyLuaSystem {
     return this.unlockedAssets.has(assetId);
   }
 
+  syncUnlockedAssetsFromCompletedLessons() {
+    this.completedLessons.forEach(lessonId => {
+      const lesson = this.lessons.find(l => l.id === lessonId);
+      if (lesson?.unlockedAssetId) {
+        this.unlockedAssets.add(lesson.unlockedAssetId);
+      }
+    });
+  }
+
   // Transpiles structured visual blocks to clean, formatted Lua code
   transpileBlocksToLua(blocks) {
     let code = '';

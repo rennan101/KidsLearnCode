@@ -3,12 +3,7 @@
 export class CraftingSystem {
   constructor(dayNightSystem) {
     this.dayNightSystem = dayNightSystem;
-    this.unlockedRecipeIds = new Set([
-      'prop_chair_wood',
-      'tool_shovel_iron',
-      'tile_ground_dirt_track',
-      'struct_fence_wood_segment'
-    ]);
+    this.unlockedRecipeIds = new Set();
 
     this.recipes = [
       // 1. Mobílias & Habitação (Bambu)
@@ -237,8 +232,13 @@ export class CraftingSystem {
     this.unlockedRecipeIds.add(recipeOrAssetId);
   }
 
-  isRecipeUnlocked(recipeId) {
-    return this.unlockedRecipeIds.has(recipeId);
+  isRecipeUnlocked(recipeOrAssetId) {
+    if (this.unlockedRecipeIds.has(recipeOrAssetId)) return true;
+    const recipe = this.recipes.find(r => r.id === recipeOrAssetId || r.assetId === recipeOrAssetId);
+    if (recipe) {
+      return this.unlockedRecipeIds.has(recipe.id) || this.unlockedRecipeIds.has(recipe.assetId);
+    }
+    return false;
   }
 
   hasMaterials(recipe) {
