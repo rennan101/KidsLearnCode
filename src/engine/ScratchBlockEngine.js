@@ -469,23 +469,30 @@ export class ScratchBlockEngine {
     };
   }
 
-  // Visual burst particle sparkles on snap
-  spawnSnapSparkles(element) {
+  // Visual droplet splash on snap (Animal Island Checkbox Style)
+  spawnSnapDroplets(element) {
     if (!element || typeof document === 'undefined') return;
     const rect = element.getBoundingClientRect();
     const container = document.createElement('div');
-    container.className = 'puzzle-snap-sparkle-container';
+    container.className = 'animal-snap-droplet-container';
     container.style.left = `${rect.left + rect.width / 2}px`;
-    container.style.top = `${rect.top + 12}px`;
+    container.style.top = `${rect.top + 14}px`;
 
-    for (let i = 0; i < 7; i++) {
-      const p = document.createElement('div');
-      p.className = 'puzzle-snap-sparkle-particle';
-      const angle = (i / 7) * Math.PI * 2;
-      const dist = 24 + Math.random() * 18;
-      p.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
-      p.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
-      container.appendChild(p);
+    const dropletCount = 6;
+    const colors = ['#19c8b9', '#3dd4c6', '#14b8a6', '#5eead4', '#2dd4bf', '#0f8e83'];
+
+    for (let i = 0; i < dropletCount; i++) {
+      const droplet = document.createElement('div');
+      droplet.className = 'animal-snap-droplet';
+      const angle = (i / dropletCount) * Math.PI * 2;
+      const distance = 26 + Math.random() * 14;
+      const dx = Math.cos(angle) * distance;
+      const dy = Math.sin(angle) * distance;
+
+      droplet.style.setProperty('--splash-dx', `${dx}px`);
+      droplet.style.setProperty('--splash-dy', `${dy}px`);
+      droplet.style.background = colors[i % colors.length];
+      container.appendChild(droplet);
     }
 
     document.body.appendChild(container);
@@ -496,19 +503,56 @@ export class ScratchBlockEngine {
     }, 600);
   }
 
-  // Render the Block Palette (Left Column)
+  // Helper to collect all template IDs currently in workspace (including nested containers)
+  getUsedTemplateIds() {
+    const used = [];
+    const collect = (blocks) => {
+      if (!blocks || !Array.isArray(blocks)) return;
+      blocks.forEach(b => {
+        if (b.templateId) used.push(b.templateId);
+        if (b.children && b.children.length > 0) collect(b.children);
+        if (b.elseChildren && b.elseChildren.length > 0) collect(b.elseChildren);
+      });
+    };
+    collect(this.blocksInWorkspace);
+    return used;
+  }
+
+  // Render the Block Palette (Left Column) with Block Consumption
   renderPalette() {
     if (!this.paletteEl) return;
     this.paletteEl.innerHTML = '';
 
-    const blocksToShow = this.activeCategory === 'all'
+    const usedTemplateIds = this.getUsedTemplateIds();
+    const usedCounts = {};
+    usedTemplateIds.forEach(id => {
+      usedCounts[id] = (usedCounts[id] || 0) + 1;
+    });
+
+    // Filter available blocks by category and remaining count
+    const pool = this.activeCategory === 'all'
       ? this.availableBlocks
       : this.availableBlocks.filter(b => b.category === this.activeCategory);
+
+    // Track how many of each template we've seen in the pool so far
+    const seenInPool = {};
+    const blocksToShow = pool.filter(tmpl => {
+      const tmplId = tmpl.id;
+      seenInPool[tmplId] = (seenInPool[tmplId] || 0) + 1;
+      const alreadyUsed = usedCounts[tmplId] || 0;
+      // If we have seen more occurrences in the pool than have been used in workspace, show this one
+      return seenInPool[tmplId] > alreadyUsed;
+    });
 
     if (blocksToShow.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'codekit-empty-palette';
-      empty.innerText = 'Nenhum bloco disponível nesta categoria.';
+      empty.innerHTML = `
+        <svg class="ui-icon" style="width: 28px; height: 28px; color: var(--animal-primary, #19c8b9); margin-bottom: 6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>Todas as peças da missão foram colocadas na mesa!</span>
+      `;
       this.paletteEl.appendChild(empty);
       return;
     }
@@ -550,11 +594,12 @@ export class ScratchBlockEngine {
         const newBlock = this.instantiateBlock(tmpl);
         this.blocksInWorkspace.push(newBlock);
         this.renderWorkspace();
+        this.renderPalette(); // Update palette count immediately
         this.updateCodePreview();
         soundFX.playSnap();
 
         const lastBlockEl = this.workspaceEl?.querySelector('.codekit-block:last-child');
-        if (lastBlockEl) this.spawnSnapSparkles(lastBlockEl);
+        if (lastBlockEl) this.spawnSnapDroplets(lastBlockEl);
 
         if (this.onBlockAdded) this.onBlockAdded(newBlock);
       });
@@ -583,11 +628,12 @@ export class ScratchBlockEngine {
         const newBlock = this.instantiateBlock(this.draggedBlockTemplate);
         this.blocksInWorkspace.push(newBlock);
         this.renderWorkspace();
+        this.renderPalette(); // Consume from palette
         this.updateCodePreview();
         soundFX.playSnap();
 
         const lastBlockEl = this.workspaceEl?.querySelector('.codekit-block:last-child');
-        if (lastBlockEl) this.spawnSnapSparkles(lastBlockEl);
+        if (lastBlockEl) this.spawnSnapDroplets(lastBlockEl);
 
         if (this.onBlockAdded) this.onBlockAdded(newBlock);
       }
@@ -661,9 +707,19 @@ export class ScratchBlockEngine {
   snapNextBlockWithAnimation(onComplete = null) {
     if (!this.availableBlocks || this.availableBlocks.length === 0) return;
 
-    // Determine the next template needed
-    const nextIdx = Math.min(this.blocksInWorkspace.length, this.availableBlocks.length - 1);
-    const nextTmpl = this.availableBlocks[nextIdx];
+    // Find the next unplaced template
+    const usedTemplateIds = this.getUsedTemplateIds();
+    const usedCounts = {};
+    usedTemplateIds.forEach(id => {
+      usedCounts[id] = (usedCounts[id] || 0) + 1;
+    });
+
+    const seenInPool = {};
+    const nextTmpl = this.availableBlocks.find(tmpl => {
+      seenInPool[tmpl.id] = (seenInPool[tmpl.id] || 0) + 1;
+      return seenInPool[tmpl.id] > (usedCounts[tmpl.id] || 0);
+    }) || this.availableBlocks[0];
+
     if (!nextTmpl) return;
 
     const cat = BLOCK_CATEGORIES[nextTmpl.category] || BLOCK_CATEGORIES.actions;
@@ -671,7 +727,7 @@ export class ScratchBlockEngine {
 
     // Source rect from palette if available
     const paletteCards = this.paletteEl?.querySelectorAll('.palette-block');
-    const startCard = paletteCards && paletteCards[nextIdx] ? paletteCards[nextIdx] : paletteCards?.[0];
+    const startCard = paletteCards && paletteCards[0] ? paletteCards[0] : null;
     const startRect = startCard ? startCard.getBoundingClientRect() : { left: 120, top: 220, width: 160, height: 44 };
     const wsRect = this.workspaceEl ? this.workspaceEl.getBoundingClientRect() : { left: 450, top: 220, width: 260, height: 200 };
 
@@ -710,11 +766,12 @@ export class ScratchBlockEngine {
       const newBlock = this.instantiateBlock(nextTmpl);
       this.blocksInWorkspace.push(newBlock);
       this.renderWorkspace();
+      this.renderPalette(); // Update palette
       this.updateCodePreview();
       soundFX.playSnap();
 
       const lastBlockEl = this.workspaceEl?.querySelector('.codekit-block:last-child');
-      if (lastBlockEl) this.spawnSnapSparkles(lastBlockEl);
+      if (lastBlockEl) this.spawnSnapDroplets(lastBlockEl);
 
       if (this.onBlockAdded) this.onBlockAdded(newBlock);
       if (onComplete) onComplete(newBlock);
@@ -795,12 +852,13 @@ export class ScratchBlockEngine {
       input.addEventListener('mousedown', (e) => e.stopPropagation());
     });
 
-    // Delete button
+    // Delete button returns block to palette
     const deleteBtn = el.querySelector('.block-delete-btn');
     deleteBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
       parentArray.splice(index, 1);
       this.renderWorkspace();
+      this.renderPalette(); // Restores block to palette
       this.updateCodePreview();
       soundFX.playPop(0.85);
     });
@@ -844,9 +902,10 @@ export class ScratchBlockEngine {
             block.children = block.children || [];
             block.children.push(childBlock);
             this.renderWorkspace();
+            this.renderPalette(); // Consume from palette
             this.updateCodePreview();
             soundFX.playSnap();
-            this.spawnSnapSparkles(innerSlot);
+            this.spawnSnapDroplets(innerSlot);
             if (this.onBlockAdded) this.onBlockAdded(childBlock);
           }
         });
@@ -894,44 +953,45 @@ export class ScratchBlockEngine {
 
   renderSyntaxHighlightedLua(rawCode) {
     if (!rawCode || rawCode.trim() === '') {
-      return `<span class="lua-token-comment">-- Monte as peças do quebra-cabeça para gerar o código Lua</span>`;
+      return `<div class="codekit-code-line"><span class="codekit-line-num">1</span><span class="codekit-line-code"><span class="tok-comment">-- Monte as peças na mesa de montagem para gerar o código Lua</span></span></div>`;
     }
 
     const lines = rawCode.split('\n');
     return lines.map((line, idx) => {
-      let highlighted = line
+      let lineHtml = line
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
 
       // Comments
-      if (highlighted.trim().startsWith('--')) {
-        highlighted = `<span class="lua-token-comment">${highlighted}</span>`;
+      if (lineHtml.trim().startsWith('--')) {
+        lineHtml = `<span class="tok-comment">${lineHtml}</span>`;
       } else {
         // Strings
-        highlighted = highlighted.replace(/(["'])(.*?)\1/g, '<span class="lua-token-string">$1$2$1</span>');
+        lineHtml = lineHtml.replace(/(["'])(.*?)\1/g, '<span class="tok-string">$1$2$1</span>');
 
         // Keywords
-        const keywords = ['local', 'se', 'entao', 'senao', 'fim', 'para', 'faca', 'funcao', 'true', 'false', 'nil'];
+        const keywords = ['local', 'se', 'entao', 'senao', 'fim', 'para', 'faca', 'funcao', 'enquanto', 'retorne', 'true', 'false', 'nil', 'and', 'or', 'not'];
         keywords.forEach(kw => {
           const reg = new RegExp(`\\b${kw}\\b`, 'g');
-          highlighted = highlighted.replace(reg, `<span class="lua-token-keyword">${kw}</span>`);
+          lineHtml = lineHtml.replace(reg, `<span class="tok-keyword">${kw}</span>`);
         });
 
-        // Numbers
-        highlighted = highlighted.replace(/\b(\d+)\b/g, '<span class="lua-token-number">$1</span>');
+        // Function Calls
+        lineHtml = lineHtml.replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g, '<span class="tok-fn">$1</span>');
 
-        // Functions
-        highlighted = highlighted.replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g, '<span class="lua-token-func">$1</span>');
+        // Numbers
+        lineHtml = lineHtml.replace(/\b(\d+)\b/g, '<span class="tok-num">$1</span>');
       }
 
-      return `<div class="codekit-lua-line"><span class="line-num">${idx + 1}</span><span class="line-code">${highlighted}</span></div>`;
+      return `<div class="codekit-code-line"><span class="codekit-line-num">${idx + 1}</span><span class="codekit-line-code">${lineHtml}</span></div>`;
     }).join('');
   }
 
   clearWorkspace() {
     this.blocksInWorkspace = [];
     this.renderWorkspace();
+    this.renderPalette(); // Restores all blocks to palette
     this.updateCodePreview();
     soundFX.playPop(0.75);
   }

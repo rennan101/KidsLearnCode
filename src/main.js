@@ -1104,6 +1104,106 @@ class RPGApplication {
     }, duration);
   }
 
+  triggerCelebrationConfetti() {
+    if (typeof document === 'undefined') return;
+    const container = document.createElement('div');
+    container.className = 'confetti-container';
+
+    const colors = ['#19c8b9', '#f59e0b', '#ec4899', '#3b82f6', '#10b981', '#8b5cf6', '#f97316', '#eab308'];
+    const count = 45;
+
+    for (let i = 0; i < count; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-particle';
+
+      const left = Math.random() * 100;
+      const width = 8 + Math.random() * 8;
+      const height = 6 + Math.random() * 10;
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const duration = 1.8 + Math.random() * 1.5;
+      const delay = Math.random() * 0.4;
+      const drift = (Math.random() - 0.5) * 160;
+      const rot = 360 + Math.random() * 720;
+
+      piece.style.left = `${left}vw`;
+      piece.style.width = `${width}px`;
+      piece.style.height = `${height}px`;
+      piece.style.background = color;
+      piece.style.setProperty('--fall-duration', `${duration}s`);
+      piece.style.setProperty('--drift-x', `${drift}px`);
+      piece.style.setProperty('--rot', `${rot}deg`);
+      piece.style.animationDelay = `${delay}s`;
+
+      container.appendChild(piece);
+    }
+
+    document.body.appendChild(container);
+    setTimeout(() => {
+      container.remove();
+    }, 4000);
+  }
+
+  triggerRewardFlight(xp = 100, gold = 50) {
+    if (typeof document === 'undefined') return;
+
+    // Origin: Center of screen / modal
+    const startX = window.innerWidth / 2;
+    const startY = window.innerHeight / 2 + 40;
+
+    // Destination: Passport bar or avatar at top
+    const passportBar = document.getElementById('passport-bar') || document.querySelector('.player-profile-pill') || document.querySelector('.bottom-shortcut-bar');
+    let targetX = 60;
+    let targetY = 40;
+
+    if (passportBar) {
+      const rect = passportBar.getBoundingClientRect();
+      targetX = rect.left + 50;
+      targetY = rect.top + 20;
+    }
+
+    const flyDx = targetX - startX;
+    const flyDy = targetY - startY;
+
+    // 1. XP Badge
+    const xpBadge = document.createElement('div');
+    xpBadge.className = 'reward-flight-badge badge-xp';
+    xpBadge.style.left = `${startX - 75}px`;
+    xpBadge.style.top = `${startY}px`;
+    xpBadge.style.setProperty('--fly-dx', `${flyDx}px`);
+    xpBadge.style.setProperty('--fly-dy', `${flyDy}px`);
+    xpBadge.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+      </svg>
+      <span>+${xp} XP</span>
+    `;
+
+    // 2. Gold Badge
+    const goldBadge = document.createElement('div');
+    goldBadge.className = 'reward-flight-badge badge-gold';
+    goldBadge.style.left = `${startX + 35}px`;
+    goldBadge.style.top = `${startY}px`;
+    goldBadge.style.setProperty('--fly-dx', `${flyDx}px`);
+    goldBadge.style.setProperty('--fly-dy', `${flyDy}px`);
+    goldBadge.style.animationDelay = '0.12s';
+    goldBadge.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M12 7v10M15 9.5c0-.83-.67-1.5-1.5-1.5H10.5c-.83 0-1.5.67-1.5 1.5 0 2 3 1.5 3 3.5 0 .83-.67 1.5-1.5 1.5H9"></path>
+      </svg>
+      <span>+${gold} Moedas</span>
+    `;
+
+    document.body.appendChild(xpBadge);
+    document.body.appendChild(goldBadge);
+
+    setTimeout(() => {
+      soundFX.playPop(1.3);
+      xpBadge.remove();
+      goldBadge.remove();
+    }, 1300);
+  }
+
   populateAssetDrawer() {
     const grid = document.getElementById('tile-drawer-grid');
     const tabsContainer = document.getElementById('category-tabs');
@@ -3116,6 +3216,21 @@ class RPGApplication {
           const iconKey = lesson.unlockedAssetId || this.inventorySystem.inferIconKey(lesson.unlockedAssetId);
           unlockIconEl.innerHTML = this.getItemSvgIcon(iconKey);
         }
+
+        const mentorAvatarEl = document.getElementById('lesson-mentor-avatar');
+        if (mentorAvatarEl) {
+          const npcId = lesson.npcId || 'npc_monkey_builder';
+          const npcPortrait = CharacterRegistry.VILLAGE_NPCS.find(n => n.id === npcId)?.portrait || 'assets/characters/char_wolf_hunter_m/portrait.jpg';
+          mentorAvatarEl.innerHTML = `<img src="${npcPortrait}" alt="Mentor" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+        }
+
+        const tutAvatarEl = document.getElementById('coding-tutorial-img');
+        if (tutAvatarEl) {
+          const npcId = lesson.npcId || 'npc_monkey_builder';
+          const npcPortrait = CharacterRegistry.VILLAGE_NPCS.find(n => n.id === npcId)?.portrait || 'assets/characters/char_wolf_hunter_m/portrait.jpg';
+          tutAvatarEl.src = npcPortrait;
+        }
+
         if (codeEditor) codeEditor.value = lesson.starterLua;
         if (this.scratchEngine) {
           this.scratchEngine.loadLessonBlocks(lesson.blocks, lesson.starterLua, lesson);
@@ -3178,7 +3293,8 @@ class RPGApplication {
 
       if (helpAvatar) {
         const npcId = lesson.npcId || 'npc_monkey_builder';
-        helpAvatar.innerHTML = `<img src="assets/characters/${npcId}/portrait.jpg" onerror="this.src='assets/characters/npc_monkey_builder/portrait.jpg'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Mentor">`;
+        const npcPortrait = CharacterRegistry.VILLAGE_NPCS.find(n => n.id === npcId)?.portrait || 'assets/characters/char_wolf_hunter_m/portrait.jpg';
+        helpAvatar.innerHTML = `<img src="${npcPortrait}" onerror="this.src='assets/characters/char_wolf_hunter_m/portrait.jpg'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Mentor">`;
       }
 
       if (helpStepBox) {
@@ -3247,6 +3363,13 @@ class RPGApplication {
         this.showToast(res.message, 4500);
         this.tutorialManager?.onCodingChallengeCompleted();
 
+        // Trigger celebratory confetti and floating reward badges
+        this.triggerCelebrationConfetti();
+        const currentLesson = this.blocklySystem.getCurrentLesson();
+        const xpAmount = currentLesson?.rewardXp || 100;
+        const goldAmount = currentLesson?.rewardGold || 50;
+        this.triggerRewardFlight(xpAmount, goldAmount);
+
         if (res.unlockedAssetId && this.craftingSystem) {
           this.craftingSystem.unlockRecipe(res.unlockedAssetId);
           // Auto add 1 item to inventory so player can immediately test/decorate
@@ -3257,12 +3380,12 @@ class RPGApplication {
         this.player.spawnCraftPoof();
         this.triggerAutoSave();
 
-        // Auto close after 1.2 seconds of visual celebration
+        // Auto close after 1.8 seconds of visual celebration
         setTimeout(() => {
           if (modal.style.display !== 'none') {
             modal.style.display = 'none';
           }
-        }, 1200);
+        }, 1800);
       } else {
         soundFX.playPop(0.7);
         this.showToast(res.message, 4000);

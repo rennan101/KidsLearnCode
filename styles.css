@@ -4430,71 +4430,105 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
 
 .codekit-code-viewer-wrap {
   flex: 1;
-  min-height: 140px;
-  background: var(--animal-bg-card, #fdfbf7);
+  min-height: 160px;
+  background: #1e1e1e !important;
+  overflow-x: auto;
   overflow-y: auto;
+  max-height: 250px;
   border-bottom: 2px solid var(--animal-border, #c4b89e);
   font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.80rem;
+  font-size: 0.82rem;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.codekit-code-viewer-wrap::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.codekit-code-viewer-wrap::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.codekit-code-viewer-wrap::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 4px;
+}
+
+.codekit-code-viewer-wrap::-webkit-scrollbar-thumb:hover {
+  background: #4f4f4f;
 }
 
 .codekit-syntax-display {
   display: flex;
   flex-direction: column;
   padding: 10px 0;
+  min-width: 100%;
+  width: max-content;
 }
 
 .codekit-code-line {
   display: flex;
   align-items: center;
-  padding: 3px 14px;
-  line-height: 1.5;
+  padding: 2px 0;
+  line-height: 1.55;
   transition: background 0.1s ease;
+  white-space: pre;
 }
 
 .codekit-code-line:hover {
-  background: var(--animal-primary-bg, #e6f9f6);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .codekit-line-num {
-  width: 26px;
-  color: var(--animal-text-secondary, #9f927d);
-  font-size: 0.72rem;
+  width: 38px;
+  min-width: 38px;
+  color: #6e7681;
+  font-size: 0.74rem;
   text-align: right;
-  margin-right: 12px;
+  padding-right: 12px;
+  margin-right: 10px;
+  border-right: 1px solid #333842;
   user-select: none;
 }
 
 .codekit-line-code {
-  color: var(--animal-text, #794f27);
-  font-weight: 700;
+  color: #d4d4d4;
+  font-weight: 600;
+  padding-right: 16px;
   white-space: pre;
 }
 
-/* Code Syntax Token Colors */
-.lua-kw {
-  color: #e11d48;
-  font-weight: 800;
-}
-
-.lua-str {
-  color: #059669;
+/* VS Code Dark Modern Syntax Token Colors */
+.tok-keyword {
+  color: #c586c0;
   font-weight: 700;
 }
 
-.lua-num {
-  color: #d97706;
+.tok-fn {
+  color: #dcdcaa;
   font-weight: 700;
 }
 
-.lua-fn {
-  color: #0284c7;
-  font-weight: 800;
+.tok-string {
+  color: #ce9178;
+  font-weight: 500;
 }
 
-.lua-comment {
-  color: var(--animal-text-muted, #8a7b66);
+.tok-num {
+  color: #b5cea8;
+  font-weight: 600;
+}
+
+.tok-comment {
+  color: #6a9955;
   font-style: italic;
+  font-weight: 500;
+}
+
+.tok-operator {
+  color: #d4d4d4;
+  font-weight: 600;
 }
 
 /* Console Output */
@@ -4846,8 +4880,8 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
   }
 }
 
-/* Satisfying Puzzle Snap Particles & Glow */
-.puzzle-snap-sparkle-container {
+/* Animal Island UI Droplet Splash on Block Snap */
+.animal-snap-droplet-container {
   position: fixed;
   pointer-events: none;
   z-index: 99999;
@@ -4855,23 +4889,26 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
   height: 0;
 }
 
-.puzzle-snap-sparkle-particle {
+.animal-snap-droplet {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: radial-gradient(circle, #fef08a 0%, #f59e0b 80%, #d97706 100%);
-  box-shadow: 0 0 8px #fde047;
-  animation: sparkleFly 0.55s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+  background: #19c8b9;
+  box-shadow: 0 0 8px rgba(25, 200, 185, 0.7);
+  animation: dropletSplash 0.52s cubic-bezier(0.12, 0.9, 0.28, 1) forwards;
 }
 
-@keyframes sparkleFly {
+@keyframes dropletSplash {
   0% {
-    transform: translate(0, 0) scale(1.3);
+    transform: translate(0, 0) scale(1.4);
     opacity: 1;
   }
+  50% {
+    opacity: 0.95;
+  }
   100% {
-    transform: translate(var(--dx, 20px), var(--dy, -20px)) scale(0);
+    transform: translate(var(--splash-dx, 20px), var(--splash-dy, -20px)) scale(0);
     opacity: 0;
   }
 }
@@ -4882,12 +4919,98 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
 
 @keyframes snapGlowPulse {
   0% {
-    filter: brightness(1.25) drop-shadow(0 0 10px #f59e0b);
+    filter: brightness(1.25) drop-shadow(0 0 12px #19c8b9);
     transform: scale(1.02);
   }
   100% {
     filter: none;
     transform: scale(1);
+  }
+}
+
+/* =========================================
+   CELEBRATION: CONFETTI & FLYING REWARDS
+   ========================================= */
+.confetti-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100000;
+  overflow: hidden;
+}
+
+.confetti-particle {
+  position: absolute;
+  top: -20px;
+  border-radius: 3px;
+  opacity: 0.95;
+  animation: confettiFall var(--fall-duration, 2.5s) linear forwards;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(var(--drift-x, 40px), 105vh, 0) rotate(var(--rot, 720deg)) scale(0.6);
+    opacity: 0;
+  }
+}
+
+/* Flying XP and Gold Coin Reward Badges */
+.reward-flight-badge {
+  position: fixed;
+  z-index: 100001;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 50px;
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-size: 0.95rem;
+  font-weight: 800;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3), 0 3px 0 rgba(0, 0, 0, 0.15);
+  animation: rewardFlyArc 1.2s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+
+.reward-flight-badge.badge-xp {
+  background: #19c8b9;
+  color: #ffffff;
+  border: 2.5px solid #0f8e83;
+}
+
+.reward-flight-badge.badge-gold {
+  background: #f59e0b;
+  color: #ffffff;
+  border: 2.5px solid #d97706;
+}
+
+.reward-flight-badge svg {
+  width: 18px;
+  height: 18px;
+  color: #ffffff;
+}
+
+@keyframes rewardFlyArc {
+  0% {
+    transform: translate(0, 0) scale(0.6);
+    opacity: 0;
+  }
+  20% {
+    transform: translate(0, -25px) scale(1.2);
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--fly-dx, 0px), var(--fly-dy, -300px)) scale(0.35);
+    opacity: 0;
   }
 }
 
