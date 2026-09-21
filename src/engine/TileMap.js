@@ -235,11 +235,6 @@ export class TileMap {
   drawTileCell(ctx, cell, x, y, assetLoader, isEditor = false, showColliders = true) {
     if (!cell || !cell.tileId) return;
 
-    // Check Master NPC progression visibility in Play Mode
-    if (!isEditor && cell.tileId.startsWith('npc_') && this.isNpcVisible && !this.isNpcVisible(cell.tileId)) {
-      return;
-    }
-
     const tileMeta = assetLoader.getTileMetadata(cell.tileId);
     if (!tileMeta) return;
 

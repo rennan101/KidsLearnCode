@@ -468,11 +468,6 @@ export class Minimap {
         // Skip invisible colliders in non-editor mode
         if (meta.isInvisibleAsset && !isEditor) continue;
 
-        // Skip locked NPCs in Play Mode
-        if (!isEditor && cell.tileId && cell.tileId.startsWith('npc_') && this.isNpcVisible && !this.isNpcVisible(cell.tileId)) {
-          continue;
-        }
-
         const gw = meta.gridW || 1;
         const gh = meta.gridH || 1;
 

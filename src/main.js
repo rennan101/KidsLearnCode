@@ -2213,7 +2213,6 @@ class RPGApplication {
                 for (let x = startCol; x <= endCol; x++) {
                   const cell = charLayer.get(this.tileMap.getKey(x, y));
                   if (!cell || cell.isRoot === false) continue;
-                  if (!isEditor && cell.tileId && cell.tileId.startsWith('npc_') && !this.isNpcUnlocked(cell.tileId)) continue;
                   const baseY = this.tileMap.getCellBaseY(cell, x, y, this.assetLoader);
                   ySortEntities.push({
                     type: 'tile',
@@ -2432,11 +2431,6 @@ class RPGApplication {
       for (const [key, cell] of layer.entries()) {
         const tileId = (typeof cell === 'object' && cell !== null) ? cell.tileId : (typeof cell === 'string' ? cell : null);
         if (tileId && typeof tileId === 'string' && tileId.startsWith('npc_')) {
-          // In Play mode, only interact with unlocked NPCs
-          if (this.mode === 'play' && !this.isNpcUnlocked(tileId)) {
-            continue;
-          }
-
           const [tx, ty] = key.split(',').map(Number);
           const npcWorldX = tx * 64 + 32;
           const npcWorldY = ty * 64 + 32;

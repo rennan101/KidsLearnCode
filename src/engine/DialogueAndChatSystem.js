@@ -526,6 +526,18 @@ export class DialogueAndChatSystem {
       worldY: npcData.worldY ?? (npcData.ty ? npcData.ty * 64 : 0)
     };
 
+    const MASTER_SEQUENCE = [
+      { id: 'npc_monkey_builder', name: 'Bambu, o Engenheiro' },
+      { id: 'npc_bull_blacksmith', name: 'Brutus da Bigorna' },
+      { id: 'npc_rabbit_farmer', name: 'Flora dos Brotos' },
+      { id: 'npc_alligator_ferryman', name: 'Barnabé, o Barqueiro' },
+      { id: 'npc_penguin_angler', name: 'Pingo dos Icebergs' },
+      { id: 'npc_chameleon_magician', name: 'Cromos, o Tecelão de Cores' },
+      { id: 'npc_shark_surfer', name: 'Kai, o Tubarão das Ondas' },
+      { id: 'npc_owl_professor', name: 'Dr. Arquimedes' },
+      { id: 'npc_turtle_elder', name: 'Mestre Casco' }
+    ];
+
     const progress = blocklySystem?.getNpcProgress(npcData.id) || {
       completedCount: 0,
       totalCount: 1,
@@ -539,6 +551,55 @@ export class DialogueAndChatSystem {
       portraitUrl: resolvedPortrait,
       pitch: 500
     };
+
+    // Sequential Linear Progression Check:
+    // If the player hasn't completed previous masters yet, guide them to the current pending master.
+    const masterIdx = MASTER_SEQUENCE.findIndex(m => m.id === npcData.id);
+    if (masterIdx > 0 && blocklySystem) {
+      const currentUnfinishedIndex = MASTER_SEQUENCE.findIndex(m => {
+        const prog = blocklySystem.getNpcProgress(m.id);
+        return !prog || !prog.isFinished;
+      });
+
+      if (currentUnfinishedIndex !== -1 && masterIdx > currentUnfinishedIndex) {
+        const requiredMaster = MASTER_SEQUENCE[currentUnfinishedIndex];
+        
+        let customLockedMessage = `Ainda não estamos prontos para trabalhar juntos! Primeiro você precisa completar todo o treinamento com ${requiredMaster.name}.`;
+
+        if (npcData.id === 'npc_bull_blacksmith') {
+          customLockedMessage = `Humpf! Antes de aprender os segredos da forja e criar ferramentas de ferro, você precisa dominar o básico com ${requiredMaster.name}! Complete as missões dele primeiro.`;
+        } else if (npcData.id === 'npc_rabbit_farmer') {
+          customLockedMessage = `Olá, jovem brotinho! A terra precisa de ferramentas adequadas antes de plantar. Conclua os ensinamentos com ${requiredMaster.name} antes de iniciarmos nossa horta mágica!`;
+        } else if (npcData.id === 'npc_alligator_ferryman') {
+          customLockedMessage = `Ora, ora... Para construirmos pontes resistentes e cercados seguros, precisamos da madeira nobre e essências de ${requiredMaster.name}! Procure-a na ilha e termine seus desafios.`;
+        } else if (npcData.id === 'npc_penguin_angler') {
+          customLockedMessage = `Brrr! As águas da ilha exigem pontes e caminhos seguros primeiro! Visite ${requiredMaster.name} e termine os projetos dele antes de começarmos a pescar!`;
+        } else if (npcData.id === 'npc_chameleon_magician') {
+          customLockedMessage = `Uma tela de arte precisa de infraestrutura e elementos aquáticos antes das cores! Conclua o treinamento com ${requiredMaster.name} antes de tecermos os pisos da ilha!`;
+        } else if (npcData.id === 'npc_shark_surfer') {
+          customLockedMessage = `E aí, fera! Antes de equipar a vila com grandes estruturas e rampas, aprenda a traçar todos os caminhos com ${requiredMaster.name}!`;
+        } else if (npcData.id === 'npc_owl_professor') {
+          customLockedMessage = `Pelas penas da sabedoria! O Grimório de Fogo e Magma requer uma base bem estruturada. Procure ${requiredMaster.name} e conclua as missões dele primeiro!`;
+        } else if (npcData.id === 'npc_turtle_elder') {
+          customLockedMessage = `Os dragões ancestrais só despertarão quando toda a ilha estiver em perfeita harmonia. Termine todos os ensinamentos com ${requiredMaster.name} antes de cuidarmos dos ninhos!`;
+        }
+
+        const lockedPages = [
+          customLockedMessage,
+          `[Mestre Atual Recomendado: ${requiredMaster.name}]\nEncontre ${requiredMaster.name} na Ilha Lua e conclua seus desafios de programação no Estúdio de Códigos para avançar na sua jornada!`
+        ];
+
+        const lockedChoices = [
+          {
+            label: `Entendido! Vou procurar ${requiredMaster.name.split(',')[0]}`,
+            action: () => this.closeNPCDialogue()
+          }
+        ];
+
+        this.startNPCDialogue(speakerMeta, lockedPages, lockedChoices, null, npcData);
+        return;
+      }
+    }
 
     if (progress.isFinished) {
       // All missions for this NPC are completed
