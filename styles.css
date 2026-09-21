@@ -1639,7 +1639,7 @@ canvas#game-canvas {
 }
 
 /* =========================================
-   RPG CIRCULAR MINIMAP WITH GOLDEN BEZEL
+   GENSHIN IMPACT STYLE CIRCULAR MINIMAP WITH EDGE FADE
    ========================================= */
 
 .minimap-hud {
@@ -1649,89 +1649,75 @@ canvas#game-canvas {
   width: 176px;
   height: 176px;
   z-index: 28;
-  filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.85));
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.45));
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
 }
 
 .minimap-hud:hover {
   transform: scale(1.03);
 }
 
-/* Golden Ornamental Bezel Frame */
+/* Outer circular container without heavy opaque bezels */
 .minimap-bezel {
   position: relative;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  padding: 8px;
-  background: conic-gradient(
-    from 180deg at 50% 50%,
-    #b45309 0deg,
-    #f59e0b 60deg,
-    #fef08a 120deg,
-    #d97706 180deg,
-    #78350f 240deg,
-    #f59e0b 300deg,
-    #b45309 360deg
-  );
-  box-shadow: 
-    0 0 0 2px #451a03,
-    inset 0 0 0 2px #78350f,
-    inset 0 2px 4px rgba(255, 255, 255, 0.7),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.9),
-    0 0 16px rgba(245, 158, 11, 0.45);
+  padding: 0;
+  background: transparent;
   box-sizing: border-box;
 }
 
-/* Cardinal Directions (N, E, S, W) */
+/* Cardinal Directions (N, E, S, W) positioned subtly over the fade */
 .compass-marker {
   position: absolute;
-  font-family: 'Cinzel', serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 800;
   font-size: 0.65rem;
-  color: #fef08a;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(245, 158, 11, 0.8);
+  color: rgba(254, 240, 138, 0.85);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 6px rgba(245, 158, 11, 0.6);
   pointer-events: none;
   z-index: 5;
 }
 
 .marker-n {
-  top: 1px;
+  top: 5px;
   left: 50%;
   transform: translateX(-50%);
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   text-shadow: 0 0 8px #f59e0b, 0 2px 4px #000;
 }
 
 .marker-s {
-  bottom: 1px;
+  bottom: 5px;
   left: 50%;
   transform: translateX(-50%);
 }
 
 .marker-e {
-  right: 2px;
+  right: 5px;
   top: 50%;
   transform: translateY(-50%);
 }
 
 .marker-w {
-  left: 2px;
+  left: 5px;
   top: 50%;
   transform: translateY(-50%);
 }
 
-/* Inner Circular Clipping Mask for Canvas */
+/* Inner Circular Clipping Mask with Radial Gradient Fade on Edges */
 .minimap-inner-mask {
   width: 100%;
   height: 100%;
   border-radius: 50%;
   overflow: hidden;
   position: relative;
-  background: #070a10;
-  border: 2px solid #1a1208;
-  box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.9);
+  background: transparent;
+  -webkit-mask-image: radial-gradient(circle at center, rgba(0,0,0,1) 68%, rgba(0,0,0,0.85) 82%, rgba(0,0,0,0) 100%);
+  mask-image: radial-gradient(circle at center, rgba(0,0,0,1) 68%, rgba(0,0,0,0.85) 82%, rgba(0,0,0,0) 100%);
 }
 
 #minimap-canvas {
@@ -1739,32 +1725,39 @@ canvas#game-canvas {
   height: 100%;
   display: block;
   image-rendering: pixelated;
+  background: transparent;
 }
 
-/* Expand Button (SVG + M Key Hint) */
+/* Expand Button (Animal Island UI Pill Style) */
 .minimap-btn-expand {
   position: absolute;
-  bottom: -4px;
-  right: -4px;
-  background: linear-gradient(135deg, #1e293b, #0f172a);
-  border: 1.5px solid var(--accent-gold);
-  color: var(--accent-gold);
-  border-radius: 20px;
+  bottom: 0;
+  right: 0;
+  background: #2b1f14;
+  border: 1.5px solid #7a583e;
+  color: #fef08a;
+  border-radius: 50px;
   padding: 4px 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 4px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7), 0 0 8px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 3px 0 0 #180f07, 0 4px 10px rgba(0, 0, 0, 0.5);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 10;
 }
 
 .minimap-btn-expand:hover {
-  background: var(--accent-gold);
-  color: #000;
-  transform: scale(1.1);
-  box-shadow: 0 0 16px rgba(245, 158, 11, 0.7);
+  background: #3d2b1d;
+  color: #ffffff;
+  border-color: #f59e0b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 0 #180f07, 0 6px 12px rgba(245, 158, 11, 0.3);
+}
+
+.minimap-btn-expand:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 #180f07;
 }
 
 .minimap-key-hint {

@@ -235,8 +235,8 @@ export class Minimap {
       focusY = this.camera.y + (this.camera.viewportHeight / this.camera.zoom) / 2;
     }
 
-    // Draw dark fantasy parchment background
-    ctx.fillStyle = '#070a10';
+    // Draw semi-transparent fantasy background (Genshin Impact style)
+    ctx.fillStyle = isExpandedMode ? '#070a10' : 'rgba(10, 16, 26, 0.78)';
     ctx.fillRect(0, 0, width, height);
 
     // Coordinate grid lines for expanded tactical overview
@@ -347,17 +347,37 @@ export class Minimap {
 
     ctx.restore();
 
-    // Subtle dark radial vignette over the minimap canvas for depth
+    // Genshin Impact style: Smooth radial edge transparency fade (feathered border)
     if (!isExpandedMode) {
-      const grad = ctx.createRadialGradient(centerX, centerY, width * 0.35, centerX, centerY, width * 0.5);
-      grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-      grad.addColorStop(1, 'rgba(0, 0, 0, 0.65)');
-      ctx.fillStyle = grad;
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-in';
+      const maskGrad = ctx.createRadialGradient(centerX, centerY, width * 0.32, centerX, centerY, width * 0.5);
+      maskGrad.addColorStop(0, 'rgba(0, 0, 0, 1)');
+      maskGrad.addColorStop(0.72, 'rgba(0, 0, 0, 0.95)');
+      maskGrad.addColorStop(0.90, 'rgba(0, 0, 0, 0.45)');
+      maskGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = maskGrad;
       ctx.fillRect(0, 0, width, height);
+      ctx.restore();
+
+      // Subtle delicate inner compass guide ring
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, width * 0.44, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.12)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, width * 0.35, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
 
       // Draw Radial Day/Night Orbital Sun/Moon and Action Points on Circular Rim
       if (this.dayNightSystem) {
-        this.renderDayNightAndAPRing(ctx, centerX, centerY, width * 0.46);
+        this.renderDayNightAndAPRing(ctx, centerX, centerY, width * 0.44);
       }
     }
   }
@@ -448,6 +468,11 @@ export class Minimap {
         // Skip invisible colliders in non-editor mode
         if (meta.isInvisibleAsset && !isEditor) continue;
 
+        // Skip locked NPCs in Play Mode
+        if (!isEditor && cell.tileId && cell.tileId.startsWith('npc_') && this.isNpcVisible && !this.isNpcVisible(cell.tileId)) {
+          continue;
+        }
+
         const gw = meta.gridW || 1;
         const gh = meta.gridH || 1;
 
@@ -460,6 +485,20 @@ export class Minimap {
         const mapY = (worldY - focusY) * scale;
         const mapW = widthPx * scale;
         const mapH = heightPx * scale;
+
+        if (cell.tileId && cell.tileId.startsWith('npc_')) {
+          // NPC Master quest indicator dot
+          ctx.save();
+          ctx.fillStyle = '#38bdf8';
+          ctx.beginPath();
+          ctx.arc(mapX + mapW / 2, mapY + mapH / 2, Math.max(3.5, mapW * 0.4), 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+          ctx.restore();
+          continue;
+        }
 
         const color = this.getTileColor(cell.tileId);
         ctx.fillStyle = color;

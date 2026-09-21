@@ -52,6 +52,11 @@ class RPGApplication {
     this.player = new Player(320, 320);
     this.camera = new Camera();
     this.minimap = new Minimap(this.tileMap, this.assetLoader, this.player, this.camera, this.dayNightSystem);
+
+    // Sequential Master NPC progression filters
+    this.tileMap.isNpcVisible = (npcId) => this.isNpcUnlocked(npcId);
+    this.minimap.isNpcVisible = (npcId) => this.isNpcUnlocked(npcId);
+
     this.editorController = new EditorController(
       this.tileMap,
       this.assetLoader,
@@ -1076,6 +1081,7 @@ class RPGApplication {
       if (confirm('Tem certeza de que deseja limpar todo o mapa do mundo?')) {
         this.editorController.recordState();
         this.tileMap = new TileMap();
+        this.tileMap.isNpcVisible = (npcId) => this.isNpcUnlocked(npcId);
         this.editorController.tileMap = this.tileMap;
         this.minimap.tileMap = this.tileMap;
         this.editorController.undoManager.tileMap = this.tileMap;
@@ -2207,6 +2213,7 @@ class RPGApplication {
                 for (let x = startCol; x <= endCol; x++) {
                   const cell = charLayer.get(this.tileMap.getKey(x, y));
                   if (!cell || cell.isRoot === false) continue;
+                  if (!isEditor && cell.tileId && cell.tileId.startsWith('npc_') && !this.isNpcUnlocked(cell.tileId)) continue;
                   const baseY = this.tileMap.getCellBaseY(cell, x, y, this.assetLoader);
                   ySortEntities.push({
                     type: 'tile',
@@ -2375,6 +2382,42 @@ class RPGApplication {
     }
   }
 
+  /**
+   * Sequential Master NPC Progression:
+   * 1. Bambu, o Engenheiro (npc_monkey_builder)
+   * 2. Brutus da Bigorna (npc_bull_blacksmith)
+   * 3. Flora dos Brotos (npc_rabbit_farmer)
+   * 4. Barnabé, o Barqueiro (npc_alligator_ferryman)
+   * 5. Pingo dos Icebergs (npc_penguin_angler)
+   * 6. Cromos, o Tecelão de Cores (npc_chameleon_magician)
+   * 7. Kai, o Tubarão das Ondas (npc_shark_surfer)
+   * 8. Dr. Arquimedes (npc_owl_professor)
+   * 9. Mestre Casco (npc_turtle_elder)
+   */
+  isNpcUnlocked(npcId) {
+    if (this.mode === 'edit') return true;
+    const masterSequence = [
+      'npc_monkey_builder',
+      'npc_bull_blacksmith',
+      'npc_rabbit_farmer',
+      'npc_alligator_ferryman',
+      'npc_penguin_angler',
+      'npc_chameleon_magician',
+      'npc_shark_surfer',
+      'npc_owl_professor',
+      'npc_turtle_elder'
+    ];
+    const idx = masterSequence.indexOf(npcId);
+    // Non-master NPCs or the first master (Bambu) are always visible by default
+    if (idx <= 0) return true;
+    if (!this.blocklySystem) return false;
+
+    // Previous master must have completed all missions
+    const prevMasterId = masterSequence[idx - 1];
+    const progress = this.blocklySystem.getNpcProgress(prevMasterId);
+    return !!(progress && progress.isFinished);
+  }
+
   findNearbyNPC(worldX, worldY, radius = 110) {
     if (!this.tileMap || !this.tileMap.layers) return null;
 
@@ -2389,6 +2432,11 @@ class RPGApplication {
       for (const [key, cell] of layer.entries()) {
         const tileId = (typeof cell === 'object' && cell !== null) ? cell.tileId : (typeof cell === 'string' ? cell : null);
         if (tileId && typeof tileId === 'string' && tileId.startsWith('npc_')) {
+          // In Play mode, only interact with unlocked NPCs
+          if (this.mode === 'play' && !this.isNpcUnlocked(tileId)) {
+            continue;
+          }
+
           const [tx, ty] = key.split(',').map(Number);
           const npcWorldX = tx * 64 + 32;
           const npcWorldY = ty * 64 + 32;

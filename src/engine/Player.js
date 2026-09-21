@@ -295,6 +295,11 @@ export class Player {
           const cell = layer.get(tileMap.getKey(tx, ty));
           if (!cell || cell.isRoot === false) continue;
 
+          // Skip collision for locked/invisible NPCs
+          if (cell.tileId && typeof cell.tileId === 'string' && cell.tileId.startsWith('npc_') && tileMap.isNpcVisible && !tileMap.isNpcVisible(cell.tileId)) {
+            continue;
+          }
+
           const meta = assetLoader.getTileMetadata(cell.tileId);
           const col = cell.collider || meta?.collider;
           if (!col || !col.enabled) continue;
