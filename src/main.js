@@ -477,7 +477,7 @@ class RPGApplication {
           placeBtn.addEventListener('click', () => {
             const targetLayer = placeBtn.dataset.layer;
             this.editorController.setLayer(targetLayer);
-            this.showToast(`🎯 Camada ativa alterada para ${targetLayer}!`);
+            this.showToast(`Camada ativa alterada para ${targetLayer}!`);
           });
         }
 
@@ -570,7 +570,7 @@ class RPGApplication {
       if (tileId === 'character-geralt' && this.player) {
         this.player.setScale(scale);
       }
-      this.showToast(`📏 Escala do personagem alterada para ${scale}x!`);
+      this.showToast(`Escala do personagem alterada para ${scale}x!`);
     };
 
     // Slider input
@@ -666,7 +666,7 @@ class RPGApplication {
       btn.addEventListener('click', () => {
         const z = parseFloat(btn.dataset.zoom) || 1.0;
         applyZoom(z);
-        this.showToast(`🎥 Zoom da câmera de jogo definido para ${z}x!`);
+        this.showToast(`Zoom da câmera de jogo definido para ${z}x!`);
       });
     });
 
@@ -989,14 +989,14 @@ class RPGApplication {
 
     document.getElementById('btn-redo')?.addEventListener('click', () => {
       if (this.editorController.redo()) {
-        this.showToast('↪️ Ação refeita (Redo)');
+        this.showToast('Ação refeita (Redo)');
       }
     });
 
     // Focus Geralt [F] Button
     document.getElementById('btn-focus-player')?.addEventListener('click', () => {
       this.editorController.focusPlayer();
-      this.showToast('🎯 Câmera centralizada no Geralt [F]');
+      this.showToast('Câmera centralizada no Geralt [F]');
     });
 
     // Layer segment buttons in drawer
@@ -1048,13 +1048,13 @@ class RPGApplication {
           const addedCount = await this.assetLoader.refreshAssets();
           this.populateAssetDrawer();
           if (addedCount > 0) {
-            this.showToast(`✅ ${addedCount} novos assets encontrados e carregados!`);
+            this.showToast(`${addedCount} novos assets encontrados e carregados!`);
           } else {
-            this.showToast('✨ Todos os assets da pasta já estão atualizados!');
+            this.showToast('Todos os assets da pasta já estão atualizados!');
           }
         } catch (err) {
           console.error('Error refreshing assets:', err);
-          this.showToast('⚠️ Erro ao atualizar assets da pasta.');
+          this.showToast('Erro ao atualizar assets da pasta.');
         } finally {
           btnRefresh.classList.remove('spinning');
         }
@@ -2033,33 +2033,7 @@ class RPGApplication {
     this.activeDialogueNPC = npc;
     this.dialogueSystem.openNpcConversation(npc, this.blocklySystem, {
       onOpenLesson: (lessonId) => {
-        const codingModal = document.getElementById('coding-modal') || document.getElementById('coding-studio-modal');
-        const lessonSelect = document.getElementById('select-lua-lesson');
-        if (codingModal && this.blocklySystem) {
-          this.blocklySystem.setLesson(lessonId);
-          if (lessonSelect) {
-            const idx = this.blocklySystem.lessons.findIndex(l => l.id === lessonId);
-            if (idx !== -1) lessonSelect.value = idx;
-          }
-          const lesson = this.blocklySystem.getCurrentLesson();
-          const lessonDesc = document.getElementById('lesson-desc');
-          const rewardBadge = document.getElementById('lesson-reward-badge');
-          const unlockBadge = document.getElementById('lesson-unlock-target');
-          const codeEditor = document.getElementById('lua-code-editor');
-          const consoleOut = document.getElementById('lua-console-output');
-
-          if (lessonDesc) lessonDesc.innerText = `${lesson.mentor} (${lesson.mentorRole}): ${lesson.description}`;
-          if (rewardBadge) rewardBadge.innerText = `+${lesson.rewardXP} XP / +${lesson.rewardGold} Moedas`;
-          if (unlockBadge) unlockBadge.innerText = `Desbloqueio: ${lesson.unlockedAssetName || 'Item Especial'}`;
-          if (codeEditor) codeEditor.value = lesson.starterLua;
-          if (this.scratchEngine) {
-            this.scratchEngine.loadLessonBlocks(lesson.blocks, lesson.starterLua);
-          }
-          if (consoleOut) {
-            consoleOut.innerHTML = `> Lição carregada: <strong>${lesson.title}</strong> (${lesson.concept})\n> Objeto a Desbloquear: <strong>${lesson.unlockedAssetName}</strong>\n> Arraste os blocos na área central e clique em 'Executar Montagem & Fabricar'.`;
-          }
-          codingModal.style.display = 'flex';
-        }
+        this.openCodingChallengeModal(lessonId);
       },
       onOpenCrafting: () => {
         if (this.openCraftingModal) {
@@ -2239,20 +2213,16 @@ class RPGApplication {
         // "Montar com Blocos" -> Opens Scratch studio configured for this recipe
         item.querySelector('.ac-btn-diy-blocks')?.addEventListener('click', () => {
           craftingModal.style.display = 'none';
-          const codingModal = document.getElementById('coding-modal') || document.getElementById('coding-studio-modal');
-          if (codingModal && this.scratchEngine) {
-            const starterCode = `-- Criando ${rec.name}\nfabricar_movel("${rec.assetId}", "carvalho")`;
-            this.scratchEngine.loadLessonBlocks(null, starterCode);
-            const titleEl = document.getElementById('coding-studio-title');
-            if (titleEl) titleEl.innerText = `Bancada DIY: ${rec.name}`;
-            const unlockBadge = document.getElementById('lesson-unlock-target');
-            if (unlockBadge) unlockBadge.innerText = `Receita: ${rec.name}`;
-            const rewardBadge = document.getElementById('lesson-reward-badge');
-            if (rewardBadge) rewardBadge.innerText = `Salva na Bolsa`;
-            const lessonDesc = document.getElementById('lesson-desc');
-            if (lessonDesc) lessonDesc.innerText = `Monte as peças de quebra-cabeça na bancada DIY para fabricar ${rec.name} e guardar na sua Bolsa.`;
-            codingModal.style.display = 'flex';
-          }
+          const starterCode = `-- Criando ${rec.name}\nfabricar_movel("${rec.assetId}", "carvalho")`;
+          this.openCodingChallengeModal(null, {
+            title: `Bancada DIY: ${rec.name}`,
+            mentor: 'Bancada DIY',
+            mentorRole: 'Oficina da Ilha',
+            description: `Encaixe o bloco na área de montagem para fabricar ${rec.name} e guardar na sua Bolsa.`,
+            reward: 'Item Pronto',
+            unlock: rec.name,
+            starterLua: starterCode
+          });
         });
 
         // "Criar Rápido"
@@ -2318,10 +2288,10 @@ class RPGApplication {
           <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 16px; line-height: 1.4;">${speciesData.desc}</p>
           <div style="display: flex; gap: 10px; justify-content: center;">
             <button id="btn-adopt-dragon" class="mount-btn" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff;">
-              Adotar na Bag B 🐉
+              Adotar na Mochila
             </button>
             <button id="btn-release-dragon" class="mount-btn" style="background: #334155; color: #e2e8f0;">
-              Libertar na Natureza 🕊️ (+30 Karma)
+              Libertar na Natureza (+30 Harmonia)
             </button>
           </div>
         </div>
@@ -2330,15 +2300,15 @@ class RPGApplication {
       document.getElementById('btn-adopt-dragon')?.addEventListener('click', () => {
         const res = this.dragonManager.adoptHatchedDragon(speciesData.id);
         if (res.success) {
-          this.showToast(`🎉 ${speciesData.name} foi adicionado à sua Mochila de Dragões!`);
+          this.showToast(`${speciesData.name} foi adicionado à sua Mochila de Dragões!`);
         } else {
-          this.showToast(`⚠️ ${res.reason}`);
+          this.showToast(res.reason);
         }
         hatchModal.style.display = 'none';
       });
 
       document.getElementById('btn-release-dragon')?.addEventListener('click', () => {
-        this.showToast(`🕊️ Você libertou o dragãozinho na natureza. Karma e harmonia da ilha aumentados! (+30)`);
+        this.showToast(`Você libertou o dragãozinho na natureza. Harmonia da ilha aumentada! (+30)`);
         hatchModal.style.display = 'none';
       });
     };
@@ -2762,13 +2732,68 @@ class RPGApplication {
     });
   }
 
-  setupCodingStudioUI() {
+  openCodingChallengeModal(lessonIdOrIndex = null, customOptions = null) {
     const modal = document.getElementById('coding-modal') || document.getElementById('coding-studio-modal');
-    const closeBtn = document.getElementById('btn-close-coding');
-    const lessonSelect = document.getElementById('select-lua-lesson');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('coding-studio-title');
+    const mentorNameEl = document.getElementById('coding-mentor-name');
+    const mentorRoleEl = document.getElementById('coding-mentor-role');
     const lessonDesc = document.getElementById('lesson-desc');
     const rewardBadge = document.getElementById('lesson-reward-badge');
     const unlockBadge = document.getElementById('lesson-unlock-target');
+    const codeEditor = document.getElementById('lua-code-editor');
+    const consoleOut = document.getElementById('lua-console-output');
+
+    if (customOptions) {
+      if (titleEl) titleEl.innerText = customOptions.title || 'Bancada DIY de Montagem';
+      if (mentorNameEl) mentorNameEl.innerText = customOptions.mentor || 'Bancada DIY';
+      if (mentorRoleEl) mentorRoleEl.innerText = customOptions.mentorRole || 'Criação Rápida';
+      if (lessonDesc) lessonDesc.innerText = customOptions.description || 'Encaixe o bloco no tabuleiro para fabricar o item!';
+      if (rewardBadge) rewardBadge.innerText = customOptions.reward || 'Salva na Bolsa';
+      if (unlockBadge) unlockBadge.innerText = customOptions.unlock || 'Novo Item';
+      if (codeEditor) codeEditor.value = customOptions.starterLua || '';
+      if (this.scratchEngine) {
+        this.scratchEngine.loadLessonBlocks(customOptions.blocks || null, customOptions.starterLua || '', null);
+      }
+      if (consoleOut) {
+        consoleOut.innerText = `> Bancada DIY pronta!\n> Arraste a peça para a área de montagem e clique em 'Montar & Fabricar'.`;
+      }
+    } else {
+      let lesson = null;
+      if (lessonIdOrIndex !== null && lessonIdOrIndex !== undefined) {
+        lesson = this.blocklySystem.setLesson(lessonIdOrIndex);
+      } else {
+        lesson = this.blocklySystem.getCurrentLesson();
+      }
+
+      if (!lesson) {
+        lesson = this.blocklySystem.setLesson(0);
+      }
+
+      if (lesson) {
+        if (titleEl) titleEl.innerText = `Desafio: ${lesson.title}`;
+        if (mentorNameEl) mentorNameEl.innerText = lesson.mentor || 'Mestre da Ilha';
+        if (mentorRoleEl) mentorRoleEl.innerText = lesson.mentorRole || 'Guia de Código';
+        if (lessonDesc) lessonDesc.innerText = lesson.description;
+        if (rewardBadge) rewardBadge.innerText = `+${lesson.rewardXP} XP / +${lesson.rewardGold} Moedas`;
+        if (unlockBadge) unlockBadge.innerText = `Desbloqueia: ${lesson.unlockedAssetName || 'Item Especial'}`;
+        if (codeEditor) codeEditor.value = lesson.starterLua;
+        if (this.scratchEngine) {
+          this.scratchEngine.loadLessonBlocks(lesson.blocks, lesson.starterLua, lesson);
+        }
+        if (consoleOut) {
+          consoleOut.innerHTML = `> Desafio carregado: <strong>${lesson.title}</strong>\n> Objetivo: <strong>${lesson.unlockedAssetName}</strong>\n> Arraste o bloco de encaixe para a direita e clique em 'Montar & Fabricar'!`;
+        }
+      }
+    }
+
+    modal.style.display = 'flex';
+  }
+
+  setupCodingStudioUI() {
+    const modal = document.getElementById('coding-modal') || document.getElementById('coding-studio-modal');
+    const closeBtn = document.getElementById('btn-close-coding');
     const codeEditor = document.getElementById('lua-code-editor');
     const consoleOut = document.getElementById('lua-console-output');
     const btnRun = document.getElementById('btn-run-lua');
@@ -2777,25 +2802,13 @@ class RPGApplication {
     const paletteEl = document.getElementById('scratch-palette');
     const workspaceEl = document.getElementById('scratch-workspace');
 
-    if (!modal || !lessonSelect || !codeEditor) return;
+    if (!modal || !codeEditor) return;
 
     if (this.scratchEngine) {
       if (paletteEl) this.scratchEngine.setPaletteContainer(paletteEl);
       if (workspaceEl) this.scratchEngine.setWorkspaceContainer(workspaceEl);
       if (codeEditor) this.scratchEngine.setCodeOutputContainer(codeEditor);
     }
-
-    // Category buttons filter
-    document.querySelectorAll('.scratch-cat-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.scratch-cat-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const cat = btn.dataset.category || 'all';
-        if (this.scratchEngine) {
-          this.scratchEngine.setFilterCategory(cat);
-        }
-      });
-    });
 
     // Clear Workspace Button
     btnClearWorkspace?.addEventListener('click', () => {
@@ -2808,49 +2821,15 @@ class RPGApplication {
       modal.style.display = 'none';
     });
 
-    const populateLessons = () => {
-      lessonSelect.innerHTML = '';
-      this.blocklySystem.lessons.forEach((l, idx) => {
-        const opt = document.createElement('option');
-        opt.value = idx;
-        const isDone = this.blocklySystem.completedLessons.has(l.id);
-        opt.innerText = `${isDone ? '[Concluído] ' : ''}${l.title}`;
-        lessonSelect.appendChild(opt);
-      });
-    };
-
-    const loadLesson = (idx) => {
-      const lesson = this.blocklySystem.setLesson(idx);
-      if (!lesson) return;
-
-      if (lessonDesc) lessonDesc.innerText = `${lesson.mentor} (${lesson.mentorRole}): ${lesson.description}`;
-      if (rewardBadge) rewardBadge.innerText = `+${lesson.rewardXP} XP / +${lesson.rewardGold} Moedas`;
-      if (unlockBadge) unlockBadge.innerText = `Desbloqueio: ${lesson.unlockedAssetName || 'Item Especial'}`;
-      if (codeEditor) codeEditor.value = lesson.starterLua;
-      if (this.scratchEngine) {
-        this.scratchEngine.loadLessonBlocks(lesson.blocks, lesson.starterLua);
-      }
-      if (consoleOut) {
-        consoleOut.innerHTML = `> Lição carregada: <strong>${lesson.title}</strong> (${lesson.concept})\n> Objeto a Desbloquear: <strong>${lesson.unlockedAssetName}</strong>\n> Arraste os blocos ou edite os valores e clique em 'Executar Montagem & Fabricar'.`;
-      }
-    };
-
-    populateLessons();
-    loadLesson(0);
-
-    lessonSelect.addEventListener('change', (e) => {
-      loadLesson(parseInt(e.target.value, 10));
-    });
-
-    // Run code & execute physical Map Grid spawning (Step 2)
+    // Run code & execute physical item crafting / inventory deposit
     btnRun?.addEventListener('click', () => {
       const code = codeEditor.value;
       const res = this.blocklySystem.runScript(code);
 
       if (consoleOut) {
-        let outHtml = `> Executando montagem e script Lua...\n`;
+        let outHtml = `> Montagem validada com sucesso!\n`;
         if (res.logs && res.logs.length > 0) {
-          outHtml += res.logs.map(l => `> [LOG] ${l}`).join('\n') + '\n';
+          outHtml += res.logs.map(l => `> [OK] ${l}`).join('\n') + '\n';
         }
         outHtml += `> ${res.message}\n`;
         consoleOut.innerText = outHtml;
@@ -2859,62 +2838,23 @@ class RPGApplication {
 
       if (res.success) {
         this.showToast(res.message, 4500);
-        populateLessons();
 
         if (res.unlockedAssetId && this.craftingSystem) {
           this.craftingSystem.unlockRecipe(res.unlockedAssetId);
+          // Auto add 1 item to inventory so player can immediately test/decorate
+          this.inventorySystem.addItem(res.unlockedAssetId, 1, { name: res.unlockedAssetName || res.unlockedAssetId });
         }
 
-        // Physical Map Grid Spawning in front of Player
-        const dirDeltas = { north: { dx: 0, dy: -1 }, south: { dx: 0, dy: 1 }, west: { dx: -1, dy: 0 }, east: { dx: 1, dy: 0 } };
-        const delta = dirDeltas[this.player.direction] || { dx: 0, dy: 1 };
-        const pTx = Math.floor((this.player.x + 32) / 64);
-        const pTy = Math.floor((this.player.y + 32) / 64);
-        const targetX = pTx + delta.dx;
-        const targetY = pTy + delta.dy;
+        // Spawn visual craft poof on player
+        this.player.spawnCraftPoof();
+        this.triggerAutoSave();
 
-        if (res.logs && res.logs.length > 0) {
-          for (const log of res.logs) {
-            if (log.startsWith('movel_fabricado:') || log.startsWith('mesa_fabricada:') || log.startsWith('cama_fabricada:') || log.startsWith('cama_nobre_fabricada:') || log.startsWith('tenda_erguida:') || log.startsWith('casa_concluida:')) {
-              this.tileMap.setTile('solid', targetX, targetY, 'crate');
-              this.inventorySystem.addItem('wood', 10);
-              this.player.spawnCraftPoof();
-              this.triggerAutoSave();
-            } else if (log.startsWith('ferramenta_forjada:') || log.startsWith('machado_forjado:') || log.startsWith('picareta_forjada:')) {
-              this.inventorySystem.addItem('iron_ore', 5);
-              if (log.includes('pickaxe')) this.inventorySystem.equipTool('tool_pickaxe');
-              if (log.includes('axe')) this.inventorySystem.equipTool('tool_axe');
-              this.player.spawnCraftPoof();
-            } else if (log.startsWith('regador_pronto:') || log.startsWith('sementes_embaladas:') || log.startsWith('arbusto_plantado:') || log.startsWith('arvore_cultivada:') || log.startsWith('pinheiro_plantado:')) {
-              this.tileMap.setTile('decor', targetX, targetY, 'flower-magic');
-              this.inventorySystem.addItem('pumpkin_seed', 5);
-              this.player.spawnCraftPoof();
-              this.triggerAutoSave();
-            } else if (log.startsWith('cerca_fincada:') || log.startsWith('portao_montado:') || log.startsWith('ponte_h_construida:') || log.startsWith('ponte_v_construida:')) {
-              this.tileMap.setTile('solid', targetX, targetY, 'crate');
-              this.player.spawnCraftPoof();
-              this.triggerAutoSave();
-            } else if (log.startsWith('vara_montada:') || log.startsWith('rede_tecida:') || log.startsWith('agua_animada:') || log.startsWith('cachoeira_gerada:')) {
-              this.inventorySystem.addItem('sea_bass', 2);
-              this.player.spawnCraftPoof();
-            } else if (log.startsWith('piso_assentado:') || log.startsWith('paralelepipedo_encaixado:') || log.startsWith('tabuado_pregado:') || log.startsWith('grama_florida_semeada:') || log.startsWith('praia_criada:') || log.startsWith('mosaico_polido:')) {
-              this.tileMap.setTile('ground', targetX, targetY, 'grass');
-              this.player.spawnCraftPoof();
-              this.triggerAutoSave();
-            } else if (log.startsWith('poste_aceso:') || log.startsWith('poco_erguido:') || log.startsWith('degraus_entalhados:') || log.startsWith('rampa_esculpida:')) {
-              this.tileMap.setTile('solid', targetX, targetY, 'crate');
-              this.player.spawnCraftPoof();
-              this.triggerAutoSave();
-            } else if (log.startsWith('fogueira_acesa:') || log.startsWith('magma_borbulhante:')) {
-              this.tileMap.setTile('decor', targetX, targetY, 'flower-magic');
-              this.player.spawnCraftPoof();
-              this.triggerAutoSave();
-            } else if (log.startsWith('ninho_aquecido_criado:') || log.startsWith('apito_entalhado:') || log.startsWith('ovo_desperto:') || log.startsWith('ovo_sagrado_desperto:')) {
-              this.dragonManager.adoptHatchedDragon('dragon_fly_solar');
-              this.player.spawnCraftPoof();
-            }
+        // Auto close after 1.2 seconds of visual celebration
+        setTimeout(() => {
+          if (modal.style.display !== 'none') {
+            modal.style.display = 'none';
           }
-        }
+        }, 1200);
       } else {
         this.showToast(res.message, 4000);
       }
@@ -2926,7 +2866,7 @@ class RPGApplication {
       if (lesson) {
         if (codeEditor) codeEditor.value = lesson.starterLua;
         if (this.scratchEngine) {
-          this.scratchEngine.loadLessonBlocks(lesson.blocks, lesson.starterLua);
+          this.scratchEngine.loadLessonBlocks(lesson.blocks, lesson.starterLua, lesson);
         }
         if (consoleOut) consoleOut.innerText = '> Desafio restaurado ao estado inicial.';
       }
@@ -2940,8 +2880,7 @@ class RPGApplication {
         if (isVisible) {
           modal.style.display = 'none';
         } else {
-          modal.style.display = 'flex';
-          loadLesson(this.blocklySystem.activeLessonIndex);
+          this.openCodingChallengeModal();
         }
       }
     });
@@ -3000,10 +2939,10 @@ class RPGApplication {
         if (this.multiplayerClient) {
           this.multiplayerClient.connect();
         }
-        this.showToast('🌐 Conexão restaurada com sucesso! Bem-vindo de volta!');
+        this.showToast('Conexão restaurada com sucesso! Bem-vindo de volta!');
       } else {
         showDisconnection('Ainda offline. Verifique seu Wi-Fi/rede local.');
-        this.showToast('⚠️ Sem conexão com a internet. Verifique sua rede e tente novamente.', 3500);
+        this.showToast('Sem conexão com a internet. Verifique sua rede e tente novamente.', 3500);
       }
     };
 

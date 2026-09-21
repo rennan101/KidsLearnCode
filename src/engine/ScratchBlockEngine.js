@@ -242,10 +242,12 @@ export class ScratchBlockEngine {
     this.renderPalette();
   }
 
-  // Load custom specific blocks for an NPC lesson
-  loadLessonBlocks(customBlockDefs = null, starterLua = null) {
+  // Load custom specific blocks for an NPC lesson (1-block focused challenge for kids)
+  loadLessonBlocks(customBlockDefs = null, starterLua = null, lesson = null) {
     if (customBlockDefs && customBlockDefs.length > 0) {
       this.availableBlocks = [...customBlockDefs];
+    } else if (lesson) {
+      this.availableBlocks = this.deriveSingleLessonBlock(lesson);
     } else {
       this.initDefaultBlockCatalog();
     }
@@ -253,11 +255,65 @@ export class ScratchBlockEngine {
     this.blocksInWorkspace = [];
     if (starterLua) {
       this.parseStarterLuaToBlocks(starterLua);
+    } else if (this.availableBlocks.length > 0) {
+      this.blocksInWorkspace.push(this.instantiateBlock(this.availableBlocks[0]));
     }
 
     this.renderPalette();
     this.renderWorkspace();
     this.updateCodePreview();
+  }
+
+  deriveSingleLessonBlock(lesson) {
+    const assetId = lesson.unlockedAssetId || 'prop_chair_wood';
+    const assetName = lesson.unlockedAssetName || 'Item Especial';
+    const concept = lesson.concept || '';
+
+    if (concept.includes('Variáveis') || concept.includes('Atribuição') || concept.includes('Parâmetros')) {
+      return [{
+        id: `block_${lesson.id || 'lesson'}`,
+        category: 'actions',
+        type: 'statement',
+        label: `Criar ${assetName}: [VAL]`,
+        defaultValues: { VAL: 'carvalho' },
+        options: { VAL: ['carvalho', 'pinheiro', 'madeira_macica', 'ferro_puro', 'cobre'] },
+        toLua: (b) => (lesson.starterLua ? lesson.starterLua.replace(/"carvalho"/g, `"${b.values.VAL || 'carvalho'}"`) : `local material = "${b.values.VAL || 'carvalho'}"\nfabricar_movel("${assetId}", material)`)
+      }];
+    }
+
+    if (concept.includes('Condicional')) {
+      return [{
+        id: `block_${lesson.id || 'lesson'}`,
+        category: 'conditions',
+        type: 'statement',
+        label: `Se Material >= [QTD] Então Criar ${assetName}`,
+        defaultValues: { QTD: '5' },
+        options: { QTD: ['3', '5', '8', '10'] },
+        toLua: (b) => (lesson.starterLua || `se palha >= ${b.values.QTD || 5} entao\n  fabricar_cama("${assetId}")\nfim`)
+      }];
+    }
+
+    if (concept.includes('Loop') || concept.includes('Repetição')) {
+      return [{
+        id: `block_${lesson.id || 'lesson'}`,
+        category: 'loops',
+        type: 'statement',
+        label: `Repetir [VEZES]x: Criar ${assetName}`,
+        defaultValues: { VEZES: '3' },
+        options: { VEZES: ['2', '3', '4', '5'] },
+        toLua: (b) => (lesson.starterLua || `para i = 1, ${b.values.VEZES || 3} faca\n  cultivar_arvore("${assetId}")\nfim`)
+      }];
+    }
+
+    return [{
+      id: `block_${lesson.id || 'lesson'}`,
+      category: 'actions',
+      type: 'statement',
+      label: `Fabricar: ${assetName} ([VAL])`,
+      defaultValues: { VAL: 'carvalho' },
+      options: { VAL: ['carvalho', 'ferro', 'ouro', 'cristal'] },
+      toLua: (b) => (lesson.starterLua || `fabricar_movel("${assetId}", "${b.values.VAL || 'carvalho'}")`)
+    }];
   }
 
   parseStarterLuaToBlocks(luaCode) {
@@ -483,7 +539,7 @@ export class ScratchBlockEngine {
         <div class="block-header">
           <span class="block-category-dot"></span>
           <div class="block-label-content">${labelHtml}</div>
-          <button class="block-delete-btn" title="Remover Peça">✕</button>
+          <button class="block-delete-btn" title="Remover Peça"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
         <div class="block-container-body drop-slot-inner"></div>
         <div class="block-container-footer">
@@ -497,7 +553,7 @@ export class ScratchBlockEngine {
         <div class="block-content">
           <span class="block-category-dot"></span>
           <div class="block-label-content">${labelHtml}</div>
-          <button class="block-delete-btn" title="Remover Peça">✕</button>
+          <button class="block-delete-btn" title="Remover Peça"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
         <div class="puzzle-notch"></div>
       `;

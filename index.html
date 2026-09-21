@@ -431,8 +431,8 @@
       <!-- Layer Stacking Order Manager (Collapsible) -->
       <div class="layer-manager-panel" id="layer-manager-panel" style="display: none;">
         <div class="layer-manager-header">
-          <span>Ordem de Renderização (Topo ➔ Base)</span>
-          <span class="layer-manager-hint">Use ▲ / ▼ para alterar qual camada fica por cima</span>
+          <span>Ordem de Renderização (Topo -&gt; Base)</span>
+          <span class="layer-manager-hint">Altere a ordem de visualização das camadas</span>
         </div>
         <div class="layer-manager-list" id="layer-manager-list">
           <!-- Dynamically populated by main.js with Move Up and Move Down buttons -->
@@ -462,7 +462,7 @@
             </svg>
             <span id="inspector-coords-title">Inspetor de Célula (X: -, Y: -)</span>
           </div>
-          <button id="btn-close-inspector" class="inspector-close-btn" title="Fechar inspetor">✕</button>
+          <button id="btn-close-inspector" class="inspector-close-btn" title="Fechar inspetor"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
         <div class="inspector-layers-list" id="inspector-layers-list">
           <!-- Dynamically populated per layer (Solid, Decor, Ground) -->
@@ -602,7 +602,7 @@
           </svg>
           <span>Bancada de Criação DIY da Ilha</span>
         </div>
-        <button id="btn-close-crafting" class="modal-close-btn" title="Fechar">✕</button>
+        <button id="btn-close-crafting" class="modal-close-btn" title="Fechar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       </div>
       <div class="ac-diy-subbar">
         <span>Escolha uma receita desbloqueada para fabricar e guardar na sua Bolsa</span>
@@ -628,7 +628,7 @@
           </svg>
           <span>Bolsa de Aventuras da Ilha</span>
         </div>
-        <button id="btn-close-backpack" class="modal-close-btn" title="Fechar">✕</button>
+        <button id="btn-close-backpack" class="modal-close-btn" title="Fechar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       </div>
 
       <!-- Backpack Tab Navigation (Pills) -->
@@ -736,20 +736,20 @@
     </div>
   </div>
 
-  <!-- Hero Selection Modal (Step 3) -->
+  <!-- Hero Selection Modal (Step 3 - ACNH Style) -->
   <div class="hero-selection-modal" id="hero-selection-modal" style="display: none;">
-    <div class="hero-selection-card">
-      <div class="hero-selection-header">
+    <div class="hero-selection-card ac-pocket-card">
+      <div class="hero-selection-header ac-header-mint">
         <div class="hero-selection-title">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
           </svg>
           <div>
             <h2>Escolha Seu Herói da Ilha Lua</h2>
-            <p>Selecione um dos 8 heróis ancestrais com atributos e passivas únicas.</p>
+            <p style="font-size: 0.78rem; opacity: 0.9; font-weight: 500;">Selecione um dos heróis da ilha para iniciar sua jornada.</p>
           </div>
         </div>
-        <button id="btn-close-hero-selection" class="modal-close-btn" title="Fechar">✕</button>
+        <button id="btn-close-hero-selection" class="modal-close-btn" title="Fechar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       </div>
 
       <div class="hero-selection-grid" id="hero-selection-grid">
@@ -758,10 +758,10 @@
     </div>
   </div>
 
-  <!-- Educational Scratch Puzzle Blocks & Lua Coding Studio Modal (ACNH DIY Block Studio) -->
-  <div class="crafting-modal" id="coding-modal" style="display: none;">
-    <div class="crafting-card scratch-studio-card" style="width: 960px; max-width: 96vw; height: 88vh; display: flex; flex-direction: column;">
-      <!-- Header -->
+  <!-- Educational Scratch Puzzle Blocks & Lua Coding Studio Modal (ACNH 1-Block Challenge Studio) -->
+  <div class="crafting-modal ac-coding-modal" id="coding-modal" style="display: none;">
+    <div class="crafting-card ac-puzzle-studio-card" style="width: 860px; max-width: 95vw; height: 84vh; display: flex; flex-direction: column;">
+      <!-- ACNH Mint Header -->
       <div class="crafting-header ac-header-mint">
         <div class="crafting-title">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -769,80 +769,78 @@
             <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
             <line x1="12" y1="22.08" x2="12" y2="12"></line>
           </svg>
-          <span id="coding-studio-title">Bancada de Montagem DIY com Blocos</span>
+          <span id="coding-studio-title">Bancada DIY com Blocos</span>
         </div>
-        <button id="btn-close-coding" class="modal-close-btn" title="Fechar">✕</button>
+        <button id="btn-close-coding" class="modal-close-btn" title="Fechar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       </div>
 
-      <!-- Studio Body -->
-      <div class="scratch-studio-body">
-        <!-- Mission & Unlock Bar -->
-        <div class="scratch-mission-bar">
-          <div class="scratch-mission-meta">
-            <select id="select-lua-lesson" class="scratch-lesson-select">
-              <!-- Populated by main.js -->
-            </select>
-            <span id="lesson-unlock-target" class="scratch-unlock-badge">Criação: Cadeira de Madeira</span>
-            <span id="lesson-reward-badge" class="scratch-reward-badge">+100 XP / +50 Moedas</span>
-          </div>
-          <p id="lesson-desc" class="scratch-lesson-desc"></p>
-        </div>
-
-        <!-- Category Tabs -->
-        <div class="scratch-category-tabs">
-          <button class="scratch-cat-btn active" data-category="all">Todas as Peças</button>
-          <button class="scratch-cat-btn cat-variables" data-category="variables">Materiais</button>
-          <button class="scratch-cat-btn cat-actions" data-category="actions">Ações</button>
-          <button class="scratch-cat-btn cat-conditions" data-category="conditions">Se / Senão</button>
-          <button class="scratch-cat-btn cat-loops" data-category="loops">Repetição</button>
-          <button class="scratch-cat-btn cat-functions" data-category="functions">Regras</button>
-        </div>
-
-        <!-- Main 3-Column Studio Area -->
-        <div class="scratch-main-layout">
-          <!-- 1. Left Palette (Draggable Pieces) -->
-          <div class="scratch-palette-col">
-            <div class="scratch-col-header">
-              <span>Peças de Quebra-Cabeça</span>
-            </div>
-            <div id="scratch-palette" class="scratch-palette-items">
-              <!-- Rendered by ScratchBlockEngine -->
-            </div>
-          </div>
-
-          <!-- 2. Middle Workspace (Drop & Assembly Area) -->
-          <div class="scratch-workspace-col">
-            <div class="scratch-col-header">
-              <span>Área de Montagem (Arraste e Encaixe)</span>
-              <button id="btn-clear-workspace" class="scratch-mini-action-btn" title="Limpar todas as peças">Limpar</button>
-            </div>
-            <div id="scratch-workspace" class="scratch-workspace-dropzone">
-              <!-- Rendered by ScratchBlockEngine -->
-            </div>
-          </div>
-
-          <!-- 3. Right Lua Preview & Console -->
-          <div class="scratch-code-col">
-            <div class="scratch-col-header">
-              <span>Grimório de Criação</span>
-            </div>
-            <textarea id="lua-code-editor" class="scratch-lua-textarea" readonly spellcheck="false"></textarea>
-            <div id="lua-console-output" class="scratch-console-output">
-              > Conecte as peças de quebra-cabeça e clique em "Montar & Criar Item".
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Footer -->
-        <div class="scratch-footer-bar">
-          <button id="btn-reset-lua" class="scratch-btn-secondary">Restaurar Peças</button>
-          <button id="btn-run-lua" class="scratch-btn-primary">
-            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+      <!-- Focused Challenge Mission Card (Single Objective) -->
+      <div class="ac-puzzle-mission-bar">
+        <div class="ac-puzzle-mission-info">
+          <div class="ac-tab-avatar-circle" id="lesson-mentor-avatar" style="width: 44px; height: 44px; border-color: #00a896; color: #00a896;">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
             </svg>
-            <span>Montar & Criar Item</span>
-          </button>
+          </div>
+          <div>
+            <div class="ac-puzzle-badges-row">
+              <span id="lesson-unlock-target" class="scratch-unlock-badge">Criação: Cadeira de Madeira</span>
+              <span id="lesson-reward-badge" class="scratch-reward-badge">+100 XP / +50 Moedas</span>
+            </div>
+            <p id="lesson-desc" class="ac-puzzle-desc">Monte a peça necessária e configure o material para fabricar seu item.</p>
+          </div>
         </div>
+      </div>
+
+      <!-- Main 2-Column Kid-Friendly Puzzle Layout (1 Block Tray on Left, Assembly Dropzone on Right) -->
+      <div class="ac-puzzle-main-layout">
+        <!-- 1. Left: Single Challenge Block Tray -->
+        <div class="ac-puzzle-palette-col">
+          <div class="ac-puzzle-col-header">
+            <svg class="ui-icon" style="width: 16px; height: 16px; color: #00a896;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+            <span>Peça do Desafio</span>
+          </div>
+          <div id="scratch-palette" class="ac-puzzle-palette-items">
+            <!-- Populated with ONLY the single block needed for this specific lesson -->
+          </div>
+          <div class="ac-puzzle-hint-box">
+            <span>Dica: Arraste a peça ou clique nela para encaixar na bancada.</span>
+          </div>
+        </div>
+
+        <!-- 2. Right: Assembly Workspace Dropzone & Recipe Preview -->
+        <div class="ac-puzzle-workspace-col">
+          <div class="ac-puzzle-col-header">
+            <span>Mesa de Montagem DIY</span>
+            <button id="btn-clear-workspace" class="ac-mini-btn" title="Limpar peças">Limpar</button>
+          </div>
+          <div id="scratch-workspace" class="ac-puzzle-workspace-dropzone">
+            <!-- Dropzone for assembling the block -->
+          </div>
+
+          <!-- Recipe Book Preview & Console -->
+          <div class="ac-puzzle-recipe-preview">
+            <div class="ac-recipe-book-header">
+              <svg class="ui-icon" style="width: 14px; height: 14px; color: #7a583e;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+              <span>Livro de Receitas da Ilha</span>
+            </div>
+            <textarea id="lua-code-editor" class="ac-puzzle-lua-textarea" readonly spellcheck="false"></textarea>
+            <div id="lua-console-output" class="ac-puzzle-console-output">
+              > Encaixe a peça e clique em "Montar & Fabricar Item".
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="ac-puzzle-footer-bar">
+        <button id="btn-reset-lua" class="scratch-btn-secondary">Restaurar Peça</button>
+        <button id="btn-run-lua" class="scratch-btn-primary">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span>Montar & Fabricar Item</span>
+        </button>
       </div>
     </div>
   </div>
@@ -852,21 +850,17 @@
 
   <!-- Disconnection / Internet Lost Screen Overlay -->
   <div id="disconnection-overlay" class="disconnection-overlay" style="display: none;">
-    <div class="disconnection-card">
+    <div class="disconnection-card ac-pocket-card">
       <div class="disconnection-icon-pulse">
         <svg class="ui-icon" style="width: 48px; height: 48px;" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="1" y1="1" x2="23" y2="23"></line>
           <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
           <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
-          <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
-          <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
-          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-          <line x1="12" y1="20" x2="12.01" y2="20"></line>
         </svg>
       </div>
-      <h2>Conexão Perdida</h2>
-      <p>Você foi desconectado do servidor. Sem conexão com a internet, o acesso ao universo e à Ilha Lua foi suspenso.</p>
-      <div class="disconnection-status">
+      <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 700; color: #f8fafc; margin-bottom: 6px;">Conexão Interrompida</h3>
+      <p style="font-size: 0.8rem; color: #94a3b8; line-height: 1.4; margin-bottom: 14px;">Você está no modo offline local. Seus progressos continuam salvos na máquina.</p>
+      <div class="disconnection-badge">
         <span class="offline-dot pulse"></span>
         <span id="disconnection-status-text">Sem sinal de rede com o servidor</span>
       </div>
@@ -880,55 +874,55 @@
     </div>
   </div>
 
-  <!-- Clean Professional Auth & Account Modal -->
+  <!-- Clean Animal Crossing Auth & Account Modal -->
   <div class="crafting-modal" id="auth-modal" style="display: none;">
-    <div class="crafting-card" style="width: 440px; max-width: 95vw;">
-      <div class="crafting-header">
+    <div class="crafting-card ac-pocket-card" style="width: 440px; max-width: 95vw;">
+      <div class="crafting-header ac-header-mint">
         <div class="crafting-title">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
-          <span id="auth-modal-title">Acesso à Conta</span>
+          <span id="auth-modal-title">Passaporte da Ilha Lua</span>
         </div>
-        <button id="btn-close-auth" class="modal-close-btn" title="Fechar">✕</button>
+        <button id="btn-close-auth" class="modal-close-btn" title="Fechar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       </div>
 
       <div class="crafting-body" style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
         <!-- Status card (somente exibido se logado) -->
-        <div id="auth-user-info-card" style="display: none; background: #090c12; border: 1px solid #1e293b; border-radius: 8px; padding: 12px 16px;">
+        <div id="auth-user-info-card" style="display: none; background: #0b121c; border: 1.5px solid #192638; border-radius: 14px; padding: 12px 16px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <div id="auth-user-name" style="font-weight: 600; color: #f3f4f6; font-size: 0.95rem;">Aventureiro</div>
-              <div id="auth-user-email" style="font-size: 0.78rem; color: #9ca3af; font-family: var(--font-mono);">usuario@email.com</div>
+              <div id="auth-user-name" style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Aventureiro</div>
+              <div id="auth-user-email" style="font-size: 0.78rem; color: #94a3b8; font-family: var(--font-mono);">usuario@email.com</div>
             </div>
-            <span id="auth-badge-status" style="background: #047857; color: #a7f3d0; font-size: 0.72rem; padding: 4px 10px; border-radius: 4px; font-weight: 600;">Conectado</span>
+            <span id="auth-badge-status" style="background: #028072; color: #ffffff; font-size: 0.72rem; padding: 3px 10px; border-radius: 12px; font-weight: 700;">Conectado</span>
           </div>
         </div>
 
         <!-- Login / Register Form Tabs -->
         <div id="auth-form-container" style="display: flex; flex-direction: column; gap: 14px;">
-          <div style="display: flex; gap: 8px;">
-            <button type="button" id="auth-tab-login" class="backpack-tab active" style="flex: 1; padding: 10px 0; font-weight: 600;">Entrar</button>
-            <button type="button" id="auth-tab-signup" class="backpack-tab" style="flex: 1; padding: 10px 0; font-weight: 600;">Criar Conta</button>
+          <div class="backpack-tabs ac-pocket-tabs" style="padding: 0; background: transparent; border-bottom: none; gap: 8px;">
+            <button type="button" id="auth-tab-login" class="backpack-tab active" style="flex: 1; padding: 8px 0; font-weight: 700; justify-content: center;">Entrar</button>
+            <button type="button" id="auth-tab-signup" class="backpack-tab" style="flex: 1; padding: 8px 0; font-weight: 700; justify-content: center;">Criar Conta</button>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 10px;">
-            <input type="text" id="auth-nickname" placeholder="Apelido no Jogo" style="display: none; background: #090c12; color: #fff; border: 1px solid #1e293b; border-radius: 8px; padding: 12px; font-size: 0.9rem; outline: none;">
-            <input type="email" id="auth-email" placeholder="E-mail" style="background: #090c12; color: #fff; border: 1px solid #1e293b; border-radius: 8px; padding: 12px; font-size: 0.9rem; outline: none;">
-            <input type="password" id="auth-password" placeholder="Senha" style="background: #090c12; color: #fff; border: 1px solid #1e293b; border-radius: 8px; padding: 12px; font-size: 0.9rem; outline: none;">
+            <input type="text" id="auth-nickname" placeholder="Seu Apelido de Morador" style="display: none; background: #0b121c; color: #fff; border: 1.5px solid #1e2e42; border-radius: 14px; padding: 10px 14px; font-size: 0.88rem; outline: none;">
+            <input type="email" id="auth-email" placeholder="E-mail" style="background: #0b121c; color: #fff; border: 1.5px solid #1e2e42; border-radius: 14px; padding: 10px 14px; font-size: 0.88rem; outline: none;">
+            <input type="password" id="auth-password" placeholder="Senha" style="background: #0b121c; color: #fff; border: 1.5px solid #1e2e42; border-radius: 14px; padding: 10px 14px; font-size: 0.88rem; outline: none;">
           </div>
 
           <div style="display: flex; gap: 10px; margin-top: 4px;">
-            <button id="btn-submit-auth" class="mount-btn" style="flex: 1; background: #2563eb; color: #fff; padding: 12px 0; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <button id="btn-submit-auth" class="btn-equip-tool" style="flex: 1; padding: 10px 0; font-weight: 700; font-size: 0.88rem;">
               <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
                 <polyline points="10 17 15 12 10 7"></polyline>
                 <line x1="15" y1="12" x2="3" y2="12"></line>
               </svg>
-              <span id="btn-submit-auth-label">Entrar</span>
+              <span id="btn-submit-auth-label">Entrar na Ilha</span>
             </button>
-            <button id="btn-signout-auth" class="mount-btn" style="display: none; background: #dc2626; color: #fff; padding: 12px 18px; font-weight: 600;">
+            <button id="btn-signout-auth" class="btn-equip-tool" style="display: none; background: #dc2626; border-color: #ef4444; padding: 10px 18px; font-weight: 700;">
               Sair
             </button>
           </div>

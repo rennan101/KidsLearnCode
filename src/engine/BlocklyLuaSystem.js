@@ -253,7 +253,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'seed_wheat_packet',
     unlockedAssetName: 'Saco de Sementes de Trigo',
     unlockedCategory: 'nature',
-    description: 'Crie uma lista de sementes e selecione o trigo na 1ª posição: local pacote = {"seed_wheat_packet", "nutritivo"} ➔ embalar_sementes(pacote[1]).',
+    description: 'Crie uma lista de sementes e selecione o trigo na 1ª posição: local pacote = {"seed_wheat_packet", "nutritivo"} -> embalar_sementes(pacote[1]).',
     starterBlocks: [
       { type: 'set_var', name: 'pacote', value: '{"seed_wheat_packet", "nutritivo"}' },
       { type: 'call_action', action: 'embalar_sementes', param: 'pacote[1]' }
@@ -426,7 +426,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'tool_fishing_rod',
     unlockedAssetName: 'Vara de Pescar de Bambu',
     unlockedCategory: 'tools',
-    description: 'Selecione o bambu flexível na lista: local varas = {"linha_seda", "bambu_flexivel"} ➔ montar_vara("tool_fishing_rod", varas[2]).',
+    description: 'Selecione o bambu flexível na lista: local varas = {"linha_seda", "bambu_flexivel"} -> montar_vara("tool_fishing_rod", varas[2]).',
     starterBlocks: [
       { type: 'set_var', name: 'varas', value: '{"linha_seda", "bambu_flexivel"}' },
       { type: 'call_action', action: 'montar_vara', param: '"tool_fishing_rod", varas[2]' }
@@ -854,7 +854,7 @@ export const LUA_LESSONS = [
     unlockedAssetId: 'dragon_egg_tide',
     unlockedAssetName: 'Ovo de Dragão Aquático',
     unlockedCategory: 'dragons',
-    description: 'Selecione a pérola azul na lista: local escamas = {"perola_azul", "espuma_mar"} ➔ polir_ovo_tide("dragon_egg_tide", escamas[1]).',
+    description: 'Selecione a pérola azul na lista: local escamas = {"perola_azul", "espuma_mar"} -> polir_ovo_tide("dragon_egg_tide", escamas[1]).',
     starterBlocks: [
       { type: 'set_var', name: 'escamas', value: '{"perola_azul", "espuma_mar"}' },
       { type: 'call_action', action: 'polir_ovo_tide', param: '"dragon_egg_tide", escamas[1]' }
