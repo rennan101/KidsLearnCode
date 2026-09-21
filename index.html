@@ -56,7 +56,7 @@
           <line x1="16" y1="16" x2="20" y2="20"></line>
           <line x1="19" y1="21" x2="21" y2="19"></line>
         </svg>
-        <span>Play</span>
+        <span>Jogar</span>
       </button>
       <button id="btn-mode-edit" class="mode-btn" title="Pintar tiles e construir o mundo">
         <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -69,7 +69,7 @@
     <!-- Hero Profile & Backpack Quick Bar (Play Mode) -->
     <div class="header-hero-bar" id="header-hero-bar">
       <button id="btn-hero-profile" class="hero-profile-btn" title="Trocar Herói / Ver Passivas [P]">
-        <img id="header-hero-avatar" src="assets/characters/char_wolf_hunter_m/portrait.jpg" alt="Hero Avatar" class="hero-avatar-mini">
+        <img id="header-hero-avatar" src="assets/characters/char_wolf_hunter_m/portrait.jpg" alt="Avatar do Herói" class="hero-avatar-mini">
         <div class="hero-header-info">
           <span id="header-hero-name" class="hero-header-name">Lobo Caçador</span>
           <span id="header-hero-passive" class="hero-header-passive">Faro Selvagem</span>
@@ -102,37 +102,37 @@
     <!-- Map Persistence, Collider Overlay & Quick Actions (Admin / Editor Only) -->
     <div class="header-actions" id="header-admin-actions">
       <!-- Toggle Collider Wireframe Overlay -->
-      <button id="btn-toggle-colliders" class="action-btn active" title="Show or hide invisible collision boxes" style="display: none;">
+      <button id="btn-toggle-colliders" class="action-btn active" title="Exibir ou ocultar caixas de colisão invisíveis" style="display: none;">
         <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
         </svg>
-        <span>Colliders</span>
+        <span>Colisores</span>
       </button>
 
-      <button id="btn-save-json" class="action-btn" title="Save map as JSON file" style="display: none;">
+      <button id="btn-save-json" class="action-btn" title="Salvar mapa em arquivo JSON" style="display: none;">
         <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
           <polyline points="17 21 17 13 7 13 7 21"></polyline>
           <polyline points="7 3 7 8 15 8"></polyline>
         </svg>
-        <span>Save JSON</span>
+        <span>Salvar JSON</span>
       </button>
-      <button id="btn-load-json" class="action-btn" title="Upload JSON map" style="display: none;">
+      <button id="btn-load-json" class="action-btn" title="Carregar mapa em JSON" style="display: none;">
         <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
         </svg>
-        <span>Load JSON</span>
+        <span>Carregar JSON</span>
       </button>
       <input type="file" id="file-input-json" accept=".json" style="display: none;">
       
-      <button id="btn-clear-map" class="action-btn danger" title="Reset current map to empty void" style="display: none;">
+      <button id="btn-clear-map" class="action-btn danger" title="Limpar mapa e reiniciar mundo" style="display: none;">
         <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="3 6 5 6 21 6"></polyline>
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
           <line x1="10" y1="11" x2="10" y2="17"></line>
           <line x1="14" y1="11" x2="14" y2="17"></line>
         </svg>
-        <span>Clear Map</span>
+        <span>Limpar Mapa</span>
       </button>
     </div>
   </header>
@@ -283,10 +283,10 @@
       <div class="minimap-hud" id="minimap-hud">
         <div class="minimap-bezel">
           <!-- Cardinal Direction Compass Points -->
-          <div class="compass-marker marker-n" title="North">N</div>
-          <div class="compass-marker marker-e" title="East">E</div>
-          <div class="compass-marker marker-s" title="South">S</div>
-          <div class="compass-marker marker-w" title="West">W</div>
+          <div class="compass-marker marker-n" title="Norte">N</div>
+          <div class="compass-marker marker-e" title="Leste">L</div>
+          <div class="compass-marker marker-s" title="Sul">S</div>
+          <div class="compass-marker marker-w" title="Oeste">O</div>
           
           <div class="minimap-inner-mask">
             <canvas id="minimap-canvas"></canvas>
@@ -294,7 +294,7 @@
         </div>
 
         <!-- Minimap Actions & Expand Toggle -->
-        <button id="btn-minimap-expand" class="minimap-btn-expand" title="Expand Tactical Map (M)">
+        <button id="btn-minimap-expand" class="minimap-btn-expand" title="Expandir Mapa Tático (M)">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 3 21 3 21 9"></polyline>
             <polyline points="9 21 3 21 3 15"></polyline>
@@ -316,11 +316,11 @@
                 <line x1="8" y1="2" x2="8" y2="18"></line>
                 <line x1="16" y1="6" x2="16" y2="22"></line>
               </svg>
-              <span>Realm Cartography & Overview</span>
+              <span>Cartografia &amp; Visão Geral da Ilha</span>
             </div>
             <div class="expanded-map-actions">
               <div class="tool-group mini">
-                <button id="btn-map-zoom-in" class="tool-btn" title="Zoom In">
+                <button id="btn-map-zoom-in" class="tool-btn" title="Aproximar Zoom">
                   <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -328,7 +328,7 @@
                     <line x1="8" y1="11" x2="14" y2="11"></line>
                   </svg>
                 </button>
-                <button id="btn-map-zoom-out" class="tool-btn" title="Zoom Out">
+                <button id="btn-map-zoom-out" class="tool-btn" title="Afastar Zoom">
                   <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -336,12 +336,12 @@
                   </svg>
                 </button>
               </div>
-              <button id="btn-close-expanded-map" class="action-btn danger" title="Close Map (M or Esc)">
+              <button id="btn-close-expanded-map" class="action-btn danger" title="Fechar Mapa (M ou Esc)">
                 <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
-                <span>Close [M]</span>
+                <span>Fechar [M]</span>
               </button>
             </div>
           </div>
@@ -349,7 +349,7 @@
             <canvas id="expanded-map-canvas"></canvas>
           </div>
           <div class="expanded-map-footer">
-            <span>Click & Drag to pan map | Double-click to fast travel | Press [M] or [ESC] to close</span>
+            <span>Clique e arraste para navegar | Duplo clique para viagem rápida | Pressione [M] ou [ESC] para fechar</span>
           </div>
         </div>
       </div>
@@ -360,17 +360,17 @@
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
           <line x1="9" y1="3" x2="9" y2="21"></line>
         </svg>
-        <span>Asset Drawer</span>
+        <span>Gaveta de Assets</span>
       </button>
     </div>
 
     <!-- Resizable Asset Palette Drawer (Edit Mode only) -->
     <aside class="asset-drawer collapsed" id="asset-drawer" style="display: none;">
       <!-- Left edge mouse resize handle -->
-      <div class="drawer-resizer" id="drawer-resizer" title="Drag to resize drawer width"></div>
+      <div class="drawer-resizer" id="drawer-resizer" title="Arraste para redimensionar a largura"></div>
 
       <div class="drawer-header">
-        <h3>Overworld Assets</h3>
+        <h3>Assets do Mundo</h3>
         <button id="btn-refresh-assets" class="drawer-action-btn" title="Escanear e carregar novos assets da pasta RPG-overworld-tileset">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="23 4 23 10 17 10"></polyline>
@@ -407,7 +407,7 @@
             <span class="layer-num">3</span>
             <span>Sólido</span>
           </button>
-          <button class="layer-btn" data-layer="characters" title="Camada 4: Personagens / Geralt / NPCs (Atalho: 4)">
+          <button class="layer-btn" data-layer="characters" title="Camada 4: Personagens / Herói / NPCs (Atalho: 4)">
             <span class="layer-num">4</span>
             <span>Personagens</span>
           </button>
@@ -431,14 +431,14 @@
 
       <!-- Category Filter Tabs -->
       <div class="drawer-category-tabs" id="category-tabs">
-        <button class="cat-tab active" data-cat="All">All</button>
-        <button class="cat-tab" data-cat="Characters">Characters</button>
-        <button class="cat-tab" data-cat="Colliders">Colliders</button>
-        <button class="cat-tab" data-cat="Water">Water (Anim)</button>
-        <button class="cat-tab" data-cat="Terrain">Terrain</button>
-        <button class="cat-tab" data-cat="Nature">Nature</button>
-        <button class="cat-tab" data-cat="Structures">Structures</button>
-        <button class="cat-tab" data-cat="Farming">Farming</button>
+        <button class="cat-tab active" data-cat="All">Todos</button>
+        <button class="cat-tab" data-cat="Characters">Personagens</button>
+        <button class="cat-tab" data-cat="Colliders">Colisores</button>
+        <button class="cat-tab" data-cat="Water">Água (Animada)</button>
+        <button class="cat-tab" data-cat="Terrain">Terrenos</button>
+        <button class="cat-tab" data-cat="Nature">Natureza</button>
+        <button class="cat-tab" data-cat="Structures">Estruturas</button>
+        <button class="cat-tab" data-cat="Farming">Agricultura</button>
       </div>
 
       <!-- Tile Inspector Panel (Shows all layers at selected cell) -->
@@ -467,17 +467,17 @@
       <!-- Interactive Tile Collider Editor Box -->
       <div class="collider-panel" id="collider-panel">
         <div class="collider-panel-header">
-          <h4 id="collider-tile-title">Collider: Animated Water</h4>
+          <h4 id="collider-tile-title">Colisor: Água Animada</h4>
           <label class="collider-toggle-label">
             <input type="checkbox" id="collider-enable-cb" checked>
-            <span>Enable Collider</span>
+            <span>Ativar Colisor</span>
           </label>
         </div>
 
         <!-- Dynamic Character Scale Control (Visible when character selected) -->
         <div class="character-scale-panel" id="character-scale-panel" style="display: none;">
           <div class="scale-panel-header">
-            <span class="scale-label">Character Size: <strong id="character-scale-val">1.0x</strong></span>
+            <span class="scale-label">Tamanho do Personagem: <strong id="character-scale-val">1.0x</strong></span>
             <div class="scale-preset-btns">
               <button type="button" class="scale-btn" data-scale="0.5">0.5x</button>
               <button type="button" class="scale-btn" data-scale="0.75">0.75x</button>
@@ -520,7 +520,7 @@
               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
               <circle cx="12" cy="13" r="4"></circle>
             </svg>
-            <span>Câmera do Jogo (Play Mode)</span>
+            <span>Câmera do Jogo (Modo Jogo)</span>
           </div>
           <span class="camera-zoom-val" id="play-camera-zoom-val">1.0x</span>
         </div>
@@ -535,7 +535,7 @@
           <div class="camera-slider-row">
             <input type="range" id="play-camera-zoom-slider" min="0.5" max="2.5" step="0.05" value="1.0">
           </div>
-          <span class="camera-settings-desc">Define a proximidade global da câmera de todos os jogadores no Play Mode</span>
+          <span class="camera-settings-desc">Define a proximidade global da câmera de todos os jogadores no Modo Jogo</span>
         </div>
       </div>
     </aside>
@@ -582,7 +582,7 @@
   <div class="ac-dialogue-modal" id="ac-dialogue-modal" style="display: none;">
     <div class="ac-dialogue-box animal-game-modal">
       <div class="ac-portrait-wrapper animal-modal-avatar">
-        <img id="ac-dialogue-portrait" src="assets/characters/char_wolf_hunter_m/portrait.jpg" alt="Speaker">
+        <img id="ac-dialogue-portrait" src="assets/characters/char_wolf_hunter_m/portrait.jpg" alt="Personagem">
       </div>
       <div class="ac-name-ribbon" id="ac-dialogue-name">Dr. Arquimedes</div>
       <div class="ac-text-content animal-modal-body">
@@ -892,7 +892,7 @@
       <div id="coding-tutorial-overlay" class="coding-tutorial-overlay" style="display: none;">
         <div class="coding-tutorial-card">
           <div class="coding-tutorial-avatar" id="coding-tutorial-avatar">
-            <img id="coding-tutorial-img" src="assets/characters/char_wolf_hunter_m/portrait.jpg" alt="Mentor" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            <img id="coding-tutorial-img" src="assets/characters/char_wolf_hunter_m/portrait.jpg" alt="Mentor do Desafio" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
           </div>
           <div class="coding-tutorial-content">
             <div class="coding-tutorial-tag" id="coding-tutorial-step-tag">Passo 1 de 4: Conhecendo o Estúdio</div>
@@ -966,7 +966,7 @@
           <div class="codekit-col-header">
             <div class="codekit-col-title">
               <svg class="ui-icon" style="width: 15px; height: 15px; color: #38bdf8;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-              <span>Mesa de Montagem (Workspace)</span>
+              <span>Mesa de Montagem</span>
             </div>
             <button id="btn-clear-workspace" class="codekit-mini-btn" title="Limpar peças">Limpar Mesa</button>
           </div>

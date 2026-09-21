@@ -29,7 +29,7 @@ export class TileMap {
       ground: { id: 'ground', label: 'Chão', num: 1, color: '#3b82f6', desc: 'Água / Terreno Base' },
       decor: { id: 'decor', label: 'Decoração', num: 2, color: '#10b981', desc: 'Flora / Caminhos / Detalhes' },
       solid: { id: 'solid', label: 'Sólido', num: 3, color: '#f59e0b', desc: 'Estruturas / Objetos' },
-      characters: { id: 'characters', label: 'Personagens', num: 4, color: '#ec4899', desc: 'Geralt / NPCs / Inimigos' },
+      characters: { id: 'characters', label: 'Personagens', num: 4, color: '#ec4899', desc: 'Herói / NPCs / Inimigos' },
       overhead: { id: 'overhead', label: 'Topo / Cobertura', num: 5, color: '#8b5cf6', desc: 'Copa das Árvores / Telhados / Acima do Player' },
       colliders: { id: 'colliders', label: 'Colisores', num: 6, color: '#ef4444', desc: 'Barreiras e Paredes Invisíveis' }
     };

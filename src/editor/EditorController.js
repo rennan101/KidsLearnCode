@@ -785,7 +785,7 @@ export class EditorController {
       ctx.font = 'bold 9px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('GERALT SPAWN', cx, sp.y - 13);
+      ctx.fillText('SPAWN DO HERÓI', cx, sp.y - 13);
 
       ctx.restore();
     }
@@ -880,7 +880,7 @@ export class EditorController {
       ctx.font = 'bold 10px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
-      ctx.fillText('SET SPAWN', cx, hy - 4);
+      ctx.fillText('DEFINIR SPAWN', cx, hy - 4);
       ctx.restore();
     } else if (this.activeTool === 'brush') {
       const meta = this.assetLoader.getTileMetadata(this.selectedTileId);

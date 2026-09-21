@@ -276,7 +276,7 @@ class RPGApplication {
       const defs = this.tileMap.layerDefinitions || {
         colliders: { id: 'colliders', label: 'Colisores', color: '#ef4444', desc: 'Barreiras / Paredes Invisíveis' },
         overhead: { id: 'overhead', label: 'Topo / Cobertura', color: '#8b5cf6', desc: 'Copa das Árvores / Telhados' },
-        characters: { id: 'characters', label: 'Personagens', color: '#ec4899', desc: 'Geralt / NPCs' },
+        characters: { id: 'characters', label: 'Personagens', color: '#ec4899', desc: 'Herói / NPCs' },
         solid: { id: 'solid', label: 'Sólido', color: '#f59e0b', desc: 'Estruturas' },
         decor: { id: 'decor', label: 'Decoração', color: '#10b981', desc: 'Flora / Caminhos' },
         ground: { id: 'ground', label: 'Chão', color: '#3b82f6', desc: 'Água / Base' }
@@ -364,7 +364,7 @@ class RPGApplication {
       const defs = this.tileMap.layerDefinitions || {
         colliders: { id: 'colliders', label: 'Camada 6 (Colisores)', color: '#ef4444', desc: 'Barreiras e Paredes Invisíveis' },
         overhead: { id: 'overhead', label: 'Camada 5 (Topo)', color: '#8b5cf6', desc: 'Copa das Árvores / Telhados' },
-        characters: { id: 'characters', label: 'Camada 4 (Personagens)', color: '#ec4899', desc: 'Geralt / NPCs' },
+        characters: { id: 'characters', label: 'Camada 4 (Personagens)', color: '#ec4899', desc: 'Herói / NPCs' },
         solid: { id: 'solid', label: 'Camada 3 (Sólido)', color: '#f59e0b', desc: 'Estruturas / Objetos' },
         decor: { id: 'decor', label: 'Camada 2 (Decoração)', color: '#10b981', desc: 'Flora / Caminhos' },
         ground: { id: 'ground', label: 'Camada 1 (Chão)', color: '#3b82f6', desc: 'Água / Terreno Base' }
@@ -744,7 +744,7 @@ class RPGApplication {
       if (this.mode === 'play') {
         if (e.key === 'f' || e.key === 'F') {
           this.camera.follow(this.player.x + 32, this.player.y + 32, 1.0);
-          this.showToast('Câmera centralizada no Geralt [F]');
+          this.showToast('Câmera centralizada no Herói [F]');
           return;
         }
 
@@ -1014,20 +1014,20 @@ class RPGApplication {
     // Undo / Redo Buttons
     document.getElementById('btn-undo')?.addEventListener('click', () => {
       if (this.editorController.undo()) {
-        this.showToast('Ação desfeita (Undo)');
+        this.showToast('Ação desfeita (Desfazer)');
       }
     });
 
     document.getElementById('btn-redo')?.addEventListener('click', () => {
       if (this.editorController.redo()) {
-        this.showToast('Ação refeita (Redo)');
+        this.showToast('Ação refeita (Refazer)');
       }
     });
 
-    // Focus Geralt [F] Button
+    // Focus Hero [F] Button
     document.getElementById('btn-focus-player')?.addEventListener('click', () => {
       this.editorController.focusPlayer();
-      this.showToast('Câmera centralizada no Geralt [F]');
+      this.showToast('Câmera centralizada no Herói [F]');
     });
 
     // Layer segment buttons in drawer
@@ -1250,7 +1250,7 @@ class RPGApplication {
         if (tile.collider && tile.collider.enabled) {
           const colBadge = document.createElement('span');
           colBadge.className = 'collider-badge';
-          colBadge.innerText = tile.isInvisibleAsset ? 'BARRIER' : 'COL';
+          colBadge.innerText = tile.isInvisibleAsset ? 'BARREIRA' : 'COL';
           card.appendChild(colBadge);
         }
 
