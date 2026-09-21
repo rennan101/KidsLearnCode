@@ -1151,6 +1151,11 @@
             <input type="email" id="auth-email" placeholder="E-mail" style="background: var(--animal-bg, #f8f8f0); color: var(--animal-text, #794f27); border: 2px solid var(--animal-border, #c4b89e); border-radius: 50px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; outline: none;">
             <input type="password" id="auth-password" placeholder="Senha" style="background: var(--animal-bg, #f8f8f0); color: var(--animal-text, #794f27); border: 2px solid var(--animal-border, #c4b89e); border-radius: 50px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; outline: none;">
 
+            <!-- Forgot Password Link (Only in Login mode) -->
+            <div id="auth-login-extras" style="display: flex; justify-content: flex-end; margin-top: -4px;">
+              <button type="button" id="btn-forgot-password" class="auth-text-link" style="background: none; border: none; font-family: var(--animal-font, 'Nunito', sans-serif); font-size: 0.8rem; font-weight: 700; color: var(--animal-primary-dark, #0f8e83); cursor: pointer; text-decoration: underline; padding: 2px 4px;">Esqueci minha senha</button>
+            </div>
+
             <!-- Age Verification & Brazilian ECA Compliance (Only on Signup) -->
             <div id="auth-age-verification-container" style="display: none; flex-direction: column; gap: 8px; margin-top: 4px;">
               <label class="animal-checkbox-label">
@@ -1187,6 +1192,102 @@
             </button>
           </div>
         </div>
+
+        <!-- Reset Password View -->
+        <div id="auth-reset-container" style="display: none; flex-direction: column; gap: 14px;">
+          <div style="text-align: center;">
+            <h4 style="margin: 0 0 6px 0; font-family: var(--animal-font-title, 'Cinzel', serif); font-size: 1.1rem; color: var(--animal-text, #794f27);">Recuperar Senha</h4>
+            <p style="margin: 0; font-size: 0.84rem; color: var(--animal-text-body, #725d42); line-height: 1.4;">
+              Informe seu e-mail cadastrado e enviaremos um link seguro para você criar uma nova senha.
+            </p>
+          </div>
+          <input type="email" id="auth-reset-email" placeholder="Seu E-mail Cadastrado" style="background: var(--animal-bg, #f8f8f0); color: var(--animal-text, #794f27); border: 2px solid var(--animal-border, #c4b89e); border-radius: 50px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; outline: none;">
+          <div style="display: flex; gap: 10px;">
+            <button type="button" id="btn-submit-reset" class="btn-equip-tool" style="flex: 1; padding: 11px 0; font-weight: 800; font-size: 0.9rem; border-radius: 50px;">
+              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              <span>Enviar Link</span>
+            </button>
+            <button type="button" id="btn-back-from-reset" class="codekit-btn-secondary" style="padding: 11px 18px; font-weight: 800; border-radius: 50px;">
+              Voltar
+            </button>
+          </div>
+        </div>
+
+        <!-- Set New Password View (When redirected via email reset link) -->
+        <div id="auth-new-password-container" style="display: none; flex-direction: column; gap: 14px;">
+          <div style="text-align: center;">
+            <h4 style="margin: 0 0 6px 0; font-family: var(--animal-font-title, 'Cinzel', serif); font-size: 1.1rem; color: var(--animal-text, #794f27);">Definir Nova Senha</h4>
+            <p style="margin: 0; font-size: 0.84rem; color: var(--animal-text-body, #725d42); line-height: 1.4;">
+              Digite a nova senha que você deseja usar para acessar a Ilha Lua.
+            </p>
+          </div>
+          <input type="password" id="auth-new-password" placeholder="Nova Senha" style="background: var(--animal-bg, #f8f8f0); color: var(--animal-text, #794f27); border: 2px solid var(--animal-border, #c4b89e); border-radius: 50px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; outline: none;">
+          <button type="button" id="btn-submit-new-password" class="btn-equip-tool" style="width: 100%; padding: 11px 0; font-weight: 800; font-size: 0.9rem; border-radius: 50px;">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>Salvar Nova Senha</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Novo Item Desbloqueado Modal (Animal Island UI) -->
+  <div class="crafting-modal" id="new-item-modal" style="display: none; z-index: 99999;">
+    <div class="crafting-card ac-pocket-card new-item-card" style="width: 420px; max-width: 95vw; text-align: center;">
+      <div class="crafting-header ac-header-mint">
+        <div class="crafting-title" style="justify-content: center; width: 100%;">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <span id="new-item-modal-title">Novo Item Desbloqueado!</span>
+        </div>
+      </div>
+      <div class="crafting-body" style="padding: 24px 20px; display: flex; flex-direction: column; align-items: center; gap: 16px;">
+        <!-- Item Showcase Spotlight -->
+        <div class="new-item-spotlight">
+          <div class="new-item-rays"></div>
+          <div class="new-item-pedestal">
+            <div id="new-item-icon-wrap" class="new-item-icon-wrap">
+              <!-- Dynamic Item SVG Icon / Image -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Item Name & Category -->
+        <div>
+          <h3 id="new-item-name" style="margin: 0; font-family: var(--animal-font-title, 'Cinzel', serif); font-size: 1.35rem; font-weight: 800; color: var(--animal-text, #794f27);">Item Mágico</h3>
+          <p id="new-item-category" style="margin: 4px 0 0 0; font-size: 0.86rem; font-weight: 700; color: var(--animal-primary-dark, #0f8e83);">Mobília &bull; Adicionado à sua Bolsa</p>
+        </div>
+
+        <!-- Rewards earned pill summary -->
+        <div id="new-item-rewards" style="display: flex; gap: 10px; justify-content: center; width: 100%;">
+          <div class="header-xp-pill" style="padding: 4px 14px; font-size: 0.8rem; background: #e6f9f6; border: 1.5px solid #19c8b9; border-radius: 50px; display: flex; align-items: center; gap: 6px; font-weight: 800; color: #0f8e83;">
+            <svg class="ui-icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <span id="new-item-xp">+100 XP</span>
+          </div>
+          <div class="header-gold-pill" style="padding: 4px 14px; font-size: 0.8rem;">
+            <svg class="ui-icon icon-sm gold-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 7v10M15 9.5a2.5 2.5 0 0 0-5 0c0 3 5 2 5 5a2.5 2.5 0 0 1-5 0"></path>
+            </svg>
+            <span id="new-item-gold">+50 Moedas</span>
+          </div>
+        </div>
+
+        <!-- Confirm / Collect Button -->
+        <button type="button" id="btn-close-new-item" class="btn-equip-tool" style="width: 100%; border-radius: 50px; font-weight: 800; padding: 12px 0; font-size: 0.95rem; margin-top: 6px;">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Guardar na Mochila</span>
+        </button>
       </div>
     </div>
   </div>

@@ -712,6 +712,14 @@ class RPGApplication {
   }
 
   bindDOMEvents() {
+    // Som tátil de Pop satisfatório ao clicar em qualquer botão da interface
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('button, .animal-btn, .crafting-tab, .backpack-tab, .auth-mode-tab, .category-tab, .hero-select-card');
+      if (btn && !btn.disabled) {
+        soundFX.playPop(1.0 + (Math.random() * 0.12 - 0.06));
+      }
+    });
+
     // Blur any active input when clicking canvas so WASD always works
     this.canvas.addEventListener('mousedown', (e) => {
       if (document.activeElement && document.activeElement.tagName === 'INPUT') {
@@ -1658,8 +1666,17 @@ class RPGApplication {
     const parentEmailContainer = document.getElementById('auth-parent-email-container');
     const parentEmailInput = document.getElementById('auth-parent-email');
     const submitBtn = document.getElementById('btn-submit-auth');
-    const guestBtn = document.getElementById('btn-guest-auth');
     const signoutBtn = document.getElementById('btn-signout-auth');
+
+    // Forgot Password & Reset Views
+    const forgotBtn = document.getElementById('btn-forgot-password');
+    const resetContainer = document.getElementById('auth-reset-container');
+    const resetEmailInput = document.getElementById('auth-reset-email');
+    const submitResetBtn = document.getElementById('btn-submit-reset');
+    const backFromResetBtn = document.getElementById('btn-back-from-reset');
+    const newPasswordContainer = document.getElementById('auth-new-password-container');
+    const newPasswordInput = document.getElementById('auth-new-password');
+    const submitNewPasswordBtn = document.getElementById('btn-submit-new-password');
 
     const statusBadge = document.getElementById('auth-badge-status');
     const userNameEl = document.getElementById('auth-user-name');
@@ -1697,10 +1714,32 @@ class RPGApplication {
 
     refreshAuthUI();
 
-    // Ouvinte automático para ativação de conta via confirmação de e-mail (Redirecionamento / Realtime)
+    const resetToLoginModal = () => {
+      if (confirmationNotice) confirmationNotice.style.display = 'none';
+      if (resetContainer) resetContainer.style.display = 'none';
+      if (newPasswordContainer) newPasswordContainer.style.display = 'none';
+      if (formContainer) formContainer.style.display = 'flex';
+      tabLogin?.click();
+      if (passwordInput) passwordInput.value = '';
+      modal.style.display = 'flex';
+    };
+
+    // Ouvinte automático para ativação de conta via confirmação de e-mail ou redefinição de senha
     this.supabaseClient.onAuthChange(async (user, profile, event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        if (confirmationNotice) confirmationNotice.style.display = 'none';
+        if (formContainer) formContainer.style.display = 'none';
+        if (resetContainer) resetContainer.style.display = 'none';
+        if (newPasswordContainer) newPasswordContainer.style.display = 'flex';
+        modal.style.display = 'flex';
+        this.showToast('Digite sua nova senha de acesso à Ilha Lua.', 5000);
+        return;
+      }
+
       if (user && !user.isGuest) {
         if (confirmationNotice) confirmationNotice.style.display = 'none';
+        if (resetContainer) resetContainer.style.display = 'none';
+        if (newPasswordContainer) newPasswordContainer.style.display = 'none';
         if (formContainer) formContainer.style.display = 'flex';
         if (modal) modal.style.display = 'none';
         refreshAuthUI();
@@ -1716,6 +1755,8 @@ class RPGApplication {
     triggerBtn?.addEventListener('click', () => {
       refreshAuthUI();
       if (confirmationNotice) confirmationNotice.style.display = 'none';
+      if (resetContainer) resetContainer.style.display = 'none';
+      if (newPasswordContainer) newPasswordContainer.style.display = 'none';
       if (formContainer) formContainer.style.display = 'flex';
       modal.style.display = 'flex';
     });
@@ -1724,6 +1765,7 @@ class RPGApplication {
       await this.supabaseClient.signOut();
       refreshAuthUI();
       this.showToast('Você saiu da conta.');
+      resetToLoginModal();
     });
 
     const submitBtnLabel = document.getElementById('btn-submit-auth-label');
@@ -1742,6 +1784,60 @@ class RPGApplication {
       if (formContainer) formContainer.style.display = 'flex';
     });
 
+    forgotBtn?.addEventListener('click', () => {
+      if (formContainer) formContainer.style.display = 'none';
+      if (resetContainer) {
+        resetContainer.style.display = 'flex';
+        if (resetEmailInput && emailInput && emailInput.value) {
+          resetEmailInput.value = emailInput.value;
+        }
+        resetEmailInput?.focus();
+      }
+    });
+
+    backFromResetBtn?.addEventListener('click', () => {
+      if (resetContainer) resetContainer.style.display = 'none';
+      if (formContainer) formContainer.style.display = 'flex';
+    });
+
+    submitResetBtn?.addEventListener('click', async () => {
+      const email = resetEmailInput?.value.trim() || '';
+      if (!email || !email.includes('@') || !email.includes('.')) {
+        this.showToast('Por favor, informe um e-mail válido para a recuperação.');
+        return;
+      }
+      submitResetBtn.disabled = true;
+      const res = await this.supabaseClient.resetPassword(email);
+      submitResetBtn.disabled = false;
+      if (res.success) {
+        this.showToast(res.message, 6000);
+        if (resetContainer) resetContainer.style.display = 'none';
+        if (formContainer) formContainer.style.display = 'flex';
+      } else {
+        this.showToast(res.error || 'Erro ao enviar o link de recuperação.');
+      }
+    });
+
+    submitNewPasswordBtn?.addEventListener('click', async () => {
+      const newPass = newPasswordInput?.value.trim() || '';
+      if (newPass.length < 6) {
+        this.showToast('A nova senha deve ter no mínimo 6 caracteres.');
+        return;
+      }
+      submitNewPasswordBtn.disabled = true;
+      const res = await this.supabaseClient.updatePassword(newPass);
+      submitNewPasswordBtn.disabled = false;
+      if (res.success) {
+        this.showToast(res.message, 5000);
+        if (newPasswordContainer) newPasswordContainer.style.display = 'none';
+        modal.style.display = 'none';
+        refreshAuthUI();
+        await this.loadGameFromStorage();
+      } else {
+        this.showToast(res.error || 'Erro ao redefinir a nova senha.');
+      }
+    });
+
     over18Checkbox?.addEventListener('change', () => {
       if (parentEmailContainer) {
         parentEmailContainer.style.display = over18Checkbox.checked ? 'none' : 'flex';
@@ -1754,7 +1850,9 @@ class RPGApplication {
       tabSignup.classList.remove('active');
       if (nicknameInput) nicknameInput.style.display = 'none';
       if (ageContainer) ageContainer.style.display = 'none';
-      if (submitBtnLabel) submitBtnLabel.innerText = 'Entrar';
+      const forgotExtra = document.getElementById('auth-login-extras');
+      if (forgotExtra) forgotExtra.style.display = 'flex';
+      if (submitBtnLabel) submitBtnLabel.innerText = 'Entrar na Ilha';
     });
 
     tabSignup?.addEventListener('click', () => {
@@ -1763,6 +1861,8 @@ class RPGApplication {
       tabLogin.classList.remove('active');
       if (nicknameInput) nicknameInput.style.display = 'block';
       if (ageContainer) ageContainer.style.display = 'flex';
+      const forgotExtra = document.getElementById('auth-login-extras');
+      if (forgotExtra) forgotExtra.style.display = 'none';
       if (parentEmailContainer) {
         parentEmailContainer.style.display = (over18Checkbox && over18Checkbox.checked) ? 'none' : 'flex';
       }
@@ -1805,7 +1905,7 @@ class RPGApplication {
       }
 
       submitBtn.disabled = false;
-      if (submitBtnLabel) submitBtnLabel.innerText = mode === 'signup' ? 'Criar Conta' : 'Entrar';
+      if (submitBtnLabel) submitBtnLabel.innerText = mode === 'signup' ? 'Criar Conta' : 'Entrar na Ilha';
 
       if (res.success) {
         if (res.requiresConfirmation) {
@@ -1838,7 +1938,7 @@ class RPGApplication {
       await this.supabaseClient.signOut();
       refreshAuthUI();
       this.showToast('Desconectado da conta.');
-      modal.style.display = 'flex';
+      resetToLoginModal();
     });
   }
 
@@ -3456,12 +3556,19 @@ class RPGApplication {
         this.player.spawnCraftPoof();
         this.triggerAutoSave();
 
-        // Auto close after 2.4 seconds of visual celebration
+        // Auto close coding studio and display New Item Unlocked Spotlight Popup!
         setTimeout(() => {
           if (modal.style.display !== 'none') {
             modal.style.display = 'none';
           }
-        }, 2400);
+          this.showNewItemPopup(
+            res.unlockedAssetId, 
+            res.unlockedAssetName, 
+            res.unlockedCategory, 
+            xpAmount, 
+            goldAmount
+          );
+        }, 2200);
       } else {
         soundFX.playPop(0.7);
         this.showToast(res.message, 4000);
@@ -3570,6 +3677,37 @@ class RPGApplication {
     if (!navigator.onLine) {
       showDisconnection('Você está sem conexão com a internet.');
     }
+  }
+
+  showNewItemPopup(assetId, assetName, category = 'Mobília & Decoração', xp = 100, gold = 50) {
+    const modal = document.getElementById('new-item-modal');
+    if (!modal) return;
+
+    const nameEl = document.getElementById('new-item-name');
+    const catEl = document.getElementById('new-item-category');
+    const xpEl = document.getElementById('new-item-xp');
+    const goldEl = document.getElementById('new-item-gold');
+    const iconWrap = document.getElementById('new-item-icon-wrap');
+    const closeBtn = document.getElementById('btn-close-new-item');
+
+    if (nameEl) nameEl.innerText = assetName || 'Item Mágico';
+    if (catEl) catEl.innerHTML = `${category || 'Item Especial'} &bull; Adicionado à sua Mochila`;
+    if (xpEl) xpEl.innerText = `+${xp} XP`;
+    if (goldEl) goldEl.innerText = `+${gold} Moedas`;
+
+    if (iconWrap) {
+      const iconKey = assetId || this.inventorySystem?.inferIconKey(assetId);
+      iconWrap.innerHTML = this.getItemSvgIcon(iconKey);
+    }
+
+    modal.style.display = 'flex';
+    soundFX.playSuccess();
+
+    const handleClose = () => {
+      modal.style.display = 'none';
+      closeBtn?.removeEventListener('click', handleClose);
+    };
+    closeBtn?.addEventListener('click', handleClose);
   }
 }
 

@@ -2797,12 +2797,79 @@ canvas#game-canvas {
   font-family: var(--animal-font-title, 'Cinzel', serif);
 }
 
-.ac-pocket-card, .ac-diy-card {
+.ac-pocket-card, .ac-diy-card, .new-item-card {
   background: #fdfbf7;
   border: 3.5px solid #7a583e;
   border-radius: 28px;
   box-shadow: 0 20px 50px rgba(60, 45, 30, 0.4);
   overflow: hidden;
+}
+
+/* ==========================================================================
+   New Item Unlocked Spotlight Card (Animal Island UI)
+   ========================================================================== */
+.new-item-spotlight {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 6px auto;
+}
+
+.new-item-rays {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.4) 0%, rgba(25, 200, 185, 0.2) 50%, transparent 70%);
+  animation: itemRaySpin 12s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes itemRaySpin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.08); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.new-item-pedestal {
+  position: relative;
+  z-index: 2;
+  width: 90px;
+  height: 90px;
+  background: linear-gradient(135deg, #ffffff 0%, #f7f3df 100%);
+  border: 3px solid #f59e0b;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.35), 0 4px 0 0 #d97706;
+  animation: itemBounceFloat 2.4s ease-in-out infinite;
+}
+
+@keyframes itemBounceFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.new-item-icon-wrap {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.new-item-icon-wrap svg {
+  width: 52px;
+  height: 52px;
+  filter: drop-shadow(0 2px 4px rgba(120, 80, 30, 0.25));
+}
+
+.auth-text-link:hover {
+  color: var(--animal-primary, #19c8b9) !important;
 }
 
 .ac-diy-subbar {

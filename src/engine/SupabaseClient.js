@@ -188,6 +188,55 @@ export class SupabaseClient {
     }
   }
 
+  async resetPassword(email) {
+    if (!this.client) {
+      return { 
+        success: false, 
+        error: 'Supabase não conectado. Configure a URL e a Anon Key do projeto nas configurações.' 
+      };
+    }
+
+    try {
+      const redirectUrl = window.location.origin + window.location.pathname;
+      const { data, error } = await this.client.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl
+      });
+
+      if (error) return { success: false, error: error.message };
+
+      return { 
+        success: true, 
+        message: `Instruções de recuperação foram enviadas para ${email}. Verifique sua caixa de entrada!` 
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  async updatePassword(newPassword) {
+    if (!this.client) {
+      return { 
+        success: false, 
+        error: 'Supabase não conectado.' 
+      };
+    }
+
+    try {
+      const { data, error } = await this.client.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) return { success: false, error: error.message };
+
+      return { 
+        success: true, 
+        message: 'Sua senha foi redefinida com sucesso!' 
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+
   async signOut() {
     if (this.client && !this.user?.isGuest) {
       await this.client.auth.signOut();
