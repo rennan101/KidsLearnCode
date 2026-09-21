@@ -1,5 +1,6 @@
 // Animal Crossing Style Dialogue & In-Game Chat Bubble Queue System (Max 2 Bubbles Stack)
 import { VILLAGE_NPCS } from './CharacterRegistry.js';
+import { soundFX } from './SoundFX.js';
 
 export class DialogueAndChatSystem {
   constructor(options = {}) {
@@ -7,13 +8,36 @@ export class DialogueAndChatSystem {
     this.maxStackedBubbles = 2;
     this.bubbleDurationMs = 5000;
     
-    // Active NPC dialogue state
-    this.activeDialogue = null; // { speaker, text, portrait, choices, onComplete }
+    // Active NPC dialogue pagination state
+    this.activeDialogue = null; // { speaker, fullText, displayedText, isFinished }
+    this.dialoguePages = [];
+    this.currentPageIndex = 0;
+    this.dialogueChoices = [];
+    this.dialogueOnComplete = null;
+    this.speakerMeta = null;
+
     this.typewriterIndex = 0;
     this.typewriterTimer = null;
     this.audioContext = null;
 
     this.initAudio();
+    this.setupGlobalControls();
+  }
+
+  setupGlobalControls() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', (e) => {
+        const modalEl = document.getElementById('ac-dialogue-modal');
+        if (!modalEl || modalEl.style.display === 'none') return;
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+        
+        // Advance dialogue on [E], [Space] or [Enter]
+        if (e.key === 'e' || e.key === 'E' || e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          this.advanceDialogue();
+        }
+      });
+    }
   }
 
   initAudio() {
@@ -216,8 +240,45 @@ export class DialogueAndChatSystem {
     }
   }
 
-  // Open Full Animal Crossing Style NPC Dialogue Box
-  startNPCDialogue(speakerMeta, dialogueText, choices = [], onComplete = null, npcData = null) {
+  // Splits long speeches into comfortable, readable pages
+  splitIntoPages(input) {
+    if (Array.isArray(input)) {
+      return input.map(s => String(s).trim()).filter(Boolean);
+    }
+
+    const rawStr = String(input || '').trim();
+    if (!rawStr) return ['...'];
+
+    // Split by double line breaks first
+    const paragraphs = rawStr.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
+    const pages = [];
+
+    paragraphs.forEach(para => {
+      // If a single paragraph is too long, split by sentence boundary
+      if (para.length > 175) {
+        const sentences = para.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [para];
+        let currentChunk = '';
+
+        sentences.forEach(sent => {
+          const trimmedSent = sent.trim();
+          if ((currentChunk + ' ' + trimmedSent).trim().length <= 165) {
+            currentChunk = (currentChunk ? currentChunk + ' ' : '') + trimmedSent;
+          } else {
+            if (currentChunk) pages.push(currentChunk);
+            currentChunk = trimmedSent;
+          }
+        });
+        if (currentChunk) pages.push(currentChunk);
+      } else {
+        pages.push(para);
+      }
+    });
+
+    return pages.length > 0 ? pages : [rawStr];
+  }
+
+  // Open Full Animal Crossing Style NPC Dialogue Box with Pagination
+  startNPCDialogue(speakerMeta, dialogueInput, choices = [], onComplete = null, npcData = null) {
     if (npcData) {
       this.activeNpc = {
         ...npcData,
@@ -226,42 +287,75 @@ export class DialogueAndChatSystem {
       };
     }
 
-    this.activeDialogue = {
-      speaker: speakerMeta,
-      fullText: dialogueText,
-      displayedText: '',
-      choices,
-      onComplete,
-      isFinished: false
-    };
+    this.speakerMeta = speakerMeta || { name: 'Morador', portraitUrl: 'assets/characters/char_wolf_hunter_m/portrait.jpg' };
+    this.dialoguePages = this.splitIntoPages(dialogueInput);
+    this.currentPageIndex = 0;
+    this.dialogueChoices = choices || [];
+    this.dialogueOnComplete = onComplete;
 
-    this.typewriterIndex = 0;
     const modalEl = document.getElementById('ac-dialogue-modal');
-    const nameEl = document.getElementById('ac-dialogue-name');
-    const textEl = document.getElementById('ac-dialogue-text');
     const portraitEl = document.getElementById('ac-dialogue-portrait');
-    const choicesEl = document.getElementById('ac-dialogue-choices');
-    const indicatorEl = document.getElementById('ac-dialogue-indicator');
+    const boxEl = modalEl?.querySelector('.ac-dialogue-box');
 
-    if (!modalEl || !textEl) return;
+    if (!modalEl) return;
 
     modalEl.style.display = 'flex';
-    if (indicatorEl) indicatorEl.style.display = 'none';
-    if (nameEl) nameEl.innerText = speakerMeta.name || 'Morador';
+
     if (portraitEl) {
       portraitEl.onerror = () => {
         portraitEl.onerror = null;
         portraitEl.src = 'assets/characters/char_wolf_hunter_m/portrait.jpg';
       };
-      portraitEl.src = speakerMeta.portraitUrl || 'assets/characters/char_wolf_hunter_m/portrait.jpg';
+      portraitEl.src = this.speakerMeta.portraitUrl || 'assets/characters/char_wolf_hunter_m/portrait.jpg';
     }
-    if (choicesEl) choicesEl.innerHTML = '';
+
+    // Attach click-to-advance listener to dialogue box
+    if (boxEl && !boxEl._hasAdvanceClick) {
+      boxEl._hasAdvanceClick = true;
+      boxEl.addEventListener('click', (e) => {
+        if (e.target.closest('.ac-choice-btn')) return;
+        this.advanceDialogue();
+      });
+    }
 
     if (this.onDialogueOpen) {
-      this.onDialogueOpen(this.activeNpc, speakerMeta);
+      this.onDialogueOpen(this.activeNpc, this.speakerMeta);
     }
 
+    this.displayCurrentPage();
+  }
+
+  displayCurrentPage() {
+    const modalEl = document.getElementById('ac-dialogue-modal');
+    const nameEl = document.getElementById('ac-dialogue-name');
+    const textEl = document.getElementById('ac-dialogue-text');
+    const choicesEl = document.getElementById('ac-dialogue-choices');
+    const indicatorEl = document.getElementById('ac-dialogue-indicator');
+
+    if (!modalEl || !textEl) return;
+
+    const pageText = this.dialoguePages[this.currentPageIndex] || '';
+    const totalPages = this.dialoguePages.length;
+
+    // Update name ribbon with page indicator if multi-page
+    if (nameEl) {
+      const baseName = this.speakerMeta.name || 'Morador';
+      nameEl.innerText = totalPages > 1 ? `${baseName} (${this.currentPageIndex + 1}/${totalPages})` : baseName;
+    }
+
+    if (indicatorEl) indicatorEl.style.display = 'none';
+    if (choicesEl) choicesEl.innerHTML = '';
+
+    this.activeDialogue = {
+      speaker: this.speakerMeta,
+      fullText: pageText,
+      displayedText: '',
+      isFinished: false
+    };
+
+    this.typewriterIndex = 0;
     clearInterval(this.typewriterTimer);
+
     this.typewriterTimer = setInterval(() => {
       if (this.typewriterIndex < this.activeDialogue.fullText.length) {
         const nextChar = this.activeDialogue.fullText[this.typewriterIndex];
@@ -270,16 +364,80 @@ export class DialogueAndChatSystem {
         
         // Cozy Animalese sound every 2 non-whitespace characters
         if (this.typewriterIndex % 2 === 0 && /\S/.test(nextChar)) {
-          this.playACBlip(speakerMeta.pitch || 520);
+          this.playACBlip(this.speakerMeta.pitch || 520);
         }
         this.typewriterIndex++;
       } else {
-        clearInterval(this.typewriterTimer);
-        this.activeDialogue.isFinished = true;
-        if (indicatorEl) indicatorEl.style.display = 'flex';
-        this.renderChoices(choicesEl, choices, onComplete);
+        this.finishCurrentPageTyping();
       }
-    }, 48);
+    }, 42);
+  }
+
+  finishCurrentPageTyping() {
+    clearInterval(this.typewriterTimer);
+    const textEl = document.getElementById('ac-dialogue-text');
+    const choicesEl = document.getElementById('ac-dialogue-choices');
+    const indicatorEl = document.getElementById('ac-dialogue-indicator');
+
+    if (this.activeDialogue) {
+      this.activeDialogue.displayedText = this.activeDialogue.fullText;
+      this.activeDialogue.isFinished = true;
+      if (textEl) textEl.innerText = this.activeDialogue.fullText;
+    }
+
+    if (indicatorEl) indicatorEl.style.display = 'flex';
+
+    const isLastPage = this.currentPageIndex >= this.dialoguePages.length - 1;
+
+    if (!isLastPage) {
+      // Intermediate page: show friendly continue button
+      if (choicesEl) {
+        choicesEl.innerHTML = '';
+        const continueBtn = document.createElement('button');
+        continueBtn.className = 'ac-choice-btn ac-continue-btn';
+        continueBtn.innerHTML = `
+          <span>Próximo</span>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        `;
+        continueBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.advanceDialogue();
+        });
+        choicesEl.appendChild(continueBtn);
+      }
+    } else {
+      // Final page: render actual interactive decision choices
+      this.renderChoices(choicesEl, this.dialogueChoices, this.dialogueOnComplete);
+    }
+  }
+
+  // Advance dialogue page or skip typewriter
+  advanceDialogue() {
+    const modalEl = document.getElementById('ac-dialogue-modal');
+    if (!modalEl || modalEl.style.display === 'none' || !this.activeDialogue) return;
+
+    // 1. If currently typing: fast-forward to full text of current page
+    if (!this.activeDialogue.isFinished) {
+      this.finishCurrentPageTyping();
+      soundFX.playPop(1.2);
+      return;
+    }
+
+    // 2. If finished typing and there are more pages: go to next page
+    if (this.currentPageIndex < this.dialoguePages.length - 1) {
+      this.currentPageIndex++;
+      soundFX.playPop(1.0);
+      this.displayCurrentPage();
+      return;
+    }
+
+    // 3. If on last page with no interactive choices: close dialogue
+    if (!this.dialogueChoices || this.dialogueChoices.length === 0) {
+      this.closeNPCDialogue();
+      if (this.dialogueOnComplete) this.dialogueOnComplete(null);
+    }
   }
 
   // Update floating dialogue box position above the NPC on screen
@@ -319,7 +477,8 @@ export class DialogueAndChatSystem {
       const continueBtn = document.createElement('button');
       continueBtn.className = 'ac-choice-btn';
       continueBtn.innerText = 'Entendido!';
-      continueBtn.addEventListener('click', () => {
+      continueBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         this.closeNPCDialogue();
         if (onComplete) onComplete(null);
       });
@@ -331,7 +490,8 @@ export class DialogueAndChatSystem {
       const btn = document.createElement('button');
       btn.className = 'ac-choice-btn';
       btn.innerText = choice.label;
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         this.closeNPCDialogue();
         if (choice.action) choice.action();
         if (onComplete) onComplete(choice.value);
@@ -348,12 +508,14 @@ export class DialogueAndChatSystem {
     if (modalEl) modalEl.style.display = 'none';
     this.activeDialogue = null;
     this.activeNpc = null;
+    this.dialoguePages = [];
+    this.currentPageIndex = 0;
     if (this.onDialogueClose) {
       this.onDialogueClose();
     }
   }
 
-  // Open complete NPC conversation with progressive multi-mission branching and asset unlocking
+  // Open complete NPC conversation with structured, paginated speech bubbles
   openNpcConversation(npcData, blocklySystem, callbacks = {}) {
     if (!npcData) return;
     this.activeNpc = {
@@ -378,36 +540,41 @@ export class DialogueAndChatSystem {
 
     if (progress.isFinished) {
       // All missions for this NPC are completed
-      const text = npcData.masterDialogue || `Parabéns! Você completou todos os meus ${progress.totalCount} desafios de código! Todos os objetos correspondentes estão totalmente liberados para você construir a ilha!`;
-      const choices = [];
+      const pages = [
+        `Parabéns, grande arquiteto! Você completou todos os meus ${progress.totalCount} desafios de código na Ilha Lua!`,
+        `Todas as minhas receitas de mobília, ferramentas e estruturas estão permanentemente liberadas na sua Bancada de Criação DIY!`,
+        `Fique à vontade para explorar a ilha ou revisar seus desafios favoritos no Estúdio de Códigos a qualquer hora!`
+      ];
 
+      const choices = [];
       if (callbacks.onOpenCrafting) {
         choices.push({
           label: 'Abrir Bancada de Criação',
           action: () => callbacks.onOpenCrafting()
         });
       }
-
       if (callbacks.onOpenLesson && progress.nextLesson) {
         choices.push({
-          label: 'Revisar Desafios no Grimório',
+          label: 'Revisar no Estúdio',
           action: () => callbacks.onOpenLesson(progress.nextLesson.id)
         });
       }
-
       choices.push({
         label: 'Até logo!',
         action: () => this.closeNPCDialogue()
       });
 
-      this.startNPCDialogue(speakerMeta, text, choices, null, npcData);
+      this.startNPCDialogue(speakerMeta, pages, choices, null, npcData);
     } else {
-      // There is an active pending mission in the sequence
+      // Active pending mission in the sequence
       const lesson = progress.nextLesson;
       if (!lesson) return;
 
-      const progressTag = `[Etapa ${progress.completedCount + 1} de ${progress.totalCount}]`;
-      const text = `${npcData.greeting || ''}\n\n${progressTag} ${lesson.title}\n${lesson.description}\n\nRecompensa de Criação: ${lesson.unlockedAssetName}`;
+      const pages = [
+        npcData.greeting || 'Olá, nobre aventureiro! Que bom ver você por aqui!',
+        `[Missão ${progress.completedCount + 1} de ${progress.totalCount}: ${lesson.title}]\n\n${lesson.description}`,
+        `Recompensa ao Concluir: ${lesson.unlockedAssetName}\nBônus de Criação: +${lesson.rewardXP} XP e +${lesson.rewardGold} Moedas da Ilha!`
+      ];
 
       const choices = [
         {
@@ -419,12 +586,15 @@ export class DialogueAndChatSystem {
           }
         },
         {
-          label: 'Pedir Dica',
+          label: 'Pedir Dica do Mentor',
           action: () => {
-            const hintText = `Dica de ${lesson.concept}: Escreva o script de acordo com os parâmetros necessários e clique em "Executar Código" no Grimório Lua!`;
-            this.startNPCDialogue(speakerMeta, hintText, [
+            const hintPages = [
+              `Dica de ${lesson.concept}:`,
+              `Arraste as peças na Mesa de Montagem para construir o script correto. Depois clique em "Executar & Fabricar"!`
+            ];
+            this.startNPCDialogue(speakerMeta, hintPages, [
               {
-                label: `Iniciar Desafio (${lesson.unlockedAssetName})`,
+                label: `Iniciar: ${lesson.unlockedAssetName}`,
                 action: () => {
                   if (callbacks.onOpenLesson) {
                     callbacks.onOpenLesson(lesson.id);
@@ -444,9 +614,10 @@ export class DialogueAndChatSystem {
         }
       ];
 
-      this.startNPCDialogue(speakerMeta, text, choices, null, npcData);
+      this.startNPCDialogue(speakerMeta, pages, choices, null, npcData);
     }
   }
 }
 
 export default DialogueAndChatSystem;
+

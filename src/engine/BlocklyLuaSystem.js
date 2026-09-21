@@ -971,10 +971,60 @@ export class BlocklyLuaSystem {
     return code;
   }
 
+  // Format and translate runtime and syntax errors to 100% kid-friendly Brazilian Portuguese (PT-BR)
+  translateErrorMessage(err, scriptCode) {
+    if (!scriptCode || scriptCode.trim() === '') {
+      return 'A mesa de montagem está vazia! Arraste as peças da paleta à esquerda para montar seu código antes de executar.';
+    }
+
+    const msg = err?.message || String(err);
+
+    // 1. Variable or function not defined
+    const notDefMatch = msg.match(/([a-zA-Z_]\w*)\s+is not defined/i);
+    if (notDefMatch) {
+      return `A variável ou comando "${notDefMatch[1]}" não foi declarado. Verifique se o nome está correto ou se precisa colocar entre aspas caso seja um texto.`;
+    }
+
+    // 2. Syntax / Unexpected identifier / Unexpected token
+    if (/Unexpected identifier/i.test(msg)) {
+      return 'Texto ou comando não reconhecido na linha. Certifique-se de que palavras de texto estejam entre aspas (ex: "carvalho") e os blocos estejam bem conectados.';
+    }
+    if (/Unexpected end of input/i.test(msg) || /Unexpected token '\}'/i.test(msg)) {
+      return 'Estrutura incompleta no código! Verifique se todos os blocos de repetição (\'para\'), condição (\'se\') ou função possuem o fechamento \'fim\'.';
+    }
+    if (/Unexpected token/i.test(msg)) {
+      return `Símbolo ou pontuação inesperada no código. Verifique se não há vírgulas, parênteses ou aspas sobrando ou faltando.`;
+    }
+    if (/missing \)/i.test(msg)) {
+      return 'Faltou fechar o parêntese ")" em uma das ações ou chamadas de função.';
+    }
+    if (/is not a function/i.test(msg)) {
+      const fnMatch = msg.match(/([a-zA-Z_]\w*)\s+is not a function/i);
+      const fnName = fnMatch ? fnMatch[1] : 'O comando';
+      return `"${fnName}" não é uma ação válida para fabricar ou interagir na ilha.`;
+    }
+    if (/Cannot read propert/i.test(msg)) {
+      return 'Tentativa de acessar um valor ou propriedade que não existe no momento.';
+    }
+    if (/Invalid left-hand side/i.test(msg)) {
+      return 'Atribuição inválida. Para guardar valores, use o padrão: local nome = valor.';
+    }
+
+    return `Erro de sintaxe no código: ${msg}. Revise o encaixe das peças e tente novamente!`;
+  }
+
   // Safe client-side evaluator for educational Lua scripts
   runScript(scriptCode, mockContext = {}) {
     const logs = [];
     const lesson = this.getCurrentLesson();
+
+    if (!scriptCode || scriptCode.trim() === '') {
+      return {
+        success: false,
+        error: 'Mesa de montagem vazia',
+        message: 'A mesa de montagem está vazia! Arraste as peças da paleta à esquerda para montar seu código antes de executar.'
+      };
+    }
 
     try {
       const sandboxEnv = {
@@ -1121,7 +1171,7 @@ export class BlocklyLuaSystem {
         logs,
         message: isSuccess 
           ? `Desafio concluído com sucesso! Recompensa: ${lesson.rewardDesc}` 
-          : `O código foi executado, mas o resultado esperado não foi atingido. Verifique a lógica e tente novamente.`,
+          : `O código foi executado, mas a receita não produziu o item esperado! Verifique se conectou todos os blocos necessários e se os valores estão corretos.`,
         rewardXP: lesson.rewardXP,
         rewardGold: lesson.rewardGold,
         unlockedAssetId: lesson.unlockedAssetId,
@@ -1129,10 +1179,11 @@ export class BlocklyLuaSystem {
         unlockedCategory: lesson.unlockedCategory
       };
     } catch (err) {
+      const friendlyMessage = this.translateErrorMessage(err, scriptCode);
       return {
         success: false,
         error: err.message,
-        message: `Erro de sintaxe no código Lua: ${err.message}`
+        message: friendlyMessage
       };
     }
   }
