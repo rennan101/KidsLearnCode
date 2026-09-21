@@ -101,11 +101,11 @@ export class DayNightSystem {
 
     // At night, only Vampire bats can act, unless special lantern buff is active
     if (isNight && !isVampire) {
-      return { allowed: false, reason: '🌙 É noite! Apenas Morcegos Vampiros possuem a habilidade Eco Noturno para agir no escuro. Descanse ou use uma tocha/dragão luminoso.' };
+      return { allowed: false, reason: 'É noite! Apenas Morcegos Vampiros possuem a habilidade Eco Noturno para agir no escuro. Descanse ou use uma tocha/dragão luminoso.' };
     }
 
     if (this.getTotalAvailableAP() <= 0) {
-      return { allowed: false, reason: '⚡ Pontos de Ação (AP) esgotados! Suas ações diárias se renovam no próximo ciclo às 06h de Brasília.' };
+      return { allowed: false, reason: 'Pontos de Ação (AP) esgotados! Suas ações diárias se renovam no próximo ciclo às 06h de Brasília.' };
     }
 
     return { allowed: true };

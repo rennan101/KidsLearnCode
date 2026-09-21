@@ -377,11 +377,14 @@ export class Minimap {
 
     ctx.save();
     ctx.font = '14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = isDay ? '#f59e0b' : '#818cf8';
-    ctx.shadowBlur = 10;
-    ctx.fillText(isDay ? '☀️' : '🌙', orbitX, orbitY);
+    // Draw Sun / Moon Vector Indicator
+    ctx.beginPath();
+    ctx.arc(orbitX, orbitY, 5, 0, Math.PI * 2);
+    ctx.fillStyle = isDay ? '#f59e0b' : '#c7d2fe';
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
     ctx.restore();
 
     // 3. Draw Action Points (AP) segmented arc along the top-left rim
@@ -408,15 +411,15 @@ export class Minimap {
     ctx.strokeStyle = isDay ? '#f59e0b' : '#6366f1';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(cx - 36, cy + radius - 24, 72, 18, 9);
+    ctx.roundRect(cx - 40, cy + radius - 24, 80, 18, 9);
     ctx.fill();
     ctx.stroke();
 
     ctx.fillStyle = isDay ? '#fef08a' : '#c7d2fe';
-    ctx.font = 'bold 10px "JetBrains Mono", monospace';
+    ctx.font = 'bold 9px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const apText = nightBonus > 0 ? `${currentAP}+${nightBonus}⚡` : `${currentAP}/${maxAP}⚡`;
+    const apText = nightBonus > 0 ? `${currentAP}+${nightBonus} AP` : `${currentAP}/${maxAP} AP`;
     ctx.fillText(`${formatted} ${apText}`, cx, cy + radius - 15);
     ctx.restore();
   }

@@ -2358,59 +2358,94 @@ canvas#game-canvas {
 }
 
 /* ==========================================================================
-   Animal Crossing: New Horizons (ACNH) Pocket Bolsa & Workbench Styles
+   Animal Island UI (ACNH) Pocket Bolsa, DIY Workbench & Dragon Modals
    ========================================================================== */
 .ac-header-mint {
-  background: linear-gradient(135deg, #00a896, #028072) !important;
+  background: linear-gradient(135deg, var(--animal-primary), var(--animal-primary-dark)) !important;
   color: #ffffff !important;
-  border-bottom: 2px solid #016b5f !important;
-  box-shadow: 0 4px 12px rgba(0, 168, 150, 0.25);
+  border-bottom: 3px solid #0b6961 !important;
+  box-shadow: 0 4px 14px rgba(25, 200, 185, 0.35);
 }
 
 .ac-pocket-card, .ac-diy-card {
-  background: #0b1119;
-  border: 1px solid #1e2e3e;
-  border-radius: 18px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 168, 150, 0.15);
+  background: #fdfbf7;
+  border: 3.5px solid #7a583e;
+  border-radius: 28px;
+  box-shadow: 0 20px 50px rgba(60, 45, 30, 0.4);
   overflow: hidden;
 }
 
 .ac-diy-subbar {
-  background: #111e2e;
+  background: #f7f3df;
   padding: 8px 18px;
-  border-bottom: 1px solid #1e2e3e;
-  font-size: 0.8rem;
-  color: #94a3b8;
+  border-bottom: 1.5px solid #c4b89e;
+  font-family: var(--animal-font);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #725d42;
 }
 
 .ac-pocket-tabs {
-  padding: 10px 18px 4px 18px;
+  padding: 12px 18px 6px 18px;
   display: flex;
   gap: 8px;
-  border-bottom: 1px solid #1e293b;
-  background: #0d1522;
+  border-bottom: 2px solid #c4b89e;
+  background: #f7f3df;
+}
+
+.backpack-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #f8f8f0;
+  border: 1.5px solid #c4b89e;
+  border-radius: 50px;
+  color: #725d42;
+  font-family: var(--animal-font);
+  font-weight: 800;
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.backpack-tab:hover {
+  background: #e6f9f6;
+  border-color: var(--animal-primary);
+  color: #0f8e83;
+}
+
+.backpack-tab.active {
+  background: linear-gradient(135deg, var(--animal-primary), var(--animal-primary-dark));
+  color: #ffffff;
+  border-color: #0b6961;
+  box-shadow: 0 3px 0 0 #0b6961, 0 4px 10px rgba(25, 200, 185, 0.35);
+  transform: translateY(-1px);
 }
 
 /* 2-Column Pocket Layout: 20 Circular Slots on Left, Item Details on Right */
 .ac-pocket-layout {
   display: grid;
-  grid-template-columns: 1fr 240px;
+  grid-template-columns: 1fr 250px;
   gap: 16px;
   flex: 1;
   padding: 16px;
   min-height: 0;
   overflow: hidden;
+  background: #fdfbf7;
 }
 
 .ac-pocket-grid-wrapper {
-  background: #080d14;
-  border: 1px solid #192636;
-  border-radius: 16px;
+  background: #f7f3df;
+  border: 2px solid #c4b89e;
+  border-radius: 20px;
   padding: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 2px 8px rgba(120, 90, 60, 0.12);
 }
 
 /* 20 Circular Pockets Grid (4 rows x 5 columns) */
@@ -2428,8 +2463,8 @@ canvas#game-canvas {
   width: 62px;
   height: 62px;
   border-radius: 50%;
-  background: #101924;
-  border: 2px dashed #1e3044;
+  background: #f8f8f0;
+  border: 2px dashed #c4b89e;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2438,26 +2473,26 @@ canvas#game-canvas {
   cursor: pointer;
   user-select: none;
   transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .ac-pocket-slot:hover {
   transform: scale(1.08);
-  border-color: #38bdf8;
-  background: #152232;
-  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3);
+  border-color: var(--animal-primary);
+  background: #e6f9f6;
+  box-shadow: 0 4px 12px rgba(25, 200, 185, 0.3);
 }
 
 .ac-pocket-slot.filled {
-  background: linear-gradient(145deg, #162436, #0e1722);
-  border: 2px solid #38bdf8;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  background: #ffffff;
+  border: 2.5px solid var(--animal-primary);
+  box-shadow: 0 4px 10px rgba(25, 200, 185, 0.25);
 }
 
 .ac-pocket-slot.selected {
-  border-color: #f59e0b;
-  background: linear-gradient(145deg, #242216, #1a160c);
-  box-shadow: 0 0 16px rgba(245, 158, 11, 0.6);
+  border-color: var(--animal-accent-gold);
+  background: #fffbeb;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.6);
   transform: scale(1.12);
 }
 
@@ -2467,7 +2502,7 @@ canvas#game-canvas {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #f8fafc;
+  color: #794f27;
 }
 
 .ac-pocket-slot-icon svg {
@@ -2480,22 +2515,22 @@ canvas#game-canvas {
   position: absolute;
   bottom: -2px;
   right: -2px;
-  background: #028072;
+  background: var(--animal-primary-dark);
   color: #ffffff;
-  border: 1.5px solid #00a896;
-  font-family: var(--font-mono);
+  border: 1.5px solid var(--animal-primary);
+  font-family: var(--animal-font-mono);
   font-size: 0.68rem;
   font-weight: 800;
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Item Detail Panel (Right Side of Pocket Grid) */
 .ac-pocket-detail-card {
-  background: #0d1522;
-  border: 1px solid #1e2e42;
-  border-radius: 16px;
+  background: #f7f3df;
+  border: 2px solid #c4b89e;
+  border-radius: 20px;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -2503,19 +2538,20 @@ canvas#game-canvas {
   text-align: center;
   gap: 12px;
   justify-content: space-between;
+  box-shadow: inset 0 2px 6px rgba(120, 90, 60, 0.1);
 }
 
 .ac-pocket-detail-icon {
-  width: 64px;
-  height: 64px;
+  width: 66px;
+  height: 66px;
   border-radius: 50%;
-  background: #142032;
-  border: 2px solid #38bdf8;
+  background: #ffffff;
+  border: 2.5px solid var(--animal-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #38bdf8;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  color: var(--animal-primary);
+  box-shadow: 0 4px 12px rgba(25, 200, 185, 0.25);
 }
 
 .ac-pocket-detail-icon svg {
@@ -2524,16 +2560,18 @@ canvas#game-canvas {
 }
 
 .ac-pocket-detail-text h4 {
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #f8fafc;
+  font-family: var(--animal-font);
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #794f27;
   margin-bottom: 4px;
 }
 
 .ac-pocket-detail-text p {
-  font-size: 0.78rem;
-  color: #94a3b8;
+  font-family: var(--animal-font);
+  font-size: 0.80rem;
+  font-weight: 600;
+  color: #725d42;
   line-height: 1.35;
 }
 
@@ -2574,22 +2612,22 @@ canvas#game-canvas {
 }
 
 .ac-pocket-action-btn.secondary {
-  background: #1e293b;
-  border-color: #334155;
-  color: #e2e8f0;
-  box-shadow: 0 4px 0 0 #0f172a, 0 6px 14px rgba(0, 0, 0, 0.35);
+  background: #f8f8f0;
+  border: 2px solid #c4b89e;
+  color: #794f27;
+  box-shadow: 0 4px 0 0 #a89878, 0 6px 14px rgba(80, 55, 30, 0.15);
 }
 
 .ac-pocket-action-btn.secondary:hover {
-  background: #334155;
-  border-color: #475569;
+  background: #ffffff;
+  border-color: #7a583e;
   transform: translateY(-1px);
-  box-shadow: 0 5px 0 0 #0f172a, 0 8px 18px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 5px 0 0 #a89878, 0 8px 18px rgba(80, 55, 30, 0.25);
 }
 
 .ac-pocket-action-btn.secondary:active {
   transform: translateY(3px);
-  box-shadow: 0 1px 0 0 #0f172a;
+  box-shadow: 0 1px 0 0 #a89878;
 }
 
 .ac-pocket-action-btn.danger {
@@ -2610,72 +2648,73 @@ canvas#game-canvas {
 
 .ac-pocket-slot.equipped {
   border-color: #10b981 !important;
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.45) !important;
 }
 
 .ac-pocket-slot.equipped::after {
   content: '';
   position: absolute;
-  top: -2px;
-  right: -2px;
+  top: -3px;
+  right: -3px;
   width: 12px;
   height: 12px;
-  background: #10b981;
-  border: 2px solid #080d14;
   border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  background: #10b981;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 6px #10b981;
 }
 
 .ac-pocket-stat-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #111a28;
-  border: 1px solid #1f2e42;
-  border-radius: 10px;
-  padding: 6px 10px;
-  font-size: 0.76rem;
-  margin-bottom: 6px;
+  flex-direction: column;
+  gap: 4px;
   width: 100%;
+  padding: 6px 8px;
+  background: #f8f8f0;
+  border: 1px solid #c4b89e;
+  border-radius: 12px;
+  margin-bottom: 6px;
 }
 
 .ac-pocket-stat-label {
-  color: #94a3b8;
-  font-weight: 600;
+  font-family: var(--animal-font);
+  font-size: 0.72rem;
+  color: #8a7b66;
+  font-weight: 700;
 }
 
 .ac-pocket-stat-val {
-  color: #f8fafc;
-  font-weight: 700;
-  font-family: var(--font-mono);
+  font-family: var(--animal-font);
+  font-size: 0.82rem;
+  color: #794f27;
+  font-weight: 800;
 }
 
 .ac-pocket-progress-wrap {
   width: 100%;
-  margin-top: 6px;
-  text-align: left;
+  margin-top: 4px;
 }
 
 .ac-pocket-progress-label {
   display: flex;
   justify-content: space-between;
+  font-family: var(--animal-font);
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: #8a7b66;
   margin-bottom: 4px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .ac-pocket-progress-bar {
   width: 100%;
-  height: 7px;
-  background: #1e293b;
+  height: 8px;
+  background: #e6dfcc;
   border-radius: 6px;
   overflow: hidden;
 }
 
 .ac-pocket-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #10b981, #34d399);
+  background: linear-gradient(90deg, var(--animal-primary), var(--animal-accent-leaf));
   border-radius: 6px;
   transition: width 0.3s ease;
 }
@@ -2686,31 +2725,34 @@ canvas#game-canvas {
   align-items: center;
   justify-content: space-between;
   padding: 10px 18px;
-  background: #090e18;
-  border-top: 1px solid #192636;
+  background: #f7f3df;
+  border-top: 2px solid #c4b89e;
   gap: 12px;
 }
 
 .ac-wallet-pill {
-  background: #111a28;
-  border: 1px solid #1f2e42;
-  border-radius: 20px;
-  padding: 6px 14px;
+  background: #ffffff;
+  border: 1.5px solid #c4b89e;
+  border-radius: 50px;
+  padding: 6px 16px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-family: var(--animal-font);
+  font-size: 0.84rem;
+  font-weight: 800;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .ac-wallet-label {
-  color: #94a3b8;
-  font-weight: 600;
+  color: #8a7b66;
+  font-weight: 700;
 }
 
 .ac-wallet-val {
-  color: #f8fafc;
-  font-family: var(--font-mono);
+  color: #794f27;
+  font-family: var(--animal-font-mono);
+  font-weight: 800;
 }
 
 /* Workbench DIY Recipe Grid & Cards */
@@ -2718,6 +2760,7 @@ canvas#game-canvas {
   padding: 16px;
   overflow-y: auto;
   flex: 1;
+  background: #fdfbf7;
 }
 
 .ac-recipe-grid {
@@ -2727,20 +2770,22 @@ canvas#game-canvas {
 }
 
 .ac-diy-recipe-card {
-  background: #0d1522;
-  border: 1px solid #1e2e42;
-  border-radius: 14px;
+  background: #f8f8f0;
+  border: 2px solid #c4b89e;
+  border-radius: 20px;
   padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   transition: all 0.18s ease;
+  box-shadow: 0 4px 10px rgba(80, 55, 30, 0.08);
 }
 
 .ac-diy-recipe-card:hover {
-  border-color: #00a896;
+  border-color: var(--animal-primary);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 168, 150, 0.25);
+  box-shadow: 0 8px 18px rgba(25, 200, 185, 0.25);
+  background: #ffffff;
 }
 
 .ac-diy-recipe-header {
@@ -2753,13 +2798,14 @@ canvas#game-canvas {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #142032;
-  border: 1.5px solid #00a896;
+  background: #ffffff;
+  border: 2px solid var(--animal-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6ee7b7;
+  color: var(--animal-primary);
   flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(25, 200, 185, 0.2);
 }
 
 .ac-diy-recipe-icon svg {
@@ -2768,60 +2814,73 @@ canvas#game-canvas {
 }
 
 .ac-diy-recipe-title {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #f8fafc;
+  font-family: var(--animal-font);
+  font-size: 0.90rem;
+  font-weight: 800;
+  color: #794f27;
   line-height: 1.2;
 }
 
 .ac-diy-recipe-desc {
-  font-size: 0.74rem;
-  color: #94a3b8;
+  font-family: var(--animal-font);
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #8a7b66;
   line-height: 1.35;
   flex: 1;
 }
 
 .ac-diy-recipe-actions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
 .ac-btn-diy-blocks {
   flex: 1;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  border: 1px solid #60a5fa;
-  color: #ffffff;
-  padding: 6px 10px;
-  border-radius: 16px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  background: #f8f8f0;
+  border: 2px solid var(--animal-primary);
+  color: #0f8e83;
+  padding: 7px 12px;
+  border-radius: 50px;
+  font-family: var(--animal-font);
+  font-size: 0.78rem;
+  font-weight: 800;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
   transition: all 0.15s ease;
+  box-shadow: 0 3px 0 0 #a89878;
 }
 
 .ac-btn-diy-blocks:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  background: #e6f9f6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 0 #a89878;
+}
+
+.ac-btn-diy-blocks:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 #a89878;
 }
 
 .ac-btn-diy-quick {
-  background: linear-gradient(135deg, #00a896, #028072);
-  border: 1px solid #34d399;
+  background: linear-gradient(135deg, var(--animal-primary), var(--animal-primary-dark));
+  border: 1px solid #3dd4c6;
   color: #ffffff;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 50px;
+  font-family: var(--animal-font);
+  font-size: 0.78rem;
+  font-weight: 800;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
   transition: all 0.15s ease;
+  box-shadow: 0 3px 0 0 #0b6961, 0 4px 8px rgba(25, 200, 185, 0.3);
 }
 
 .ac-btn-diy-quick:hover {
@@ -2987,8 +3046,7 @@ canvas#game-canvas {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: rgba(4, 7, 13, 0.92);
-  backdrop-filter: blur(14px);
+  background: var(--animal-bg-overlay, rgba(20, 15, 10, 0.7));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3000,22 +3058,23 @@ canvas#game-canvas {
   width: 960px;
   max-width: 95vw;
   max-height: 90vh;
-  background: #0f172a;
-  border: 2px solid #334155;
-  border-radius: 16px;
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 3px solid var(--animal-border-wood, #7a583e);
+  border-radius: var(--animal-radius-lg, 24px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(245, 158, 11, 0.15);
+  box-shadow: var(--animal-shadow-floating, 0 20px 40px rgba(0, 0, 0, 0.45));
 }
 
 .hero-selection-header {
-  padding: 16px 20px;
-  background: #141c2e;
-  border-bottom: 1px solid #1e293b;
+  padding: 16px 24px;
+  background: linear-gradient(180deg, var(--animal-primary, #19c8b9) 0%, var(--animal-primary-dark, #0f8e83) 100%);
+  border-bottom: 3px solid var(--animal-border-wood, #7a583e);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  color: #ffffff;
 }
 
 .hero-selection-title {
@@ -3025,205 +3084,223 @@ canvas#game-canvas {
 }
 
 .hero-selection-icon {
-  font-size: 2rem;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
 }
 
 .hero-selection-title h2 {
-  font-family: 'Cinzel', serif;
-  font-size: 1.25rem;
-  color: #fef08a;
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: #ffffff;
   letter-spacing: 0.5px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  margin: 0;
 }
 
 .hero-selection-title p {
-  font-size: 0.8rem;
-  color: #94a3b8;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  margin: 2px 0 0 0;
 }
 
 .hero-selection-grid {
-  padding: 18px;
+  padding: 20px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 14px;
+  gap: 16px;
   overflow-y: auto;
   flex: 1;
+  background: var(--animal-bg, #f8f8f0);
 }
 
 .hero-card {
-  background: #090e18;
-  border: 1px solid #1e293b;
-  border-radius: 12px;
-  padding: 14px;
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 2.5px solid var(--animal-border, #c4b89e);
+  border-radius: var(--animal-radius-md, 18px);
+  padding: 16px 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 8px;
+  gap: 10px;
   position: relative;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 3px 0 0 var(--animal-border, #c4b89e);
 }
 
 .hero-card:hover {
-  border-color: var(--accent-gold);
-  background: #121929;
+  border-color: var(--animal-primary, #19c8b9);
   transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 6px 16px rgba(25, 200, 185, 0.25);
 }
 
 .hero-card.selected {
-  border-color: #10b981;
-  background: #0d1e1e;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+  border-color: var(--animal-primary, #19c8b9);
+  background: var(--animal-primary-bg, #e6f9f6);
+  box-shadow: 0 0 0 3px var(--animal-primary, #19c8b9), 0 4px 12px rgba(25, 200, 185, 0.25);
 }
 
 .hero-card-portrait {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  border: 2px solid var(--accent-gold);
+  width: 76px;
+  height: 76px;
+  border-radius: var(--animal-radius-circle, 50%);
+  border: 3px solid var(--animal-border-wood, #7a583e);
   object-fit: cover;
-  background: #000;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+  background: var(--animal-bg-content, #f7f3df);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
 .hero-card-name {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #f8fafc;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--animal-text, #794f27);
   line-height: 1.2;
 }
 
 .hero-card-tags {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   flex-wrap: wrap;
   justify-content: center;
 }
 
 .hero-badge {
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: var(--animal-radius-pill, 50px);
   text-transform: uppercase;
 }
 
 .hero-badge.archetype {
-  background: #1e293b;
-  color: #38bdf8;
-  border: 1px solid #334155;
+  background: var(--animal-primary-bg, #e6f9f6);
+  color: var(--animal-primary-dark, #0f8e83);
+  border: 1.5px solid var(--animal-border-mint, #3dd4c6);
 }
 
 .hero-badge.gender {
-  background: #3730a3;
-  color: #c7d2fe;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1.5px solid #fde68a;
 }
 
 .hero-passive-box {
-  background: #050811;
-  border: 1px solid #1e293b;
-  border-radius: 6px;
-  padding: 8px;
-  font-size: 0.72rem;
-  color: #cbd5e1;
+  background: var(--animal-bg-content, #f7f3df);
+  border: 1.5px solid var(--animal-border, #c4b89e);
+  border-radius: var(--animal-radius-sm, 12px);
+  padding: 10px;
+  font-size: 0.76rem;
+  color: var(--animal-text-body, #725d42);
   text-align: left;
   width: 100%;
-  line-height: 1.35;
+  line-height: 1.4;
   flex: 1;
 }
 
 .hero-passive-title {
-  color: var(--accent-gold);
-  font-weight: 700;
+  color: var(--animal-text, #794f27);
+  font-weight: 800;
   display: block;
   margin-bottom: 2px;
 }
 
 .hero-select-btn {
   width: 100%;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #000;
+  background: var(--animal-primary, #19c8b9);
+  color: #ffffff;
   border: none;
-  padding: 8px 0;
-  border-radius: 8px;
+  padding: 9px 0;
+  border-radius: var(--animal-radius-pill, 50px);
   font-weight: 800;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.15s ease;
   margin-top: 4px;
+  box-shadow: var(--animal-shadow-btn-primary, 0 4px 0 0 #0f8e83);
 }
 
 .hero-select-btn:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+  background: var(--animal-primary-hover, #3dd4c6);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 0 0 #0f8e83;
+}
+
+.hero-select-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 #0f8e83;
 }
 
 .hero-select-btn.active {
-  background: #047857;
-  color: #a7f3d0;
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 4px 0 0 #059669;
   cursor: default;
 }
+
 
 /* ==========================================================================
    Supabase Cloud Account & Status Header Bar
    ========================================================================== */
 .cloud-account-btn {
-  background: #090c12;
-  border: 1px solid #1e293b;
-  color: #cbd5e1;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.78rem;
-  font-weight: 600;
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 2px solid var(--animal-border, #c4b89e);
+  color: var(--animal-text, #794f27);
+  padding: 6px 14px;
+  border-radius: var(--animal-radius-pill, 50px);
+  font-size: 0.82rem;
+  font-weight: 800;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   transition: all 0.2s ease;
+  box-shadow: 0 3px 0 0 var(--animal-border, #c4b89e);
 }
 
 .cloud-account-btn:hover {
-  border-color: #38bdf8;
-  background: #141923;
-  color: #ffffff;
+  border-color: var(--animal-primary, #19c8b9);
+  background: var(--animal-primary-bg, #e6f9f6);
+  color: var(--animal-primary-dark, #0f8e83);
   transform: translateY(-1px);
 }
 
 .cloud-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: #10b981;
+  background: var(--animal-primary, #19c8b9);
 }
 
 .cloud-dot.offline {
-  background: #94a3b8;
+  background: var(--animal-text-secondary, #9f927d);
 }
 
 .cloud-dot.authenticated {
-  background: #38bdf8;
-  box-shadow: 0 0 6px #38bdf8;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
 }
 
 .header-logout-btn {
-  background: #090c12;
-  border: 1px solid #dc2626;
-  color: #f87171;
-  padding: 6px 10px;
-  border-radius: 12px;
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 2px solid #ea580c;
+  color: #ea580c;
+  padding: 6px 12px;
+  border-radius: var(--animal-radius-pill, 50px);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  box-shadow: 0 3px 0 0 #c2410c;
 }
 
 .header-logout-btn:hover {
-  background: #dc2626;
+  background: #ea580c;
   color: #ffffff;
-  border-color: #ef4444;
-  transform: scale(1.05);
-  box-shadow: 0 0 12px rgba(220, 38, 38, 0.4);
+  transform: translateY(-1px);
 }
 
 /* ==========================================================================

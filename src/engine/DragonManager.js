@@ -241,7 +241,7 @@ export class DragonManager {
         y: 180,
         eggType: 'dragon_fly_solar',
         eggName: 'Ovo Solar da Aurora',
-        eggIcon: '🥚☀️',
+        eggIcon: 'solar',
         warmthProgress: 0, // 0 to 100%
         hatched: false
       },
@@ -252,7 +252,7 @@ export class DragonManager {
         y: 600,
         eggType: 'dragon_land_magma',
         eggName: 'Ovo de Magma Ardente',
-        eggIcon: '🥚🔥',
+        eggIcon: 'magma',
         warmthProgress: 0,
         hatched: false
       },
@@ -263,7 +263,7 @@ export class DragonManager {
         y: 500,
         eggType: 'dragon_water_frost',
         eggName: 'Ovo Glacial dos Icebergs',
-        eggIcon: '🥚❄️',
+        eggIcon: 'frost',
         warmthProgress: 0,
         hatched: false
       }
@@ -453,7 +453,7 @@ export class DragonManager {
         success: true,
         hatched: true,
         speciesData,
-        message: `🎉 O ${nest.eggName} chocou! Um adorável ${speciesData.name} nasceu!`
+        message: `O ${nest.eggName} chocou! Um adorável ${speciesData.name} nasceu!`
       };
     }
 
@@ -461,7 +461,7 @@ export class DragonManager {
       success: true,
       hatched: false,
       progress: nest.warmthProgress,
-      message: `❤️ Você aqueceu o ${nest.eggName}! Incubação: ${nest.warmthProgress}%`
+      message: `Você aqueceu o ${nest.eggName}! Incubação: ${nest.warmthProgress}%`
     };
   }
 
@@ -561,7 +561,7 @@ export class DragonManager {
           this.damageNumbers.push({
             x: target.x + 16,
             y: target.y - 10,
-            text: isCrit ? `💥 CRIT! -${damage}` : `-${damage}`,
+            text: isCrit ? `CRIT! -${damage}` : `-${damage}`,
             color: isCrit ? '#f59e0b' : '#ef4444',
             alpha: 1.0,
             life: 0,
