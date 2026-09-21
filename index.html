@@ -38,102 +38,125 @@
   </div>
 
   <!-- Top App Navigation Bar -->
+  <!-- Top App Navigation Bar -->
   <header class="app-header">
-    <div class="brand-section">
-      <!-- Auto-Save Status Indicator Badge (Apenas visível no Modo de Edição) -->
-      <div id="save-status" class="save-status saved" title="Status de persistência do mapa" style="display: none;">
-        <span class="save-dot"></span>
-        <span>Salvo</span>
+    <!-- Left Section: Character Profile, XP & Level, Gold, Backpack & Logout -->
+    <div class="header-left-bar">
+      <div class="header-hero-bar" id="header-hero-bar">
+        <!-- Hero / Character Profile Button -->
+        <button id="btn-hero-profile" class="hero-profile-btn" title="Trocar Herói / Perfil do Personagem [P]">
+          <img id="header-hero-avatar" src="assets/characters/char_wolf_hunter_m/portrait.jpg" alt="Avatar do Herói" class="hero-avatar-mini">
+          <div class="hero-header-info">
+            <span id="header-hero-name" class="hero-header-name">Lobo Caçador</span>
+            <div class="hero-header-stats">
+              <span id="header-hero-level" class="hero-header-level">Nv. 1</span>
+              <span class="hero-header-sep">•</span>
+              <span id="header-hero-xp" class="hero-header-xp">100 XP</span>
+            </div>
+          </div>
+        </button>
+
+        <!-- Money / Gold Pill -->
+        <div class="header-gold-pill" id="header-gold-pill" title="Moedas da Ilha">
+          <svg class="ui-icon icon-sm gold-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 7v10M15 9.5a2.5 2.5 0 0 0-5 0c0 3 5 2 5 5a2.5 2.5 0 0 1-5 0"></path>
+          </svg>
+          <span id="header-hero-gold" class="header-gold-amount">150</span>
+        </div>
+
+        <!-- Backpack Button -->
+        <button id="btn-open-backpack" class="backpack-quick-btn" title="Mochila [B]">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 20h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3V4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"></path>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+            <path d="M10 12h4"></path>
+            <path d="M10 16h4"></path>
+          </svg>
+          <span class="header-btn-label">Bolsa</span>
+        </button>
+
+        <!-- Account / Login Button -->
+        <button id="btn-cloud-account" class="cloud-account-btn" title="Conta Supabase & Sincronização em Nuvem MMORPG">
+          <span class="cloud-dot online"></span>
+          <span id="cloud-account-label">Entrar</span>
+        </button>
+
+        <!-- Logout Button -->
+        <button id="btn-header-logout" class="header-logout-btn" title="Sair do Jogo / Desconectar" style="display: none;">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span class="header-btn-label">Sair</span>
+        </button>
+
+        <!-- Auto-Save Status Indicator Badge (Editor Mode) -->
+        <div id="save-status" class="save-status saved" title="Status de persistência do mapa" style="display: none;">
+          <span class="save-dot"></span>
+          <span>Salvo</span>
+        </div>
       </div>
     </div>
 
-    <!-- Play Mode vs World Editor Toggle -->
-    <div class="mode-toggle">
-      <button id="btn-mode-play" class="mode-btn active" title="Controlar Herói com WASD">
-        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polygon>
-          <line x1="13" y1="19" x2="19" y2="13"></line>
-          <line x1="16" y1="16" x2="20" y2="20"></line>
-          <line x1="19" y1="21" x2="21" y2="19"></line>
-        </svg>
-        <span>Jogar</span>
-      </button>
-      <button id="btn-mode-edit" class="mode-btn" title="Pintar tiles e construir o mundo">
-        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
-        </svg>
-        <span>Editor</span>
-      </button>
-    </div>
+    <!-- Right Section: Mode Toggle & Admin / Editor Actions -->
+    <div class="header-right-bar">
+      <!-- Play Mode vs World Editor Toggle -->
+      <div class="mode-toggle">
+        <button id="btn-mode-play" class="mode-btn active" title="Controlar Herói com WASD">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polygon>
+            <line x1="13" y1="19" x2="19" y2="13"></line>
+            <line x1="16" y1="16" x2="20" y2="20"></line>
+            <line x1="19" y1="21" x2="21" y2="19"></line>
+          </svg>
+          <span>Jogar</span>
+        </button>
+        <button id="btn-mode-edit" class="mode-btn" title="Pintar tiles e construir o mundo">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+          </svg>
+          <span>Editor</span>
+        </button>
+      </div>
 
-    <!-- Hero Profile & Backpack Quick Bar (Play Mode) -->
-    <div class="header-hero-bar" id="header-hero-bar">
-      <button id="btn-hero-profile" class="hero-profile-btn" title="Trocar Herói / Ver Passivas [P]">
-        <img id="header-hero-avatar" src="assets/characters/char_wolf_hunter_m/portrait.jpg" alt="Avatar do Herói" class="hero-avatar-mini">
-        <div class="hero-header-info">
-          <span id="header-hero-name" class="hero-header-name">Lobo Caçador</span>
-          <span id="header-hero-passive" class="hero-header-passive">Faro Selvagem</span>
-        </div>
-      </button>
+      <!-- Map Persistence, Collider Overlay & Quick Actions (Admin / Editor Only) -->
+      <div class="header-actions" id="header-admin-actions">
+        <!-- Toggle Collider Wireframe Overlay -->
+        <button id="btn-toggle-colliders" class="action-btn active" title="Exibir ou ocultar caixas de colisão invisíveis" style="display: none;">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          <span>Colisores</span>
+        </button>
 
-      <button id="btn-open-backpack" class="backpack-quick-btn" title="Mochila [B]">
-        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6 20h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3V4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"></path>
-          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
-          <path d="M10 12h4"></path>
-          <path d="M10 16h4"></path>
-        </svg>
-      </button>
-
-      <button id="btn-cloud-account" class="cloud-account-btn" title="Conta Supabase & Sincronização em Nuvem MMORPG">
-        <span class="cloud-dot online"></span>
-        <span id="cloud-account-label">Entrar</span>
-      </button>
-
-      <button id="btn-header-logout" class="header-logout-btn" title="Sair do Jogo / Desconectar" style="display: none;">
-        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-          <polyline points="16 17 21 12 16 7"></polyline>
-          <line x1="21" y1="12" x2="9" y2="12"></line>
-        </svg>
-      </button>
-    </div>
-
-    <!-- Map Persistence, Collider Overlay & Quick Actions (Admin / Editor Only) -->
-    <div class="header-actions" id="header-admin-actions">
-      <!-- Toggle Collider Wireframe Overlay -->
-      <button id="btn-toggle-colliders" class="action-btn active" title="Exibir ou ocultar caixas de colisão invisíveis" style="display: none;">
-        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-        </svg>
-        <span>Colisores</span>
-      </button>
-
-      <button id="btn-save-json" class="action-btn" title="Salvar mapa em arquivo JSON" style="display: none;">
-        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-          <polyline points="17 21 17 13 7 13 7 21"></polyline>
-          <polyline points="7 3 7 8 15 8"></polyline>
-        </svg>
-        <span>Salvar JSON</span>
-      </button>
-      <button id="btn-load-json" class="action-btn" title="Carregar mapa em JSON" style="display: none;">
-        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-        </svg>
-        <span>Carregar JSON</span>
-      </button>
-      <input type="file" id="file-input-json" accept=".json" style="display: none;">
-      
-      <button id="btn-clear-map" class="action-btn danger" title="Limpar mapa e reiniciar mundo" style="display: none;">
-        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="3 6 5 6 21 6"></polyline>
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-          <line x1="10" y1="11" x2="10" y2="17"></line>
-          <line x1="14" y1="11" x2="14" y2="17"></line>
-        </svg>
-        <span>Limpar Mapa</span>
-      </button>
+        <button id="btn-save-json" class="action-btn" title="Salvar mapa em arquivo JSON" style="display: none;">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>Salvar JSON</span>
+        </button>
+        <button id="btn-load-json" class="action-btn" title="Carregar mapa em JSON" style="display: none;">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>Carregar JSON</span>
+        </button>
+        <input type="file" id="file-input-json" accept=".json" style="display: none;">
+        
+        <button id="btn-clear-map" class="action-btn danger" title="Limpar mapa e reiniciar mundo" style="display: none;">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            <line x1="10" y1="11" x2="10" y2="17"></line>
+            <line x1="14" y1="11" x2="14" y2="17"></line>
+          </svg>
+          <span>Limpar Mapa</span>
+        </button>
+      </div>
     </div>
   </header>
 

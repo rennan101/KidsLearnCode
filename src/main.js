@@ -1145,15 +1145,24 @@ class RPGApplication {
 
   updateGlobalWalletPills() {
     const goldCount = this.blocklySystem?.playerGold !== undefined ? this.blocklySystem.playerGold : 150;
-    const xpCount = this.blocklySystem?.playerXP !== undefined ? this.blocklySystem.playerXP : 100;
+    const xpCount = this.blocklySystem?.playerXP !== undefined ? this.blocklySystem.playerXP : 0;
+    const playerLevel = Math.max(1, Math.floor(xpCount / 200) + 1);
 
-    // 1. Backpack Wallet Pills
+    // 1. Header Hero Bar elements (Top-Left)
+    const headerGold = document.getElementById('header-hero-gold');
+    const headerXp = document.getElementById('header-hero-xp');
+    const headerLevel = document.getElementById('header-hero-level');
+    if (headerGold) headerGold.innerText = `${goldCount}`;
+    if (headerXp) headerXp.innerText = `${xpCount} XP`;
+    if (headerLevel) headerLevel.innerText = `Nv. ${playerLevel}`;
+
+    // 2. Backpack Wallet Pills
     const pocketGold = document.getElementById('pocket-wallet-gold');
     const pocketXp = document.getElementById('pocket-wallet-xp');
     if (pocketGold) pocketGold.innerText = `${goldCount}`;
-    if (pocketXp) pocketXp.innerText = `Nv. 1 (${xpCount} XP)`;
+    if (pocketXp) pocketXp.innerText = `Nv. ${playerLevel} (${xpCount} XP)`;
 
-    // 2. DIY Workbench Wallet Pills
+    // 3. DIY Workbench Wallet Pills
     const diyGold = document.getElementById('diy-wallet-gold');
     const diyXp = document.getElementById('diy-wallet-xp');
     if (diyGold) diyGold.innerText = `${goldCount}`;
@@ -1167,13 +1176,13 @@ class RPGApplication {
     const startX = window.innerWidth / 2;
     const startY = window.innerHeight / 2 + 30;
 
-    // Destination: Target visible DIY wallet, backpack wallet or top header
-    let targetX = window.innerWidth - 140;
-    let targetY = 50;
+    // Destination: Target visible DIY wallet, backpack wallet or top-left header gold pill
+    let targetX = 140;
+    let targetY = 28;
 
     const diyWallet = document.getElementById('diy-wallet-group');
     const pocketWallet = document.querySelector('.ac-wallet-bar');
-    const passportBar = document.getElementById('header-hero-bar');
+    const headerGoldPill = document.getElementById('header-gold-pill');
 
     if (diyWallet && diyWallet.offsetParent !== null) {
       const rect = diyWallet.getBoundingClientRect();
@@ -1183,10 +1192,10 @@ class RPGApplication {
       const rect = pocketWallet.getBoundingClientRect();
       targetX = rect.left + rect.width / 2;
       targetY = rect.top + rect.height / 2;
-    } else if (passportBar) {
-      const rect = passportBar.getBoundingClientRect();
-      targetX = rect.left + 50;
-      targetY = rect.top + 20;
+    } else if (headerGoldPill && headerGoldPill.offsetParent !== null) {
+      const rect = headerGoldPill.getBoundingClientRect();
+      targetX = rect.left + rect.width / 2;
+      targetY = rect.top + rect.height / 2;
     }
 
     const flyDx = targetX - startX;
@@ -1668,6 +1677,10 @@ class RPGApplication {
 
       if (signoutBtn) {
         signoutBtn.style.display = isGuest ? 'none' : 'block';
+      }
+
+      if (this.updateHeroHeaderBadge && this.player) {
+        this.updateHeroHeaderBadge(this.player.heroId);
       }
     };
 
@@ -2574,11 +2587,12 @@ class RPGApplication {
       const hero = PLAYABLE_HEROES.find(h => h.id === heroId) || PLAYABLE_HEROES[0];
       const avatarEl = document.getElementById('header-hero-avatar');
       const nameEl = document.getElementById('header-hero-name');
-      const passiveEl = document.getElementById('header-hero-passive');
+      const user = this.supabaseClient?.user;
+      const userName = (user && !user.isGuest && user.nickname) ? user.nickname : (hero.name.split(' (')[0]);
 
       if (avatarEl) avatarEl.src = `assets/characters/${hero.id}/portrait.jpg`;
-      if (nameEl) nameEl.innerText = hero.name.split(' (')[0];
-      if (passiveEl) passiveEl.innerText = hero.passive.name;
+      if (nameEl) nameEl.innerText = userName;
+      this.updateGlobalWalletPills();
     };
 
     this.openHeroSelectionModal = () => {
