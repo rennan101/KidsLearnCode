@@ -192,6 +192,11 @@ export class DragonManager {
     this.floatTimer = 0;
     this.state = 'idle'; // 'idle', 'follow', 'mounted', 'combat', 'dodge', 'field_move'
 
+    // Flight Altitude System (Q: Descend/Land, E: Ascend/Fly higher)
+    this.flightAltitude = 0; // Current altitude in pixels (0 to 120)
+    this.targetFlightAltitude = 0; // Target altitude
+    this.maxFlightAltitude = 120; // Max flight height
+
     // Tactical Dodge (Tecla 1)
     this.isDodging = false;
     this.dodgeDuration = 0.8;
@@ -303,12 +308,31 @@ export class DragonManager {
     return this.mode === 'follow';
   }
 
+  canActiveDragonFly() {
+    const active = this.getActiveDragon();
+    return !!(active && (active.category === 'fly' || active.category === 'mythic' || active.canFly));
+  }
+
+  ascendFlight(amount = 25) {
+    if (!this.canActiveDragonFly() || this.mode !== 'mounted') return false;
+    this.targetFlightAltitude = Math.min(this.maxFlightAltitude, this.targetFlightAltitude + amount);
+    return true;
+  }
+
+  descendFlight(amount = 25) {
+    if (!this.canActiveDragonFly() || this.mode !== 'mounted') return false;
+    this.targetFlightAltitude = Math.max(0, this.targetFlightAltitude - amount);
+    return true;
+  }
+
   toggleMount() {
     const active = this.getActiveDragon();
     if (!active) return { success: false, reason: 'Nenhum dragão ativo selecionado!' };
 
     if (this.mode === 'mounted') {
       this.mode = 'follow';
+      this.targetFlightAltitude = 0;
+      this.flightAltitude = 0;
       return { success: true, mounted: false, dragon: active };
     } else {
       this.mode = 'mounted';
@@ -538,6 +562,23 @@ export class DragonManager {
       }
     }
 
+    // Update Flight Altitude System (Q: Descend, E: Ascend)
+    const canFly = this.canActiveDragonFly();
+    if (this.mode === 'mounted' && canFly) {
+      if (player && player.keys) {
+        if (player.keys.e || player.keys.KeyE) {
+          this.targetFlightAltitude = Math.min(this.maxFlightAltitude, this.targetFlightAltitude + 95 * dt);
+        }
+        if (player.keys.q || player.keys.KeyQ) {
+          this.targetFlightAltitude = Math.max(0, this.targetFlightAltitude - 95 * dt);
+        }
+      }
+      this.flightAltitude += (this.targetFlightAltitude - this.flightAltitude) * Math.min(1.0, 7.0 * dt);
+    } else {
+      this.targetFlightAltitude = 0;
+      this.flightAltitude += (0 - this.flightAltitude) * Math.min(1.0, 10.0 * dt);
+    }
+
     const dragon = this.getActiveDragon();
     if (!dragon || this.mode === 'none') return;
 
@@ -684,15 +725,24 @@ export class DragonManager {
   renderDragonEntity(ctx, dragon, player = null) {
     ctx.save();
 
-    const bounce = Math.sin(this.floatTimer * 4) * 4;
+    const isMounted = this.mode === 'mounted';
+    const alt = isMounted ? (this.flightAltitude || 0) : 0;
+    const bounce = Math.sin(this.floatTimer * (alt > 10 ? 8 : 4)) * (alt > 10 ? 6 : 4);
     const drawX = Math.round(this.x);
-    const drawY = Math.round(this.y + bounce);
+    const drawY = Math.round(this.y + bounce - alt);
 
-    // Shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+    // 1. Single Unified Ground Shadow (Always rendered on the terrain floor, expands & softens with altitude)
+    ctx.save();
+    const shadowScaleX = 20 + (alt * 0.14);
+    const shadowScaleY = 8 + (alt * 0.06);
+    const shadowAlpha = isMounted 
+      ? Math.max(0.12, 0.38 - (alt / 120) * 0.20)
+      : 0.28;
+    ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
     ctx.beginPath();
-    ctx.ellipse(drawX + 24, this.y + 44, 20, 8, 0, 0, Math.PI * 2);
+    ctx.ellipse(drawX + 24, this.y + 44, shadowScaleX, shadowScaleY, 0, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
 
     // Invulnerability flashing when dodging
     if (this.isDodging && Math.floor(this.floatTimer * 20) % 2 === 0) {
@@ -703,9 +753,11 @@ export class DragonManager {
     const bodyColor = dragon.color || '#38bdf8';
     const accentColor = dragon.secondaryColor || '#fef08a';
 
-    // 1. Dragon Wings / Fins
+    // 1. Dragon Wings / Fins with dynamic flap frequency in flight
     ctx.fillStyle = accentColor;
-    const wingFlap = Math.sin(this.floatTimer * 8) * 6;
+    const flapFreq = alt > 10 ? 14 : 8;
+    const flapAmp = alt > 10 ? 9 : 6;
+    const wingFlap = Math.sin(this.floatTimer * flapFreq) * flapAmp;
     // Left wing
     ctx.beginPath();
     ctx.ellipse(drawX + 8, drawY + 16 + wingFlap, 12, 8, -Math.PI / 4, 0, Math.PI * 2);
@@ -821,6 +873,38 @@ export class DragonManager {
         ctx.textAlign = 'center';
         ctx.fillText(`Lv.${dragon.level}`, drawX + 24, drawY - 5);
       }
+    } else if (isMounted && this.canActiveDragonFly() && alt > 8) {
+      // Altitude Indicator & Controls Prompt (Animal Island UI 3D Pill)
+      const hudText = `Altitude: ${Math.round(alt)}m [Q ⬇ / E ⬆]`;
+      ctx.font = 'bold 10px "Nunito", sans-serif';
+      const tw = ctx.measureText(hudText).width;
+      const bw = tw + 18;
+      const bh = 18;
+      const bx = drawX + 24 - bw / 2;
+      const by = drawY - 24;
+
+      // 3D Pill shadow
+      ctx.fillStyle = '#0f8e83';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(bx, by + 2, bw, bh, 50);
+      else ctx.rect(bx, by + 2, bw, bh);
+      ctx.fill();
+
+      // Pill body
+      ctx.fillStyle = '#19c8b9';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, 50);
+      else ctx.rect(bx, by, bw, bh);
+      ctx.fill();
+
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(hudText, drawX + 24, by + bh / 2);
     }
 
     ctx.restore();

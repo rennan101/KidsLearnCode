@@ -50,6 +50,7 @@ class RPGApplication {
     this.assetLoader = new AssetLoader();
     this.tileMap = new TileMap();
     this.player = new Player(320, 320);
+    this.player.dragonManager = this.dragonManager;
     this.camera = new Camera();
     this.minimap = new Minimap(this.tileMap, this.assetLoader, this.player, this.camera, this.dayNightSystem);
 
@@ -900,8 +901,23 @@ class RPGApplication {
           return;
         }
 
-        // Key E: Interact with NPC, Wild Nest or Trigger Active Dragon Field Move (Sprint 5 & 6)
+        // Key Q: Flight Descend (when mounted on flying dragon)
+        if (e.key === 'q' || e.key === 'Q') {
+          if (this.dragonManager && this.dragonManager.isMounted() && this.dragonManager.canActiveDragonFly()) {
+            this.dragonManager.descendFlight(25);
+            this.player.handleKeyDown(e.key);
+            return;
+          }
+        }
+
+        // Key E: Flight Ascend (when mounted on flying dragon) OR Interact with NPC / Wild Nest / Field Move
         if (e.key === 'e' || e.key === 'E') {
+          if (this.dragonManager && this.dragonManager.isMounted() && this.dragonManager.canActiveDragonFly()) {
+            this.dragonManager.ascendFlight(25);
+            this.player.handleKeyDown(e.key);
+            return;
+          }
+
           // 1. Check proximity to placed NPCs on TileMap ('characters' layer)
           const nearbyNpc = this.findNearbyNPC(this.player.x, this.player.y, 90);
           if (nearbyNpc) {
@@ -931,7 +947,7 @@ class RPGApplication {
             return;
           }
 
-          // 3. Otherwise trigger active dragon Field Move
+          // 4. Otherwise trigger active dragon Field Move
           const fieldRes = this.dragonManager.triggerFieldMove(this.tileMap, this.player.x, this.player.y);
           if (fieldRes.success) {
             this.showToast(fieldRes.message);

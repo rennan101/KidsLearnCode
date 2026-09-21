@@ -16,6 +16,7 @@ export class Player {
     // Character identity
     this.heroId = heroId;
     this.heroData = PLAYABLE_HEROES.find(h => h.id === heroId) || PLAYABLE_HEROES[0];
+    this.dragonManager = null;
 
     // Movement & Animation States
     this.isMoving = false;
@@ -37,12 +38,14 @@ export class Player {
       height: 16
     };
 
-    // Smooth movement input keys (WASD / Arrows)
+    // Smooth movement input keys (WASD / Arrows / Flight Q/E)
     this.keys = {
       w: false,
       a: false,
       s: false,
       d: false,
+      q: false,
+      e: false,
       ArrowUp: false,
       ArrowLeft: false,
       ArrowDown: false,
@@ -134,7 +137,7 @@ export class Player {
     if (!key) return;
     const raw = (typeof key === 'string' ? key : key.key || '');
     const k = raw.toLowerCase();
-    if (['w', 'a', 's', 'd'].includes(k)) this.keys[k] = true;
+    if (['w', 'a', 's', 'd', 'q', 'e'].includes(k)) this.keys[k] = true;
     if (raw === 'ArrowUp' || k === 'arrowup') { this.keys['ArrowUp'] = true; this.keys['w'] = true; }
     if (raw === 'ArrowLeft' || k === 'arrowleft') { this.keys['ArrowLeft'] = true; this.keys['a'] = true; }
     if (raw === 'ArrowDown' || k === 'arrowdown') { this.keys['ArrowDown'] = true; this.keys['s'] = true; }
@@ -152,7 +155,7 @@ export class Player {
     if (!key) return;
     const raw = (typeof key === 'string' ? key : key.key || '');
     const k = raw.toLowerCase();
-    if (['w', 'a', 's', 'd'].includes(k)) this.keys[k] = false;
+    if (['w', 'a', 's', 'd', 'q', 'e'].includes(k)) this.keys[k] = false;
     if (raw === 'ArrowUp' || k === 'arrowup') { this.keys['ArrowUp'] = false; this.keys['w'] = false; }
     if (raw === 'ArrowLeft' || k === 'arrowleft') { this.keys['ArrowLeft'] = false; this.keys['a'] = false; }
     if (raw === 'ArrowDown' || k === 'arrowdown') { this.keys['ArrowDown'] = false; this.keys['s'] = false; }
@@ -275,6 +278,15 @@ export class Player {
   checkCollision(testPlayerX, testPlayerY, tileMap, assetLoader) {
     if (!tileMap || !assetLoader) return false;
 
+    // Se montado em dragão voador, ajusta colisão conforme altitude
+    const isMountedFly = this.isMounted && this.dragonManager?.canActiveDragonFly();
+    const flightAlt = isMountedFly ? (this.dragonManager.flightAltitude || 0) : 0;
+
+    // Se voo alto (>= 60), sobrevoa todos os colisores de terreno e obstáculos do mapa
+    if (flightAlt >= 60) {
+      return false;
+    }
+
     const feet = this.getFeetBox(testPlayerX, testPlayerY);
     const tileSize = tileMap.tileSize;
 
@@ -284,8 +296,15 @@ export class Player {
     const startTileY = Math.floor(feet.y / tileSize) - padding;
     const endTileY = Math.ceil((feet.y + feet.h) / tileSize) + padding;
 
-    // Check all layers, with 'colliders', 'solid', and 'characters' prioritized
-    const layersToCheck = ['colliders', 'solid', 'characters', 'decor', 'ground', 'overhead'];
+    // Determina camadas a checar conforme a altitude de voo
+    let layersToCheck = ['colliders', 'solid', 'characters', 'decor', 'ground', 'overhead'];
+    if (flightAlt >= 30) {
+      // Voo médio: sobrevoa decor, ground e solid terrestre regular
+      layersToCheck = ['colliders'];
+    } else if (flightAlt >= 15) {
+      // Voo rasante: sobrevoa água e arbustos (ground e decor)
+      layersToCheck = ['colliders', 'solid', 'characters'];
+    }
 
     for (const layerName of layersToCheck) {
       const layer = tileMap.layers[layerName];
@@ -359,16 +378,21 @@ export class Player {
 
     const renderW = this.width * s;
     const renderH = this.height * s;
-    const drawX = Math.round(this.x);
-    const drawY = Math.round(this.y);
 
-    // 1. Sombra circular nos pés
-    ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-    ctx.beginPath();
-    ctx.ellipse(Math.round(this.x + 32 * s), Math.round(this.y + 60 * s), Math.round(16 * s), Math.round(6 * s), 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    const alt = (this.isMounted && this.dragonManager) ? (this.dragonManager.flightAltitude || 0) : 0;
+    const bounce = (this.isMounted && this.dragonManager) ? Math.sin(this.dragonManager.floatTimer * (alt > 10 ? 8 : 4)) * (alt > 10 ? 6 : 4) : 0;
+    const drawX = Math.round(this.x);
+    const drawY = Math.round(this.y + bounce - alt);
+
+    // 1. Sombra circular nos pés (omitida quando montado no dragão para ter SOMBRA ÚNICA unificada no chão renderizada pelo DragonManager)
+    if (!this.isMounted) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.beginPath();
+      ctx.ellipse(Math.round(this.x + 32 * s), Math.round(this.y + 60 * s), Math.round(16 * s), Math.round(6 * s), 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
 
     // 2. Determina o frame recortado transparente da pasta frames
     // Mapeamento de linhas: south=0, east=1, north=2, west=3
