@@ -313,10 +313,28 @@ export class Player {
       for (let ty = startTileY; ty <= endTileY; ty++) {
         for (let tx = startTileX; tx <= endTileX; tx++) {
           const cell = layer.get(tileMap.getKey(tx, ty));
-          if (!cell || cell.isRoot === false) continue;
+          if (!cell) continue;
 
-          const meta = assetLoader.getTileMetadata(cell.tileId);
-          const col = cell.collider || meta?.collider;
+          const isInvisibleCollider = (cell.tileId && cell.tileId.startsWith('invisible-collider')) || (cell.tileId && cell.tileId.includes('invisible'));
+          if (cell.isRoot === false && !isInvisibleCollider) continue;
+
+          const meta = assetLoader ? assetLoader.getTileMetadata(cell.tileId) : null;
+          let col = cell.collider || meta?.collider;
+
+          // Fallback robusto garantido para qualquer variante de colisor invisível
+          if (isInvisibleCollider && (!col || !col.enabled)) {
+            if (cell.tileId === 'invisible-collider-top') col = { enabled: true, x: 0, y: 0, w: 64, h: 20 };
+            else if (cell.tileId === 'invisible-collider-bottom') col = { enabled: true, x: 0, y: 44, w: 64, h: 20 };
+            else if (cell.tileId === 'invisible-collider-left') col = { enabled: true, x: 0, y: 0, w: 20, h: 64 };
+            else if (cell.tileId === 'invisible-collider-right') col = { enabled: true, x: 44, y: 0, w: 20, h: 64 };
+            else if (cell.tileId === 'invisible-collider-corner-tl') col = { enabled: true, x: 0, y: 0, w: 64, h: 20, boxes: [{ x: 0, y: 0, w: 64, h: 20 }, { x: 0, y: 20, w: 20, h: 44 }] };
+            else if (cell.tileId === 'invisible-collider-corner-tr') col = { enabled: true, x: 0, y: 0, w: 64, h: 20, boxes: [{ x: 0, y: 0, w: 64, h: 20 }, { x: 44, y: 20, w: 20, h: 44 }] };
+            else if (cell.tileId === 'invisible-collider-corner-bl') col = { enabled: true, x: 0, y: 44, w: 64, h: 20, boxes: [{ x: 0, y: 44, w: 64, h: 20 }, { x: 0, y: 0, w: 20, h: 44 }] };
+            else if (cell.tileId === 'invisible-collider-corner-br') col = { enabled: true, x: 0, y: 44, w: 64, h: 20, boxes: [{ x: 0, y: 44, w: 64, h: 20 }, { x: 44, y: 0, w: 20, h: 44 }] };
+            else if (cell.tileId === 'invisible-collider-2x2') col = { enabled: true, x: 0, y: 0, w: 128, h: 128 };
+            else col = { enabled: true, x: 0, y: 0, w: 64, h: 64 };
+          }
+
           if (!col || !col.enabled) continue;
 
           const rotation = cell.rotation || 0;

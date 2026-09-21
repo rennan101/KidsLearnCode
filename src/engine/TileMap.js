@@ -642,17 +642,57 @@ export class TileMap {
       colliders: deserializeLayer(data.layers.colliders)
     };
 
+    // Auto-migrate and strengthen any invisible colliders across all layers
+    const ensureColliderDef = (cell) => {
+      if (!cell || !cell.tileId) return;
+      if (cell.tileId.startsWith('invisible-collider') || cell.tileId.includes('invisible')) {
+        cell.isRoot = true;
+        if (!cell.collider || !cell.collider.enabled) {
+          if (cell.tileId === 'invisible-collider-top') {
+            cell.collider = { enabled: true, x: 0, y: 0, w: 64, h: 20 };
+          } else if (cell.tileId === 'invisible-collider-bottom') {
+            cell.collider = { enabled: true, x: 0, y: 44, w: 64, h: 20 };
+          } else if (cell.tileId === 'invisible-collider-left') {
+            cell.collider = { enabled: true, x: 0, y: 0, w: 20, h: 64 };
+          } else if (cell.tileId === 'invisible-collider-right') {
+            cell.collider = { enabled: true, x: 44, y: 0, w: 20, h: 64 };
+          } else if (cell.tileId === 'invisible-collider-corner-tl') {
+            cell.collider = { enabled: true, x: 0, y: 0, w: 64, h: 20, boxes: [{ x: 0, y: 0, w: 64, h: 20 }, { x: 0, y: 20, w: 20, h: 44 }] };
+          } else if (cell.tileId === 'invisible-collider-corner-tr') {
+            cell.collider = { enabled: true, x: 0, y: 0, w: 64, h: 20, boxes: [{ x: 0, y: 0, w: 64, h: 20 }, { x: 44, y: 20, w: 20, h: 44 }] };
+          } else if (cell.tileId === 'invisible-collider-corner-bl') {
+            cell.collider = { enabled: true, x: 0, y: 44, w: 64, h: 20, boxes: [{ x: 0, y: 44, w: 64, h: 20 }, { x: 0, y: 0, w: 20, h: 44 }] };
+          } else if (cell.tileId === 'invisible-collider-corner-br') {
+            cell.collider = { enabled: true, x: 0, y: 44, w: 64, h: 20, boxes: [{ x: 0, y: 44, w: 64, h: 20 }, { x: 44, y: 0, w: 20, h: 44 }] };
+          } else if (cell.tileId === 'invisible-collider-2x2') {
+            cell.collider = { enabled: true, x: 0, y: 0, w: 128, h: 128 };
+          } else {
+            cell.collider = { enabled: true, x: 0, y: 0, w: 64, h: 64 };
+          }
+        }
+      }
+    };
+
+    for (const [, cell] of this.layers.colliders.entries()) {
+      ensureColliderDef(cell);
+    }
+
     // Auto-migrate any invisible colliders in legacy layers to the dedicated colliders layer
     for (const [layerKey, layerMap] of Object.entries(this.layers)) {
       if (layerKey === 'colliders') continue;
       for (const [coordKey, cell] of layerMap.entries()) {
-        if (cell && cell.tileId && cell.tileId.startsWith('invisible-collider')) {
+        if (cell && cell.tileId && (cell.tileId.startsWith('invisible-collider') || cell.tileId.includes('invisible'))) {
+          ensureColliderDef(cell);
           if (!this.layers.colliders.has(coordKey)) {
             this.layers.colliders.set(coordKey, cell);
           }
           layerMap.delete(coordKey);
         }
       }
+    }
+
+    if (!this.layerOrder.includes('colliders')) {
+      this.layerOrder.push('colliders');
     }
 
     return true;

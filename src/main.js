@@ -2514,13 +2514,37 @@ class RPGApplication {
       this.ctx.restore();
     }
 
-    // 1. Day / Night Atmospheric Lighting Tint Overlay (Play Mode)
+    // 1. Day / Night Atmospheric Lighting Tint & Deep Night Darkness Overlay (Play Mode)
     if (this.mode === 'play' && this.dayNightSystem) {
       const ambient = this.dayNightSystem.getAmbientLight();
       if (ambient.alpha > 0.02) {
         this.ctx.save();
-        this.ctx.fillStyle = `rgba(${ambient.r}, ${ambient.g}, ${ambient.b}, ${ambient.alpha})`;
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        if (ambient.alpha >= 0.40) {
+          // Night / Dusk Darkness with dynamic player lantern glow aura
+          const playerScreen = this.camera.worldToScreen(this.player.x + 32, this.player.y + 32);
+          const isVampire = this.player.heroId && this.player.heroId.includes('bat_vampire');
+          const isMounted = this.player.isMounted;
+          const glowRadius = isVampire ? 240 : (isMounted ? 200 : 160);
+
+          const grad = this.ctx.createRadialGradient(
+            playerScreen.x, playerScreen.y, 25,
+            playerScreen.x, playerScreen.y, glowRadius
+          );
+          grad.addColorStop(0, `rgba(${ambient.r}, ${ambient.g}, ${ambient.b}, 0.05)`);
+          grad.addColorStop(0.45, `rgba(${ambient.r}, ${ambient.g}, ${ambient.b}, ${ambient.alpha * 0.45})`);
+          grad.addColorStop(1, `rgba(${ambient.r}, ${ambient.g}, ${ambient.b}, ${ambient.alpha})`);
+
+          this.ctx.fillStyle = grad;
+          this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+          // Deepen the edge atmosphere
+          this.ctx.fillStyle = `rgba(${ambient.r}, ${ambient.g}, ${ambient.b}, ${ambient.alpha * 0.25})`;
+          this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        } else {
+          // Daytime / Dawn / Sunset soft color tint
+          this.ctx.fillStyle = `rgba(${ambient.r}, ${ambient.g}, ${ambient.b}, ${ambient.alpha})`;
+          this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
         this.ctx.restore();
       }
     }

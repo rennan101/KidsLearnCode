@@ -2234,16 +2234,22 @@ canvas#game-canvas {
   color: #ffffff;
   border: 1px solid #3dd4c6;
   border-radius: 50px;
-  padding: 6px 16px;
+  padding: 8px 14px;
+  min-width: 44px;
+  height: 38px;
   font-family: var(--animal-font);
-  font-size: 0.82rem;
-  font-weight: 800;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
   transition: all 0.15s ease;
   box-shadow: 0 3px 0 0 #0b6961, 0 4px 8px rgba(25, 200, 185, 0.3);
+}
+
+.chat-send-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: #ffffff;
 }
 
 .chat-send-btn:hover {
