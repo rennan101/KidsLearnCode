@@ -17,6 +17,7 @@ import { SupabaseClient } from './engine/SupabaseClient.js';
 import { securityManager } from './engine/SecurityManager.js';
 import { ScratchBlockEngine } from './engine/ScratchBlockEngine.js';
 import { TutorialManager } from './engine/TutorialManager.js';
+import { soundFX } from './engine/SoundFX.js';
 
 
 class RPGApplication {
@@ -2580,6 +2581,10 @@ class RPGApplication {
           });
         }
 
+        slotEl.addEventListener('mouseenter', () => {
+          soundFX.playPop(0.95 + (slotIndex % 5) * 0.04);
+        });
+
         itemsGrid.appendChild(slotEl);
       });
 
@@ -2704,6 +2709,10 @@ class RPGApplication {
           });
         }
 
+        slotEl.addEventListener('mouseenter', () => {
+          soundFX.playPop(1.0 + (i % 5) * 0.04);
+        });
+
         toolsGrid.appendChild(slotEl);
       }
 
@@ -2714,6 +2723,7 @@ class RPGApplication {
       if (!selectedTool) return;
       this.inventorySystem.equipTool(selectedTool.id);
       this.player.spawnCraftPoof();
+      soundFX.playPop(1.3);
       this.showToast(`${selectedTool.name} equipado com sucesso!`);
       renderToolsTab();
       updateToolDetailPanel(selectedTool);
@@ -2809,6 +2819,10 @@ class RPGApplication {
           });
         }
 
+        slotEl.addEventListener('mouseenter', () => {
+          soundFX.playPop(1.05 + (i % 5) * 0.04);
+        });
+
         eggsGrid.appendChild(slotEl);
       }
 
@@ -2817,9 +2831,11 @@ class RPGApplication {
 
     btnWarmEgg?.addEventListener('click', () => {
       if (!selectedEgg) return;
+      soundFX.playPop(1.2);
       const res = this.inventorySystem.warmEgg(selectedEgg.id, 25);
       if (res.success) {
         if (res.hatched) {
+          soundFX.playSuccess();
           this.dragonManager.adoptHatchedDragon(selectedEgg.speciesId);
           this.inventorySystem.removeEgg(selectedEgg.id);
           this.player.spawnCraftPoof();
@@ -2942,6 +2958,10 @@ class RPGApplication {
             updateDragonDetailPanel(null);
           });
         }
+
+        slotEl.addEventListener('mouseenter', () => {
+          soundFX.playPop(1.1 + (i % 5) * 0.04);
+        });
 
         dragonsGrid.appendChild(slotEl);
       }
@@ -3138,7 +3158,61 @@ class RPGApplication {
       }
     });
 
+    // Ask Help (Dica do Mentor)
+    const btnAskHelp = document.getElementById('btn-ask-help');
+    const helpModal = document.getElementById('coding-help-modal');
+    const btnCloseHelp = document.getElementById('btn-close-help');
+    const btnUnderstoodHelp = document.getElementById('btn-understood-help');
+    const helpMentorName = document.getElementById('coding-help-mentor-name');
+    const helpText = document.getElementById('coding-help-text');
+    const helpStepBox = document.getElementById('coding-help-step-box');
+    const helpAvatar = document.getElementById('coding-help-avatar');
+
+    const openHelpModal = () => {
+      soundFX.playPop(1.1);
+      const lesson = this.blocklySystem.getCurrentLesson();
+      if (!lesson) return;
+
+      if (helpMentorName) helpMentorName.innerText = lesson.mentor || 'Mestre da Ilha';
+      if (helpText) helpText.innerText = `Como resolver: "${lesson.title}"`;
+
+      if (helpAvatar) {
+        const npcId = lesson.npcId || 'npc_monkey_builder';
+        helpAvatar.innerHTML = `<img src="assets/characters/${npcId}/portrait.jpg" onerror="this.src='assets/characters/npc_monkey_builder/portrait.jpg'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Mentor">`;
+      }
+
+      if (helpStepBox) {
+        helpStepBox.innerHTML = `
+          <div class="coding-help-step-item">
+            <div class="coding-help-step-num">1</div>
+            <div>${lesson.description || 'Observe os blocos da missão na Paleta de Peças à esquerda.'}</div>
+          </div>
+          <div class="coding-help-step-item">
+            <div class="coding-help-step-num">2</div>
+            <div>Arraste ou clique nas peças para conectá-las na Mesa de Montagem.</div>
+          </div>
+          <div class="coding-help-step-item">
+            <div class="coding-help-step-num">3</div>
+            <div>Confira o código gerado à direita e clique no botão <strong>Montar & Fabricar Item</strong>!</div>
+          </div>
+        `;
+      }
+
+      if (helpModal) helpModal.style.display = 'flex';
+    };
+
+    btnAskHelp?.addEventListener('click', openHelpModal);
+    btnCloseHelp?.addEventListener('click', () => {
+      soundFX.playPop(0.9);
+      if (helpModal) helpModal.style.display = 'none';
+    });
+    btnUnderstoodHelp?.addEventListener('click', () => {
+      soundFX.playPop(1.2);
+      if (helpModal) helpModal.style.display = 'none';
+    });
+
     closeBtn?.addEventListener('click', () => {
+      soundFX.playPop(0.85);
       modal.style.display = 'none';
     });
 
@@ -3158,6 +3232,7 @@ class RPGApplication {
       }
 
       if (res.success) {
+        soundFX.playSuccess();
         this.showToast(res.message, 4500);
         this.tutorialManager?.onCodingChallengeCompleted();
 
@@ -3178,6 +3253,7 @@ class RPGApplication {
           }
         }, 1200);
       } else {
+        soundFX.playPop(0.7);
         this.showToast(res.message, 4000);
       }
     });

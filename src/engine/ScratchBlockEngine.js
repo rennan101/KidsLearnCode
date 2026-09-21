@@ -5,6 +5,8 @@
  * aninhar blocos de repetição e condição, e ver a transformação do código Lua em tempo real ao lado.
  */
 
+import { soundFX } from './SoundFX.js';
+
 export const BLOCK_CATEGORIES = {
   variables: { id: 'variables', name: 'Variáveis & Valores', color: '#EA580C', darkColor: '#C2410C', accentColor: '#ffedd5' },
   actions: { id: 'actions', name: 'Ações de Criação', color: '#0284C7', darkColor: '#0369A1', accentColor: '#e0f2fe' },
@@ -49,8 +51,8 @@ export class ScratchBlockEngine {
         label: 'Definir [NAME] = [VAL]',
         defaultValues: { NAME: 'quantidade', VAL: '5' },
         toLua: (b) => {
-          const v = b.values.VAL || '0';
-          const isNum = !isNaN(Number(v));
+          const v = b.values.VAL !== undefined ? b.values.VAL : '0';
+          const isNum = !isNaN(Number(v)) && String(v).trim() !== '';
           return `local ${b.values.NAME || 'var'} = ${isNum ? v : `"${v}"`}`;
         }
       },
@@ -164,9 +166,9 @@ export class ScratchBlockEngine {
     this.renderWorkspace();
   }
 
-  setCodeOutputContainer(editorEl, syntaxEl = null) {
+  setCodeOutputContainer(editorEl, syntaxDisplayEl = null) {
     this.codeOutputEl = editorEl;
-    this.syntaxDisplayEl = syntaxEl || document.getElementById('codekit-syntax-display');
+    this.syntaxDisplayEl = syntaxDisplayEl;
     this.updateCodePreview();
   }
 
@@ -197,104 +199,193 @@ export class ScratchBlockEngine {
     this.updateCodePreview();
   }
 
+  // Intelligent block derivation for all 37+ NPC lessons
   deriveLessonBlocks(lesson) {
     const assetId = lesson.unlockedAssetId || 'prop_chair_wood';
     const assetName = lesson.unlockedAssetName || 'Item Especial';
-    const concept = lesson.concept || '';
+    const starterLua = lesson.starterLua || '';
+    const lines = starterLua.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('--'));
 
-    const blocks = [];
+    const derived = [];
+    const seenBlockIds = new Set();
 
-    if (concept.includes('Variáveis') || concept.includes('Atribuição') || concept.includes('Parâmetros')) {
-      blocks.push({
+    lines.forEach((line, idx) => {
+      // 1. Variable definition: local name = "val" or num
+      const varMatch = line.match(/^local\s+([a-zA-Z_]\w*)\s*=\s*(.*)$/);
+      if (varMatch) {
+        const varName = varMatch[1];
+        let rawVal = varMatch[2].trim();
+        const isString = rawVal.startsWith('"') || rawVal.startsWith("'");
+        const cleanVal = rawVal.replace(/^["']|["']$/g, '');
+
+        const blockId = `var_${varName}_${idx}`;
+        if (!seenBlockIds.has(blockId)) {
+          seenBlockIds.add(blockId);
+          derived.push({
+            id: blockId,
+            category: 'variables',
+            type: 'statement',
+            label: `Definir [NAME] = [VAL]`,
+            defaultValues: { NAME: varName, VAL: cleanVal },
+            options: isString ? {
+              VAL: [cleanVal, 'carvalho', 'pinheiro', 'madeira_macica', 'ferro_puro', 'ouro', 'cristal', 'azul', 'vermelho']
+            } : {},
+            toLua: (b) => {
+              const name = b.values.NAME || varName;
+              const val = b.values.VAL !== undefined ? b.values.VAL : cleanVal;
+              const isNum = !isNaN(Number(val)) && String(val).trim() !== '';
+              return `local ${name} = ${isNum ? val : `"${val}"`}`;
+            }
+          });
+        }
+        return;
+      }
+
+      // 2. Conditional: se condition entao ... senao ... fim
+      const ifMatch = line.match(/^se\s+(.+)\s+entao$/);
+      if (ifMatch) {
+        const condStr = ifMatch[1].trim();
+        const blockId = `cond_if_${idx}`;
+        if (!seenBlockIds.has(blockId)) {
+          seenBlockIds.add(blockId);
+          derived.push({
+            id: blockId,
+            category: 'conditions',
+            type: 'container',
+            label: `Se [COND] Então:`,
+            defaultValues: { COND: condStr },
+            options: {
+              COND: [condStr, 'palha >= 5', 'ferro >= 5', 'madeira >= 8', 'ouro >= 10', 'energia >= 20', 'amizade >= 50']
+            },
+            children: [],
+            toLua: (b, engine) => {
+              const inner = engine.transpileBlockList(b.children || [], '  ');
+              return `se ${b.values.COND || condStr} entao\n${inner || '  -- encaixe sua acao aqui\n'}fim`;
+            }
+          });
+        }
+        return;
+      }
+
+      // 3. Loop: para i = 1, N faca
+      const forMatch = line.match(/^para\s+([a-zA-Z_]\w*)\s*=\s*(\d+)\s*,\s*(\d+)\s+faca$/);
+      if (forMatch) {
+        const varI = forMatch[1];
+        const countEnd = forMatch[3];
+        const blockId = `loop_for_${idx}`;
+        if (!seenBlockIds.has(blockId)) {
+          seenBlockIds.add(blockId);
+          derived.push({
+            id: blockId,
+            category: 'loops',
+            type: 'container',
+            label: `Repetir de 1 até [COUNT] Vezes:`,
+            defaultValues: { COUNT: countEnd },
+            options: { COUNT: ['2', '3', '4', '5', '8', '10', '12'] },
+            children: [],
+            toLua: (b, engine) => {
+              const inner = engine.transpileBlockList(b.children || [], '  ');
+              return `para ${varI} = 1, ${b.values.COUNT || countEnd} faca\n${inner || '  -- acao do laco\n'}fim`;
+            }
+          });
+        }
+        return;
+      }
+
+      // 4. Function definition: funcao name(param)
+      const funcDefMatch = line.match(/^funcao\s+([a-zA-Z_]\w*)\s*\((.*?)\)$/);
+      if (funcDefMatch) {
+        const fName = funcDefMatch[1];
+        const fParam = funcDefMatch[2];
+        const blockId = `func_${fName}_${idx}`;
+        if (!seenBlockIds.has(blockId)) {
+          seenBlockIds.add(blockId);
+          derived.push({
+            id: blockId,
+            category: 'functions',
+            type: 'container',
+            label: `Criar Função [NAME]([PARAM]):`,
+            defaultValues: { NAME: fName, PARAM: fParam },
+            children: [],
+            toLua: (b, engine) => {
+              const inner = engine.transpileBlockList(b.children || [], '  ');
+              return `funcao ${b.values.NAME || fName}(${b.values.PARAM || fParam})\n${inner || '  -- acoes da funcao\n'}fim`;
+            }
+          });
+        }
+        return;
+      }
+
+      // 5. Function / Action call: action(args)
+      const callMatch = line.match(/^([a-zA-Z_]\w*)\s*\((.*?)\)$/);
+      if (callMatch) {
+        const actName = callMatch[1];
+        const rawArgs = callMatch[2].trim();
+        const blockId = `act_${actName}_${idx}`;
+        if (!seenBlockIds.has(blockId)) {
+          seenBlockIds.add(blockId);
+
+          let friendlyLabel = `${actName.replace(/_/g, ' ')}: [ARGS]`;
+          if (actName === 'fabricar_movel') friendlyLabel = `Fabricar Móvel: [ARGS]`;
+          else if (actName === 'forjar_ferramenta') friendlyLabel = `Forjar Ferramenta: [ARGS]`;
+          else if (actName === 'fabricar_mesa') friendlyLabel = `Fabricar Mesa: [ARGS]`;
+          else if (actName === 'fabricar_cama') friendlyLabel = `Fabricar Cama: [ARGS]`;
+          else if (actName === 'fixar_estaca') friendlyLabel = `Fixar Estaca na Posição [ARGS]`;
+          else if (actName === 'erguer_lona') friendlyLabel = `Erguer Lona de Acampamento`;
+          else if (actName === 'assentar_piso') friendlyLabel = `Assentar Piso: [ARGS]`;
+          else if (actName === 'plantar_arbusto') friendlyLabel = `Plantar na Ilha: [ARGS]`;
+
+          derived.push({
+            id: blockId,
+            category: 'actions',
+            type: 'statement',
+            label: friendlyLabel,
+            defaultValues: { ARGS: rawArgs },
+            toLua: (b) => {
+              const args = b.values.ARGS !== undefined ? b.values.ARGS : rawArgs;
+              return `${actName}(${args})`;
+            }
+          });
+        }
+      }
+    });
+
+    // Fallback: If no blocks were derived, provide standard recipe block
+    if (derived.length === 0) {
+      derived.push({
         id: `var_${lesson.id || 'mat'}`,
         category: 'variables',
         type: 'statement',
         label: 'Definir material = [VAL]',
         defaultValues: { VAL: 'carvalho' },
-        options: { VAL: ['carvalho', 'pinheiro', 'madeira_macica', 'ferro_puro', 'cobre', 'veio_mineral'] },
+        options: { VAL: ['carvalho', 'pinheiro', 'madeira_macica', 'ferro_puro', 'ouro'] },
         toLua: (b) => `local material = "${b.values.VAL || 'carvalho'}"`
       });
-      blocks.push({
+      derived.push({
         id: `act_${lesson.id || 'craft'}`,
         category: 'actions',
         type: 'statement',
-        label: `Fabricar ${assetName} com material`,
+        label: `Fabricar: ${assetName} com material`,
         defaultValues: {},
         toLua: () => `fabricar_movel("${assetId}", material)`
       });
-      return blocks;
     }
 
-    if (concept.includes('Condicional')) {
-      blocks.push({
-        id: `cond_${lesson.id || 'if'}`,
-        category: 'conditions',
-        type: 'container',
-        label: `Se estoque >= [QTD] Então:`,
-        defaultValues: { QTD: '5' },
-        options: { QTD: ['3', '5', '8', '10'] },
-        children: [],
-        toLua: (b, engine) => {
-          const inner = engine.transpileBlockList(b.children || [], '  ');
-          return `se palha >= ${b.values.QTD || 5} entao\n${inner || `  fabricar_cama("${assetId}")\n`}fim`;
-        }
-      });
-      blocks.push({
-        id: `act_${lesson.id || 'action'}`,
-        category: 'actions',
-        type: 'statement',
-        label: `Fabricar: ${assetName}`,
-        defaultValues: {},
-        toLua: () => `fabricar_cama("${assetId}")`
-      });
-      return blocks;
-    }
-
-    if (concept.includes('Loop') || concept.includes('Repetição')) {
-      blocks.push({
-        id: `loop_${lesson.id || 'for'}`,
-        category: 'loops',
-        type: 'container',
-        label: `Repetir [COUNT] Vezes:`,
-        defaultValues: { COUNT: '4' },
-        options: { COUNT: ['2', '3', '4', '5'] },
-        children: [],
-        toLua: (b, engine) => {
-          const inner = engine.transpileBlockList(b.children || [], '  ');
-          return `para i = 1, ${b.values.COUNT || 4} faca\n${inner || `  fixar_estaca(i)\n`}fim`;
-        }
-      });
-      blocks.push({
-        id: `act_${lesson.id || 'step'}`,
-        category: 'actions',
-        type: 'statement',
-        label: `Construir etapa na posição [I]`,
-        defaultValues: { I: 'i' },
-        toLua: (b) => `fixar_estaca(${b.values.I || 'i'})`
-      });
-      blocks.push({
-        id: `act_${lesson.id || 'finish'}`,
-        category: 'actions',
-        type: 'statement',
-        label: `Finalizar ${assetName}`,
-        defaultValues: {},
-        toLua: () => `erguer_lona()`
-      });
-      return blocks;
-    }
-
-    // Default block pair
-    blocks.push({
-      id: `block_act_${lesson.id || 'craft'}`,
-      category: 'actions',
+    // Always append extra customizable variable and action block for freedom of editing
+    derived.push({
+      id: 'var_extra_custom',
+      category: 'variables',
       type: 'statement',
-      label: `Fabricar: ${assetName} ([VAL])`,
-      defaultValues: { VAL: 'carvalho' },
-      options: { VAL: ['carvalho', 'pinheiro', 'ferro', 'ouro', 'cristal'] },
-      toLua: (b) => `fabricar_movel("${assetId}", "${b.values.VAL || 'carvalho'}")`
+      label: '+ Criar Variável: [NAME] = [VAL]',
+      defaultValues: { NAME: 'nova_var', VAL: '10' },
+      toLua: (b) => {
+        const v = b.values.VAL !== undefined ? b.values.VAL : '10';
+        const isNum = !isNaN(Number(v)) && String(v).trim() !== '';
+        return `local ${b.values.NAME || 'var'} = ${isNum ? v : `"${v}"`}`;
+      }
     });
 
-    return blocks;
+    return derived;
   }
 
   parseStarterLuaToBlocks(luaCode) {
@@ -335,10 +426,10 @@ export class ScratchBlockEngine {
     }
 
     // 2. Loop for
-    const forMatch = line.match(/^para\s+i\s*=\s*1\s*,\s*(\d+)\s+faca$/);
+    const forMatch = line.match(/^para\s+([a-zA-Z_]\w*)\s*=\s*(\d+)\s*,\s*(\d+)\s+faca$/);
     if (forMatch) {
       const tmpl = this.availableBlocks.find(b => b.category === 'loops') || this.availableBlocks[0];
-      return this.instantiateBlock(tmpl, { COUNT: forMatch[1] });
+      return this.instantiateBlock(tmpl, { COUNT: forMatch[3] });
     }
 
     // 3. Condition se
@@ -348,13 +439,20 @@ export class ScratchBlockEngine {
       return this.instantiateBlock(tmpl, { COND: ifMatch[1] });
     }
 
-    // 4. Function / Action call
+    // 4. Function definition
+    const funcDefMatch = line.match(/^funcao\s+([a-zA-Z_]\w*)\s*\((.*?)\)$/);
+    if (funcDefMatch) {
+      const tmpl = this.availableBlocks.find(b => b.category === 'functions') || this.availableBlocks[0];
+      return this.instantiateBlock(tmpl, { NAME: funcDefMatch[1], PARAM: funcDefMatch[2] });
+    }
+
+    // 5. Function / Action call
     const actionMatch = line.match(/^([a-zA-Z_]\w*)\s*\((.*?)\)$/);
     if (actionMatch) {
       const actName = actionMatch[1];
       const args = actionMatch[2];
-      const tmpl = this.availableBlocks.find(b => b.category === 'actions' || b.id.includes(actName)) || this.availableBlocks[0];
-      return this.instantiateBlock(tmpl, { ITEM: args.replace(/^["']|["']$/g, ''), VAL: args.replace(/^["']|["']$/g, '') });
+      const tmpl = this.availableBlocks.find(b => b.id.includes(actName) || b.category === 'actions') || this.availableBlocks[0];
+      return this.instantiateBlock(tmpl, { ARGS: args, ITEM: args.replace(/^["']|["']$/g, ''), VAL: args.replace(/^["']|["']$/g, '') });
     }
 
     return null;
@@ -376,6 +474,33 @@ export class ScratchBlockEngine {
     };
   }
 
+  // Visual burst particle sparkles on snap
+  spawnSnapSparkles(element) {
+    if (!element || typeof document === 'undefined') return;
+    const rect = element.getBoundingClientRect();
+    const container = document.createElement('div');
+    container.className = 'puzzle-snap-sparkle-container';
+    container.style.left = `${rect.left + rect.width / 2}px`;
+    container.style.top = `${rect.top + 12}px`;
+
+    for (let i = 0; i < 7; i++) {
+      const p = document.createElement('div');
+      p.className = 'puzzle-snap-sparkle-particle';
+      const angle = (i / 7) * Math.PI * 2;
+      const dist = 24 + Math.random() * 18;
+      p.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
+      p.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
+      container.appendChild(p);
+    }
+
+    document.body.appendChild(container);
+    element.classList.add('snap-glow-active');
+    setTimeout(() => {
+      element.classList.remove('snap-glow-active');
+      container.remove();
+    }, 600);
+  }
+
   // Render the Block Palette (Left Column)
   renderPalette() {
     if (!this.paletteEl) return;
@@ -388,7 +513,7 @@ export class ScratchBlockEngine {
     if (blocksToShow.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'codekit-empty-palette';
-      empty.innerText = 'Nenhum bloco disponível.';
+      empty.innerText = 'Nenhum bloco disponível nesta categoria.';
       this.paletteEl.appendChild(empty);
       return;
     }
@@ -401,7 +526,6 @@ export class ScratchBlockEngine {
       card.style.setProperty('--block-dark', cat.darkColor);
       card.setAttribute('draggable', 'true');
 
-      // Authentic CodeKit / Blockly puzzle structure
       let displayLabel = tmpl.label.replace(/\[([A-Z_]+)\]/g, '●');
 
       card.innerHTML = `
@@ -414,6 +538,7 @@ export class ScratchBlockEngine {
       `;
 
       card.addEventListener('dragstart', (e) => {
+        soundFX.playPickUp();
         this.draggedBlockTemplate = tmpl;
         this.draggedWorkspaceBlockId = null;
         e.dataTransfer.setData('text/plain', tmpl.id);
@@ -431,6 +556,11 @@ export class ScratchBlockEngine {
         this.blocksInWorkspace.push(newBlock);
         this.renderWorkspace();
         this.updateCodePreview();
+        soundFX.playSnap();
+
+        const lastBlockEl = this.workspaceEl?.querySelector('.codekit-block:last-child');
+        if (lastBlockEl) this.spawnSnapSparkles(lastBlockEl);
+
         if (this.onBlockAdded) this.onBlockAdded(newBlock);
       });
 
@@ -459,6 +589,11 @@ export class ScratchBlockEngine {
         this.blocksInWorkspace.push(newBlock);
         this.renderWorkspace();
         this.updateCodePreview();
+        soundFX.playSnap();
+
+        const lastBlockEl = this.workspaceEl?.querySelector('.codekit-block:last-child');
+        if (lastBlockEl) this.spawnSnapSparkles(lastBlockEl);
+
         if (this.onBlockAdded) this.onBlockAdded(newBlock);
       }
     });
@@ -473,12 +608,12 @@ export class ScratchBlockEngine {
       const placeholder = document.createElement('div');
       placeholder.className = 'codekit-workspace-placeholder';
       placeholder.innerHTML = `
-        <svg class="ui-icon" style="width: 38px; height: 38px; color: #475569;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <svg class="ui-icon" style="width: 42px; height: 42px; color: #725d42;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="16 18 22 12 16 6"></polyline>
           <polyline points="8 6 2 12 8 18"></polyline>
         </svg>
         <span class="placeholder-title">Mesa de Montagem Vazia</span>
-        <span class="placeholder-desc">Arraste os blocos da paleta à esquerda para montar seu algoritmo</span>
+        <span class="placeholder-desc">Arraste ou clique nas peças da paleta à esquerda para montar seu código</span>
       `;
       this.workspaceEl.appendChild(placeholder);
       return;
@@ -571,11 +706,13 @@ export class ScratchBlockEngine {
       parentArray.splice(index, 1);
       this.renderWorkspace();
       this.updateCodePreview();
+      soundFX.playPop(0.85);
     });
 
     // Drag events for workspace reordering
     el.addEventListener('dragstart', (e) => {
       e.stopPropagation();
+      soundFX.playPickUp();
       this.draggedWorkspaceBlockId = block.instanceId;
       this.draggedBlockTemplate = null;
       e.dataTransfer.setData('text/plain', block.instanceId);
@@ -612,12 +749,16 @@ export class ScratchBlockEngine {
             block.children.push(childBlock);
             this.renderWorkspace();
             this.updateCodePreview();
+            soundFX.playSnap();
+            this.spawnSnapSparkles(innerSlot);
+            if (this.onBlockAdded) this.onBlockAdded(childBlock);
           }
         });
 
+        // Render inner children if any
         if (block.children && block.children.length > 0) {
-          block.children.forEach((childBlock, childIdx) => {
-            const childEl = this.createWorkspaceBlockElement(childBlock, block.children, childIdx);
+          block.children.forEach((child, cIdx) => {
+            const childEl = this.createWorkspaceBlockElement(child, block.children, cIdx);
             innerSlot.appendChild(childEl);
           });
         }
@@ -627,87 +768,75 @@ export class ScratchBlockEngine {
     return el;
   }
 
-  // Transpile blocks to pure Lua code
-  transpileToLua() {
-    return this.transpileBlockList(this.blocksInWorkspace);
-  }
-
-  transpileBlockList(list, indent = '') {
-    let code = '';
-    for (const b of list) {
-      if (b.toLua) {
-        const line = b.toLua(b, this);
-        if (line) {
-          const indentedLine = line.split('\n').map(l => `${indent}${l}`).join('\n');
-          code += `${indentedLine}\n`;
-        }
+  // Transpile visual workspace blocks to clean Lua code
+  transpileBlockList(blocks, indent = '') {
+    return blocks.map((b) => {
+      if (typeof b.toLua === 'function') {
+        const res = b.toLua(b, this);
+        return res ? indent + res : '';
       }
-    }
-    return code;
+      return '';
+    }).filter(Boolean).join('\n');
   }
 
-  // Syntax highlighter for live Code Kit side-by-side view
-  highlightLuaSyntax(code) {
-    if (!code || code.trim() === '') {
-      return `
-        <div class="codekit-code-line">
-          <span class="codekit-line-num">1</span>
-          <span class="codekit-line-code"><span class="lua-comment">-- Arraste blocos para a mesa</span></span>
-        </div>
-      `;
+  generateLuaCode() {
+    return this.transpileBlockList(this.blocksInWorkspace, '');
+  }
+
+  updateCodePreview() {
+    const code = this.generateLuaCode();
+    if (this.codeOutputEl) {
+      this.codeOutputEl.value = code;
+    }
+    if (this.syntaxDisplayEl) {
+      this.syntaxDisplayEl.innerHTML = this.renderSyntaxHighlightedLua(code);
+    }
+    if (this.onCodeChange) {
+      this.onCodeChange(code);
+    }
+  }
+
+  renderSyntaxHighlightedLua(rawCode) {
+    if (!rawCode || rawCode.trim() === '') {
+      return `<span class="lua-token-comment">-- Monte as peças do quebra-cabeça para gerar o código Lua</span>`;
     }
 
-    const lines = code.trim().split('\n');
+    const lines = rawCode.split('\n');
     return lines.map((line, idx) => {
-      let escaped = line
+      let highlighted = line
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
 
       // Comments
-      if (escaped.trim().startsWith('--')) {
-        escaped = `<span class="lua-comment">${escaped}</span>`;
+      if (highlighted.trim().startsWith('--')) {
+        highlighted = `<span class="lua-token-comment">${highlighted}</span>`;
       } else {
         // Strings
-        escaped = escaped.replace(/(["'])(.*?)\1/g, '<span class="lua-str">$1$2$1</span>');
+        highlighted = highlighted.replace(/(["'])(.*?)\1/g, '<span class="lua-token-string">$1$2$1</span>');
+
         // Keywords
-        escaped = escaped.replace(/\b(local|if|then|else|elseif|end|for|do|in|while|repeat|until|function|return|and|or|not|true|false|nil|se|entao|senao|fim|para|faca|funcao)\b/g, '<span class="lua-kw">$1</span>');
+        const keywords = ['local', 'se', 'entao', 'senao', 'fim', 'para', 'faca', 'funcao', 'true', 'false', 'nil'];
+        keywords.forEach(kw => {
+          const reg = new RegExp(`\\b${kw}\\b`, 'g');
+          highlighted = highlighted.replace(reg, `<span class="lua-token-keyword">${kw}</span>`);
+        });
+
         // Numbers
-        escaped = escaped.replace(/\b(\d+(\.\d+)?)\b/g, '<span class="lua-num">$1</span>');
+        highlighted = highlighted.replace(/\b(\d+)\b/g, '<span class="lua-token-number">$1</span>');
+
         // Functions
-        escaped = escaped.replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g, '<span class="lua-fn">$1</span>');
+        highlighted = highlighted.replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g, '<span class="lua-token-func">$1</span>');
       }
 
-      return `
-        <div class="codekit-code-line">
-          <span class="codekit-line-num">${idx + 1}</span>
-          <span class="codekit-line-code">${escaped}</span>
-        </div>
-      `;
+      return `<div class="codekit-lua-line"><span class="line-num">${idx + 1}</span><span class="line-code">${highlighted}</span></div>`;
     }).join('');
-  }
-
-  updateCodePreview() {
-    const luaCode = this.transpileToLua();
-    if (this.codeOutputEl) {
-      this.codeOutputEl.value = luaCode;
-    }
-    if (!this.syntaxDisplayEl) {
-      this.syntaxDisplayEl = document.getElementById('codekit-syntax-display');
-    }
-    if (this.syntaxDisplayEl) {
-      this.syntaxDisplayEl.innerHTML = this.highlightLuaSyntax(luaCode);
-    }
-    if (this.onCodeChange) {
-      this.onCodeChange(luaCode);
-    }
   }
 
   clearWorkspace() {
     this.blocksInWorkspace = [];
     this.renderWorkspace();
     this.updateCodePreview();
+    soundFX.playPop(0.75);
   }
 }
-
-export default ScratchBlockEngine;

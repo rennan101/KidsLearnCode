@@ -844,7 +844,61 @@
           </svg>
           <span id="coding-studio-title">Estúdio de Códigos</span>
         </div>
-        <button id="btn-close-coding" class="modal-close-btn" title="Fechar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button id="btn-ask-help" class="codekit-btn-help" title="Pedir Ajuda ao Mentor">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <span>Pedir Ajuda</span>
+          </button>
+          <button id="btn-close-coding" class="modal-close-btn" title="Fechar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+      </div>
+
+      <!-- Interactive Mentor Help Popup (Dica do Mentor) -->
+      <div id="coding-help-modal" class="coding-help-modal" style="display: none;">
+        <div class="coding-help-card">
+          <div class="coding-help-header">
+            <div class="coding-help-avatar" id="coding-help-avatar">
+              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>
+            </div>
+            <div class="coding-help-meta">
+              <span class="coding-help-mentor-name" id="coding-help-mentor-name">Bambu, o Engenheiro</span>
+              <span class="coding-help-tag">Dica do Mestre</span>
+            </div>
+            <button id="btn-close-help" class="modal-close-btn" title="Fechar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+          </div>
+          <div class="coding-help-body">
+            <p id="coding-help-text" class="coding-help-text">Aqui está o que você precisa fazer para resolver este desafio:</p>
+            <div class="coding-help-step-box" id="coding-help-step-box">
+              <!-- Dynamically populated steps -->
+            </div>
+          </div>
+          <div class="coding-help-footer">
+            <button id="btn-understood-help" class="btn-equip-tool" style="width: 100%; padding: 11px 0; border-radius: 50px; font-weight: 800;">
+              Entendido, vou montar agora!
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mentor Guided Code Walkthrough Overlay (Primeiro Desafio) -->
+      <div id="coding-tutorial-overlay" class="coding-tutorial-overlay" style="display: none;">
+        <div class="coding-tutorial-card">
+          <div class="coding-tutorial-avatar" id="coding-tutorial-avatar">
+            <img id="coding-tutorial-img" src="assets/characters/npc_monkey_builder/portrait.jpg" alt="Mentor" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+          </div>
+          <div class="coding-tutorial-content">
+            <div class="coding-tutorial-tag" id="coding-tutorial-step-tag">Passo 1 de 4: Conhecendo o Estúdio</div>
+            <p class="coding-tutorial-msg" id="coding-tutorial-text">Olá, pequeno aventureiro! Bem-vindo ao Estúdio de Códigos da Ilha Lua!</p>
+            <div class="coding-tutorial-actions">
+              <button id="btn-tutorial-skip" class="codekit-mini-btn" style="background: transparent; color: var(--animal-text, #794f27); border-color: var(--animal-border-wood, #7a583e);">Pular Tutorial</button>
+              <button id="btn-tutorial-next" class="btn-equip-tool" style="padding: 6px 18px; border-radius: 50px; font-size: 0.85rem;">Próximo</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Focused Challenge Mission Bar -->

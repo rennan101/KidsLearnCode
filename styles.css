@@ -4364,6 +4364,309 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
   height: 16px;
 }
 
+/* Pedir Ajuda (Mentor Hint Button) */
+.codekit-btn-help {
+  background: #fef3c7;
+  border: 2px solid #f59e0b;
+  color: #92400e;
+  padding: 6px 14px;
+  border-radius: var(--animal-radius-pill, 50px);
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 3px 0 0 #d97706;
+  transition: all 0.15s ease;
+}
+
+.codekit-btn-help:hover {
+  background: #fde68a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 0 #b45309;
+}
+
+.codekit-btn-help:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 #d97706;
+}
+
+/* Mentor Help Modal / Popup */
+.coding-help-modal {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  animation: fadeInHelp 0.2s ease-out;
+}
+
+@keyframes fadeInHelp {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.coding-help-card {
+  width: 90%;
+  max-width: 520px;
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 3.5px solid var(--animal-border-wood, #7a583e);
+  border-radius: 24px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  padding: 24px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: helpCardPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes helpCardPop {
+  from { transform: scale(0.88); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.coding-help-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 2px solid var(--animal-border, #c4b89e);
+  padding-bottom: 12px;
+}
+
+.coding-help-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--animal-primary-bg, #e6f9f6);
+  border: 2.5px solid var(--animal-border-wood, #7a583e);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.coding-help-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.coding-help-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.coding-help-mentor-name {
+  font-family: var(--animal-font-title, 'Cinzel', serif);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--animal-text, #794f27);
+}
+
+.coding-help-tag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #0f8e83;
+  letter-spacing: 0.5px;
+}
+
+.coding-help-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.coding-help-text {
+  font-size: 0.9rem;
+  color: var(--animal-text-body, #725d42);
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.coding-help-step-box {
+  background: var(--animal-bg-content, #f7f3df);
+  border: 2px dashed var(--animal-border, #c4b89e);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coding-help-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.84rem;
+  color: var(--animal-text, #794f27);
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.coding-help-step-num {
+  width: 22px;
+  height: 22px;
+  background: var(--animal-primary, #19c8b9);
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.76rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Mentor Guided Code Studio Walkthrough Overlay */
+.coding-tutorial-overlay {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 92%;
+  max-width: 680px;
+  z-index: 60;
+  animation: slideUpTut 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideUpTut {
+  from { transform: translateX(-50%) translateY(30px); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+.coding-tutorial-card {
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 3.5px solid var(--animal-border-wood, #7a583e);
+  border-radius: 28px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.coding-tutorial-avatar {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 3px solid var(--animal-border-wood, #7a583e);
+  background: #e6f9f6;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.coding-tutorial-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.coding-tutorial-tag {
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #0f8e83;
+  letter-spacing: 0.5px;
+}
+
+.coding-tutorial-msg {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--animal-text, #794f27);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.coding-tutorial-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* Spotlight Highlight for Tutorial Steps */
+.tutorial-spotlight-panel {
+  animation: tutSpotlightPulse 1.8s ease-in-out infinite !important;
+  border-color: #19c8b9 !important;
+  position: relative;
+  z-index: 55 !important;
+}
+
+@keyframes tutSpotlightPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 4px #19c8b9, 0 0 25px rgba(25, 200, 185, 0.65);
+  }
+  50% {
+    box-shadow: 0 0 0 6px #f59e0b, 0 0 35px rgba(245, 158, 11, 0.75);
+  }
+}
+
+/* Satisfying Puzzle Snap Particles & Glow */
+.puzzle-snap-sparkle-container {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99999;
+  width: 0;
+  height: 0;
+}
+
+.puzzle-snap-sparkle-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fef08a 0%, #f59e0b 80%, #d97706 100%);
+  box-shadow: 0 0 8px #fde047;
+  animation: sparkleFly 0.55s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+@keyframes sparkleFly {
+  0% {
+    transform: translate(0, 0) scale(1.3);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx, 20px), var(--dy, -20px)) scale(0);
+    opacity: 0;
+  }
+}
+
+.snap-glow-active {
+  animation: snapGlowPulse 0.45s ease-out !important;
+}
+
+@keyframes snapGlowPulse {
+  0% {
+    filter: brightness(1.25) drop-shadow(0 0 10px #f59e0b);
+    transform: scale(1.02);
+  }
+  100% {
+    filter: none;
+    transform: scale(1);
+  }
+}
+
+/* Pocket Slot Hover Pop Animation */
+.ac-pocket-slot {
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease;
+}
+
+.ac-pocket-slot:hover {
+  transform: scale(1.08);
+}
+
 /* =========================================
    ANIMAL ISLAND UI TOOLTIP SYSTEM
    ========================================= */
