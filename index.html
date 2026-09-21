@@ -12,8 +12,19 @@
 </head>
 <body>
 
-  <!-- Asset Preloading Screen (Animal Island UI Progress) -->
+  <!-- Asset Preloading Screen (Animal Island UI Progress & Animated Background) -->
   <div id="loading-screen">
+    <!-- Decorative Floating Clouds in Background -->
+    <svg class="loading-cloud loading-cloud-1" viewBox="0 0 100 45" fill="#ffffff">
+      <path d="M20,35 Q10,35 10,25 Q10,15 25,15 Q30,5 45,5 Q60,5 65,15 Q80,10 85,22 Q95,25 90,35 Z"></path>
+    </svg>
+    <svg class="loading-cloud loading-cloud-2" viewBox="0 0 100 45" fill="#ffffff">
+      <path d="M15,35 Q5,35 5,22 Q5,12 20,12 Q28,2 45,2 Q62,2 70,12 Q82,8 88,20 Q98,22 92,35 Z"></path>
+    </svg>
+    <svg class="loading-cloud loading-cloud-3" viewBox="0 0 100 45" fill="#ffffff">
+      <path d="M25,35 Q15,35 15,25 Q15,18 28,18 Q35,8 50,8 Q65,8 72,18 Q85,15 88,25 Q95,28 90,35 Z"></path>
+    </svg>
+
     <div class="loader-card">
       <h1>Ilha Lua</h1>
       <p>Carregando o mundo de aventuras, heróis e dragões...</p>
@@ -1057,6 +1068,9 @@
               Sair
             </button>
           </div>
+          <button type="button" id="btn-guest-auth" class="codekit-btn-secondary" style="width: 100%; border-radius: 50px; font-weight: 800; padding: 10px 0; margin-top: 2px;">
+            Jogar como Convidado (Modo Livre)
+          </button>
         </div>
       </div>
     </div>

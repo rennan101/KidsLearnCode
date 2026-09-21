@@ -145,6 +145,15 @@ class RPGApplication {
       }
     }
 
+    // Safety fallback: maximum 3.5s to ensure loading screen is hidden in all circumstances
+    setTimeout(() => {
+      const loadingScreen = document.getElementById('loading-screen');
+      if (loadingScreen && loadingScreen.style.display !== 'none') {
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => (loadingScreen.style.display = 'none'), 300);
+      }
+    }, 3500);
+
     // Load saved map & game state from IndexedDB (with multi-key migration/fallback)
     await this.loadGameFromStorage();
 
@@ -160,14 +169,6 @@ class RPGApplication {
 
     // Sincroniza visibilidade de controles admin e modo
     this.updateAdminAndModeUI();
-
-    // Se o usuário não estiver logado com e-mail/senha, apresenta a tela inicial de Login / Criar Conta
-    if (!this.supabaseClient.user || this.supabaseClient.user.isGuest) {
-      const authModal = document.getElementById('auth-modal');
-      if (authModal) {
-        authModal.style.display = 'flex';
-      }
-    }
 
     // Periodic background auto-save (every 4 seconds) non-blocking via IndexedDB
     setInterval(() => this.saveGameToStorage(true), 4000);

@@ -123,16 +123,79 @@ body {
   flex-shrink: 0;
 }
 
-/* Loading Overlay (Animal Island UI) */
+/* Loading Overlay (Animal Island UI Animated Background - https://guokaigdg.github.io/animal-island-ui/#/loading) */
 #loading-screen {
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at center, #fdfbf7 0%, #e8f4f8 100%);
+  background: repeating-linear-gradient(
+    -45deg,
+    #19c8b9,
+    #19c8b9 35px,
+    #10b3a5 35px,
+    #10b3a5 70px
+  );
+  background-size: 200% 200%;
+  animation: animalIslandLoadingStripe 10s linear infinite;
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: opacity 0.4s ease, visibility 0.4s;
+  overflow: hidden;
+}
+
+@keyframes animalIslandLoadingStripe {
+  0% { background-position: 0 0; }
+  100% { background-position: 140px 140px; }
+}
+
+/* Floating Decorative Island Clouds in Loading Screen */
+.loading-cloud {
+  position: absolute;
+  opacity: 0.35;
+  pointer-events: none;
+  animation: animalFloatCloud 18s linear infinite;
+}
+
+.loading-cloud-1 {
+  top: 15%;
+  left: -150px;
+  width: 180px;
+  animation-duration: 22s;
+}
+
+.loading-cloud-2 {
+  bottom: 20%;
+  left: -200px;
+  width: 240px;
+  animation-duration: 18s;
+  animation-delay: 4s;
+}
+
+.loading-cloud-3 {
+  top: 65%;
+  left: -120px;
+  width: 140px;
+  animation-duration: 26s;
+  animation-delay: 8s;
+}
+
+@keyframes animalFloatCloud {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(100vw + 300px)); }
+}
+
+#auth-modal {
+  background: repeating-linear-gradient(
+    -45deg,
+    #19c8b9,
+    #19c8b9 35px,
+    #10b3a5 35px,
+    #10b3a5 70px
+  ) !important;
+  background-size: 200% 200% !important;
+  animation: animalIslandLoadingStripe 10s linear infinite !important;
+  z-index: 1001 !important;
 }
 
 .loader-card {
@@ -144,6 +207,8 @@ body {
   border: 3.5px solid var(--animal-border-wood, #7a583e);
   border-radius: 28px;
   box-shadow: 0 20px 50px rgba(60, 45, 30, 0.25), inset 0 2px 0 rgba(255, 255, 255, 0.9);
+  position: relative;
+  z-index: 2;
 }
 
 .loader-card h1 {
