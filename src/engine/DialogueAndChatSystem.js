@@ -45,17 +45,17 @@ export class DialogueAndChatSystem {
 
       osc.type = 'triangle';
       // Pitch variation based on character voice
-      const randomPitch = pitch * (0.95 + Math.random() * 0.1);
-      osc.frequency.setValueAtTime(randomPitch, this.audioContext.currentTime);
+      const randomPitch = pitch * (0.96 + Math.random() * 0.08);
+      osc.frequency.setValueAtTime(randomPitch, ctx.currentTime);
 
-      gain.gain.setValueAtTime(0.08, this.audioContext.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.035, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0005, ctx.currentTime + 0.045);
 
       osc.connect(gain);
-      gain.connect(this.audioContext.destination);
+      gain.connect(ctx.destination);
 
       osc.start();
-      osc.stop(this.audioContext.currentTime + 0.08);
+      osc.stop(ctx.currentTime + 0.045);
     } catch {
       // Ignore audio glitch
     }
@@ -261,16 +261,21 @@ export class DialogueAndChatSystem {
     clearInterval(this.typewriterTimer);
     this.typewriterTimer = setInterval(() => {
       if (this.typewriterIndex < this.activeDialogue.fullText.length) {
-        this.activeDialogue.displayedText += this.activeDialogue.fullText[this.typewriterIndex];
+        const nextChar = this.activeDialogue.fullText[this.typewriterIndex];
+        this.activeDialogue.displayedText += nextChar;
         textEl.innerText = this.activeDialogue.displayedText;
-        this.playACBlip(speakerMeta.pitch || 520);
+        
+        // Cozy Animalese sound every 2 non-whitespace characters
+        if (this.typewriterIndex % 2 === 0 && /\S/.test(nextChar)) {
+          this.playACBlip(speakerMeta.pitch || 520);
+        }
         this.typewriterIndex++;
       } else {
         clearInterval(this.typewriterTimer);
         this.activeDialogue.isFinished = true;
         this.renderChoices(choicesEl, choices, onComplete);
       }
-    }, 28);
+    }, 48);
   }
 
   // Update floating dialogue box position above the NPC on screen
