@@ -2259,10 +2259,12 @@ class RPGApplication {
       return;
     }
 
-    // Update animations & floating chat bubbles
+    // Update animations & floating chat bubbles (with real-time flight altitude tracking)
     this.tileMap.update(deltaTime);
     if (this.dialogueSystem && this.player) {
-      this.dialogueSystem.update(new Map([['player', { x: this.player.x, y: this.player.y }]]));
+      const playerAlt = (this.player.isMounted && this.dragonManager) ? (this.dragonManager.flightAltitude || 0) : 0;
+      const playerDrawY = this.player.y - playerAlt;
+      this.dialogueSystem.update(new Map([['player', { x: this.player.x, y: playerDrawY }]]));
     }
 
     if (this.mode === 'play') {
@@ -2694,6 +2696,30 @@ class RPGApplication {
   }
 
   findNearbyDragon(worldX, worldY, radius = 100) {
+    if (this.dragonManager && this.dragonManager.wildDragons && this.dragonManager.wildDragons.size > 0) {
+      let nearest = null;
+      let minDistance = radius;
+      for (const entity of this.dragonManager.wildDragons.values()) {
+        const dragonWorldX = entity.x + 32;
+        const dragonWorldY = entity.y + 32;
+        const dist = Math.hypot(dragonWorldX - (worldX + 32), dragonWorldY - (worldY + 32));
+        if (dist <= minDistance) {
+          minDistance = dist;
+          nearest = {
+            ...entity.catalog,
+            id: entity.tileId,
+            name: entity.name,
+            level: entity.level || 1,
+            worldX: entity.x,
+            worldY: entity.y,
+            tx: Math.floor(entity.x / 64),
+            ty: Math.floor(entity.y / 64)
+          };
+        }
+      }
+      if (nearest) return nearest;
+    }
+
     if (!this.tileMap || !this.tileMap.layers) return null;
 
     let nearest = null;
@@ -2872,7 +2898,9 @@ class RPGApplication {
     const sendMsg = () => {
       const text = chatInput.value.trim();
       if (text.length > 0) {
-        this.dialogueSystem.addSpeechBubble('player', text, { x: this.player.x, y: this.player.y }, true);
+        const playerAlt = (this.player.isMounted && this.dragonManager) ? (this.dragonManager.flightAltitude || 0) : 0;
+        const playerDrawY = this.player.y - playerAlt;
+        this.dialogueSystem.addSpeechBubble('player', text, { x: this.player.x, y: playerDrawY }, true);
         if (this.multiplayerClient) {
           this.multiplayerClient.sendChatMessage(text, this.player, this.player.heroData?.name || 'Aventureiro');
         }

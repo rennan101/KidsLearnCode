@@ -214,6 +214,9 @@ export class DragonManager {
 
     // Wild Dragon Nests in World (placed dynamically by ADM in Edit Mode)
     this.wildNests = [];
+
+    // Autonomous Wild Dragons FSM Map (placed by ADM in Edit Mode)
+    this.wildDragons = new Map();
   }
 
   getParty() {
@@ -505,6 +508,12 @@ export class DragonManager {
     const dt = Math.min(deltaTime / 1000, 0.1);
     this.floatTimer += dt;
 
+    // 0. Synchronize and Update Autonomous Wild Dragons in Scene (FSM)
+    if (tileMap) {
+      this.syncWildDragonsFromMap(tileMap);
+    }
+    this.updateWildDragons(dt, player, tileMap);
+
     // Cooldown timers
     if (this.dodgeCooldownTimer > 0) {
       this.dodgeCooldownTimer = Math.max(0, this.dodgeCooldownTimer - dt);
@@ -635,6 +644,204 @@ export class DragonManager {
     }
   }
 
+  // Synchronize Placed Wild Dragons from TileMap
+  syncWildDragonsFromMap(tileMap) {
+    if (!tileMap || !tileMap.layers) return;
+    const currentKeys = new Set();
+    const layersToCheck = ['characters', 'solid', 'decor', 'top', 'ground'];
+
+    for (const layerName of layersToCheck) {
+      const layer = tileMap.layers[layerName];
+      if (!layer) continue;
+
+      for (const [coordKey, cell] of layer.entries()) {
+        const tileId = (typeof cell === 'object' && cell !== null) ? cell.tileId : (typeof cell === 'string' ? cell : null);
+        if (tileId && typeof tileId === 'string' && (tileId.startsWith('dragon_') || tileId.includes('dragon'))) {
+          const uniqueKey = `${layerName}_${coordKey}`;
+          currentKeys.add(uniqueKey);
+
+          const [tx, ty] = coordKey.split(',').map(Number);
+          const cellLevel = (typeof cell === 'object' && cell?.level) ? cell.level : 1;
+          const cellFlip = (typeof cell === 'object' && cell?.flipX) ? cell.flipX : false;
+
+          let entity = this.wildDragons.get(uniqueKey);
+          if (!entity) {
+            const catalogItem = DRAGON_CATALOG.find(d => d.id === tileId) || {
+              id: tileId,
+              name: 'Dragão Selvagem',
+              category: 'land',
+              color: '#38bdf8',
+              secondaryColor: '#fef08a'
+            };
+
+            entity = {
+              key: uniqueKey,
+              tileId,
+              layerName,
+              coordKey,
+              name: catalogItem.name,
+              catalog: catalogItem,
+              category: catalogItem.category || 'land',
+              color: catalogItem.color || '#38bdf8',
+              secondaryColor: catalogItem.secondaryColor || '#fef08a',
+              level: cellLevel,
+              flipX: cellFlip,
+              originX: tx * 64,
+              originY: ty * 64,
+              x: tx * 64,
+              y: ty * 64,
+              targetX: tx * 64,
+              targetY: ty * 64,
+              direction: cellFlip ? 'west' : 'east',
+              fsmState: 'idle', // 'idle', 'roam', 'fly_hover', 'curious', 'sleep'
+              stateTimer: 2.0 + Math.random() * 3.0,
+              flightAltitude: 0,
+              targetAltitude: 0,
+              animTimer: Math.random() * 10,
+              emote: null,
+              territoryRadius: 160
+            };
+            this.wildDragons.set(uniqueKey, entity);
+          } else {
+            entity.level = cellLevel;
+            entity.flipX = cellFlip;
+          }
+        }
+      }
+    }
+
+    // Clean up removed dragons
+    for (const [key] of this.wildDragons.entries()) {
+      if (!currentKeys.has(key)) {
+        this.wildDragons.delete(key);
+      }
+    }
+  }
+
+  // Update FSM for all Wild Dragons
+  updateWildDragons(dt, player, tileMap) {
+    for (const entity of this.wildDragons.values()) {
+      entity.animTimer += dt;
+
+      // Update Emote Timer
+      if (entity.emote) {
+        entity.emote.timer -= dt;
+        if (entity.emote.timer <= 0) {
+          entity.emote = null;
+        }
+      }
+
+      // Smooth Altitude transition
+      entity.flightAltitude += (entity.targetAltitude - entity.flightAltitude) * Math.min(1.0, 5.0 * dt);
+
+      // Distance to player
+      const distToPlayer = player ? Math.hypot((player.x + 24) - (entity.x + 32), (player.y + 24) - (entity.y + 32)) : 999;
+
+      // Player proximity curiosity trigger
+      if (distToPlayer < 90 && entity.fsmState !== 'curious' && entity.fsmState !== 'sleep') {
+        if (Math.random() < 0.20) {
+          entity.fsmState = 'curious';
+          entity.stateTimer = 2.5;
+          entity.emote = { type: Math.random() < 0.5 ? 'curious' : 'heart', timer: 2.2 };
+          entity.direction = (player.x < entity.x) ? 'west' : 'east';
+        }
+      }
+
+      entity.stateTimer -= dt;
+
+      switch (entity.fsmState) {
+        case 'idle':
+          // Hover occasionally if flying dragon
+          if (entity.category === 'fly') {
+            entity.targetAltitude = (Math.sin(entity.animTimer * 0.8) > 0.3) ? 18 : 0;
+          } else {
+            entity.targetAltitude = 0;
+          }
+
+          if (entity.stateTimer <= 0) {
+            const roll = Math.random();
+            if (roll < 0.60) {
+              // Switch to Roam / Flight Hover
+              entity.fsmState = (entity.category === 'fly' && Math.random() < 0.6) ? 'fly_hover' : 'roam';
+              const angle = Math.random() * Math.PI * 2;
+              const dist = 30 + Math.random() * entity.territoryRadius;
+              entity.targetX = entity.originX + Math.cos(angle) * dist;
+              entity.targetY = entity.originY + Math.sin(angle) * dist;
+              entity.stateTimer = 3.0 + Math.random() * 4.0;
+            } else if (roll < 0.85) {
+              // Continue Idle
+              entity.stateTimer = 2.0 + Math.random() * 3.0;
+            } else {
+              // Take a quick rest / nap
+              entity.fsmState = 'sleep';
+              entity.stateTimer = 4.0 + Math.random() * 3.0;
+              entity.targetAltitude = 0;
+              entity.emote = { type: 'zzz', timer: 3.5 };
+            }
+          }
+          break;
+
+        case 'fly_hover':
+          entity.targetAltitude = 28 + Math.sin(entity.animTimer * 2) * 8;
+          // fall-through to roam movement logic
+        case 'roam':
+          {
+            const dx = entity.targetX - entity.x;
+            const dy = entity.targetY - entity.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist > 6) {
+              let speed = 28;
+              if (entity.category === 'fly' && entity.flightAltitude > 10) speed = 46;
+              else if (entity.category === 'water') speed = 36;
+
+              entity.x += (dx / dist) * speed * dt;
+              entity.y += (dy / dist) * speed * dt;
+
+              if (Math.abs(dx) > Math.abs(dy)) {
+                entity.direction = dx > 0 ? 'east' : 'west';
+              } else {
+                entity.direction = dy > 0 ? 'south' : 'north';
+              }
+            } else {
+              entity.fsmState = 'idle';
+              entity.stateTimer = 2.0 + Math.random() * 3.0;
+            }
+
+            if (entity.stateTimer <= 0) {
+              entity.fsmState = 'idle';
+              entity.stateTimer = 2.0 + Math.random() * 2.0;
+            }
+          }
+          break;
+
+        case 'curious':
+          // Look at player
+          if (player) {
+            entity.direction = (player.x < entity.x) ? 'west' : 'east';
+          }
+          if (distToPlayer > 120 || entity.stateTimer <= 0) {
+            entity.fsmState = 'idle';
+            entity.stateTimer = 2.0 + Math.random() * 2.0;
+          }
+          break;
+
+        case 'sleep':
+          entity.targetAltitude = 0;
+          if (distToPlayer < 45) {
+            // Player startled sleeping dragon
+            entity.fsmState = 'curious';
+            entity.stateTimer = 2.0;
+            entity.emote = { type: 'curious', timer: 1.8 };
+          } else if (entity.stateTimer <= 0) {
+            entity.fsmState = 'idle';
+            entity.stateTimer = 2.0 + Math.random() * 2.0;
+          }
+          break;
+      }
+    }
+  }
+
   spawnAttackParticles(fromX, fromY, toX, toY, dragon) {
     for (let i = 0; i < 8; i++) {
       const angle = Math.atan2(toY - fromY, toX - fromX) + (Math.random() - 0.5) * 0.4;
@@ -656,25 +863,287 @@ export class DragonManager {
 
   // Render Companion, Targets, Nests, and Combat UI in World Space
   render(ctx, assetLoader, player = null) {
-    const dragon = this.getActiveDragon();
-    if (!dragon) return;
-
     // 1. Render Wild Dragon Nests
     this.renderWildNests(ctx);
 
     // 2. Render Training Targets
     this.renderTrainingTargets(ctx);
 
-    // 3. Render Active Dragon Companion (if not mounted, or socket underlay)
-    if (this.mode !== 'none') {
+    // 3. Render Autonomous Wild Dragons (placed in world by ADM)
+    this.renderWildDragons(ctx, player, assetLoader);
+
+    // 4. Render Active Dragon Companion (if not mounted, or socket underlay)
+    const dragon = this.getActiveDragon();
+    if (dragon && this.mode !== 'none') {
       this.renderDragonEntity(ctx, dragon, player);
     }
 
-    // 4. Render Combat Particles
+    // 5. Render Combat Particles
     this.renderParticles(ctx);
 
-    // 5. Render Floating Damage Numbers
+    // 6. Render Floating Damage Numbers
     this.renderDamageNumbers(ctx);
+  }
+
+  // Render Autonomous Wild Dragons with FSM Animations, Shadows, Badges, and Emotes
+  renderWildDragons(ctx, player, assetLoader) {
+    for (const entity of this.wildDragons.values()) {
+      this.renderWildDragonEntity(ctx, entity, player);
+    }
+  }
+
+  renderWildDragonEntity(ctx, entity, player = null) {
+    ctx.save();
+
+    const alt = entity.flightAltitude || 0;
+    const bounce = (entity.fsmState === 'sleep') ? 0 : Math.sin(entity.animTimer * (alt > 10 ? 8 : 4)) * (alt > 10 ? 6 : 4);
+    const drawX = Math.round(entity.x);
+    const drawY = Math.round(entity.y + bounce - alt);
+
+    // 1. Ground Shadow (Always on floor terrain)
+    ctx.save();
+    const shadowScaleX = 20 + (alt * 0.14);
+    const shadowScaleY = 8 + (alt * 0.06);
+    const shadowAlpha = Math.max(0.12, 0.32 - (alt / 120) * 0.18);
+    ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(drawX + 32, entity.y + 52, shadowScaleX, shadowScaleY, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 1b. Water Ripple Waves for Aquatic Dragons
+    if (entity.category === 'water') {
+      ctx.save();
+      const wavePhase = (entity.animTimer * 3.5) % (Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.ellipse(drawX + 32, entity.y + 52, 22 + Math.sin(wavePhase) * 4, 9 + Math.cos(wavePhase) * 2, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 2. Dragon Drawing (with direction flipping)
+    ctx.save();
+    const isWest = entity.direction === 'west';
+    if (isWest) {
+      ctx.translate(drawX + 64, drawY);
+      ctx.scale(-1, 1);
+    } else {
+      ctx.translate(drawX, drawY);
+    }
+
+    const bodyColor = entity.color || '#38bdf8';
+    const accentColor = entity.secondaryColor || '#fef08a';
+
+    // 2a. Wings / Fins with dynamic flap
+    ctx.fillStyle = accentColor;
+    const flapFreq = alt > 10 ? 14 : 7;
+    const flapAmp = alt > 10 ? 9 : 5;
+    const wingFlap = (entity.fsmState === 'sleep') ? 0 : Math.sin(entity.animTimer * flapFreq) * flapAmp;
+    // Left wing
+    ctx.beginPath();
+    ctx.ellipse(14, 26 + wingFlap, 12, 8, -Math.PI / 4, 0, Math.PI * 2);
+    ctx.fill();
+    // Right wing
+    ctx.beginPath();
+    ctx.ellipse(50, 26 - wingFlap, 12, 8, Math.PI / 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2b. Chubby Body
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.ellipse(32, 34, 18, 16, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2c. Belly Highlight
+    ctx.fillStyle = accentColor;
+    ctx.beginPath();
+    ctx.ellipse(32, 36, 11, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2d. Head
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.arc(32, 20, 14, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2e. Horns / Ears
+    ctx.fillStyle = accentColor;
+    ctx.beginPath();
+    ctx.moveTo(24, 12);
+    ctx.lineTo(20, 2);
+    ctx.lineTo(28, 10);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(40, 12);
+    ctx.lineTo(44, 2);
+    ctx.lineTo(36, 10);
+    ctx.fill();
+
+    // 2f. Eyes (sleeping or open)
+    if (entity.fsmState === 'sleep') {
+      // Sleeping curved eye lines
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.arc(27, 20, 3, 0.1 * Math.PI, 0.9 * Math.PI, false);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(37, 20, 3, 0.1 * Math.PI, 0.9 * Math.PI, false);
+      ctx.stroke();
+    } else {
+      // Big expressive eyes
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.arc(27, 19, 3.2, 0, Math.PI * 2);
+      ctx.arc(37, 19, 3.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eye catchlights
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(26, 18, 1.2, 0, Math.PI * 2);
+      ctx.arc(36, 18, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Rosy cute cheeks
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.65)';
+    ctx.beginPath();
+    ctx.arc(23, 23, 2.5, 0, Math.PI * 2);
+    ctx.arc(41, 23, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+
+    // 3. Overhead Level Badge (Animal Island UI 3D Pill, non-flipped)
+    ctx.save();
+    const lvlText = `Nv. ${entity.level || 1}`;
+    ctx.font = 'bold 10px "Nunito", sans-serif';
+    const textMetrics = ctx.measureText(lvlText);
+    const badgeW = Math.max(38, textMetrics.width + 12);
+    const badgeH = 16;
+    const badgeX = drawX + 32 - badgeW / 2;
+    const badgeY = drawY - 14;
+
+    // Badge shadow 3D
+    ctx.fillStyle = '#d97706';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(badgeX, badgeY + 2, badgeW, badgeH, 50);
+    else ctx.rect(badgeX, badgeY + 2, badgeW, badgeH);
+    ctx.fill();
+
+    // Badge body
+    ctx.fillStyle = '#fffdf5';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 50);
+    else ctx.rect(badgeX, badgeY, badgeW, badgeH);
+    ctx.fill();
+
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 1.3;
+    ctx.stroke();
+
+    ctx.fillStyle = '#7a583e';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(lvlText, drawX + 32, badgeY + badgeH / 2);
+    ctx.restore();
+
+    // 4. Emote Balloon above head (ACNH Style)
+    if (entity.emote) {
+      ctx.save();
+      const emoteX = drawX + 32;
+      const emoteY = drawY - 34;
+
+      if (entity.emote.type === 'zzz') {
+        // Floating Zzz
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 12px "Outfit", sans-serif';
+        ctx.textAlign = 'center';
+        const zOffset = (entity.animTimer * 10) % 15;
+        ctx.fillText('Zzz...', emoteX, emoteY - zOffset);
+      } else if (entity.emote.type === 'heart') {
+        // Heart Bubble
+        ctx.fillStyle = '#f43f5e';
+        ctx.beginPath();
+        ctx.arc(emoteX, emoteY, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('♥', emoteX, emoteY);
+      } else if (entity.emote.type === 'curious') {
+        // Curious Question Mark
+        ctx.fillStyle = '#10b981';
+        ctx.beginPath();
+        ctx.arc(emoteX, emoteY, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px "Outfit", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('?', emoteX, emoteY + 0.5);
+      }
+      ctx.restore();
+    }
+
+    // 5. Proximity [R] Keycap Prompt when Player is close
+    const distToPlayer = player ? Math.hypot((player.x + 24) - (entity.x + 32), (player.y + 24) - (entity.y + 32)) : 999;
+    if (distToPlayer < 90) {
+      ctx.save();
+      const badgeSize = 22;
+      const badgeX = drawX + 32 - badgeSize / 2;
+      const badgeY = drawY - (entity.emote ? 58 : 38);
+
+      // Sombra suave do badge
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(badgeX - 1, badgeY - 1, badgeSize + 2, badgeSize + 2, 6);
+      else ctx.rect(badgeX - 1, badgeY - 1, badgeSize + 2, badgeSize + 2);
+      ctx.fill();
+
+      // Keycap dourado
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, badgeSize, badgeSize, 5);
+      else ctx.rect(badgeX, badgeY, badgeSize, badgeSize);
+      ctx.fill();
+
+      // Borda dourada suave
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Letra R centralizada
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 12px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('R', badgeX + badgeSize / 2, badgeY + badgeSize / 2 + 0.5);
+
+      // Pontinha triangular sutil abaixo do badge
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.moveTo(drawX + 29, badgeY + badgeSize);
+      ctx.lineTo(drawX + 32, badgeY + badgeSize + 3);
+      ctx.lineTo(drawX + 35, badgeY + badgeSize);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.restore();
   }
 
   renderDragonEntity(ctx, dragon, player = null) {

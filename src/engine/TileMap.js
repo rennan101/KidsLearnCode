@@ -367,8 +367,11 @@ export class TileMap {
       return;
     }
 
-    // Special Dragon Entity Canvas Renderer with Level Badge
+    // Special Dragon Entity Canvas Renderer with Level Badge (Play Mode uses dynamic FSM in DragonManager)
     if (tileMeta.isDragon || cell.tileId.startsWith('dragon_')) {
+      if (!isEditor) {
+        return; // Rendered dynamically by DragonManager FSM
+      }
       const dragonData = tileMeta.dragonData || {};
       const bodyColor = dragonData.color || '#38bdf8';
       const accentColor = dragonData.secondaryColor || '#fef08a';
