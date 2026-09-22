@@ -314,11 +314,35 @@ export class MultiplayerClient {
       col = Math.floor(player.animTimer * 3) % 2;
     }
 
-    const heroId = player.heroId || 'char_wolf_hunter_f';
-    const frameUrl = `assets/characters/${heroId}/frames/wolf_hunter_r${row}_c${col}.png`;
-    let sprite = assetLoader?.getImage(frameUrl) 
-      || assetLoader?.getImage(`assets/characters/${heroId}/portrait.jpg`)
-      || (player.isMoving ? assetLoader?.getImage(`Geralt/running/rotations/${player.direction}.png`) : assetLoader?.getImage(`Geralt/Idle/rotations/${player.direction}.png`));
+    const heroId = player.heroId || 'char_wolf_hunter_m';
+    let sprite = null;
+
+    if (heroId === 'char_wolf_hunter_m') {
+      if (player.direction === 'south') {
+        if (player.isMoving) {
+          const frameNum = (Math.floor((player.animTimer || 0) * 12) % 17) + 1;
+          const frameIdx = String(frameNum).padStart(3, '0');
+          sprite = assetLoader?.getImage(`assets/characters/char_wolf_hunter_m/Walk_Down/sprite_${frameIdx}.png`);
+        } else {
+          sprite = assetLoader?.getImage(`assets/characters/char_wolf_hunter_m/Walk_Down/sprite_001.png`);
+        }
+      } else if (player.direction === 'north') {
+        if (player.isMoving) {
+          const frameNum = (Math.floor((player.animTimer || 0) * 12) % 15) + 1;
+          const frameIdx = String(frameNum).padStart(3, '0');
+          sprite = assetLoader?.getImage(`assets/characters/char_wolf_hunter_m/Walk_Up/sprite_${frameIdx}.png`);
+        } else {
+          sprite = assetLoader?.getImage(`assets/characters/char_wolf_hunter_m/Walk_Up/sprite_001.png`);
+        }
+      }
+    }
+
+    if (!sprite) {
+      const frameUrl = `assets/characters/${heroId}/frames/wolf_hunter_r${row}_c${col}.png`;
+      sprite = assetLoader?.getImage(frameUrl) 
+        || assetLoader?.getImage(`assets/characters/${heroId}/portrait.jpg`)
+        || (player.isMoving ? assetLoader?.getImage(`Geralt/running/rotations/${player.direction}.png`) : assetLoader?.getImage(`Geralt/Idle/rotations/${player.direction}.png`));
+    }
 
     if (sprite) {
       ctx.drawImage(sprite, drawX, drawY, 64, 64);

@@ -2832,6 +2832,16 @@ export class AssetLoader {
       }
     }
 
+    // Specific Walk_Down and Walk_Up animation frames for char_wolf_hunter_m
+    for (let i = 1; i <= 17; i++) {
+      const idx = String(i).padStart(3, '0');
+      urlsToLoad.push(`assets/characters/char_wolf_hunter_m/Walk_Down/sprite_${idx}.png`);
+    }
+    for (let i = 1; i <= 15; i++) {
+      const idx = String(i).padStart(3, '0');
+      urlsToLoad.push(`assets/characters/char_wolf_hunter_m/Walk_Up/sprite_${idx}.png`);
+    }
+
     // Legacy Geralt Fallback Sprites
     if (this.directions) {
       for (const dir of this.directions) {

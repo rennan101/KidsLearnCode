@@ -4,6 +4,8 @@
   "species": "wolf",
   "spritesheet": {
     "framesDir": "assets/characters/char_wolf_hunter_m/frames",
+    "walkDownDir": "assets/characters/char_wolf_hunter_m/Walk_Down",
+    "walkUpDir": "assets/characters/char_wolf_hunter_m/Walk_Up",
     "portrait": "assets/characters/char_wolf_hunter_m/portrait.jpg"
   }
 }

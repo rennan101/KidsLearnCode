@@ -461,13 +461,64 @@ export class Player {
       col = Math.floor(this.animTimer * 3) % 2; // Idle cols 0, 1
     }
 
-    const frameUrl = `assets/characters/${this.heroId}/frames/wolf_hunter_r${row}_c${col}.png`;
-    let sprite = assetLoader.getImage(frameUrl) 
-      || assetLoader.getImage(`assets/characters/${this.heroId}/portrait.jpg`)
-      || (this.isMoving ? assetLoader.getImage(`Geralt/running/rotations/${dir}.png`) : assetLoader.getImage(`Geralt/Idle/rotations/${dir}.png`));
+    let flipX = false;
+    let targetRow = row;
+    let sprite = null;
+
+    // Check if hero has dedicated Walk_Down / Walk_Up animations (char_wolf_hunter_m)
+    if (this.heroId === 'char_wolf_hunter_m' && !this.isCrafting) {
+      if (dir === 'south' || (dir === 'north' && !this.isMoving && row === 0)) {
+        if (this.isMoving) {
+          const fps = this.isSprinting ? 18 : 12;
+          const frameNum = (Math.floor(this.animTimer * fps) % 17) + 1;
+          const frameIdx = String(frameNum).padStart(3, '0');
+          sprite = assetLoader.getImage(`assets/characters/char_wolf_hunter_m/Walk_Down/sprite_${frameIdx}.png`);
+        } else {
+          // Idle facing south
+          sprite = assetLoader.getImage(`assets/characters/char_wolf_hunter_m/Walk_Down/sprite_001.png`);
+        }
+      } else if (dir === 'north') {
+        if (this.isMoving) {
+          const fps = this.isSprinting ? 18 : 12;
+          const frameNum = (Math.floor(this.animTimer * fps) % 15) + 1;
+          const frameIdx = String(frameNum).padStart(3, '0');
+          sprite = assetLoader.getImage(`assets/characters/char_wolf_hunter_m/Walk_Up/sprite_${frameIdx}.png`);
+        } else {
+          // Idle facing north
+          sprite = assetLoader.getImage(`assets/characters/char_wolf_hunter_m/Walk_Up/sprite_001.png`);
+        }
+      }
+    }
+
+    if (!sprite) {
+      let frameUrl = `assets/characters/${this.heroId}/frames/wolf_hunter_r${row}_c${col}.png`;
+      sprite = assetLoader.getImage(frameUrl);
+
+      // Se a direção for 'west' e não houver frame específico de west (row 3), usa o frame de 'east' (row 1) espelhado
+      if (!sprite && dir === 'west') {
+        const eastUrl = `assets/characters/${this.heroId}/frames/wolf_hunter_r1_c${col}.png`;
+        sprite = assetLoader.getImage(eastUrl);
+        if (sprite) {
+          flipX = true;
+        }
+      }
+    }
+
+    if (!sprite) {
+      sprite = assetLoader.getImage(`assets/characters/${this.heroId}/portrait.jpg`)
+        || (this.isMoving ? assetLoader.getImage(`Geralt/running/rotations/${dir}.png`) : assetLoader.getImage(`Geralt/Idle/rotations/${dir}.png`));
+    }
 
     if (sprite) {
-      ctx.drawImage(sprite, drawX, drawY, renderW, renderH);
+      if (flipX) {
+        ctx.save();
+        ctx.translate(drawX + renderW, drawY);
+        ctx.scale(-1, 1);
+        ctx.drawImage(sprite, 0, 0, renderW, renderH);
+        ctx.restore();
+      } else {
+        ctx.drawImage(sprite, drawX, drawY, renderW, renderH);
+      }
     } else {
       // Fallback
       ctx.save();

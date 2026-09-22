@@ -1,13 +1,19 @@
-# 🐾 Catálogo Oficial de Personagens Jogáveis e NPCs (Design & Prompts de Geração)
+# 🐾 Catálogo Oficial de Personagens Jogáveis e NPCs (Design Frontal Reto & Prompts 1x8)
 
 > **Documento de Especificação de Heróis, Moradores da Ilha e Prompts de Geração de Spritesheets**  
-> **Diretriz Visual:** *Personagens antropomórficos adoráveis no estilo estético de **Animal Crossing: New Horizons** (proporções fofas 'chibi', olhos expressivos, vestimentas charmosas), renderizados em **Perspectiva 3/4 Top-Down (ângulo de visão elevado estilo Sea of Stars)**. Acabamento em **Vector Art 2.5D com sombreamento suave, oclusão de ambiente e iluminação 3D / Clay Render** (NÃO é pixel art).*
+> **Diretriz Visual:** *Personagens antropomórficos adoráveis no estilo estético de **Animal Crossing: New Horizons** (proporções fofas 'chibi', olhos expressivos, vestimentas charmosas). Acabamento em **Vector Art 2.5D com sombreamento suave, oclusão de ambiente e iluminação 3D / Clay Render**.*
+> **Enquadramento Cardinal Reto (Straight-On Front/Back/Side):**
+> * **Sul (South / Frente):** Visão frontal reta e centralizada olhando diretamente para a câmera (NÃO em ângulo 3/4), caminhando em linha reta para a frente.
+> * **Norte (North / Costas):** Visão traseira reta centralizada de costas para a câmera, caminhando em linha reta para longe.
+> * **Leste (East / Lateral):** Perfil lateral direto virado para a direita. *(Espelhe horizontalmente para obter o Oeste/Esquerda)*.
+> **Design Bilateralmente Simétrico (Seamless Flip):** *Acessórios, roupas e fechos centralizados para permitir espelhamento perfeito.*
+> **Fundo:** *Branco 100% puro e sólido (`#FFFFFF`) sem linhas, sem caixas e sem sombras no chão.*
 
 ---
 
 ## 📋 Sumário do Catálogo
 
-1. [🎨 Guia de Estrutura dos 4 Spritesheets por Personagem (Grade 4x8)](#1-🎨-guia-de-estrutura-dos-4-spritesheets-por-personagem-grade-4x8)
+1. [🎨 Guia de Estrutura Modular (3 Direções x 1 Linha de 8 Frames)](#1-🎨-guia-de-estrutura-modular-3-direções-x-1-linha-de-8-frames)
 2. [🐺 Personagens Jogáveis — 4 Classes x 2 Gêneros = 8 Heróis](#2-🐺-personagens-jogáveis--4-classes-x-2-gêneros--8-heróis)
    * [2.1. Lobo — Caçador / Caçadora](#21-lobo--caçador--caçadora)
      * [🐺 Lobo Masculino (`char_wolf_hunter_m` - Ragnar)](#-lobo-masculino-char_wolf_hunter_m---ragnar)
@@ -36,26 +42,16 @@
 
 ---
 
-## 1. 🎨 Guia de Estrutura dos 4 Spritesheets por Personagem (Grade 4x8)
+## 1. 🎨 Guia de Estrutura Modular (3 Direções x 1 Linha de 8 Frames)
 
-Para garantir máxima fidelidade de animação, recorte transparente perfeito e organização nos motores 2D, cada personagem possui **4 prompts dedicados de spritesheets separados**.
-
-Cada spritesheet segue uma **grade estrita de 4 linhas horizontais x 8 frames por linha (32 frames no total)** cobrindo com clareza as 4 direções cardinais do jogo:
-
-### 🎭 Estrutura Padrão da Grade (4 Linhas x 8 Frames = 32 Frames)
-* **Linha 1 (Row 1 - 8 frames):** Direção **Sul / Frente** (`Facing South / Front view`).
-* **Linha 2 (Row 2 - 8 frames):** Direção **Norte / Costas** (`Facing North / Back view`).
-* **Linha 3 (Row 3 - 8 frames):** Direção **Esquerda / Oeste** (`Facing West / Left side view`).
-* **Linha 4 (Row 4 - 8 frames):** Direção **Direita / Leste** (`Facing East / Right side view`).
-
-### 📦 Os 4 Tipos de Spritesheets por Personagem:
-1. **🚶 Spritesheet de Caminhada (`Walk`):** Ciclo completo e fluido de passos com balanceio natural dos braços e cauda/orelhas em 8 frames por direção.
-2. **🧘 Spritesheet Parado / Respiração (`Idle`):** Animação suave de respiração relaxada, leve oscilação corporal e piscar de olhos em 8 frames por direção.
-3. **🔨 Spritesheet de Fabricação / Ação (`Craft`):** Personagem em pé movimentando alegremente as patinhas/mãos para cima e para baixo em frente ao peito no estilo clássico de crafting do *Animal Crossing*, sem segurar objetos fixos.
-4. **🐉 Spritesheet Montado no Dragão (`Mounted Pose / Dragon Riding`):** Postura firme e dinâmica do herói cavalgando no dorso do dragão, com as perninhas abertas no arreio, segurando as rédeas e oscilando no ritmo do voo/trote do dragão em 8 frames por direção.
-
-* **Fundo:** **Branco 100% puro e sólido (`#FFFFFF`) sem linhas de grade desenhadas, sem caixas, sem divisórias e sem molduras**.
-* **Estilo Artístico Imutável:** *Animal Crossing: New Horizons aesthetic, Sea of Stars 3/4 high top-down perspective, clean 2.5D vector art, smooth clay render with soft ambient lighting*.
+Para garantir máxima fidelidade no Google AI Studio (Imagen 3 / Gemini):
+* Cada prompt gera **exatamente 1 única linha horizontal de 8 frames (1x8)** em formato Widescreen (`16:9`).
+* **Design Simétrico Bilateral:** Roupas, fivelas, bolsas e cabelos são centralizados.
+* **Apenas 3 Prompts por Ação:**
+  1. **Sul (South / Frente):** Visão frontal reta e direta olhando para a frente. Na montaria: tronco ereto, rédeas à frente, pernas abertas para ambos os lados contornando o dorso.
+  2. **Norte (North / Costas):** Visão traseira reta de costas para a câmera. Na montaria: visto de costas, pernas abertas nas laterais, tronco firme.
+  3. **Leste / Lateral (East / Side View):** Perfil lateral direto virado para a direita. Na montaria: tronco inclinado para a frente segurando rédeas, **apenas a perna direita (próxima) visível flexionada**, perna esquerda oculta pelo dragão. *(Espelhe horizontalmente para obter Oeste)*.
+* **Fundo:** Fundo sólido branco puro (`#FFFFFF`) sem molduras, sem grades e sem sombras no chão.
 
 ---
 
@@ -65,466 +61,374 @@ Cada spritesheet segue uma **grade estrita de 4 linhas horizontais x 8 frames po
 
 ### 2.1. Lobo — Caçador / Caçadora
 * **Arquétipo:** O Rastreador Destemido da Floresta.
-* **Personalidade:** Leal, corajoso, enérgico e com instinto aguçado para aventuras ao ar livre.
-* **Habilidade Única — `Faro Selvagem`:** Revela pegadas brilhantes no chão que apontam na direção de ovos de dragão ocultos e recursos raros a até 15 tiles de distância.
+* **Habilidade Única — `Faro Selvagem`:** Revela pegadas brilhantes no chão apontando para ovos de dragão e minérios raros a até 15 tiles.
 
 ---
 
 #### 🐺 Lobo Masculino (`char_wolf_hunter_m` - Ragnar)
-* **Visual:** Pelagem cinza-chumbo com focinho creme fofo, orelhas pontudas atentas, olhos dourados calorosos, túnica de caçador de couro macio verde-floresta com fivela de bronze e pequena pena presa na touca.
+* **Visual Simétrico:** Pelagem cinza-chumbo com focinho creme simétrico, orelhas pontudas eretas, túnica de caçador de couro verde-floresta com cinto e fivela de bronze centralizada no peito.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic wolf boy hunter walking cycle, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down perspective, charcoal-gray and cream fur, amber eyes, forest-green leather tunic with bronze buckle and tiny feather hat, neatly arranged in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), solid pure plain white background without any grid lines or boxes, clean 2.5D vector art, smooth 3D clay lighting
-```
+##### 1. Caminhada (`Walk` - 1 Linha x 8 Frames):
+* **South (Frente Direta):**
+  ```text
+  2D sprite strip of cute chibi wolf boy hunter walking straight forward towards camera, Animal Crossing New Horizons style, perfectly centered straight front view, symmetrical design, charcoal-gray and cream fur, amber eyes, forest-green leather tunic with centered bronze belt buckle, facing SOUTH, single horizontal row of EXACTLY 8 sequential animation frames of forward walking cycle, solid plain white background #FFFFFF, clean vector art, soft 3D clay lighting, no floor shadows, no pixel art
+  ```
+* **North (Costas Retas):**
+  ```text
+  2D sprite strip of cute chibi wolf boy hunter walking straight away from camera, Animal Crossing New Horizons style, perfectly centered straight back view, symmetrical design, charcoal-gray fur, forest-green tunic, facing NORTH, single horizontal row of EXACTLY 8 sequential animation frames of walking away cycle, solid plain white background #FFFFFF, clean vector art, soft 3D clay lighting, no floor shadows, no pixel art
+  ```
+* **East / Side (Lateral Direita - Espelhável para Oeste):**
+  ```text
+  2D sprite strip of cute chibi wolf boy hunter walking sideways, Animal Crossing New Horizons style, straight side profile view, symmetrical design, charcoal-gray fur, forest-green tunic, facing EAST (flippable for WEST), single horizontal row of EXACTLY 8 sequential animation frames of side walking cycle, solid plain white background #FFFFFF, clean vector art, soft 3D clay lighting, no floor shadows, no pixel art
+  ```
 
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic wolf boy hunter idle breathing animation, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down perspective, charcoal-gray and cream fur, amber eyes, forest-green leather tunic with bronze buckle and tiny feather hat, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid pure plain white background without any grid lines or boxes, clean 2.5D vector art, smooth 3D clay lighting
-```
+##### 2. Parado / Respiração (`Idle` - 1 Linha x 8 Frames):
+* **South (Frente Direta):**
+  ```text
+  2D sprite strip of cute chibi wolf boy hunter idle breathing, Animal Crossing style, straight front view facing camera, symmetrical design, charcoal-gray fur, green tunic, facing SOUTH, single horizontal row of EXACTLY 8 frames gentle breathing cycle, solid plain white background #FFFFFF, clean vector art, soft 3D clay lighting
+  ```
+* **North (Costas Retas):**
+  ```text
+  2D sprite strip of cute chibi wolf boy hunter idle breathing, Animal Crossing style, straight back view facing away, symmetrical design, charcoal-gray fur, green tunic, facing NORTH, single horizontal row of EXACTLY 8 frames gentle breathing cycle, solid plain white background #FFFFFF, clean vector art, soft 3D clay lighting
+  ```
+* **East / Side (Lateral Direita):**
+  ```text
+  2D sprite strip of cute chibi wolf boy hunter idle breathing, Animal Crossing style, straight side profile view, symmetrical design, charcoal-gray fur, green tunic, facing EAST (flippable for WEST), single horizontal row of EXACTLY 8 frames gentle side breathing cycle, solid plain white background #FFFFFF, clean vector art
+  ```
 
-##### 3. Prompt de Fabricação / Crafting (`Craft` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic wolf boy hunter crafting animation, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down perspective, charcoal-gray and cream fur, forest-green leather tunic, standing crafting animation happily moving arms up and down in front of chest without holding items, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid pure plain white background without any grid lines or boxes, clean 2.5D vector art, smooth 3D clay lighting
-```
+##### 3. Fabricação / Crafting (`Craft` - 1 Linha x 8 Frames):
+* **South (Frente Direta):**
+  ```text
+  2D sprite strip of cute chibi wolf boy hunter crafting, Animal Crossing style, straight front view, symmetrical design, charcoal-gray fur, green tunic, facing SOUTH, standing happily moving arms symmetrically up and down in front of chest without items, single horizontal row of EXACTLY 8 crafting frames, solid plain white background #FFFFFF, clean vector art
+  ```
+* **North (Costas Retas):**
+  ```text
+  2D sprite strip of cute chibi wolf boy hunter crafting, Animal Crossing style, straight back view, symmetrical design, charcoal-gray fur, green tunic, facing NORTH, standing moving arms up and down in front of chest without items, single horizontal row of EXACTLY 8 crafting frames, solid plain white background #FFFFFF, clean vector art
+  ```
+* **East / Side (Lateral Direita):**
+  ```text
+  2D sprite strip of cute chibi wolf boy hunter crafting, Animal Crossing style, straight side profile view, symmetrical design, charcoal-gray fur, green tunic, facing EAST (flippable for WEST), standing moving arms up and down in front of chest without items, single horizontal row of EXACTLY 8 side crafting frames, solid plain white background #FFFFFF, clean vector art
+  ```
 
-##### 4. Prompt de Montado no Dragão (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic wolf boy hunter riding mount pose(without the mount animal), Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down perspective, charcoal-gray fur, forest-green tunic, character seated in riding saddle pose holding reins with natural riding bobbing motion, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid pure plain white background without any grid lines or boxes, clean 2.5D vector art, smooth 3D clay lighting
-```
+##### 4. Montado no Dragão (`Mounted` - 1 Linha x 8 Frames):
+* **South (Frente Direta):**
+  ```text
+  2D sprite strip of cute chibi wolf boy hunter in dragon riding saddle pose (without mount), Animal Crossing style, straight front view facing camera, symmetrical design, charcoal-gray fur, green tunic, facing SOUTH, seated with both legs spread wide outwards straddling the saddle and hands holding reins at chest, single horizontal row of EXACTLY 8 riding bobbing frames, solid plain white background #FFFFFF, clean vector art
+  ```
+* **North (Costas Retas):**
+  ```text
+  2D sprite strip of cute chibi wolf boy hunter in dragon riding saddle pose (without mount), Animal Crossing style, straight back view facing away, symmetrical design, charcoal-gray fur, green tunic, facing NORTH, seated with legs spread outwards around saddle holding reins, single horizontal row of EXACTLY 8 riding bobbing frames, solid plain white background #FFFFFF, clean vector art
+  ```
+* **East / Side (Lateral Direita - Espelhável para Oeste):**
+  ```text
+  2D sprite strip of cute chibi wolf boy hunter in dragon riding saddle pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, charcoal-gray fur, green tunic, facing EAST (flippable for WEST), seated leaning 10 degrees forward holding reins, ONLY near right leg visible bent down over saddle while far left leg is occluded, single horizontal row of EXACTLY 8 riding bobbing frames, solid plain white background #FFFFFF, clean vector art
+  ```
 
 ---
 
 #### 🐺 Lobo Feminino (`char_wolf_hunter_f` - Lyra)
-* **Visual:** Pelagem branca-ártica com detalhes prateados, olhos azul-gelo curiosos e expressivos, lenço vermelho no pescoço sobre capa curta de batedora verde-oliva e botas de camurça com pelos fofos.
+* **Visual Simétrico:** Pelagem branca-ártica e prateada, olhos ciano brilhantes, lenço vermelho simétrico no peito, capa curta verde-oliva com fecho centralizado e botas de camurça felpudas iguais em ambas as pernas.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic arctic wolf girl ranger walking cycle, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down perspective, soft white and silver fur, bright cyan eyes, red neck scarf over olive-green scout capelet and fur boots, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), solid pure plain white background without any grid lines or boxes, clean 2.5D vector illustration, smooth 3D clay lighting
-```
+##### 1. Caminhada (`Walk` - 1 Linha x 8 Frames):
+* **South (Frente Direta):**
+  ```text
+  2D sprite strip of cute chibi arctic wolf girl ranger walking straight forward towards camera, Animal Crossing style, perfectly centered straight front view, symmetrical design, white and silver fur, cyan eyes, symmetrical red neck scarf, olive-green scout capelet, facing SOUTH, single horizontal row of EXACTLY 8 walking frames, solid plain white background #FFFFFF, clean vector art, soft 3D clay lighting, no pixel art
+  ```
+* **North (Costas Retas):**
+  ```text
+  2D sprite strip of cute chibi arctic wolf girl ranger walking straight away from camera, Animal Crossing style, straight back view, symmetrical design, white fur, olive capelet, facing NORTH, single horizontal row of EXACTLY 8 walking away frames, solid plain white background #FFFFFF, clean vector art
+  ```
+* **East / Side (Lateral):**
+  ```text
+  2D sprite strip of cute chibi arctic wolf girl ranger walking sideways, Animal Crossing style, straight side profile view, symmetrical design, white fur, red scarf, olive capelet, facing EAST (flippable for WEST), single horizontal row of EXACTLY 8 side walking frames, solid plain white background #FFFFFF, clean vector art
+  ```
 
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic arctic wolf girl ranger idle breathing animation, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down perspective, soft white and silver fur, bright cyan eyes, red neck scarf, olive-green capelet, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid pure plain white background without any grid lines or boxes, clean 2.5D vector illustration, smooth 3D clay lighting
-```
+##### 2. Parado / Respiração (`Idle` - 1 Linha x 8 Frames):
+* **South (Frente Direta):** `2D sprite strip of cute chibi arctic wolf girl ranger idle breathing, Animal Crossing style, straight front view facing camera, symmetrical design, white fur, cyan eyes, red scarf, olive capelet, facing SOUTH, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **North (Costas Retas):** `2D sprite strip of cute chibi arctic wolf girl ranger idle breathing, Animal Crossing style, straight back view, symmetrical design, white fur, olive capelet, facing NORTH, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **East / Side (Lateral):** `2D sprite strip of cute chibi arctic wolf girl ranger idle breathing, Animal Crossing style, straight side profile view, symmetrical design, white fur, red scarf, olive capelet, facing EAST (flippable for WEST), single row of EXACTLY 8 side idle frames, solid white background #FFFFFF`
 
-##### 3. Prompt de Fabricação / Crafting (`Craft` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic arctic wolf girl ranger crafting animation, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down perspective, soft white fur, red neck scarf, olive-green capelet, standing crafting animation cheerfully moving arms up and down in front of chest without items, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid pure plain white background without any grid lines or boxes, clean 2.5D vector art
-```
+##### 3. Fabricação / Crafting (`Craft` - 1 Linha x 8 Frames):
+* **South (Frente Direta):** `2D sprite strip of cute chibi arctic wolf girl ranger crafting, Animal Crossing style, straight front view, symmetrical design, white fur, red scarf, olive capelet, facing SOUTH, standing moving arms up and down in front of chest without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **North (Costas Retas):** `2D sprite strip of cute chibi arctic wolf girl ranger crafting, Animal Crossing style, straight back view, symmetrical design, white fur, olive capelet, facing NORTH, standing moving arms up and down without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **East / Side (Lateral):** `2D sprite strip of cute chibi arctic wolf girl ranger crafting, Animal Crossing style, straight side profile view, symmetrical design, white fur, red scarf, olive capelet, facing EAST (flippable for WEST), standing moving arms up and down without items, single row of EXACTLY 8 side crafting frames, solid white background #FFFFFF`
 
-##### 4. Prompt de Montado no Dragão (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic arctic wolf girl ranger riding dragon mount pose, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down perspective, white fur, red neck scarf, olive-green capelet, seated saddle riding pose holding reins with smooth flight bobbing motion, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid pure plain white background without any grid lines or boxes, clean 2.5D vector art
-```
+##### 4. Montado no Dragão (`Mounted` - 1 Linha x 8 Frames):
+* **South (Frente Direta):** `2D sprite strip of cute chibi arctic wolf girl ranger in dragon riding saddle pose (without mount), Animal Crossing style, straight front view, symmetrical design, white fur, red scarf, facing SOUTH, seated with both legs spread outwards around saddle holding reins at chest, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+* **North (Costas Retas):** `2D sprite strip of cute chibi arctic wolf girl ranger in dragon riding saddle pose (without mount), Animal Crossing style, straight back view, symmetrical design, white fur, red scarf, facing NORTH, back view seated straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+* **East / Side (Lateral):** `2D sprite strip of cute chibi arctic wolf girl ranger in dragon riding saddle pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, white fur, red scarf, facing EAST (flippable for WEST), seated leaning forward holding reins, ONLY near leg visible bent down over saddle while far leg is occluded, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
 
 ---
 
 ### 2.2. Morcego — Vampiro / Vampira
 * **Arquétipo:** O Aristocrata Noturno e Alquimista.
-* **Personalidade:** Culto, misterioso, refinado, amante da noite, de livros arcanos e de poções doces.
-* **Habilidade Única — `Eco Noturno`:** Permite enxergar com clareza dentro de cavernas, concede **+5 Ações Noturnas exclusivas** durante a noite (após às 17h de Brasília, quando outros descansam) e +15% de velocidade de ataque noturno ao dragão companheiro.
+* **Habilidade Única — `Eco Noturno`:** +5 Ações Noturnas exclusivas (após 17h) e visão no escuro em cavernas.
 
 ---
 
 #### 🦇 Morcego Masculino (`char_bat_vampire_m` - Vlad)
-* **Visual:** Pelagem roxo-escura aveludada, orelhas grandes triangulares com interior rosa suave, dentinhos pontudos adoráveis ao sorrir, colete bordô com botões dourados e mini-capa preta de seda.
+* **Visual Simétrico:** Pelagem ameixa-escura, orelhas triangulares simétricas com interior rosa, colete bordô abotoado ao centro com botões dourados simétricos e mini-capa preta centralizada nas costas.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic fruit bat boy vampire walking cycle, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 high top-down viewpoint, dark plum-purple fur, big bat ears with pink inner, tiny fang smile, burgundy gentleman vest with gold buttons and black mini-cape, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), solid pure white background without any grid lines or boxes, clean vector art, soft 3D shading
-```
-
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic fruit bat boy vampire idle breathing animation, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 high top-down viewpoint, dark plum-purple fur, big bat ears, burgundy gentleman vest and black mini-cape, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid pure white background without any grid lines or boxes, clean vector art, soft 3D clay lighting
-```
-
-##### 3. Prompt de Fabricação / Crafting (`Craft` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic fruit bat boy vampire crafting animation, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down perspective, plum-purple fur, burgundy vest, standing crafting animation moving arms up and down in front of chest without holding objects, neatly arranged in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid pure plain white background without any grid lines, clean vector art
-```
-
-##### 4. Prompt de Montado no Dragão (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic fruit bat boy vampire riding dragon mount pose, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down viewpoint, plum-purple fur, burgundy vest, black mini-cape flowing gently, seated saddle riding pose holding reins with smooth riding bobbing, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid pure white background without grid lines, clean vector illustration
-```
+* **Walk (South / North / East):**
+  * **South (Frente Direta):** `2D sprite strip of cute chibi fruit bat boy vampire walking straight forward towards camera, Animal Crossing style, perfectly centered straight front view, symmetrical design, plum-purple fur, big bat ears, burgundy vest with centered gold buttons and symmetrical black mini-cape, facing SOUTH, single row of EXACTLY 8 walking frames, solid white background #FFFFFF, clean vector art, soft 3D clay lighting, no pixel art`
+  * **North (Costas Retas):** `2D sprite strip of cute chibi fruit bat boy vampire walking straight away from camera, Animal Crossing style, straight back view, symmetrical design, plum-purple fur, black mini-cape, facing NORTH, single row of EXACTLY 8 walking frames, solid white background #FFFFFF`
+  * **East / Side (Lateral):** `2D sprite strip of cute chibi fruit bat boy vampire walking sideways, Animal Crossing style, straight side profile view, symmetrical design, plum-purple fur, burgundy vest and mini-cape, facing EAST (flippable for WEST), single row of EXACTLY 8 side walking frames, solid white background #FFFFFF`
+* **Idle (South / North / East):**
+  * `2D sprite strip of cute chibi fruit bat boy vampire idle breathing, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, plum-purple fur, burgundy vest, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **Craft (South / North / East):**
+  * `2D sprite strip of cute chibi fruit bat boy vampire crafting, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, plum-purple fur, burgundy vest, standing moving arms up and down in front of chest without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **Mounted (Dragon Riding):**
+  * **South (Frente Direta):** `2D sprite strip of cute chibi fruit bat boy vampire in dragon riding pose (without mount), Animal Crossing style, straight front view, symmetrical design, plum-purple fur, burgundy vest, facing SOUTH, seated with both legs spread wide straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **North (Costas Retas):** `2D sprite strip of cute chibi fruit bat boy vampire in dragon riding pose (without mount), Animal Crossing style, straight back view, symmetrical design, plum-purple fur, black mini-cape, facing NORTH, back view seated straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **East / Side (Lateral):** `2D sprite strip of cute chibi fruit bat boy vampire in dragon riding pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, plum-purple fur, burgundy vest, facing EAST (flippable for WEST), seated leaning forward holding reins, ONLY near leg visible bent over saddle, far leg hidden, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
 
 ---
 
 #### 🦇 Morcego Feminino (`char_bat_vampire_f` - Carmilla)
-* **Visual:** Pelagem lilás suave com penugem no peito, asas membranosas charmosas nos bracinhos, vestido vitoriano preto e lilás com gola rendada branca e presilha de morcego de safira.
+* **Visual Simétrico:** Pelagem lilás suave, vestido gótico medieval preto e roxo com gola rendada branca centralizada e saia simétrica rodada.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic bat girl vampire noble walking cycle, Animal Crossing New Horizons style, Sea of Stars 3/4 high top-down perspective, pastel lilac fur with white chest fluff, gothic-lolita black and purple medieval dress with white lace collar, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), solid plain white background without any grid lines or boxes, clean vector art, smooth 3D lighting
-```
-
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic bat girl vampire noble idle breathing animation, Animal Crossing New Horizons style, Sea of Stars 3/4 high top-down perspective, pastel lilac fur, gothic black and purple medieval dress with white lace collar, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid plain white background without any grid lines, clean 2.5D vector art
-```
-
-##### 3. Prompt de Fabricação / Crafting (`Craft` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic bat girl vampire noble crafting animation, Animal Crossing New Horizons style, Sea of Stars 3/4 top-down perspective, pastel lilac fur, black and purple dress, standing crafting animation happily moving arms up and down in front of chest without items, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid plain white background without grid lines, clean vector art
-```
-
-##### 4. Prompt de Montado no Dragão (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic bat girl vampire noble riding dragon mount pose, Animal Crossing New Horizons style, Sea of Stars 3/4 top-down perspective, pastel lilac fur, black and purple dress, seated saddle riding pose holding dragon reins with elegant bobbing motion, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid plain white background without grid lines, clean vector art
-```
+* **Walk (South / North / East):**
+  * `2D sprite strip of cute chibi bat girl vampire noble walking, Animal Crossing style, [perfectly centered straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, pastel lilac fur, gothic black and purple medieval dress with centered white lace collar, single row of EXACTLY 8 walking frames, solid white background #FFFFFF, clean vector art, soft 3D clay lighting, no pixel art`
+* **Idle (South / North / East):**
+  * `2D sprite strip of cute chibi bat girl vampire noble idle breathing, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, pastel lilac fur, black and purple dress, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **Craft (South / North / East):**
+  * `2D sprite strip of cute chibi bat girl vampire noble crafting, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, pastel lilac fur, dress with lace collar, standing moving arms up and down without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **Mounted (Dragon Riding):**
+  * **South (Frente Direta):** `2D sprite strip of cute chibi bat girl vampire in dragon riding pose (without mount), Animal Crossing style, straight front view, symmetrical design, pastel lilac fur, black and purple dress, facing SOUTH, seated with skirt draped and legs spread straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **North (Costas Retas):** `2D sprite strip of cute chibi bat girl vampire in dragon riding pose (without mount), Animal Crossing style, straight back view, symmetrical design, pastel lilac fur, facing NORTH, back view seated straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **East / Side (Lateral):** `2D sprite strip of cute chibi bat girl vampire in dragon riding pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, pastel lilac fur, facing EAST (flippable for WEST), seated holding reins, ONLY near leg visible bent over saddle, far leg hidden, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
 
 ---
 
 ### 2.3. Águia — Arqueiro / Arqueira
 * **Arquétipo:** O Sentinela Alado dos Cumes.
-* **Personalidade:** Focado, observador, disciplinado, bem-humorado e apaixonado pela brisa das montanhas.
-* **Habilidade Única — `Mira Perfeita`:** Aumenta a velocidade de coleta com a Vara de Pescar e Machado em 30%, além de recarregar a *Esquiva Tática (Tecla 4)* do dragão 1 segundo mais rápido.
+* **Habilidade Única — `Mira Perfeita`:** +30% de velocidade de coleta com ferramentas e -1s no cooldown da Esquiva.
 
 ---
 
 #### 🦅 Águia Masculino (`char_eagle_archer_m` - Zephyr)
-* **Visual:** Penas marrons com cabeça branca de águia-careca majestosa e fofa, bico dourado pequeno e amigável, gibão de arqueiro azul-celeste com protetor de ombro de couro e aljava miniatura nas costas.
+* **Visual Simétrico:** Penas marrons, cabeça de águia branca simétrica com penugem fofa, bico dourado, gibão azul-celeste com braçadeiras de couro iguais em ambos os braços e aljava centralizada nas costas.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic eagle boy archer walking cycle, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down viewpoint, brown feathers, fluffy white head plumage, yellow beak, sky-blue archer tunic with leather bracers, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), solid pure white background without any grid lines or boxes, clean 2.5D vector illustration, smooth 3D clay lighting
-```
-
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic eagle boy archer idle breathing animation, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down viewpoint, brown body feathers, fluffy white head plumage, yellow beak, sky-blue archer tunic, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid pure white background without grid lines, clean vector art
-```
-
-##### 3. Prompt de Fabricação / Crafting (`Craft` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic eagle boy archer crafting animation, Animal Crossing New Horizons art style, Sea of Stars 3/4 top-down angle, fluffy white head plumage, sky-blue tunic, standing crafting animation moving arms up and down in front of chest without items, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid pure white background without grid lines, clean 2.5D vector art
-```
-
-##### 4. Prompt de Montado no Dragão (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic eagle boy archer riding dragon mount pose, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down perspective, white head plumage, sky-blue archer tunic, seated in dragon saddle pose holding reins with smooth flight bobbing motion, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid pure white background without grid lines, clean vector illustration
-```
+* **Walk (South / North / East):**
+  * `2D sprite strip of cute chibi eagle boy archer walking, Animal Crossing style, [perfectly centered straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, brown body feathers, fluffy white head plumage, yellow beak, sky-blue tunic with matching leather bracers, single row of EXACTLY 8 walking frames, solid white background #FFFFFF, clean vector art, soft 3D clay lighting, no pixel art`
+* **Idle (South / North / East):**
+  * `2D sprite strip of cute chibi eagle boy archer idle breathing, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, white head plumage, sky-blue tunic, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **Craft (South / North / East):**
+  * `2D sprite strip of cute chibi eagle boy archer crafting, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, sky-blue tunic, moving arms up and down in front of chest without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **Mounted (Dragon Riding):**
+  * **South (Frente Direta):** `2D sprite strip of cute chibi eagle boy archer in dragon riding pose (without mount), Animal Crossing style, straight front view, symmetrical design, white head plumage, sky-blue tunic, facing SOUTH, seated with both legs spread wide straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **North (Costas Retas):** `2D sprite strip of cute chibi eagle boy archer in dragon riding pose (without mount), Animal Crossing style, straight back view, symmetrical design, white head plumage, facing NORTH, back view seated straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **East / Side (Lateral):** `2D sprite strip of cute chibi eagle boy archer in dragon riding pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, sky-blue tunic, facing EAST (flippable for WEST), seated leaning forward holding reins, ONLY near leg visible bent over saddle, far leg hidden, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
 
 ---
 
 #### 🦅 Águia Feminina (`char_eagle_archer_f` - Astra)
-* **Visual:** Penas de falcão dourado e creme, penugem estilosa como franja, olhos amendoados dourados, túnica de batedora em tons de turquesa e dourado com broche de asa de pássaro no peito.
+* **Visual Simétrico:** Penas douradas e creme de falcão, crista de penas centralizada, túnica turquesa e dourada com broche simétrico de asas no centro do peito.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic golden falcon girl marksman walking cycle, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 high top-down angle, golden-tan feathers, stylish feather crest, teal and gold trimmed archer tunic with feather brooch, arranged in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), solid plain white background without any grid lines or boxes, clean 2.5D vector art, soft 3D clay lighting
-```
-
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic golden falcon girl marksman idle breathing animation, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down perspective, golden-tan feathers, teal and gold archer tunic, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid plain white background without grid lines, clean vector art
-```
-
-##### 3. Prompt de Fabricação / Crafting (`Craft` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic golden falcon girl marksman crafting animation, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down viewpoint, golden feathers, teal tunic, standing crafting animation cheerfully moving arms up and down without holding objects, neatly arranged in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid plain white background without grid lines, clean vector art
-```
-
-##### 4. Prompt de Montado no Dragão (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic golden falcon girl marksman riding dragon mount pose, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 high top-down viewpoint, golden feathers, teal tunic, seated saddle riding pose holding dragon reins with smooth aerial bobbing motion, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid plain white background without grid lines, clean 2.5D vector art
-```
+* **Walk (South / North / East):**
+  * `2D sprite strip of cute chibi golden falcon girl marksman walking, Animal Crossing style, [perfectly centered straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, golden-tan feathers, centered feather crest, teal and gold tunic with centered wing brooch, single row of EXACTLY 8 walking frames, solid white background #FFFFFF, clean vector art, soft 3D clay lighting, no pixel art`
+* **Idle (South / North / East):**
+  * `2D sprite strip of cute chibi golden falcon girl marksman idle breathing, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, golden feathers, teal tunic, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **Craft (South / North / East):**
+  * `2D sprite strip of cute chibi golden falcon girl marksman crafting, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, golden feathers, teal tunic, standing moving arms up and down without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **Mounted (Dragon Riding):**
+  * **South (Frente Direta):** `2D sprite strip of cute chibi golden falcon girl marksman in dragon riding pose (without mount), Animal Crossing style, straight front view, symmetrical design, golden feathers, teal tunic, facing SOUTH, seated with both legs spread wide straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **North (Costas Retas):** `2D sprite strip of cute chibi golden falcon girl marksman in dragon riding pose (without mount), Animal Crossing style, straight back view, symmetrical design, golden feathers, facing NORTH, back view seated straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **East / Side (Lateral):** `2D sprite strip of cute chibi golden falcon girl marksman in dragon riding pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, teal tunic, facing EAST (flippable for WEST), seated leaning forward holding reins, ONLY near leg visible bent over saddle, far leg hidden, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
 
 ---
 
 ### 2.4. Gato — Bruxo / Bruxa
 * **Arquétipo:** O Conjurador Místico e Estudioso de Lua.
-* **Personalidade:** Curioso, brincalhão, místico, engenhoso e fascinado por resolver quebra-cabeças lógicos.
-* **Habilidade Única — `Afinidade Arcana`:** Concede +10% de ganho de XP para os dragões domesticados e desbloqueia dicas automáticas nos desafios de programação Blockly.
+* **Habilidade Única — `Afinidade Arcana`:** +10% de ganho de XP aos dragões e dicas nos quebra-cabeças Lua.
 
 ---
 
 #### 🐱 Gato Masculino (`char_cat_mage_m` - Merlin)
-* **Visual:** Pelagem de gato preto aveludado com patinhas brancas ("meias"), cauda longa ondulante com ponta dourada, túnica de feiticeiro azul-noite estrelada e pequeno chapéu pontudo tortinho com lua crescente.
+* **Visual Simétrico:** Pelagem preta com patinhas brancas simétricas ("meias"), túnica azul-noite estrelada com estampa rúnica central e chapéu cônico pontudo com lua crescente frontal centralizada.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic black cat boy wizard walking cycle, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 high top-down perspective, sleek black fur with white paw socks, emerald green eyes, midnight-blue star-patterned robe and crooked pointed wizard hat with crescent moon, arranged in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), solid pure white background without any grid lines or boxes, clean 2.5D vector art, smooth 3D clay lighting
-```
-
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic black cat boy wizard idle breathing animation, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down perspective, sleek black fur with white paws, emerald eyes, midnight-blue robe and crooked pointed wizard hat, arranged in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid pure white background without any grid lines, clean vector art
-```
-
-##### 3. Prompt de Fabricação / Crafting (`Craft` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic black cat boy wizard crafting animation, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down viewpoint, black fur, midnight-blue robe and wizard hat, standing crafting animation moving paws up and down in front of chest without items, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid pure white background without grid lines, clean vector art
-```
-
-##### 4. Prompt de Montado no Dragão (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic black cat boy wizard riding dragon mount pose, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 high top-down perspective, black fur, midnight-blue robe, wizard hat, seated saddle riding pose holding dragon reins with cute tail curl and bobbing motion, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid pure white background without grid lines, clean 2.5D vector illustration
-```
+* **Walk (South / North / East):**
+  * `2D sprite strip of cute chibi black cat boy wizard walking, Animal Crossing style, [perfectly centered straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, sleek black fur with white paws, emerald eyes, midnight-blue starry robe and centered pointed wizard hat, single row of EXACTLY 8 walking frames, solid white background #FFFFFF, clean vector art, soft 3D clay lighting, no pixel art`
+* **Idle (South / North / East):**
+  * `2D sprite strip of cute chibi black cat boy wizard idle breathing, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, black fur, midnight-blue robe and wizard hat, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **Craft (South / North / East):**
+  * `2D sprite strip of cute chibi black cat boy wizard crafting, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, black fur, wizard robe, moving paws up and down in front of chest without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **Mounted (Dragon Riding):**
+  * **South (Frente Direta):** `2D sprite strip of cute chibi black cat boy wizard in dragon riding pose (without mount), Animal Crossing style, straight front view, symmetrical design, black fur, wizard robe and hat, facing SOUTH, seated with both legs spread straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **North (Costas Retas):** `2D sprite strip of cute chibi black cat boy wizard in dragon riding pose (without mount), Animal Crossing style, straight back view, symmetrical design, black fur, pointed hat, facing NORTH, back view seated straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **East / Side (Lateral):** `2D sprite strip of cute chibi black cat boy wizard in dragon riding pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, wizard robe, facing EAST (flippable for WEST), seated leaning forward holding reins, ONLY near leg visible bent over saddle, far leg hidden, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
 
 ---
 
 #### 🐱 Gato Feminino (`char_cat_witch_f` - Luna)
-* **Visual:** Pelagem tricolor (calico) fofa (laranja, preto e branco), grandes olhos verdes brilhantes, vestido de bruxinha roxo e abóbora com avental branco rendado e bolsinha mágica pendurada na cintura.
+* **Visual Simétrico:** Pelagem calico com manchas simétricas em ambas as orelhas e bochechas, vestido de bruxinha roxo e abóbora com avental branco rendado centralizado.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic calico cat girl witch walking cycle, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down viewpoint, fluffy spotted calico fur, sparkling emerald eyes, purple and orange apprentice witch dress with white apron, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), solid plain white background without any grid lines or boxes, clean 2.5D vector illustration, smooth 3D clay lighting
-```
-
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic calico cat girl witch idle breathing animation, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down perspective, fluffy calico fur, sparkling emerald eyes, purple and orange witch dress with white apron, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid plain white background without any grid lines, clean vector art
-```
-
-##### 3. Prompt de Fabricação / Crafting (`Craft` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic calico cat girl witch crafting animation, Animal Crossing New Horizons art style, Sea of Stars 3/4 top-down angle, calico fur, purple witch dress with white apron, standing crafting animation moving paws up and down cheerfully in front of chest without items, neatly arranged in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid plain white background without grid lines, clean 2.5D vector art
-```
-
-##### 4. Prompt de Montado no Dragão (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic calico cat girl witch riding dragon mount pose, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down viewpoint, fluffy calico fur, purple dress with apron, seated in dragon saddle pose holding reins with cheerful riding bobbing motion, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid plain white background without grid lines, clean vector illustration
-```
+* **Walk (South / North / East):**
+  * `2D sprite strip of cute chibi calico cat girl witch walking, Animal Crossing style, [perfectly centered straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, fluffy spotted calico fur, emerald eyes, purple and orange witch dress with centered white apron, single row of EXACTLY 8 walking frames, solid white background #FFFFFF, clean vector art, soft 3D clay lighting, no pixel art`
+* **Idle (South / North / East):**
+  * `2D sprite strip of cute chibi calico cat girl witch idle breathing, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, calico fur, witch dress with apron, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **Craft (South / North / East):**
+  * `2D sprite strip of cute chibi calico cat girl witch crafting, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, calico fur, witch dress, moving paws up and down in front of chest without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **Mounted (Dragon Riding):**
+  * **South (Frente Direta):** `2D sprite strip of cute chibi calico cat girl witch in dragon riding pose (without mount), Animal Crossing style, straight front view, symmetrical design, calico fur, purple dress with apron, facing SOUTH, seated with both legs spread wide straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **North (Costas Retas):** `2D sprite strip of cute chibi calico cat girl witch in dragon riding pose (without mount), Animal Crossing style, straight back view, symmetrical design, calico fur, facing NORTH, back view seated straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **East / Side (Lateral):** `2D sprite strip of cute chibi calico cat girl witch in dragon riding pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, purple dress, facing EAST (flippable for WEST), seated leaning forward holding reins, ONLY near leg visible bent over saddle, far leg hidden, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
 
 ---
 
-## 3. 🏝️ NPCs Principais da Ilha Lua
+# 🏝️ 3. NPCs Principais da Ilha Lua (5 Moradores)
 
 ---
 
 ### 3.1. Tubarão — O Surfista (`npc_shark_surfer` - Kai)
-* **Visual:** Tubarão-branco fofo, pele azul-clara e branca, focinho arredondado amigável, colete tropical aberto de hibisco e colar de conchas trançado.
+* **Visual Simétrico:** Tubarão-branco fofo, pele azul-clara e branca, colete tropical aberto com padrão floral simétrico e colar de conchas centralizado.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic great white shark surfer NPC walking cycle, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 high top-down camera angle, smooth light-blue and white skin, cute round snout with friendly toothy grin, wearing colorful tropical hibiscus open vest and woven shell necklace, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), solid pure white background without any grid lines or boxes, clean vector art, soft 3D lighting
-```
-
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic great white shark surfer NPC idle breathing animation, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down perspective, light-blue and white skin, friendly toothy grin, tropical open vest and shell necklace, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid pure white background without grid lines, clean 2.5D vector art
-```
-
-##### 3. Prompt de Fabricação / Ação (`Craft / Work` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic shark surfer NPC crafting working animation, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down angle, light-blue shark, tropical vest, standing working animation enthusiastically moving flippers/arms up and down in front of chest without items, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid pure white background without grid lines, clean vector art
-```
-
-##### 4. Prompt de Montado no Dragão / Navegação (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic shark surfer NPC riding water dragon mount pose, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down viewpoint, light-blue shark, tropical vest, seated saddle riding pose holding reins with rhythmic sea riding bobbing motion, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid pure white background without grid lines, clean vector art
-```
+* **Walk (South / North / East):**
+  * `2D sprite strip of cute chibi great white shark surfer NPC walking, Animal Crossing style, [perfectly centered straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, light-blue and white skin, friendly toothy grin, open tropical vest and centered shell necklace, single row of EXACTLY 8 walking frames, solid white background #FFFFFF, clean vector art, soft 3D clay lighting, no pixel art`
+* **Idle (South / North / East):**
+  * `2D sprite strip of cute chibi shark surfer NPC idle breathing, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, light-blue skin, tropical vest, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **Craft (South / North / East):**
+  * `2D sprite strip of cute chibi shark surfer NPC working crafting, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, tropical vest, moving flippers up and down in front of chest without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **Mounted (Dragon Riding):**
+  * **South (Frente Direta):** `2D sprite strip of cute chibi shark surfer in dragon riding pose (without mount), Animal Crossing style, straight front view, symmetrical design, light-blue skin, tropical vest, facing SOUTH, seated with legs spread wide straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **North (Costas Retas):** `2D sprite strip of cute chibi shark surfer in dragon riding pose (without mount), Animal Crossing style, straight back view, symmetrical design, light-blue skin, facing NORTH, back view seated straddling saddle holding reins with dorsal fin, single row of EXACTLY 8 frames, solid white background #FFFFFF`
+  * **East / Side (Lateral):** `2D sprite strip of cute chibi shark surfer in dragon riding pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, tropical vest, facing EAST (flippable for WEST), seated holding reins, ONLY near leg/flipper visible bent over saddle, far side hidden, single row of EXACTLY 8 frames, solid white background #FFFFFF`
 
 ---
 
 ### 3.2. Jacaré — O Atravessador (`npc_alligator_ferryman` - Barnabé)
-* **Visual:** Escamas verdes musgo texturizadas, olhos amarelos expressivos, chapéu de palha de barqueiro, camisa listrada de marinheiro e macacão jeans de pescador.
+* **Visual Simétrico:** Escamas verdes musgo, chapéu de palha de barqueiro centralizado, camisa listrada de marinheiro e macacão jeans com alças simétricas.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic alligator ferryman NPC walking cycle, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down perspective, mossy green scaly texture, friendly wide yellow eyes, wearing straw boatman hat, striped sailor shirt and fisherman overalls, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), solid white background without any grid lines, smooth 2.5D vector illustration, soft 3D clay lighting
-```
-
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic alligator ferryman NPC idle breathing animation, Animal Crossing New Horizons art style, Sea of Stars 3/4 top-down perspective, mossy green scales, straw boatman hat, striped shirt and denim overalls, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid white background without grid lines, clean vector art
-```
-
-##### 3. Prompt de Fabricação / Ação (`Craft / Work` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic alligator ferryman NPC crafting working animation, Animal Crossing New Horizons art style, Sea of Stars 3/4 top-down viewpoint, mossy green alligator, straw hat, standing working animation moving arms up and down in front of chest without items, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid white background without grid lines, clean vector illustration
-```
-
-##### 4. Prompt de Montado no Dragão / Barco (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic alligator ferryman NPC riding dragon mount pose, Animal Crossing New Horizons art style, Sea of Stars 3/4 top-down angle, green alligator, straw hat, overalls, seated in saddle pose holding reins with steady riding bobbing motion, neatly arranged in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid white background without grid lines, clean vector art
-```
+* **Walk (South / North / East):**
+  * `2D sprite strip of cute chibi alligator ferryman NPC walking, Animal Crossing style, [perfectly centered straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, mossy green scales, centered straw boatman hat, striped sailor shirt and denim overalls, single row of EXACTLY 8 walking frames, solid white background #FFFFFF, clean vector art, soft 3D clay lighting, no pixel art`
+* **Idle (South / North / East):**
+  * `2D sprite strip of cute chibi alligator ferryman NPC idle breathing, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, mossy green scales, straw hat, overalls, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **Craft (South / North / East):**
+  * `2D sprite strip of cute chibi alligator ferryman NPC crafting, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, straw hat, overalls, moving arms up and down in front of chest without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **Mounted (Dragon Riding):**
+  * **South (Frente Direta):** `2D sprite strip of cute chibi alligator ferryman in dragon riding pose (without mount), Animal Crossing style, straight front view, symmetrical design, green scales, straw hat, overalls, facing SOUTH, seated with legs spread wide straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **North (Costas Retas):** `2D sprite strip of cute chibi alligator ferryman in dragon riding pose (without mount), Animal Crossing style, straight back view, symmetrical design, facing NORTH, back view seated straddling saddle holding reins, single row of EXACTLY 8 frames, solid white background #FFFFFF`
+  * **East / Side (Lateral):** `2D sprite strip of cute chibi alligator ferryman in dragon riding pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, straw hat, overalls, facing EAST (flippable for WEST), seated holding reins, ONLY near leg visible bent over saddle, far leg hidden, single row of EXACTLY 8 frames, solid white background #FFFFFF`
 
 ---
 
 ### 3.3. Macaco — O Mestre Construtor (`npc_monkey_builder` - Bambu)
-* **Visual:** Pelagem marrom e pêssego, capacete de construção amarelo com recortes para as orelhas, macacão jeans com bolsos de ferramentas.
+* **Visual Simétrico:** Pelagem marrom e pêssego, capacete amarelo com recortes para as duas orelhas e macacão jeans com bolsos frontais centralizados.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic capuchin monkey carpenter builder NPC walking cycle, Animal Crossing New Horizons style, high 3/4 top-down view like Sea of Stars, fluffy brown fur with peach face, mischievous smile, yellow construction hardhat with ear cutouts and denim tool overalls, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), crisp vector art, solid white background without any grid lines, soft 3D clay lighting
-```
-
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic monkey builder NPC idle breathing animation, Animal Crossing New Horizons style, Sea of Stars 3/4 top-down perspective, brown fur, peach face, yellow construction hardhat, denim overalls, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid pure white background without grid lines, clean vector art
-```
-
-##### 3. Prompt de Fabricação / Crafting (`Craft` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic monkey builder NPC crafting building animation, Animal Crossing New Horizons style, Sea of Stars 3/4 top-down viewpoint, monkey carpenter, yellow hardhat, standing hammering crafting animation enthusiastically moving arms up and down without holding objects, neatly arranged in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid white background without grid lines, clean vector art
-```
-
-##### 4. Prompt de Montado no Dragão (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic monkey builder NPC riding dragon mount pose, Animal Crossing New Horizons style, Sea of Stars 3/4 top-down view, brown fur, yellow hardhat, denim overalls, seated saddle riding pose holding reins with lively flight bobbing, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid white background without grid lines, clean 2.5D vector illustration
-```
+* **Walk (South / North / East):**
+  * `2D sprite strip of cute chibi monkey carpenter builder NPC walking, Animal Crossing style, [perfectly centered straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, brown fur, peach face, yellow construction hardhat with ear cutouts and denim tool overalls, single row of EXACTLY 8 walking frames, solid white background #FFFFFF, clean vector art, soft 3D clay lighting, no pixel art`
+* **Idle (South / North / East):**
+  * `2D sprite strip of cute chibi monkey builder NPC idle breathing, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, brown fur, yellow hardhat, denim overalls, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **Craft (South / North / East):**
+  * `2D sprite strip of cute chibi monkey builder NPC crafting, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, yellow hardhat, denim overalls, moving arms up and down enthusiastically without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **Mounted (Dragon Riding):**
+  * **South (Frente Direta):** `2D sprite strip of cute chibi monkey builder in dragon riding pose (without mount), Animal Crossing style, straight front view, symmetrical design, brown fur, yellow hardhat, denim overalls, facing SOUTH, seated with legs spread wide straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **North (Costas Retas):** `2D sprite strip of cute chibi monkey builder in dragon riding pose (without mount), Animal Crossing style, straight back view, symmetrical design, yellow hardhat, facing NORTH, back view seated straddling saddle holding reins with tail, single row of EXACTLY 8 frames, solid white background #FFFFFF`
+  * **East / Side (Lateral):** `2D sprite strip of cute chibi monkey builder in dragon riding pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, yellow hardhat, overalls, facing EAST (flippable for WEST), seated holding reins, ONLY near leg visible bent over saddle, far leg hidden, single row of EXACTLY 8 frames, solid white background #FFFFFF`
 
 ---
 
 ### 3.4. Camaleão — O Ilusionista Mágico (`npc_chameleon_magician` - Cromos)
-* **Visual:** Escamas verdes e iridescentes que mudam de cor, olhos grandes espirais independentes, cauda enrolada, capa roxa de mágico com forro estrelado e mini-cartola.
+* **Visual Simétrico:** Escamas verdes iridescentes, cauda espiral, capa roxa com forro de estrelas e mini-cartola centralizada na cabeça.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic chameleon magician NPC walking cycle, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 high top-down angle, iridescent green and shifting rainbow scales, big spiral expressive independent eyes, curled tail, purple magician cape with gold starry lining and tiny top hat, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), clean vector art, solid white background without any grid lines, smooth 3D lighting
-```
-
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic chameleon magician NPC idle breathing animation, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down perspective, iridescent green scales, spiral eyes, purple magician cape with star lining and tiny top hat, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid white background without grid lines, clean 2.5D vector art
-```
-
-##### 3. Prompt de Fabricação / Magia (`Craft / Magic` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic chameleon magician NPC enchanting crafting animation, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down angle, green chameleon, purple starry cape, standing spellcasting crafting animation waving arms rhythmically in front of chest without items, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid white background without grid lines, clean vector art
-```
-
-##### 4. Prompt de Montado no Dragão (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic chameleon magician NPC riding dragon mount pose, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down viewpoint, iridescent scales, purple cape, tiny top hat, seated saddle riding pose holding dragon reins with magical float bobbing motion, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid white background without grid lines, clean vector illustration
-```
+* **Walk (South / North / East):**
+  * `2D sprite strip of cute chibi chameleon magician NPC walking, Animal Crossing style, [perfectly centered straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, iridescent green scales, spiral eyes, purple magician cape with gold star lining and centered tiny top hat, single row of EXACTLY 8 walking frames, solid white background #FFFFFF, clean vector art, soft 3D clay lighting, no pixel art`
+* **Idle (South / North / East):**
+  * `2D sprite strip of cute chibi chameleon magician NPC idle breathing, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, iridescent scales, purple starry cape, tiny top hat, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **Craft (South / North / East):**
+  * `2D sprite strip of cute chibi chameleon magician NPC spellcasting crafting, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, purple starry cape, moving arms rhythmically in front of chest without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **Mounted (Dragon Riding):**
+  * **South (Frente Direta):** `2D sprite strip of cute chibi chameleon magician in dragon riding pose (without mount), Animal Crossing style, straight front view, symmetrical design, iridescent scales, purple cape, top hat, facing SOUTH, seated with legs spread wide straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **North (Costas Retas):** `2D sprite strip of cute chibi chameleon magician in dragon riding pose (without mount), Animal Crossing style, straight back view, symmetrical design, purple cape, facing NORTH, back view seated straddling saddle holding reins with cape, single row of EXACTLY 8 frames, solid white background #FFFFFF`
+  * **East / Side (Lateral):** `2D sprite strip of cute chibi chameleon magician in dragon riding pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, purple cape, top hat, facing EAST (flippable for WEST), seated holding reins, ONLY near leg visible bent over saddle, far leg hidden, single row of EXACTLY 8 frames, solid white background #FFFFFF`
 
 ---
 
 ### 3.5. Coruja — O Professor Ancião (`npc_owl_professor` - Dr. Arquimedes)
-* **Visual:** Penas salpicadas de marrom e creme, olhos dourados sábios com óculos redondos de aro dourado, colete de tweed com gravata borboleta e capelo acadêmico.
+* **Visual Simétrico:** Penas salpicadas de marrom e creme, óculos redondos dourados simétricos, colete de tweed com gravata borboleta centralizada e capelo acadêmico reto.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic scholarly barn owl professor NPC walking cycle, Animal Crossing New Horizons art style, high 3/4 top-down perspective like Sea of Stars, fluffy speckled brown and cream feathers, wise big golden eyes behind round gold spectacles, brown tweed scholarly vest, bow tie and academic cap, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), clean vector art, solid white background without any grid lines, soft 3D clay lighting
-```
-
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic scholarly owl professor NPC idle breathing animation, Animal Crossing New Horizons art style, Sea of Stars 3/4 top-down viewpoint, speckled brown feathers, round gold spectacles, tweed vest, bow tie and academic cap, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid white background without grid lines, clean vector art
-```
-
-##### 3. Prompt de Fabricação / Pesquisa (`Craft / Research` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic scholarly owl professor NPC researching crafting animation, Animal Crossing New Horizons style, Sea of Stars 3/4 top-down perspective, owl professor, tweed vest, academic cap, standing studying animation moving wingtips/arms thoughtfully up and down in front of chest without items, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid white background without grid lines, clean 2.5D vector art
-```
-
-##### 4. Prompt de Montado no Dragão (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic scholarly owl professor NPC riding dragon mount pose, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down perspective, speckled owl, tweed vest, academic cap, seated saddle riding pose holding reins with dignified aerial bobbing motion, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid white background without grid lines, clean vector illustration
-```
+* **Walk (South / North / East):**
+  * `2D sprite strip of cute chibi scholarly barn owl professor NPC walking, Animal Crossing style, [perfectly centered straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, speckled brown and cream feathers, gold spectacles, brown tweed vest, centered bow tie and academic cap, single row of EXACTLY 8 walking frames, solid white background #FFFFFF, clean vector art, soft 3D clay lighting, no pixel art`
+* **Idle (South / North / East):**
+  * `2D sprite strip of cute chibi owl professor NPC idle breathing, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, speckled brown feathers, gold spectacles, tweed vest, academic cap, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **Craft (South / North / East):**
+  * `2D sprite strip of cute chibi owl professor NPC researching crafting, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, tweed vest, academic cap, moving wingtips thoughtfully in front of chest without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **Mounted (Dragon Riding):**
+  * **South (Frente Direta):** `2D sprite strip of cute chibi owl professor in dragon riding pose (without mount), Animal Crossing style, straight front view, symmetrical design, speckled owl, tweed vest, academic cap, facing SOUTH, seated with legs spread wide straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **North (Costas Retas):** `2D sprite strip of cute chibi owl professor in dragon riding pose (without mount), Animal Crossing style, straight back view, symmetrical design, academic cap, facing NORTH, back view seated straddling saddle holding reins, single row of EXACTLY 8 frames, solid white background #FFFFFF`
+  * **East / Side (Lateral):** `2D sprite strip of cute chibi owl professor in dragon riding pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, tweed vest, cap, facing EAST (flippable for WEST), seated holding reins, ONLY near leg visible bent over saddle, far leg hidden, single row of EXACTLY 8 frames, solid white background #FFFFFF`
 
 ---
 
-## 4. 🏰 NPCs Complementares da Vila Medieval
+# 🏰 4. NPCs Complementares da Vila Medieval (4 Moradores)
 
 ---
 
 ### 4.1. Touro — O Ferreiro Forjador (`npc_bull_blacksmith` - Brutus)
-* **Visual:** Pelagem castanho-avermelhada felpuda, chifres curvos com argola de bronze no nariz, avental pesado de ferreiro de couro com manchas de fuligem.
+* **Visual Simétrico:** Pelagem castanho-avermelhada, chifres curvos simétricos, argola de bronze centralizada no nariz e avental de ferreiro de couro com alças simétricas.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic highland bull blacksmith NPC walking cycle, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 high top-down viewpoint, shaggy reddish-brown fur, curved horns with brass nose ring, kind dark eyes, heavy leather blacksmith apron with soot smudges, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), clean vector illustration, solid white background without any grid lines, soft 3D clay lighting
-```
-
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic bull blacksmith NPC idle breathing animation, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down perspective, reddish-brown fur, curved horns, brass nose ring, leather blacksmith apron, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid white background without grid lines, clean vector art
-```
-
-##### 3. Prompt de Fabricação / Forja (`Craft / Forging` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic bull blacksmith NPC forging crafting animation, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down angle, shaggy bull, leather apron, standing forging crafting animation pumping arms rhythmically up and down in front of chest without items, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid white background without grid lines, clean 2.5D vector art
-```
-
-##### 4. Prompt de Montado no Dragão (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic bull blacksmith NPC riding earth dragon mount pose, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down viewpoint, shaggy bull, curved horns, leather apron, sturdy seated saddle riding pose holding reins with heavy rhythmic bobbing motion, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid white background without grid lines, clean vector art
-```
+* **Walk (South / North / East):**
+  * `2D sprite strip of cute chibi highland bull blacksmith NPC walking, Animal Crossing style, [perfectly centered straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, shaggy reddish-brown fur, curved horns, centered brass nose ring, leather blacksmith apron, single row of EXACTLY 8 walking frames, solid white background #FFFFFF, clean vector art, soft 3D clay lighting, no pixel art`
+* **Idle (South / North / East):**
+  * `2D sprite strip of cute chibi bull blacksmith NPC idle breathing, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, reddish-brown fur, curved horns, leather apron, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **Craft (South / North / East):**
+  * `2D sprite strip of cute chibi bull blacksmith NPC forging crafting, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, leather apron, pumping arms rhythmically in front of chest without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **Mounted (Dragon Riding):**
+  * **South (Frente Direta):** `2D sprite strip of cute chibi bull blacksmith in dragon riding pose (without mount), Animal Crossing style, straight front view, symmetrical design, shaggy bull, curved horns, leather apron, facing SOUTH, sturdy seated with legs spread wide straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **North (Costas Retas):** `2D sprite strip of cute chibi bull blacksmith in dragon riding pose (without mount), Animal Crossing style, straight back view, symmetrical design, shaggy bull, facing NORTH, back view sturdy seated straddling saddle holding reins, single row of EXACTLY 8 frames, solid white background #FFFFFF`
+  * **East / Side (Lateral):** `2D sprite strip of cute chibi bull blacksmith in dragon riding pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, leather apron, facing EAST (flippable for WEST), seated holding reins, ONLY near leg visible bent over saddle, far leg hidden, single row of EXACTLY 8 frames, solid white background #FFFFFF`
 
 ---
 
 ### 4.2. Coelho — A Herbalista e Fazendeira (`npc_rabbit_farmer` - Flora)
-* **Visual:** Pelagem creme e rosa-pastel, orelhas longas caídas (lop-eared), vestido de linho floral com avental de jardinagem.
+* **Visual Simétrico:** Pelagem creme e rosa-pastel, orelhas longas caídas simétricas (lop-eared), vestido de linho floral com avental de jardinagem com laço central.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic lop-eared rabbit girl farmer herbalist NPC walking cycle, Animal Crossing New Horizons style, high 3/4 top-down angle like Sea of Stars, fluffy cream and pastel pink fur, long floppy ears, floral linen dress with gardening apron, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), clean vector art, solid white background without any grid lines, soft 3D clay lighting
-```
-
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic lop-eared rabbit girl farmer NPC idle breathing animation, Animal Crossing New Horizons style, Sea of Stars 3/4 top-down perspective, fluffy cream and pink fur, long floppy ears, floral linen dress with gardening apron, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid white background without grid lines, clean 2.5D vector illustration
-```
-
-##### 3. Prompt de Fabricação / Jardinagem (`Craft / Planting` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic rabbit girl farmer NPC gardening crafting animation, Animal Crossing New Horizons style, Sea of Stars 3/4 top-down angle, cream rabbit, floppy ears, floral dress with apron, standing crafting animation happily moving paws up and down in front of chest without items, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid white background without grid lines, clean vector art
-```
-
-##### 4. Prompt de Montado no Dragão (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic rabbit girl farmer NPC riding nature dragon mount pose, Animal Crossing New Horizons style, Sea of Stars 3/4 high top-down viewpoint, cream fur, floppy ears, floral dress, seated in saddle pose holding reins with gentle cheerful riding bobbing, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid white background without grid lines, clean vector illustration
-```
+* **Walk (South / North / East):**
+  * `2D sprite strip of cute chibi lop-eared rabbit girl farmer NPC walking, Animal Crossing style, [perfectly centered straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, fluffy cream and pastel pink fur, long floppy ears, floral linen dress with gardening apron, single row of EXACTLY 8 walking frames, solid white background #FFFFFF, clean vector art, soft 3D clay lighting, no pixel art`
+* **Idle (South / North / East):**
+  * `2D sprite strip of cute chibi rabbit girl farmer NPC idle breathing, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, cream and pink fur, floppy ears, floral dress with apron, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **Craft (South / North / East):**
+  * `2D sprite strip of cute chibi rabbit girl farmer NPC gardening crafting, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, floppy ears, floral dress with apron, moving paws happily in front of chest without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **Mounted (Dragon Riding):**
+  * **South (Frente Direta):** `2D sprite strip of cute chibi rabbit girl farmer in dragon riding pose (without mount), Animal Crossing style, straight front view, symmetrical design, cream fur, floppy ears, floral dress, facing SOUTH, seated with legs spread wide straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **North (Costas Retas):** `2D sprite strip of cute chibi rabbit girl farmer in dragon riding pose (without mount), Animal Crossing style, straight back view, symmetrical design, floppy ears, facing NORTH, back view seated straddling saddle holding reins, single row of EXACTLY 8 frames, solid white background #FFFFFF`
+  * **East / Side (Lateral):** `2D sprite strip of cute chibi rabbit girl farmer in dragon riding pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, floral dress, facing EAST (flippable for WEST), seated holding reins, ONLY near leg visible bent over saddle, far leg hidden, single row of EXACTLY 8 frames, solid white background #FFFFFF`
 
 ---
 
 ### 4.3. Tartaruga — O Guardião Ancestral (`npc_turtle_elder` - Mestre Casco)
-* **Visual:** Casco antigo musgoso com padrões rúnicos entalhados, rosto enrugado sábio e amigável com longa barba branca esvoaçante e túnica de eremita.
+* **Visual Simétrico:** Casco antigo musgoso com inscrições rúnicas simétricas, longa barba branca esvoaçante centralizada e túnica rúnica de eremita.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic ancient sea turtle elder NPC walking cycle, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down perspective, wrinkled friendly sage face with long white wispy beard, mossy carved ancient shell with glowing runic patterns and sage robe, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), smooth 2.5D vector illustration, solid white background without any grid lines, soft 3D clay lighting
-```
-
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic ancient turtle elder NPC idle breathing animation, Animal Crossing New Horizons art style, Sea of Stars 3/4 top-down viewpoint, wrinkled sage face, long white beard, mossy carved shell with runic patterns, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid white background without grid lines, clean vector art
-```
-
-##### 3. Prompt de Fabricação / Meditação (`Craft / Chanting` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic turtle elder NPC meditating crafting animation, Animal Crossing New Horizons art style, Sea of Stars 3/4 top-down angle, ancient turtle, mossy shell, long white beard, standing mystical crafting animation slowly raising and lowering flippers/hands in front of chest without items, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid white background without grid lines, clean vector art
-```
-
-##### 4. Prompt de Montado no Dragão (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic ancient turtle elder NPC riding dragon mount pose, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down perspective, ancient turtle, mossy shell, white beard, serene seated saddle riding pose holding reins with slow majestic bobbing motion, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid white background without grid lines, clean vector illustration
-```
+* **Walk (South / North / East):**
+  * `2D sprite strip of cute chibi ancient sea turtle elder NPC walking, Animal Crossing style, [perfectly centered straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, wrinkled sage face, centered long white beard, mossy carved shell with glowing runes and sage robe, single row of EXACTLY 8 walking frames, solid white background #FFFFFF, clean vector art, soft 3D clay lighting, no pixel art`
+* **Idle (South / North / East):**
+  * `2D sprite strip of cute chibi ancient turtle elder NPC idle breathing, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, wrinkled sage face, long white beard, mossy runic shell, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **Craft (South / North / East):**
+  * `2D sprite strip of cute chibi ancient turtle elder NPC meditating crafting, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, mossy shell, white beard, slowly raising and lowering flippers in front of chest without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **Mounted (Dragon Riding):**
+  * **South (Frente Direta):** `2D sprite strip of cute chibi ancient turtle elder in dragon riding pose (without mount), Animal Crossing style, straight front view, symmetrical design, ancient turtle, mossy shell, white beard, facing SOUTH, serene seated with legs spread wide straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **North (Costas Retas):** `2D sprite strip of cute chibi ancient turtle elder in dragon riding pose (without mount), Animal Crossing style, straight back view, symmetrical design, mossy shell, facing NORTH, back view serene seated straddling saddle holding reins, single row of EXACTLY 8 frames, solid white background #FFFFFF`
+  * **East / Side (Lateral):** `2D sprite strip of cute chibi ancient turtle elder in dragon riding pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, mossy shell, facing EAST (flippable for WEST), seated holding reins, ONLY near flipper/leg visible bent over saddle, far side hidden, single row of EXACTLY 8 frames, solid white background #FFFFFF`
 
 ---
 
 ### 4.4. Pinguim — O Pescador Polar (`npc_penguin_angler` - Pingo)
-* **Visual:** Pinguim-imperador gordinho preto, branco e amarelo, gorro de lã tricotado com pompom fofo e capa impermeável amarela aconchegante.
+* **Visual Simétrico:** Pinguim-imperador gordinho, gorro de lã com pompom centralizado e capa impermeável amarela aconchegante com fechos simétricos.
 
-##### 1. Prompt de Caminhada (`Walk` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic emperor penguin angler NPC walking cycle, Animal Crossing New Horizons aesthetic, high 3/4 top-down camera view like Sea of Stars, chubby black, white and yellow penguin body, bright curious eyes, wearing hand-knitted pom-pom winter beanie and cozy yellow raincoat, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames walking South facing front, Row 2: 8 frames walking North facing back, Row 3: 8 frames walking West facing left, Row 4: 8 frames walking East facing right), clean vector art, solid white background without any grid lines, soft 3D clay lighting
-```
-
-##### 2. Prompt de Parado / Respiração (`Idle` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic emperor penguin angler NPC idle breathing animation, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down perspective, chubby penguin body, pom-pom winter beanie and yellow raincoat, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames idle breathing South facing front, Row 2: 8 frames idle North facing back, Row 3: 8 frames idle West facing left, Row 4: 8 frames idle East facing right), solid pure white background without grid lines, clean 2.5D vector art
-```
-
-##### 3. Prompt de Fabricação / Pesca (`Craft / Working` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic penguin angler NPC crafting working animation, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 top-down viewpoint, chubby penguin, yellow raincoat and pom-pom beanie, standing working animation waddling flippers up and down cheerfully in front of chest without items, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames crafting South facing front, Row 2: 8 frames crafting North facing back, Row 3: 8 frames crafting West facing left, Row 4: 8 frames crafting East facing right), solid white background without grid lines, clean vector art
-```
-
-##### 4. Prompt de Montado no Dragão (`Mounted / Riding` - 4 Direções x 8 Frames):
-```text
-2D game character spritesheet of cute anthropomorphic penguin angler NPC riding ice dragon mount pose, Animal Crossing New Horizons aesthetic, Sea of Stars 3/4 high top-down viewpoint, chubby penguin, pom-pom beanie, yellow raincoat, seated saddle riding pose holding reins with cute buoyant riding bobbing motion, organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid white background without grid lines, clean vector illustration
-```
+* **Walk (South / North / East):**
+  * `2D sprite strip of cute chibi emperor penguin angler NPC walking, Animal Crossing style, [perfectly centered straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, chubby penguin body, centered pom-pom winter beanie and cozy yellow raincoat, single row of EXACTLY 8 walking frames, solid white background #FFFFFF, clean vector art, soft 3D clay lighting, no pixel art`
+* **Idle (South / North / East):**
+  * `2D sprite strip of cute chibi penguin angler NPC idle breathing, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, chubby penguin body, pom-pom beanie, yellow raincoat, single row of EXACTLY 8 idle frames, solid white background #FFFFFF`
+* **Craft (South / North / East):**
+  * `2D sprite strip of cute chibi penguin angler NPC working crafting, Animal Crossing style, [straight front view facing SOUTH / straight back view facing NORTH / straight side profile facing EAST (flippable for WEST)], symmetrical design, yellow raincoat, pom-pom beanie, waddling flippers up and down in front of chest without items, single row of EXACTLY 8 crafting frames, solid white background #FFFFFF`
+* **Mounted (Dragon Riding):**
+  * **South (Frente Direta):** `2D sprite strip of cute chibi penguin angler in dragon riding pose (without mount), Animal Crossing style, straight front view, symmetrical design, chubby penguin, pom-pom beanie, yellow raincoat, facing SOUTH, seated with chubby legs spread wide straddling saddle holding reins, single row of EXACTLY 8 riding frames, solid white background #FFFFFF`
+  * **North (Costas Retas):** `2D sprite strip of cute chibi penguin angler in dragon riding pose (without mount), Animal Crossing style, straight back view, symmetrical design, pom-pom beanie, facing NORTH, back view seated straddling saddle holding reins, single row of EXACTLY 8 frames, solid white background #FFFFFF`
+  * **East / Side (Lateral):** `2D sprite strip of cute chibi penguin angler in dragon riding pose (without mount), Animal Crossing style, straight side profile view, symmetrical design, yellow raincoat, facing EAST (flippable for WEST), seated holding reins, ONLY near flipper/foot visible bent over saddle, far side hidden, single row of EXACTLY 8 frames, solid white background #FFFFFF`
 
 ---
 
-## 5. 📊 Tabela Comparativa de Habilidades Únicas (Heróis Jogáveis)
+## 5. 📊 Tabela Comparativa de Habilidades Únicas
 
 | ID | Classe | Gênero | Nome do Herói | Habilidade Passiva | Efeito no Gameplay |
 | :--- | :--- | :---: | :--- | :--- | :--- |
@@ -536,11 +440,3 @@ Cada spritesheet segue uma **grade estrita de 4 linhas horizontais x 8 frames po
 | `char_eagle_archer_f` | **Águia Arqueira** | ♀️ | *Astra* | **Mira Perfeita** | +30% velocidade de coleta com ferramentas e -1s no cooldown da Esquiva (Tecla 4). |
 | `char_cat_mage_m` | **Gato Bruxo** | ♂️ | *Merlin* | **Afinidade Arcana** | +10% de ganho de XP aos dragões e pistas automáticas nos quebra-cabeças Lua. |
 | `char_cat_witch_f` | **Gato Bruxa** | ♀️ | *Luna* | **Afinidade Arcana** | +10% de ganho de XP aos dragões e pistas automáticas nos quebra-cabeças Lua. |
-
----
-
-## 🔗 Links Relacionados
-* [[00 - High Concept & Game Vision]]
-* [[Player Entity & 4-Way Movement]]
-* [[Day Night Cycle & Action Points System]]
-* [[Mount & Modular Character Layering System]]
