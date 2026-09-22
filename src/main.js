@@ -18,6 +18,8 @@ import { securityManager } from './engine/SecurityManager.js';
 import { ScratchBlockEngine } from './engine/ScratchBlockEngine.js';
 import { TutorialManager } from './engine/TutorialManager.js';
 import { soundFX } from './engine/SoundFX.js';
+import { CharacterCreator } from './ui/CharacterCreator.js';
+import { DEFAULT_AVATAR_CONFIG } from './engine/animation/AvatarConfig.js';
 
 
 class RPGApplication {
@@ -40,6 +42,9 @@ class RPGApplication {
     this.scratchEngine = new ScratchBlockEngine();
     this.multiplayerClient = new MultiplayerClient();
     this.tutorialManager = new TutorialManager(this);
+    this.characterCreator = new CharacterCreator({
+      onSave: (config) => this.handleCustomAvatarSave(config)
+    });
 
     if (this.scratchEngine) {
       this.scratchEngine.onBlockAdded = () => {
@@ -1614,6 +1619,7 @@ class RPGApplication {
           playerGold: this.blocklySystem.playerGold
         },
         activeHero: this.player.heroId,
+        customAvatar: this.player.customAvatarConfig || null,
         savedAt: Date.now()
       };
 
@@ -1737,9 +1743,19 @@ class RPGApplication {
           if (data.player.scale) {
             this.player.setScale(data.player.scale);
           }
+          if (data.customAvatar) {
+            this.player.customAvatarConfig = data.customAvatar;
+            try {
+              localStorage.setItem('kidslearn_custom_avatar', JSON.stringify(data.customAvatar));
+            } catch (e) {}
+          }
           if (data.player.heroId || data.activeHero) {
             const hId = data.player.heroId || data.activeHero;
-            this.player.setHero(hId);
+            if (hId === 'custom_avatar' && this.player.customAvatarConfig) {
+              this.player.setCustomAvatar(this.player.customAvatarConfig);
+            } else {
+              this.player.setHero(hId);
+            }
             if (this.updateHeroHeaderBadge) {
               this.updateHeroHeaderBadge(hId);
             }
@@ -1991,6 +2007,14 @@ class RPGApplication {
         await this.loadGameFromStorage();
         if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
           this.showToast(`Passaporte ativado com sucesso! Bem-vindo(a) à Ilha Lua, ${user.user_metadata?.nickname || user.email}!`, 5000);
+          
+          // Se o usuário ainda não possui um avatar personalizado configurado, abre o Character Creator de corpo inteiro
+          if (!this.player.customAvatarConfig && !localStorage.getItem('kidslearn_custom_avatar')) {
+            const nickname = user.user_metadata?.nickname || 'Aventureiro';
+            setTimeout(() => {
+              this.openCharacterCreator({ ...DEFAULT_AVATAR_CONFIG, name: nickname });
+            }, 600);
+          }
         }
       } else {
         refreshAuthUI();
@@ -3385,15 +3409,43 @@ class RPGApplication {
     const profileBtn = document.getElementById('btn-hero-profile');
 
     this.updateHeroHeaderBadge = (heroId) => {
-      const hero = PLAYABLE_HEROES.find(h => h.id === heroId) || PLAYABLE_HEROES[0];
       const avatarEl = document.getElementById('header-hero-avatar');
       const nameEl = document.getElementById('header-hero-name');
       const user = this.supabaseClient?.user;
-      const userName = (user && !user.isGuest && user.nickname) ? user.nickname : (hero.name.split(' (')[0]);
 
-      if (avatarEl) avatarEl.src = `assets/characters/${hero.id}/portrait.jpg`;
-      if (nameEl) nameEl.innerText = userName;
+      if (heroId === 'custom_avatar') {
+        const cfg = this.player.customAvatarConfig || DEFAULT_AVATAR_CONFIG;
+        const userName = cfg.name || ((user && !user.isGuest && user.nickname) ? user.nickname : 'Aventureiro');
+        if (avatarEl && this.player.modularAvatarRenderer) {
+          avatarEl.src = this.player.modularAvatarRenderer.getAvatarThumbnail(cfg, 64);
+        }
+        if (nameEl) nameEl.innerText = userName;
+      } else {
+        const hero = PLAYABLE_HEROES.find(h => h.id === heroId) || PLAYABLE_HEROES[0];
+        const userName = (user && !user.isGuest && user.nickname) ? user.nickname : (hero.name.split(' (')[0]);
+        if (avatarEl) avatarEl.src = `assets/characters/${hero.id}/portrait.jpg`;
+        if (nameEl) nameEl.innerText = userName;
+      }
       this.updateGlobalWalletPills();
+    };
+
+    this.handleCustomAvatarSave = (config) => {
+      this.player.setCustomAvatar(config);
+      localStorage.setItem('kidslearn_custom_avatar', JSON.stringify(config));
+      localStorage.setItem('kidslearn_active_hero', 'custom_avatar');
+      this.updateHeroHeaderBadge('custom_avatar');
+      this.triggerAutoSave();
+      this.player.spawnCraftPoof();
+      this.showToast(`Seu personagem ${config.name || 'Aventureiro'} foi atualizado e ativado!`);
+      if (modal && modal.style.display !== 'none') {
+        this.openHeroSelectionModal();
+      }
+    };
+
+    this.openCharacterCreator = (config = null) => {
+      if (!this.characterCreator) return;
+      const initial = config || this.player.customAvatarConfig || DEFAULT_AVATAR_CONFIG;
+      this.characterCreator.open(initial);
     };
 
     this.openHeroSelectionModal = () => {
@@ -3401,6 +3453,59 @@ class RPGApplication {
       grid.innerHTML = '';
       modal.style.display = 'flex';
 
+      // 1. Card Especial de Topo: Avatar Customizável de Corpo Inteiro (Cutout 2D)
+      const isCustomActive = this.player.heroId === 'custom_avatar';
+      const customCfg = this.player.customAvatarConfig || DEFAULT_AVATAR_CONFIG;
+      const customThumb = this.player.modularAvatarRenderer.getAvatarThumbnail(customCfg, 120);
+
+      const customCard = document.createElement('div');
+      customCard.className = `hero-card hero-card-custom ${isCustomActive ? 'selected' : ''}`;
+      customCard.style.gridColumn = '1 / -1';
+      customCard.style.background = 'linear-gradient(135deg, #f0fdfa 0%, #e6f9f6 100%)';
+      customCard.style.borderColor = isCustomActive ? '#0f8e83' : '#19c8b9';
+
+      customCard.innerHTML = `
+        <div style="display: flex; gap: 16px; align-items: center; width: 100%;">
+          <img src="${customThumb}" alt="Avatar Customizado" class="hero-card-portrait" style="width: 72px; height: 72px; object-fit: contain; background: #ffffff; border-radius: 18px; border: 2px solid #b8dfd8;">
+          <div style="flex: 1; text-align: left;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div class="hero-card-name" style="font-size: 1.15rem; margin: 0;">${customCfg.name || 'Meu Herói Customizado'}</div>
+              <span class="hero-badge archetype" style="background: #19c8b9; color: #ffffff;">Corpo Inteiro (Cutout 2D)</span>
+            </div>
+            <div style="font-size: 0.8rem; color: #725d42; margin-top: 4px;">
+              Avatar animado proceduralmente com trajes, cortes de cabelo e expressões customizáveis.
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <button class="hero-select-btn" id="btn-edit-custom-avatar" style="background: #ffffff; color: #19c8b9; border-color: #19c8b9;">
+              Personalizar Aparência
+            </button>
+            <button class="hero-select-btn ${isCustomActive ? 'active' : ''}" id="btn-select-custom-avatar">
+              ${isCustomActive ? 'Avatar Atual' : 'Jogar com Meu Avatar'}
+            </button>
+          </div>
+        </div>
+      `;
+
+      customCard.querySelector('#btn-edit-custom-avatar')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        modal.style.display = 'none';
+        this.openCharacterCreator(this.player.customAvatarConfig);
+      });
+
+      customCard.querySelector('#btn-select-custom-avatar')?.addEventListener('click', () => {
+        this.player.setCustomAvatar(customCfg);
+        localStorage.setItem('kidslearn_active_hero', 'custom_avatar');
+        this.updateHeroHeaderBadge('custom_avatar');
+        this.triggerAutoSave();
+        this.player.spawnCraftPoof();
+        this.showToast(`Você agora está jogando com seu avatar customizado!`);
+        modal.style.display = 'none';
+      });
+
+      grid.appendChild(customCard);
+
+      // 2. Heróis Fixos da Ilha
       PLAYABLE_HEROES.forEach((hero) => {
         const isCurrent = this.player.heroId === hero.id;
         const card = document.createElement('div');
@@ -3457,9 +3562,22 @@ class RPGApplication {
       }
     });
 
-    // Initialize saved hero or default
-    const savedHero = localStorage.getItem('kidslearn_active_hero') || 'char_wolf_hunter_m';
-    this.player.setHero(savedHero);
+    // Initialize saved custom avatar and hero
+    try {
+      const savedCustomRaw = localStorage.getItem('kidslearn_custom_avatar');
+      if (savedCustomRaw) {
+        this.player.customAvatarConfig = JSON.parse(savedCustomRaw);
+      }
+    } catch (e) {
+      console.warn('Erro ao carregar kidslearn_custom_avatar do localStorage:', e);
+    }
+
+    const savedHero = localStorage.getItem('kidslearn_active_hero') || (this.player.customAvatarConfig ? 'custom_avatar' : 'char_wolf_hunter_m');
+    if (savedHero === 'custom_avatar') {
+      this.player.setCustomAvatar(this.player.customAvatarConfig || DEFAULT_AVATAR_CONFIG);
+    } else {
+      this.player.setHero(savedHero);
+    }
     this.updateHeroHeaderBadge(savedHero);
   }
 

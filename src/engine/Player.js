@@ -1,6 +1,8 @@
 // Hero Player Entity with 4-Way Movement, Sprint (Shift), Crafting and Mount Support
 
 import { PLAYABLE_HEROES } from './CharacterRegistry.js';
+import { ModularAvatarRenderer } from './animation/ModularAvatarRenderer.js';
+import { DEFAULT_AVATAR_CONFIG } from './animation/AvatarConfig.js';
 
 export class Player {
   constructor(x = 320, y = 320, heroId = 'char_wolf_hunter_m') {
@@ -12,6 +14,10 @@ export class Player {
     this.width = 64;
     this.height = 64;
     this.scale = 1.0;
+
+    // Modular Cutout Avatar support
+    this.modularAvatarRenderer = new ModularAvatarRenderer();
+    this.customAvatarConfig = null;
 
     // Character identity
     this.heroId = heroId;
@@ -61,11 +67,30 @@ export class Player {
   }
 
   setHero(heroId) {
+    if (heroId === 'custom_avatar') {
+      this.heroId = 'custom_avatar';
+      this.heroData = {
+        id: 'custom_avatar',
+        name: this.customAvatarConfig?.name || 'Aventureiro',
+        species: 'human',
+        gender: this.customAvatarConfig?.gender || 'neutral',
+        archetype: 'adventurer',
+        passive: { id: 'creative_spirit', name: 'Espírito Criativo', desc: 'Avatar exclusivo com animação procedural por recorte 2D.' }
+      };
+      return;
+    }
+
     const found = PLAYABLE_HEROES.find(h => h.id === heroId);
     if (found) {
       this.heroId = heroId;
       this.heroData = found;
     }
+  }
+
+  setCustomAvatar(config) {
+    if (!config) return;
+    this.customAvatarConfig = { ...DEFAULT_AVATAR_CONFIG, ...config };
+    this.setHero('custom_avatar');
   }
 
   setCrafting(active = true) {
@@ -436,7 +461,7 @@ export class Player {
     const drawY = Math.round(this.y + bounce - alt);
 
     // 1. Sombra circular nos pés (omitida quando montado no dragão para ter SOMBRA ÚNICA unificada no chão renderizada pelo DragonManager)
-    if (!this.isMounted) {
+    if (!this.isMounted && this.heroId !== 'custom_avatar') {
       ctx.save();
       ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
       ctx.beginPath();
@@ -445,7 +470,59 @@ export class Player {
       ctx.restore();
     }
 
-    // 2. Determina o frame recortado transparente da pasta frames
+    // 2. Se for o Avatar Customizável do Jogador, renderiza via Modular Cutout Engine
+    if (this.heroId === 'custom_avatar' && this.modularAvatarRenderer) {
+      let animState = 'idle';
+      if (this.isCrafting) {
+        animState = 'craft';
+      } else if (this.isMounted) {
+        animState = 'riding';
+      } else if (this.isSprinting && this.isMoving) {
+        animState = 'run';
+      } else if (this.isMoving) {
+        animState = 'walk';
+      }
+
+      this.modularAvatarRenderer.render(
+        ctx,
+        drawX,
+        drawY,
+        dir,
+        animState,
+        this.animTimer,
+        this.customAvatarConfig || DEFAULT_AVATAR_CONFIG,
+        s
+      );
+
+      // Efeito de Nuvem Poof de Construção no Workbench estilo Animal Crossing
+      if (this.isCrafting && this.poofParticles.length > 0) {
+        ctx.save();
+        for (const p of this.poofParticles) {
+          ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+          ctx.strokeStyle = `rgba(229, 216, 184, ${p.alpha})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(this.x + 32 * s + p.x, this.y + 20 * s + p.y, p.r * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      if (showColliders) {
+        ctx.save();
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2;
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.35)';
+        const feet = this.getFeetBox();
+        ctx.fillRect(feet.x, feet.y, feet.w, feet.h);
+        ctx.strokeRect(feet.x, feet.y, feet.w, feet.h);
+        ctx.restore();
+      }
+      return;
+    }
+
+    // 3. Determina o frame recortado transparente da pasta frames (para Heróis fixos)
     // Mapeamento de linhas: south=0, east=1, north=2, west=3
     const rowMap = { south: 0, east: 1, north: 2, west: 3 };
     const row = rowMap[dir] ?? 0;
