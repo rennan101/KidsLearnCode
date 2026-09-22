@@ -26,7 +26,6 @@ import {
   TOP_OPTIONS,
   BOTTOM_OPTIONS,
   SHOES_OPTIONS,
-  HAT_OPTIONS,
   GLASSES_OPTIONS
 } from './CharacterCreatorAssets.js';
 
@@ -335,9 +334,11 @@ export class CharacterCreator {
       case 'shoes':
         this.renderShoesTab(container);
         break;
-      case 'accessories':
-        this.renderAccessoriesTab(container);
+      case 'glasses':
+        this.renderGlassesTab(container);
         break;
+      default:
+        this.renderSkinTab(container);
     }
   }
 
@@ -654,20 +655,10 @@ export class CharacterCreator {
     container.appendChild(section);
   }
 
-  renderAccessoriesTab(container) {
+  renderGlassesTab(container) {
     const section = document.createElement('div');
     section.innerHTML = `
-      <div class="cc-section-title">Chapéus & Tiaras</div>
-      <div class="cc-items-grid">
-        ${HAT_OPTIONS.map(opt => `
-          <div class="cc-item-card ${this.currentConfig.hatStyle === opt.id ? 'active' : ''}" data-hat="${opt.id}">
-            <div class="cc-item-name">${opt.name}</div>
-            <div class="cc-item-desc">${opt.desc}</div>
-          </div>
-        `).join('')}
-      </div>
-
-      <div class="cc-section-title" style="margin-top: 18px;">Óculos & Acessórios Faciais</div>
+      <div class="cc-section-title">Óculos & Acessórios Faciais</div>
       <div class="cc-items-grid">
         ${GLASSES_OPTIONS.map(opt => `
           <div class="cc-item-card ${this.currentConfig.glassesStyle === opt.id ? 'active' : ''}" data-glasses="${opt.id}">
@@ -677,14 +668,6 @@ export class CharacterCreator {
         `).join('')}
       </div>
     `;
-
-    section.querySelectorAll('[data-hat]').forEach(card => {
-      card.addEventListener('click', () => {
-        section.querySelectorAll('[data-hat]').forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-        this.currentConfig.hatStyle = card.dataset.hat;
-      });
-    });
 
     section.querySelectorAll('[data-glasses]').forEach(card => {
       card.addEventListener('click', () => {
@@ -697,3 +680,4 @@ export class CharacterCreator {
     container.appendChild(section);
   }
 }
+

@@ -50,11 +50,12 @@ export const CREATOR_CATEGORIES = [
     iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ui-icon"><path d="M4 17h16a2 2 0 0 0 2-2v-2a4 4 0 0 0-4-4h-3L11 5H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2z"/><line x1="4" y1="14" x2="20" y2="14"/></svg>`
   },
   {
-    id: 'accessories',
-    label: 'Chapéus & Óculos',
-    iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ui-icon"><path d="M2 18h20"/><path d="M12 4a7 7 0 0 0-7 7v7h14v-7a7 7 0 0 0-7-7z"/></svg>`
+    id: 'glasses',
+    label: 'Óculos',
+    iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ui-icon"><circle cx="6" cy="12" r="4"/><circle cx="18" cy="12" r="4"/><line x1="10" y1="12" x2="14" y2="12"/><line x1="2" y1="12" x2="2" y2="10"/><line x1="22" y1="12" x2="22" y2="10"/></svg>`
   }
 ];
+
 
 export const HAIR_STYLE_OPTIONS = SVG_HAIRS.map(h => ({
   id: h.id,
@@ -104,15 +105,9 @@ export const SHOES_OPTIONS = [
   { id: 'sandals_beach', name: 'Sandálias de Praia', desc: 'Calçado aberto' }
 ];
 
-export const HAT_OPTIONS = [
-  { id: 'none', name: 'Nenhum Chapéu', desc: 'Sem chapéu' },
-  { id: 'straw_hat', name: 'Chapéu de Palha', desc: 'Aba larga com fita vermelha' },
-  { id: 'cat_ears_band', name: 'Tiara de Gatinho', desc: 'Orelhinhas de gato' },
-  { id: 'witch_hat', name: 'Chapéu de Mago', desc: 'Chapéu pontudo cônico' }
-];
-
 export const GLASSES_OPTIONS = [
   { id: 'none', name: 'Nenhum Óculos', desc: 'Sem armação' },
   { id: 'round_wire', name: 'Óculos Redondos', desc: 'Armação clássica fina' },
   { id: 'sunglasses_cool', name: 'Óculos Escuros', desc: 'Lentes solares escuras' }
 ];
+

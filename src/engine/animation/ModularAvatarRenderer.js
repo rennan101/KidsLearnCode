@@ -69,12 +69,13 @@ export class ModularAvatarRenderer {
     }
 
     if (effectiveDir === 'north') {
-      this.renderNorth(ctx, pose, config, centerX, headCenterY);
+      this.renderNorth(ctx, pose, config, centerX, headCenterY, state);
     } else if (effectiveDir === 'east') {
-      this.renderEast(ctx, pose, config, centerX, headCenterY);
+      this.renderEast(ctx, pose, config, centerX, headCenterY, state);
     } else {
-      this.renderSouth(ctx, pose, config, centerX, headCenterY);
+      this.renderSouth(ctx, pose, config, centerX, headCenterY, state);
     }
+
 
     ctx.restore();
   }
@@ -82,7 +83,7 @@ export class ModularAvatarRenderer {
   /* ========================================================================= */
   /*  RENDERIZAÇÃO: VISTA FRONTAL (SOUTH)                                      */
   /* ========================================================================= */
-  renderSouth(ctx, pose, cfg, cx, cy) {
+  renderSouth(ctx, pose, cfg, cx, cy, state) {
     const skin = cfg.skinTone || '#ffd0a8';
     const skinShadow = cfg.skinShadow || '#e0ae82';
 
@@ -96,43 +97,40 @@ export class ModularAvatarRenderer {
     // 2. Pernas e Pés
     this.drawLegs(ctx, cx, torsoY + 75, pose, cfg, 'south');
 
-    // 3. Tronco e Roupas (Corpo Chibi de samples.svg)
+    // 3. Tronco e Roupas
     this.drawTorso(ctx, cx, torsoY, pose.root.rot, cfg, 'south');
 
-    // 4. Braços e Mãos (NA FRENTE DO TRONCO - NUNCA ATRÁS DO CABELO!)
-    this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'south');
+    // 4. Se NÃO estiver comemorando (celebrate), desenha os braços na frente do tronco e atrás da cabeça
+    const isCelebrating = state === 'celebrate';
+    if (!isCelebrating) {
+      this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'south');
+    }
 
     // 5. Cabeça e Rosto
     ctx.save();
     ctx.translate(headX, headY);
     ctx.rotate(pose.head.rot);
 
-    // Formato oficial da Cabeça Chibi (samples.svg)
     this.drawHeadBase(ctx, skin, skinShadow, 'south');
-
-    // Feições faciais (Face Components.svg alinhadas exatamente a samples.svg)
     this.drawFaceFeatures(ctx, cfg, 'south');
-
-    // Cabelo Frontal (Hairs.svg encaixado perfeitamente no topo e laterais)
     this.drawHairFront(ctx, cfg, 'south');
 
-    // Óculos
     if (cfg.glassesStyle && cfg.glassesStyle !== 'none') {
       this.drawGlasses(ctx, cfg, 'south');
     }
 
-    // Chapéus
-    if (cfg.hatStyle && cfg.hatStyle !== 'none') {
-      this.drawHat(ctx, cfg, 'south');
-    }
-
     ctx.restore();
+
+    // 6. Se estiver comemorando, desenha os braços e mãos na frente de TUDO (acima da cabeça e do cabelo)
+    if (isCelebrating) {
+      this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'south');
+    }
   }
 
   /* ========================================================================= */
   /*  RENDERIZAÇÃO: VISTA TRASEIRA (NORTH)                                     */
   /* ========================================================================= */
-  renderNorth(ctx, pose, cfg, cx, cy) {
+  renderNorth(ctx, pose, cfg, cx, cy, state) {
     const skin = cfg.skinTone || '#ffd0a8';
     const skinShadow = cfg.skinShadow || '#e0ae82';
 
@@ -140,10 +138,19 @@ export class ModularAvatarRenderer {
     const headY = cy + (pose.head.y * 2.5) + (pose.head.bobY * 2.5);
     const torsoY = headY + 82;
 
-    this.drawLegs(ctx, cx, torsoY + 75, pose, cfg, 'north');
-    this.drawTorso(ctx, cx, torsoY, pose.root.rot, cfg, 'north');
-    this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'north');
+    // 1. Braços de Costas: ficam ATRÁS do tronco quando em idle/walk, ou erguidos se celebrate
+    const isCelebrating = state === 'celebrate';
+    if (!isCelebrating) {
+      this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'north');
+    }
 
+    // 2. Pernas e Pés
+    this.drawLegs(ctx, cx, torsoY + 75, pose, cfg, 'north');
+
+    // 3. Tronco e Roupas (de costas cobre a base dos braços)
+    this.drawTorso(ctx, cx, torsoY, pose.root.rot, cfg, 'north');
+
+    // 4. Cabeça e Cabelo Traseiro
     ctx.save();
     ctx.translate(headX, headY);
     ctx.rotate(pose.head.rot);
@@ -152,23 +159,25 @@ export class ModularAvatarRenderer {
     this.drawHairBack(ctx, 0, 0, cfg, 'north');
     this.drawHairFront(ctx, cfg, 'north');
 
-    if (cfg.hatStyle && cfg.hatStyle !== 'none') {
-      this.drawHat(ctx, cfg, 'north');
-    }
-
     ctx.restore();
+
+    // 5. Se estiver comemorando de costas, os braços erguidos sobem
+    if (isCelebrating) {
+      this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'north');
+    }
   }
 
   /* ========================================================================= */
   /*  RENDERIZAÇÃO: VISTA LATERAL (EAST / PERFIL)                              */
   /* ========================================================================= */
-  renderEast(ctx, pose, cfg, cx, cy) {
+  renderEast(ctx, pose, cfg, cx, cy, state) {
     const skin = cfg.skinTone || '#ffd0a8';
     const skinShadow = cfg.skinShadow || '#e0ae82';
 
     const headX = cx + (pose.head.x * 2.5);
     const headY = cy + (pose.head.y * 2.5) + (pose.head.bobY * 2.5);
     const torsoY = headY + 82;
+    const isCelebrating = state === 'celebrate';
 
     // 1. Cabelo Traseiro / Lateral
     this.drawHairBack(ctx, headX, headY, cfg, 'east');
@@ -182,8 +191,10 @@ export class ModularAvatarRenderer {
     // 4. Tronco e Roupas de Perfil
     this.drawTorso(ctx, cx, torsoY, pose.root.rot, cfg, 'east');
 
-    // 5. Braço da Frente (Direito / Front Arm)
-    this.drawSingleArm(ctx, cx, torsoY + 22, pose.arm_r.rot, cfg, 'east', 'front');
+    // 5. Braço da Frente (se não estiver comemorando, fica na frente do tronco)
+    if (!isCelebrating) {
+      this.drawSingleArm(ctx, cx, torsoY + 22, pose.arm_r.rot, cfg, 'east', 'front');
+    }
 
     // 6. Cabeça e Feições de Perfil
     ctx.save();
@@ -198,11 +209,12 @@ export class ModularAvatarRenderer {
       this.drawGlasses(ctx, cfg, 'east');
     }
 
-    if (cfg.hatStyle && cfg.hatStyle !== 'none') {
-      this.drawHat(ctx, cfg, 'east');
-    }
-
     ctx.restore();
+
+    // 7. Se estiver comemorando de perfil, o braço dianteiro fica na frente de tudo
+    if (isCelebrating) {
+      this.drawSingleArm(ctx, cx, torsoY + 22, pose.arm_r.rot, cfg, 'east', 'front');
+    }
   }
 
   /* ========================================================================= */
@@ -528,7 +540,19 @@ export class ModularAvatarRenderer {
     ctx.lineJoin = 'round';
 
     if (dir === 'east') {
-      // PERFIL LATERAL: Translada para a frente e ajusta a silhueta da franja
+      // PERFIL LATERAL: Preenche o topo e a nuca do crânio com a cor do cabelo (evitando falhas)
+      ctx.beginPath();
+      ctx.moveTo(-75, -5);
+      ctx.bezierCurveTo(-75, -50, -45, -88, 0, -88);
+      ctx.bezierCurveTo(45, -88, 70, -60, 75, -5);
+      ctx.lineTo(60, -5);
+      ctx.bezierCurveTo(55, -50, 30, -75, 0, -75);
+      ctx.bezierCurveTo(-30, -75, -55, -45, -60, -5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Franja recortada projetada para a frente de perfil
       ctx.translate(-hairDef.cx + 25, -hairDef.topY - 83.5);
       if (Array.isArray(hairDef.frontPaths)) {
         for (const d of hairDef.frontPaths) {
@@ -539,6 +563,11 @@ export class ModularAvatarRenderer {
       }
     } else {
       // VISTA FRONTAL / TRASEIRA
+      // Preenchimento de base do crânio superior
+      ctx.beginPath();
+      ctx.arc(0, -25, 68, Math.PI * 1.0, Math.PI * 2.0);
+      ctx.fill();
+
       ctx.translate(-hairDef.cx, -hairDef.topY - 83.5);
       if (Array.isArray(hairDef.frontPaths)) {
         for (const d of hairDef.frontPaths) {
@@ -566,20 +595,25 @@ export class ModularAvatarRenderer {
       // Cabelo de Trás visto de perfil
       if (cfg.hairStyle === 'hair_long_straight') {
         ctx.beginPath();
-        ctx.roundRect(-65, -20, 80, 180, 16);
+        ctx.roundRect(-75, -20, 85, 180, 16);
         ctx.fill();
         ctx.stroke();
       } else if (cfg.hairStyle === 'hair_twin_buns') {
         ctx.beginPath();
-        ctx.arc(-45, -55, 26, 0, Math.PI * 2);
+        ctx.arc(-45, -55, 28, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
       } else if (cfg.hairStyle === 'hair_high_ponytail') {
         ctx.beginPath();
         ctx.moveTo(-40, -60);
-        ctx.quadraticCurveTo(-90, -40, -85, 30);
-        ctx.quadraticCurveTo(-70, 45, -55, 10);
+        ctx.quadraticCurveTo(-95, -40, -90, 35);
+        ctx.quadraticCurveTo(-70, 50, -55, 15);
         ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      } else if (cfg.hairStyle === 'hair_twin_braids') {
+        ctx.beginPath();
+        ctx.roundRect(-60, 0, 30, 120, 12);
         ctx.fill();
         ctx.stroke();
       }
@@ -593,6 +627,13 @@ export class ModularAvatarRenderer {
         [-78, 78].forEach(bx => {
           ctx.beginPath();
           ctx.arc(bx, -55, 26, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        });
+      } else if (cfg.hairStyle === 'hair_twin_braids') {
+        [-65, 65].forEach(bx => {
+          ctx.beginPath();
+          ctx.roundRect(bx - 15, 10, 30, 130, 12);
           ctx.fill();
           ctx.stroke();
         });
@@ -989,109 +1030,66 @@ export class ModularAvatarRenderer {
     ctx.strokeStyle = cfg.glassesColor || '#5c3c26';
     ctx.lineWidth = 3.5;
 
-    if (cfg.glassesStyle === 'sunglasses_cool') {
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-      [-38, 40].forEach(gx => {
+    if (dir === 'east') {
+      // PERFIL LATERAL: uma única lente de perfil com haste até a orelha
+      if (cfg.glassesStyle === 'sunglasses_cool') {
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
         ctx.beginPath();
-        ctx.roundRect(gx - 20, -14, 40, 34, 8);
+        ctx.roundRect(18, -12, 38, 32, 6);
         ctx.fill();
         ctx.stroke();
-      });
-      ctx.beginPath();
-      ctx.moveTo(-18, 0);
-      ctx.lineTo(20, 0);
-      ctx.stroke();
+
+        // Haste lateral até a orelha
+        ctx.beginPath();
+        ctx.moveTo(18, 0);
+        ctx.lineTo(-20, 4);
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.beginPath();
+        ctx.ellipse(34, 4, 18, 20, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Haste lateral até a orelha
+        ctx.beginPath();
+        ctx.moveTo(20, 4);
+        ctx.lineTo(-20, 4);
+        ctx.stroke();
+      }
+
     } else {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-      [-38, 40].forEach(gx => {
+      // VISTA FRONTAL (SOUTH)
+      if (cfg.glassesStyle === 'sunglasses_cool') {
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+        [-38, 40].forEach(gx => {
+          ctx.beginPath();
+          ctx.roundRect(gx - 20, -14, 40, 34, 8);
+          ctx.fill();
+          ctx.stroke();
+        });
         ctx.beginPath();
-        ctx.arc(gx, 4, 22, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(-18, 0);
+        ctx.lineTo(20, 0);
         ctx.stroke();
-      });
-      ctx.beginPath();
-      ctx.moveTo(-16, 4);
-      ctx.lineTo(18, 4);
-      ctx.stroke();
+      } else {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        [-38, 40].forEach(gx => {
+          ctx.beginPath();
+          ctx.arc(gx, 4, 22, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        });
+        ctx.beginPath();
+        ctx.moveTo(-16, 4);
+        ctx.lineTo(18, 4);
+        ctx.stroke();
+      }
     }
 
     ctx.restore();
   }
 
-  drawHat(ctx, cfg, dir) {
-    ctx.save();
-
-    if (cfg.hatStyle === 'straw_hat') {
-      ctx.fillStyle = '#fde68a';
-      ctx.strokeStyle = '#d97706';
-      ctx.lineWidth = 3.0;
-
-      // Aba larga
-      ctx.beginPath();
-      ctx.ellipse(0, -65, 110, 32, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      // Copa
-      ctx.beginPath();
-      ctx.arc(0, -90, 52, Math.PI * 1.0, Math.PI * 2.0);
-      ctx.fill();
-      ctx.stroke();
-
-      // Fita vermelha
-      ctx.strokeStyle = '#dc2626';
-      ctx.lineWidth = 9.0;
-      ctx.beginPath();
-      ctx.arc(0, -72, 51, Math.PI * 1.05, Math.PI * 1.95);
-      ctx.stroke();
-
-    } else if (cfg.hatStyle === 'witch_hat') {
-      ctx.fillStyle = '#4c1d95';
-      ctx.strokeStyle = '#2e1065';
-      ctx.lineWidth = 3.0;
-
-      ctx.beginPath();
-      ctx.ellipse(0, -70, 105, 30, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(-55, -75);
-      ctx.quadraticCurveTo(0, -150, 35, -180);
-      ctx.quadraticCurveTo(45, -130, 55, -75);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-    } else if (cfg.hatStyle === 'cat_ears_band') {
-      ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 4.0;
-      ctx.beginPath();
-      ctx.arc(0, -60, 72, Math.PI * 1.15, Math.PI * 1.85);
-      ctx.stroke();
-
-      [-48, 48].forEach(ox => {
-        ctx.fillStyle = cfg.hairColor || '#3d2314';
-        ctx.beginPath();
-        ctx.moveTo(ox - 22, -70);
-        ctx.lineTo(ox, -125);
-        ctx.lineTo(ox + 22, -70);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = '#f472b6';
-        ctx.beginPath();
-        ctx.moveTo(ox - 12, -75);
-        ctx.lineTo(ox, -110);
-        ctx.lineTo(ox + 12, -75);
-        ctx.closePath();
-        ctx.fill();
-      });
-    }
-
-    ctx.restore();
-  }
 
   getAvatarThumbnail(config, size = 64) {
     const offCanvas = document.createElement('canvas');

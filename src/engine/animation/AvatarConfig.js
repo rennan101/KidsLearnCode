@@ -80,8 +80,6 @@ export const DEFAULT_AVATAR_CONFIG = {
   shoesStyle: 'sneakers_classic',
   shoesColor: '#ea580c',
   shoesTrim: '#ffffff',
-  hatStyle: 'none',
-  hatColor: '#f59e0b',
   glassesStyle: 'none',
   glassesColor: '#5c3c26'
 };
@@ -126,7 +124,6 @@ export function randomizeAvatarConfig(currentName) {
 
   const bottomStyles = ['shorts_denim', 'pants_cargo', 'skirt_pleated'];
   const shoeStyles = ['sneakers_classic', 'boots_hunter', 'sandals_beach'];
-  const hatStyles = ['none', 'none', 'straw_hat', 'cat_ears_band', 'witch_hat'];
   const glassesStyles = ['none', 'none', 'none', 'round_wire', 'sunglasses_cool'];
 
   return {
@@ -152,10 +149,9 @@ export function randomizeAvatarConfig(currentName) {
     shoesStyle: shoeStyles[Math.floor(Math.random() * shoeStyles.length)],
     shoesColor: clothP.primary,
     shoesTrim: '#ffffff',
-    hatStyle: hatStyles[Math.floor(Math.random() * hatStyles.length)],
-    hatColor: '#f59e0b',
     glassesStyle: glassesStyles[Math.floor(Math.random() * glassesStyles.length)],
     glassesColor: '#5c3c26'
   };
 }
+
 
