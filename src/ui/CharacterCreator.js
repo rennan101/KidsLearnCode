@@ -1,8 +1,8 @@
 /**
  * CharacterCreator.js - KidsLearnCode
- * Controlador da interface de criação e customização de personagens em corpo inteiro.
+ * Controlador da interface de criação e customização de personagens em tela cheia.
  * 
- * Regra de Ouro: Padrão Animal Island UI, sem emojis na interface e com suporte
+ * Regra de Ouro: Padrão Animal Island UI, tela cheia, sem emojis na interface e com suporte
  * a renderização procedural por Cutout 2D em tempo real.
  */
 
@@ -39,7 +39,7 @@ export class CharacterCreator {
     this.currentConfig = { ...DEFAULT_AVATAR_CONFIG };
     this.currentCategory = 'skin';
     this.currentDirection = 'south';
-    this.currentAnimation = 'idle';
+    this.currentAnimation = 'idle'; // 'idle' | 'walk' | 'riding' | 'celebrate'
     this.animTime = 0;
     this.lastFrameTime = performance.now();
     this.animationFrameId = null;
@@ -61,7 +61,7 @@ export class CharacterCreator {
   }
 
   /**
-   * Abre o criador de personagem com a configuração inicial.
+   * Abre o criador de personagem em tela cheia com a configuração inicial.
    * @param {Object} initialConfig - Configuração prévia do avatar ou null
    */
   open(initialConfig = null) {
@@ -112,10 +112,10 @@ export class CharacterCreator {
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Renderiza o personagem centralizado e ampliado no Canvas de Preview (64x64 escalado em 2.8x)
-    const scale = 2.6;
+    // Renderiza o personagem centralizado e ampliado no Canvas de Preview em tela cheia (3.2x)
+    const scale = 3.2;
     const targetX = (this.canvas.width / 2) - (32 * scale);
-    const targetY = (this.canvas.height / 2) - (38 * scale);
+    const targetY = (this.canvas.height / 2) - (36 * scale);
 
     this.renderer.render(
       this.ctx,
@@ -147,8 +147,8 @@ export class CharacterCreator {
               <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
             </svg>
             <div>
-              <h2 class="cc-title">Criador de Personagem</h2>
-              <p class="cc-subtitle">Personalize seu herói para explorar e programar na Ilha Lua</p>
+              <h2 class="cc-title">Criador de Personagem (Tela Cheia)</h2>
+              <p class="cc-subtitle">Personalize seu avatar de corpo inteiro com animações automáticas por recorte 2D</p>
             </div>
           </div>
           <button class="cc-close-btn" id="cc-btn-close" title="Fechar">
@@ -164,7 +164,7 @@ export class CharacterCreator {
           <!-- Left Stage -->
           <div class="cc-stage-panel">
             <div class="cc-preview-stage">
-              <canvas id="cc-preview-canvas" width="220" height="240" class="cc-canvas"></canvas>
+              <canvas id="cc-preview-canvas" width="280" height="300" class="cc-canvas"></canvas>
             </div>
 
             <div class="cc-stage-controls">
@@ -176,12 +176,24 @@ export class CharacterCreator {
                 <button class="cc-dir-btn ${this.currentDirection === 'west' ? 'active' : ''}" data-dir="west">Esquerda</button>
               </div>
 
-              <!-- Animations -->
+              <!-- Animations: Parado, Andando, Montar Dragão, Comemorar -->
               <div class="cc-anim-pills">
-                <button class="cc-anim-btn ${this.currentAnimation === 'idle' ? 'active' : ''}" data-anim="idle">Parado</button>
-                <button class="cc-anim-btn ${this.currentAnimation === 'walk' ? 'active' : ''}" data-anim="walk">Andando</button>
-                <button class="cc-anim-btn ${this.currentAnimation === 'run' ? 'active' : ''}" data-anim="run">Correndo</button>
-                <button class="cc-anim-btn ${this.currentAnimation === 'celebrate' ? 'active' : ''}" data-anim="celebrate">Comemorar</button>
+                <button class="cc-anim-btn ${this.currentAnimation === 'idle' ? 'active' : ''}" data-anim="idle">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ui-icon icon-sm"><circle cx="12" cy="12" r="10"/></svg>
+                  Parado
+                </button>
+                <button class="cc-anim-btn ${this.currentAnimation === 'walk' ? 'active' : ''}" data-anim="walk">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ui-icon icon-sm"><path d="M13 4v6l4 2-2 6-4-2-2 6"/></svg>
+                  Andando
+                </button>
+                <button class="cc-anim-btn ${this.currentAnimation === 'riding' ? 'active' : ''}" data-anim="riding">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ui-icon icon-sm"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                  Montar no Dragão
+                </button>
+                <button class="cc-anim-btn ${this.currentAnimation === 'celebrate' ? 'active' : ''}" data-anim="celebrate">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ui-icon icon-sm"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  Comemorar
+                </button>
               </div>
 
               <!-- Randomize Button -->
@@ -190,7 +202,7 @@ export class CharacterCreator {
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
                   <path d="M16 8h.01M8 8h.01M8 16h.01M16 16h.01M12 12h.01"/>
                 </svg>
-                Aleatório
+                Dado da Sorte (Aleatório)
               </button>
             </div>
           </div>
@@ -217,7 +229,7 @@ export class CharacterCreator {
         <!-- Footer -->
         <div class="cc-footer">
           <div class="cc-name-input-group">
-            <span class="cc-name-label">Nome do Herói:</span>
+            <span class="cc-name-label">Nome do Personagem:</span>
             <input type="text" id="cc-name-input" class="cc-name-input" value="${this.currentConfig.name || 'Aventureiro'}" maxlength="20" placeholder="Seu nome...">
           </div>
           <button class="cc-save-btn" id="cc-btn-save">
@@ -241,7 +253,6 @@ export class CharacterCreator {
   }
 
   bindEvents(overlay) {
-    // Fechar
     overlay.querySelector('#cc-btn-close')?.addEventListener('click', () => this.close());
 
     // Direções
@@ -335,7 +346,7 @@ export class CharacterCreator {
     section.innerHTML = `
       <div class="cc-section-title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ui-icon icon-sm"><circle cx="12" cy="12" r="10"/></svg>
-        Tom de Pele Acolhedor
+        Tom de Pele Acolhedor (base_character.png)
       </div>
       <div class="cc-swatches-grid">
         ${SKIN_TONES.map(s => `
@@ -386,7 +397,7 @@ export class CharacterCreator {
 
     const sectionStyles = document.createElement('div');
     sectionStyles.innerHTML = `
-      <div class="cc-section-title" style="margin-top: 16px;">Estilo de Penteado</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Penteados (Extraídos de Hairs.svg)</div>
       <div class="cc-items-grid">
         ${HAIR_STYLE_OPTIONS.map(opt => `
           <div class="cc-item-card ${this.currentConfig.hairStyle === opt.id ? 'active' : ''}" data-style="${opt.id}">
@@ -410,7 +421,7 @@ export class CharacterCreator {
   }
 
   renderFaceTab(container) {
-    // 1. Olhos
+    // 1. Olhos (Face Components.svg)
     const sectionEyes = document.createElement('div');
     sectionEyes.innerHTML = `
       <div class="cc-section-title">Cor dos Olhos (Íris)</div>
@@ -423,7 +434,7 @@ export class CharacterCreator {
         `).join('')}
       </div>
 
-      <div class="cc-section-title" style="margin-top: 16px;">Formato dos Olhos</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Formato dos Olhos (Face Components.svg)</div>
       <div class="cc-items-grid">
         ${EYE_SHAPE_OPTIONS.map(opt => `
           <div class="cc-item-card ${this.currentConfig.eyeShape === opt.id ? 'active' : ''}" data-eye="${opt.id}">
@@ -450,10 +461,20 @@ export class CharacterCreator {
       });
     });
 
-    // 2. Nariz & Boca
+    // 2. Nariz & Boca & Bochechas (Face Components.svg)
     const sectionMouth = document.createElement('div');
     sectionMouth.innerHTML = `
-      <div class="cc-section-title" style="margin-top: 16px;">Boca & Expressão</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Formato do Nariz (Face Components.svg)</div>
+      <div class="cc-items-grid">
+        ${NOSE_OPTIONS.map(opt => `
+          <div class="cc-item-card ${this.currentConfig.noseShape === opt.id ? 'active' : ''}" data-nose="${opt.id}">
+            <div class="cc-item-name">${opt.name}</div>
+            <div class="cc-item-desc">${opt.desc}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="cc-section-title" style="margin-top: 18px;">Boca & Expressão (Face Components.svg)</div>
       <div class="cc-items-grid">
         ${MOUTH_OPTIONS.map(opt => `
           <div class="cc-item-card ${this.currentConfig.mouthShape === opt.id ? 'active' : ''}" data-mouth="${opt.id}">
@@ -463,7 +484,7 @@ export class CharacterCreator {
         `).join('')}
       </div>
 
-      <div class="cc-section-title" style="margin-top: 16px;">Bochechas & Detalhes</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Bochechas & Detalhes (Face Components.svg)</div>
       <div class="cc-items-grid">
         ${CHEEKS_OPTIONS.map(opt => `
           <div class="cc-item-card ${this.currentConfig.cheeksShape === opt.id ? 'active' : ''}" data-cheeks="${opt.id}">
@@ -473,6 +494,14 @@ export class CharacterCreator {
         `).join('')}
       </div>
     `;
+
+    sectionMouth.querySelectorAll('[data-nose]').forEach(card => {
+      card.addEventListener('click', () => {
+        sectionMouth.querySelectorAll('[data-nose]').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        this.currentConfig.noseShape = card.dataset.nose;
+      });
+    });
 
     sectionMouth.querySelectorAll('[data-mouth]').forEach(card => {
       card.addEventListener('click', () => {
@@ -508,7 +537,7 @@ export class CharacterCreator {
         `).join('')}
       </div>
 
-      <div class="cc-section-title" style="margin-top: 16px;">Estilo da Camisa / Roupa Superior</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Estilo da Camisa / Roupa Superior</div>
       <div class="cc-items-grid">
         ${TOP_OPTIONS.map(opt => `
           <div class="cc-item-card ${this.currentConfig.topStyle === opt.id ? 'active' : ''}" data-top="${opt.id}">
@@ -552,7 +581,7 @@ export class CharacterCreator {
         `).join('')}
       </div>
 
-      <div class="cc-section-title" style="margin-top: 16px;">Modelo Inferior</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Modelo Inferior</div>
       <div class="cc-items-grid">
         ${BOTTOM_OPTIONS.map(opt => `
           <div class="cc-item-card ${this.currentConfig.bottomStyle === opt.id ? 'active' : ''}" data-bottom="${opt.id}">
@@ -595,7 +624,7 @@ export class CharacterCreator {
         `).join('')}
       </div>
 
-      <div class="cc-section-title" style="margin-top: 16px;">Tipo de Calçado</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Tipo de Calçado</div>
       <div class="cc-items-grid">
         ${SHOES_OPTIONS.map(opt => `
           <div class="cc-item-card ${this.currentConfig.shoesStyle === opt.id ? 'active' : ''}" data-shoes="${opt.id}">
@@ -638,7 +667,7 @@ export class CharacterCreator {
         `).join('')}
       </div>
 
-      <div class="cc-section-title" style="margin-top: 16px;">Óculos & Acessórios Faciais</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Óculos & Acessórios Faciais</div>
       <div class="cc-items-grid">
         ${GLASSES_OPTIONS.map(opt => `
           <div class="cc-item-card ${this.currentConfig.glassesStyle === opt.id ? 'active' : ''}" data-glasses="${opt.id}">

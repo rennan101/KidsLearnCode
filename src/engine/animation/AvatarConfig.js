@@ -34,7 +34,7 @@ export const HAIR_COLORS = [
 ];
 
 export const EYE_COLORS = [
-  { id: 'eye_brown', color: '#543018', name: 'Castanho' },
+  { id: 'eye_brown', color: '#8C501D', name: 'Castanho ACNH' },
   { id: 'eye_dark', color: '#1e293b', name: 'Preto / Ônix' },
   { id: 'eye_blue', color: '#2563eb', name: 'Azul Safira' },
   { id: 'eye_teal', color: '#0d9488', name: 'Teal / Turquesa' },
@@ -63,15 +63,15 @@ export const DEFAULT_AVATAR_CONFIG = {
   gender: 'neutral',
   skinTone: '#ffd0a8',
   skinShadow: '#e0ae82',
-  hairStyle: 'fluffy_curls',
+  hairStyle: 'hair_wavy_medium',
   hairColor: '#3d2314',
   hairShadow: '#241208',
-  eyeShape: 'sparkle_round',
-  eyeColor: '#2563eb',
-  noseShape: 'triangle_soft',
-  mouthShape: 'happy_smile',
-  cheeksShape: 'blush_dots',
-  cheeksColor: 'rgba(244, 114, 182, 0.45)',
+  eyeShape: 'eye_anime_sparkle',
+  eyeColor: '#8C501D',
+  noseShape: 'nose_triangle',
+  mouthShape: 'mouth_smile_arc',
+  cheeksShape: 'cheeks_peach_oval',
+  cheeksColor: 'rgba(255, 186, 165, 0.75)',
   topStyle: 'shirt_striped_teal',
   topColorPrimary: '#19c8b9',
   topColorSecondary: '#ffffff',
@@ -100,19 +100,23 @@ export function randomizeAvatarConfig(currentName) {
   const clothP = CLOTH_PALETTES[Math.floor(Math.random() * CLOTH_PALETTES.length)];
 
   const hairStyles = [
-    'short_messy', 'spiky_hero', 'fluffy_curls', 'wavy_bob',
-    'twin_braids', 'high_ponytail', 'afro_puff', 'samurai_bun',
-    'straight_long', 'undercut_fade', 'witch_messy', 'curtains_middle'
+    'hair_short_bangs', 'hair_wavy_medium', 'hair_curtains_bob',
+    'hair_fluffy_afro', 'hair_long_straight', 'hair_classic_bowl',
+    'hair_twin_buns', 'hair_hero_spikes'
   ];
 
   const eyeShapes = [
-    'sparkle_round', 'cheerful_arc', 'determined_sharp',
-    'cat_wide', 'gentle_oval', 'big_anime'
+    'eye_anime_sparkle', 'eye_almond_lash', 'eye_sharp_determined',
+    'eye_sleepy_calm', 'eye_cheerful_crescent', 'eye_cat_lashes',
+    'eye_round_button', 'eye_gentle_oval'
   ];
 
-  const noseShapes = ['triangle_soft', 'button_dot', 'cute_cat', 'oval_subtle'];
-  const mouthShapes = ['happy_smile', 'cat_w', 'open_joy', 'neutral_smirk', 'tiny_smile'];
-  const cheekShapes = ['blush_dots', 'blush_ovals', 'freckles', 'none', 'cat_whiskers'];
+  const noseShapes = ['nose_triangle', 'nose_oval', 'nose_rect', 'nose_circle'];
+  const mouthShapes = [
+    'mouth_smile_arc', 'mouth_open_dot', 'mouth_smirk_curl',
+    'mouth_wide_smile', 'mouth_joyful_teeth', 'mouth_cat_w', 'mouth_buck_tooth'
+  ];
+  const cheekShapes = ['cheeks_peach_oval', 'cheeks_coral_vibrant', 'cheeks_freckles', 'cheeks_whiskers', 'none'];
 
   const topStyles = [
     'shirt_striped_teal', 'tshirt_basic', 'hoodie_pocket',
@@ -121,7 +125,7 @@ export function randomizeAvatarConfig(currentName) {
 
   const bottomStyles = ['shorts_denim', 'pants_cargo', 'skirt_pleated', 'pants_adventurer'];
   const shoeStyles = ['sneakers_classic', 'boots_hunter', 'sandals_beach', 'slippers_mage'];
-  const hatStyles = ['none', 'none', 'straw_hat', 'cat_ears_band', 'witch_hat', 'archer_headband', 'beret_chic'];
+  const hatStyles = ['none', 'none', 'straw_hat', 'cat_ears_band', 'witch_hat'];
   const glassesStyles = ['none', 'none', 'none', 'round_wire', 'sunglasses_cool'];
 
   return {
@@ -138,7 +142,7 @@ export function randomizeAvatarConfig(currentName) {
     noseShape: noseShapes[Math.floor(Math.random() * noseShapes.length)],
     mouthShape: mouthShapes[Math.floor(Math.random() * mouthShapes.length)],
     cheeksShape: cheekShapes[Math.floor(Math.random() * cheekShapes.length)],
-    cheeksColor: 'rgba(244, 114, 182, 0.45)',
+    cheeksColor: 'rgba(255, 186, 165, 0.75)',
     topStyle: topStyles[Math.floor(Math.random() * topStyles.length)],
     topColorPrimary: clothP.primary,
     topColorSecondary: clothP.secondary,

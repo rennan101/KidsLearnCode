@@ -2,10 +2,20 @@
  * CharacterCreatorAssets.js - KidsLearnCode
  * Catálogo visual de opções de customização para a interface do Criador de Personagens.
  * 
- * Regra Estrita: Todos os ícones visuais usam SVG vetorial limpo (sem emojis).
+ * Regra Estrita: Todos os componentes utilizam os assets oficiais de:
+ * - Face Components.svg
+ * - Hairs.svg
+ * - Proporções de base_character.png
+ * - Ícones visuais em SVG vetorial limpo (sem emojis).
  */
 
-import { SKIN_TONES, HAIR_COLORS, EYE_COLORS, CLOTH_PALETTES } from '../engine/animation/AvatarConfig.js';
+import {
+  SVG_NOSES,
+  SVG_MOUTHS,
+  SVG_EYES,
+  SVG_CHEEKS,
+  SVG_HAIRS
+} from '../engine/animation/SvgAssetCatalog.js';
 
 export const CREATOR_CATEGORIES = [
   {
@@ -45,72 +55,64 @@ export const CREATOR_CATEGORIES = [
   }
 ];
 
-export const HAIR_STYLE_OPTIONS = [
-  { id: 'fluffy_curls', name: 'Cachos Fofos', desc: 'Volume aconchegante com ondas suaves' },
-  { id: 'wavy_bob', name: 'Bob Ondulado', desc: 'Corte moderno com mechas laterais' },
-  { id: 'curtains_middle', name: 'Franja Repartida', desc: 'Estilo clássico despojado' },
-  { id: 'spiky_hero', name: 'Espetado de Aventura', desc: 'Penteado dinâmico de herói' },
-  { id: 'high_ponytail', name: 'Rabo de Cavalo Alto', desc: 'Prendedor alto com balanço' },
-  { id: 'twin_braids', name: 'Trancinhas Duplas', desc: 'Tranças delicadas estilo aldeão' },
-  { id: 'afro_puff', name: 'Afro Volumoso', desc: 'Cachos naturais e volumosos' },
-  { id: 'straight_long', name: 'Longo Liso', desc: 'Cabelo comprido pelas costas' }
-];
+export const HAIR_STYLE_OPTIONS = SVG_HAIRS.map(h => ({
+  id: h.id,
+  name: h.name,
+  desc: h.desc
+}));
 
-export const EYE_SHAPE_OPTIONS = [
-  { id: 'sparkle_round', name: 'Brilho Estrelado', desc: 'Olhos redondos com reflexos vivos' },
-  { id: 'cheerful_arc', name: 'Sorriso Contente', desc: 'Olhinhos fechados alegres' },
-  { id: 'determined_sharp', name: 'Determinado', desc: 'Olhar focado de explorador' },
-  { id: 'cat_wide', name: 'Olhar de Gatinho', desc: 'Olhos grandes e curiosos' }
-];
+export const EYE_SHAPE_OPTIONS = SVG_EYES.map(e => ({
+  id: e.id,
+  name: e.name,
+  desc: 'Extraído de Face Components.svg'
+}));
 
-export const NOSE_OPTIONS = [
-  { id: 'triangle_soft', name: 'Triângulo ACNH', desc: 'O clássico nariz de botão suave' },
-  { id: 'button_dot', name: 'Ponto Delicado', desc: 'Pequeno nariz minimalista' },
-  { id: 'cute_cat', name: 'Focinho de Bichinho', desc: 'Nariz delicado em forma de V' }
-];
+export const NOSE_OPTIONS = SVG_NOSES.map(n => ({
+  id: n.id,
+  name: n.name,
+  desc: 'Formato vetorial de Face Components'
+}));
 
-export const MOUTH_OPTIONS = [
-  { id: 'happy_smile', name: 'Sorriso Feliz', desc: 'Expressão alegre e acolhedora' },
-  { id: 'cat_w', name: 'Boquinha :3', desc: 'Sorriso felino arqueado' },
-  { id: 'open_joy', name: 'Riso Aberto', desc: 'Gargalhada de comemoração' },
-  { id: 'neutral_smirk', name: 'Meio Sorriso', desc: 'Expressão amigável e serena' }
-];
+export const MOUTH_OPTIONS = SVG_MOUTHS.map(m => ({
+  id: m.id,
+  name: m.name,
+  desc: 'Expressão clássica ACNH'
+}));
 
-export const CHEEKS_OPTIONS = [
-  { id: 'blush_dots', name: 'Blush Rosado', desc: 'Bochechas coradas' },
-  { id: 'freckles', name: 'Sardinhas', desc: 'Pequenas sardas nas bochechas' },
-  { id: 'cat_whiskers', name: 'Bigodes de Gato', desc: 'Pintura facial de felino' },
-  { id: 'none', name: 'Sem Marcação', desc: 'Pele lisa e limpa' }
-];
+export const CHEEKS_OPTIONS = SVG_CHEEKS.map(c => ({
+  id: c.id,
+  name: c.name,
+  desc: 'Detalhes faciais e corados'
+}));
 
 export const TOP_OPTIONS = [
-  { id: 'shirt_striped_teal', name: 'Listrada da Ilha', desc: 'Camiseta clássica náutica de algodão' },
-  { id: 'tshirt_basic', name: 'Camiseta Básica', desc: 'Camiseta de manga curta lisa' },
-  { id: 'hoodie_pocket', name: 'Moletom Confortável', desc: 'Moletom quentinho com bolso central' },
-  { id: 'wizard_tunic', name: 'Túnica de Aprendiz', desc: 'Vestimenta leve de estudante de magia' }
+  { id: 'shirt_striped_teal', name: 'Listrada da Ilha', desc: 'Camiseta náutica de algodão' },
+  { id: 'tshirt_basic', name: 'Camiseta Básica', desc: 'Camiseta lisa' },
+  { id: 'hoodie_pocket', name: 'Moletom Confortável', desc: 'Moletom com bolso frontal' },
+  { id: 'wizard_tunic', name: 'Túnica de Aprendiz', desc: 'Traje de explorador de magia' }
 ];
 
 export const BOTTOM_OPTIONS = [
-  { id: 'shorts_denim', name: 'Shorts Jeans', desc: 'Shorts de brim azul resistente' },
-  { id: 'pants_cargo', name: 'Calça Cargo', desc: 'Calça confortável com bolsos utilitários' },
-  { id: 'skirt_pleated', name: 'Saia Plissada', desc: 'Saia clássica com dobras' }
+  { id: 'shorts_denim', name: 'Shorts Jeans', desc: 'Shorts de brim azul' },
+  { id: 'pants_cargo', name: 'Calça Cargo', desc: 'Calça com bolsos' },
+  { id: 'skirt_pleated', name: 'Saia Plissada', desc: 'Saia plissada clássica' }
 ];
 
 export const SHOES_OPTIONS = [
-  { id: 'sneakers_classic', name: 'Tênis de Passeio', desc: 'Tênis macio com sola branca' },
-  { id: 'boots_hunter', name: 'Botas de Trilha', desc: 'Botas de couro resistentes para explorar' },
-  { id: 'sandals_beach', name: 'Sandálias de Praia', desc: 'Calçado aberto e arejado' }
+  { id: 'sneakers_classic', name: 'Tênis de Passeio', desc: 'Tênis confortável com sola' },
+  { id: 'boots_hunter', name: 'Botas de Trilha', desc: 'Botas resistentes' },
+  { id: 'sandals_beach', name: 'Sandálias de Praia', desc: 'Calçado aberto' }
 ];
 
 export const HAT_OPTIONS = [
-  { id: 'none', name: 'Nenhum Chapéu', desc: 'Sem cobertura para a cabeça' },
-  { id: 'straw_hat', name: 'Chapéu de Palha', desc: 'Aba larga com fita vermelha para o sol' },
-  { id: 'cat_ears_band', name: 'Tiara de Gatinho', desc: 'Orelhinhas felinas fofas' },
-  { id: 'witch_hat', name: 'Chapéu de Mago', desc: 'Chapéu cônico pontudo roxo' }
+  { id: 'none', name: 'Nenhum Chapéu', desc: 'Sem chapéu' },
+  { id: 'straw_hat', name: 'Chapéu de Palha', desc: 'Aba larga com fita vermelha' },
+  { id: 'cat_ears_band', name: 'Tiara de Gatinho', desc: 'Orelhinhas de gato' },
+  { id: 'witch_hat', name: 'Chapéu de Mago', desc: 'Chapéu pontudo cônico' }
 ];
 
 export const GLASSES_OPTIONS = [
-  { id: 'none', name: 'Nenhum Óculos', desc: 'Visão limpa sem armação' },
-  { id: 'round_wire', name: 'Óculos Redondos', desc: 'Armação fina de metal intelectual' },
-  { id: 'sunglasses_cool', name: 'Óculos Escuros', desc: 'Lentes escuras contra o sol da ilha' }
+  { id: 'none', name: 'Nenhum Óculos', desc: 'Sem armação' },
+  { id: 'round_wire', name: 'Óculos Redondos', desc: 'Armação clássica fina' },
+  { id: 'sunglasses_cool', name: 'Óculos Escuros', desc: 'Lentes solares escuras' }
 ];

@@ -2,30 +2,43 @@
  * ModularAvatarRenderer.js - KidsLearnCode
  * Renderizador Vetorial 2D por Cutout / Paper-Doll para Personagens Customizáveis.
  * 
- * Renderiza todas as partes do corpo, roupas, rostos e cabelos usando transformações
- * hierárquicas de matrizes 2D orientadas pelo SkeletonRig.
+ * Utiliza as proporções oficiais de base_character.png e os componentes vetoriais
+ * extraídos de Face Components.svg e Hairs.svg.
  */
 
 import { SkeletonRig } from './SkeletonRig.js';
 import { DEFAULT_AVATAR_CONFIG } from './AvatarConfig.js';
+import {
+  SVG_NOSES,
+  SVG_MOUTHS,
+  SVG_EYES,
+  SVG_CHEEKS,
+  SVG_HAIRS
+} from './SvgAssetCatalog.js';
 
 export class ModularAvatarRenderer {
   constructor() {
     this.rig = new SkeletonRig();
-    // Cache de renderização opcional para otimização
-    this.offscreenCache = new Map();
+    this.path2dCache = new Map();
+  }
+
+  getPath2D(d) {
+    if (!this.path2dCache.has(d)) {
+      this.path2dCache.set(d, new Path2D(d));
+    }
+    return this.path2dCache.get(d);
   }
 
   /**
    * Renderiza o avatar completo no contexto 2D alvo.
    * @param {CanvasRenderingContext2D} ctx - Contexto Canvas onde desenhar
-   * @param {number} x - Posição X no mundo (origem do sprite 64x64)
+   * @param {number} x - Posição X no mundo
    * @param {number} y - Posição Y no mundo
    * @param {string} direction - 'south' | 'north' | 'east' | 'west'
-   * @param {string} state - 'idle' | 'walk' | 'run' | 'craft' | 'riding' | 'celebrate'
-   * @param {number} time - Tempo de animação acumulado em segundos
-   * @param {Object} config - Objeto de configuração do avatar (AvatarConfig)
-   * @param {number} scale - Escala global do personagem (padrão 1.0)
+   * @param {string} state - 'idle' | 'walk' | 'riding' | 'craft' | 'celebrate'
+   * @param {number} time - Tempo decorrido em segundos
+   * @param {Object} config - Configuração do avatar
+   * @param {number} scale - Escala global do avatar
    */
   render(ctx, x, y, direction = 'south', state = 'idle', time = 0, config = DEFAULT_AVATAR_CONFIG, scale = 1.0) {
     const isWest = direction === 'west';
@@ -35,7 +48,6 @@ export class ModularAvatarRenderer {
     ctx.save();
     ctx.translate(Math.round(x), Math.round(y));
 
-    // Se for 'west', espelha horizontalmente em torno do centro (x = 32)
     if (isWest) {
       ctx.translate(32 * scale, 0);
       ctx.scale(-1, 1);
@@ -46,12 +58,11 @@ export class ModularAvatarRenderer {
       ctx.scale(scale, scale);
     }
 
-    // 1. Sombra elíptica no chão (exceto se montado)
+    // Sombra elíptica no chão (exceto se montado)
     if (state !== 'riding') {
       this.drawShadow(ctx, pose.root.x, 60, pose.shadow.scale);
     }
 
-    // Ordenação de Z-Index de acordo com a direção da câmera
     if (effectiveDir === 'north') {
       this.renderNorth(ctx, pose, config);
     } else if (effectiveDir === 'east') {
@@ -69,13 +80,11 @@ export class ModularAvatarRenderer {
   renderSouth(ctx, pose, cfg) {
     const skin = cfg.skinTone || '#ffd0a8';
     const skinShadow = cfg.skinShadow || '#e0ae82';
-    const hairColor = cfg.hairColor || '#3d2314';
-    const hairShadow = cfg.hairShadow || '#241208';
 
-    // 1. Cabelo Traseiro / Longo (atrás de tudo)
+    // 1. Cabelo Traseiro
     this.drawHairBack(ctx, pose.root.x + pose.head.x, pose.root.y + pose.head.y + pose.head.bobY, cfg, 'south');
 
-    // 2. Braço Esquerdo (Posterior / Atrás)
+    // 2. Braço Esquerdo (Traseiro)
     this.drawArm(ctx, pose.root.x + pose.shoulder_l.x, pose.root.y + pose.shoulder_l.y, pose.arm_l.rot, cfg, 'left', 'south');
 
     // 3. Pernas e Pés
@@ -85,7 +94,7 @@ export class ModularAvatarRenderer {
     // 4. Tronco & Roupas
     this.drawTorso(ctx, pose.root.x + pose.torso.x, pose.root.y + pose.torso.y, pose.root.rot, cfg, 'south');
 
-    // 5. Braço Direito (Anterior / Frente)
+    // 5. Braço Direito (Dianteiro)
     this.drawArm(ctx, pose.root.x + pose.shoulder_r.x, pose.root.y + pose.shoulder_r.y, pose.arm_r.rot, cfg, 'right', 'south');
 
     // 6. Cabeça, Rosto & Acessórios
@@ -96,13 +105,13 @@ export class ModularAvatarRenderer {
     ctx.translate(headX, headY);
     ctx.rotate(pose.head.rot);
 
-    // Formato da Cabeça Chibi
+    // Formato da Cabeça Chibi (base_character.png)
     this.drawHeadBase(ctx, 0, 0, skin, skinShadow, 'south');
 
-    // Feições do Rosto (Olhos, Nariz, Boca, Bochechas)
+    // Feições faciais (Face Components.svg)
     this.drawFaceFeatures(ctx, 0, 0, cfg, 'south');
 
-    // Cabelo Frontal (Franja / Topo)
+    // Cabelo Frontal (Hairs.svg)
     this.drawHairFront(ctx, 0, 0, cfg, 'south');
 
     // Óculos
@@ -110,7 +119,7 @@ export class ModularAvatarRenderer {
       this.drawGlasses(ctx, 0, 0, cfg, 'south');
     }
 
-    // Chapéus & Acessórios de Cabeça
+    // Chapéus & Acessórios
     if (cfg.hatStyle && cfg.hatStyle !== 'none') {
       this.drawHat(ctx, 0, 0, cfg, 'south');
     }
@@ -125,18 +134,14 @@ export class ModularAvatarRenderer {
     const skin = cfg.skinTone || '#ffd0a8';
     const skinShadow = cfg.skinShadow || '#e0ae82';
 
-    // 1. Braços (Ambos ligeiramente atrás do corpo)
     this.drawArm(ctx, pose.root.x + pose.shoulder_l.x, pose.root.y + pose.shoulder_l.y, pose.arm_l.rot, cfg, 'left', 'north');
     this.drawArm(ctx, pose.root.x + pose.shoulder_r.x, pose.root.y + pose.shoulder_r.y, pose.arm_r.rot, cfg, 'right', 'north');
 
-    // 2. Pernas e Pés
     this.drawLeg(ctx, pose.root.x + pose.hip_l.x, pose.root.y + pose.hip_l.y, pose.hip_l.rot + pose.leg_l.rot, cfg, 'left', 'north');
     this.drawLeg(ctx, pose.root.x + pose.hip_r.x, pose.root.y + pose.hip_r.y, pose.hip_r.rot + pose.leg_r.rot, cfg, 'right', 'north');
 
-    // 3. Tronco & Roupas (Costas)
     this.drawTorso(ctx, pose.root.x + pose.torso.x, pose.root.y + pose.torso.y, pose.root.rot, cfg, 'north');
 
-    // 4. Cabeça (Nuca e Cabelo de Trás cobrindo tudo)
     const headX = pose.root.x + pose.head.x;
     const headY = pose.root.y + pose.head.y + pose.head.bobY;
 
@@ -162,25 +167,14 @@ export class ModularAvatarRenderer {
     const skin = cfg.skinTone || '#ffd0a8';
     const skinShadow = cfg.skinShadow || '#e0ae82';
 
-    // 1. Cabelo Traseiro
     this.drawHairBack(ctx, pose.root.x + pose.head.x, pose.root.y + pose.head.y + pose.head.bobY, cfg, 'east');
 
-    // 2. Braço Traseiro (Esquerdo)
     this.drawArm(ctx, pose.root.x - 2, pose.root.y + pose.shoulder_l.y, pose.arm_l.rot, cfg, 'left', 'east');
-
-    // 3. Perna Traseira (Esquerda)
     this.drawLeg(ctx, pose.root.x - 3, pose.root.y + pose.hip_l.y, pose.hip_l.rot + pose.leg_l.rot, cfg, 'left', 'east');
-
-    // 4. Tronco & Roupas
     this.drawTorso(ctx, pose.root.x + pose.torso.x, pose.root.y + pose.torso.y, pose.root.rot, cfg, 'east');
-
-    // 5. Perna Dianteira (Direita)
     this.drawLeg(ctx, pose.root.x + 3, pose.root.y + pose.hip_r.y, pose.hip_r.rot + pose.leg_r.rot, cfg, 'right', 'east');
-
-    // 6. Braço Dianteiro (Direito)
     this.drawArm(ctx, pose.root.x + 2, pose.root.y + pose.shoulder_r.y, pose.arm_r.rot, cfg, 'right', 'east');
 
-    // 7. Cabeça, Rosto & Acessórios
     const headX = pose.root.x + pose.head.x;
     const headY = pose.root.y + pose.head.y + pose.head.bobY;
 
@@ -204,7 +198,7 @@ export class ModularAvatarRenderer {
   }
 
   /* ========================================================================= */
-  /*  SUB-RENDERIZADORES ANATÔMICOS & VESTUÁRIO                                */
+  /*  SUB-RENDERIZADORES VETORIAIS (Face Components.svg & Hairs.svg)          */
   /* ========================================================================= */
 
   drawShadow(ctx, x, y, scale = 1.0) {
@@ -220,40 +214,34 @@ export class ModularAvatarRenderer {
     ctx.save();
     ctx.translate(x, y);
 
-    // Formato Chibi esférico fofo ligeiramente mais largo nas bochechas
     ctx.fillStyle = skin;
     ctx.strokeStyle = skinShadow;
     ctx.lineWidth = 1.2;
 
     ctx.beginPath();
     if (dir === 'east') {
-      // Perfil com leve elevação do nariz/focinho suave
       ctx.moveTo(-12, -14);
       ctx.bezierCurveTo(8, -16, 15, -6, 15, 3);
       ctx.bezierCurveTo(15, 11, 4, 15, -4, 15);
       ctx.bezierCurveTo(-14, 15, -16, 8, -16, -2);
       ctx.bezierCurveTo(-16, -10, -14, -14, -12, -14);
     } else {
-      // Frontal e Traseira
-      ctx.ellipse(0, 0, 16, 14, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 16.5, 14.5, 0, 0, Math.PI * 2);
     }
     ctx.fill();
     ctx.stroke();
 
     // Orelhas arredondadas
     if (dir === 'south') {
-      // Orelha Esquerda
       ctx.beginPath();
-      ctx.arc(-16, 0, 3.5, 0, Math.PI * 2);
+      ctx.arc(-16.5, 0, 3.5, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
-      // Orelha Direita
       ctx.beginPath();
-      ctx.arc(16, 0, 3.5, 0, Math.PI * 2);
+      ctx.arc(16.5, 0, 3.5, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
     } else if (dir === 'east') {
-      // Apenas a orelha visível no perfil
       ctx.beginPath();
       ctx.arc(-6, 1, 3.5, 0, Math.PI * 2);
       ctx.fill();
@@ -264,251 +252,279 @@ export class ModularAvatarRenderer {
   }
 
   drawFaceFeatures(ctx, x, y, cfg, dir) {
-    if (dir === 'north') return; // Sem rosto de costas
-
-    const eyeColor = cfg.eyeColor || '#2563eb';
-    const cheekColor = cfg.cheeksColor || 'rgba(244, 114, 182, 0.45)';
+    if (dir === 'north') return;
 
     ctx.save();
     ctx.translate(x, y);
 
     if (dir === 'south') {
-      // 1. Bochechas / Blush
-      if (cfg.cheeksShape !== 'none') {
-        ctx.fillStyle = cheekColor;
-        if (cfg.cheeksShape === 'freckles') {
-          ctx.fillStyle = '#92400e';
-          [-9, -8, -10, 8, 9, 10].forEach((fx, i) => {
-            ctx.beginPath();
-            ctx.arc(fx, 4 + (i % 2) * 2, 0.9, 0, Math.PI * 2);
-            ctx.fill();
-          });
-        } else if (cfg.cheeksShape === 'cat_whiskers') {
-          ctx.strokeStyle = '#78350f';
-          ctx.lineWidth = 1;
-          [-1, 1].forEach(side => {
-            ctx.beginPath();
-            ctx.moveTo(side * 8, 2);
-            ctx.lineTo(side * 15, 0);
-            ctx.moveTo(side * 8, 4);
-            ctx.lineTo(side * 15, 5);
-            ctx.stroke();
-          });
-        } else {
-          // Blush padrão (círculos/ovais)
-          ctx.beginPath();
-          ctx.ellipse(-9, 3, 3.5, 2.2, 0, 0, Math.PI * 2);
-          ctx.ellipse(9, 3, 3.5, 2.2, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
+      // 1. Bochechas (Face Components.svg)
+      this.drawCheekItem(ctx, -9, 3.5, cfg.cheeksShape, 'left');
+      this.drawCheekItem(ctx, 9, 3.5, cfg.cheeksShape, 'right');
 
-      // 2. Olhos
-      this.drawEyes(ctx, -7, 0, eyeColor, cfg.eyeShape, 'left');
-      this.drawEyes(ctx, 7, 0, eyeColor, cfg.eyeShape, 'right');
+      // 2. Olhos (Face Components.svg)
+      this.drawEyeItem(ctx, -7.5, -0.5, cfg.eyeShape, cfg.eyeColor, 'left');
+      this.drawEyeItem(ctx, 7.5, -0.5, cfg.eyeShape, cfg.eyeColor, 'right');
 
-      // 3. Nariz
-      ctx.fillStyle = cfg.skinShadow || '#e0ae82';
-      ctx.beginPath();
-      if (cfg.noseShape === 'button_dot') {
-        ctx.arc(0, 1.5, 1.2, 0, Math.PI * 2);
-      } else if (cfg.noseShape === 'cute_cat') {
-        ctx.moveTo(0, 2);
-        ctx.lineTo(-1.8, 0.5);
-        ctx.lineTo(1.8, 0.5);
-      } else {
-        // Triângulo suave padrão ACNH
-        ctx.moveTo(0, 0.5);
-        ctx.lineTo(-2, 2.5);
-        ctx.lineTo(2, 2.5);
-      }
-      ctx.closePath();
-      ctx.fill();
+      // 3. Nariz (Face Components.svg)
+      this.drawNoseItem(ctx, 0, 1.8, cfg.noseShape);
 
-      // 4. Boca
-      ctx.strokeStyle = '#831843';
-      ctx.fillStyle = '#e11d48';
-      ctx.lineWidth = 1.2;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-
-      if (cfg.mouthShape === 'cat_w') {
-        ctx.moveTo(-4, 5);
-        ctx.quadraticCurveTo(-2, 7, 0, 5.5);
-        ctx.quadraticCurveTo(2, 7, 4, 5);
-        ctx.stroke();
-      } else if (cfg.mouthShape === 'open_joy') {
-        ctx.arc(0, 5, 3.2, 0, Math.PI);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-      } else if (cfg.mouthShape === 'neutral_smirk') {
-        ctx.moveTo(-2, 6);
-        ctx.quadraticCurveTo(2, 6, 4, 5);
-        ctx.stroke();
-      } else {
-        // Happy Smile clássico
-        ctx.arc(0, 4.5, 3.2, 0.2, Math.PI - 0.2);
-        ctx.stroke();
-      }
+      // 4. Boca (Face Components.svg)
+      this.drawMouthItem(ctx, 0, 5.5, cfg.mouthShape);
 
     } else if (dir === 'east') {
-      // Perfil: apenas olho direito, nariz e boca lateral
-      if (cfg.cheeksShape !== 'none') {
-        ctx.fillStyle = cheekColor;
-        ctx.beginPath();
-        ctx.ellipse(8, 3, 3.2, 2.0, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      this.drawEyes(ctx, 7, 0, eyeColor, cfg.eyeShape, 'right');
-
-      // Nariz em perfil
-      ctx.fillStyle = cfg.skinShadow || '#e0ae82';
-      ctx.beginPath();
-      ctx.moveTo(14, 1);
-      ctx.lineTo(16, 2.5);
-      ctx.lineTo(14, 3);
-      ctx.closePath();
-      ctx.fill();
-
-      // Boca em perfil
-      ctx.strokeStyle = '#831843';
-      ctx.lineWidth = 1.2;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(10, 6);
-      ctx.lineTo(13, 5.5);
-      ctx.stroke();
+      // Perfil
+      this.drawCheekItem(ctx, 7.5, 3.5, cfg.cheeksShape, 'right');
+      this.drawEyeItem(ctx, 7.5, -0.5, cfg.eyeShape, cfg.eyeColor, 'right');
+      this.drawNoseItem(ctx, 14, 1.8, cfg.noseShape, 'east');
+      this.drawMouthItem(ctx, 11, 5.5, cfg.mouthShape, 'east');
     }
 
     ctx.restore();
   }
 
-  drawEyes(ctx, x, y, irisColor, shape = 'sparkle_round', side = 'right') {
+  drawNoseItem(ctx, x, y, noseShape, dir = 'south') {
     ctx.save();
     ctx.translate(x, y);
 
-    if (shape === 'cheerful_arc') {
-      // Olhos fechados sorrindo em arco ^_^
-      ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 2.0;
+    const noseDef = SVG_NOSES.find(n => n.id === noseShape) || SVG_NOSES[0];
+    ctx.fillStyle = noseDef.color || '#FF7E36';
+    ctx.strokeStyle = '#D96522';
+    ctx.lineWidth = 0.8;
+
+    if (noseDef.type === 'circle') {
+      ctx.beginPath();
+      ctx.arc(0, 0, noseDef.r * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (noseDef.type === 'ellipse') {
+      ctx.beginPath();
+      ctx.ellipse(0, 0, noseDef.rx * 0.45, noseDef.ry * 0.45, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (noseDef.type === 'rect') {
+      ctx.beginPath();
+      ctx.roundRect(-noseDef.w * 0.25, -noseDef.h * 0.25, noseDef.w * 0.5, noseDef.h * 0.5, 1);
+      ctx.fill();
+    } else {
+      // Triângulo clássico ACNH
+      ctx.beginPath();
+      ctx.moveTo(0, -2.5);
+      ctx.lineTo(2.5, 1.5);
+      ctx.lineTo(-2.5, 1.5);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  drawMouthItem(ctx, x, y, mouthShape, dir = 'south') {
+    ctx.save();
+    ctx.translate(x, y);
+
+    const mouthDef = SVG_MOUTHS.find(m => m.id === mouthShape) || SVG_MOUTHS[0];
+
+    if (dir === 'east') {
+      // Perfil da boca
+      ctx.strokeStyle = '#8C501D';
+      ctx.lineWidth = 1.2;
       ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.arc(0, 0, 3.5, Math.PI * 1.1, Math.PI * 1.9);
+      ctx.moveTo(-1, 0);
+      ctx.lineTo(3, 0);
       ctx.stroke();
+      ctx.restore();
+      return;
+    }
+
+    ctx.scale(mouthDef.scale || 0.45, mouthDef.scale || 0.45);
+
+    if (mouthDef.type === 'fill') {
+      ctx.fillStyle = mouthDef.color || '#8C501D';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, mouthDef.rx, mouthDef.ry, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (mouthDef.type === 'fill_stroke') {
+      const path = this.getPath2D(mouthDef.d);
+      ctx.fillStyle = mouthDef.fillColor || '#FFFFFF';
+      ctx.strokeStyle = mouthDef.strokeColor || '#8C501D';
+      ctx.lineWidth = mouthDef.strokeWidth || 2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.fill(path);
+      ctx.stroke(path);
+    } else if (mouthDef.type === 'tooth') {
+      const path = this.getPath2D(mouthDef.d);
+      ctx.strokeStyle = mouthDef.color || '#8C501D';
+      ctx.lineWidth = mouthDef.strokeWidth || 2;
+      ctx.lineCap = 'round';
+      ctx.stroke(path);
+      // Dente branco
+      const toothPath = this.getPath2D(mouthDef.toothD);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill(toothPath);
+      ctx.stroke(toothPath);
     } else {
-      // Globo ocular e íris expressiva
-      ctx.fillStyle = '#ffffff';
+      // Traço de linha
+      const path = this.getPath2D(mouthDef.d);
+      ctx.strokeStyle = mouthDef.color || '#8C501D';
+      ctx.lineWidth = mouthDef.strokeWidth || 2.2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke(path);
+    }
+
+    ctx.restore();
+  }
+
+  drawEyeItem(ctx, x, y, eyeShape, irisColor, side = 'right') {
+    ctx.save();
+    ctx.translate(x, y);
+
+    const isLeft = side === 'left';
+    if (isLeft) {
+      ctx.scale(-1, 1);
+    }
+
+    const eyeDef = SVG_EYES.find(e => e.id === eyeShape) || SVG_EYES[0];
+
+    if (eyeDef.type === 'cheerful_crescent') {
+      // Arco fechado feliz
+      ctx.strokeStyle = '#8C501D';
+      ctx.lineWidth = 1.8;
+      ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.ellipse(0, 0, 3.6, 4.5, 0, 0, Math.PI * 2);
+      ctx.arc(0, 0, 3.8, Math.PI * 1.1, Math.PI * 1.9);
+      ctx.stroke();
+    } else if (eyeDef.type === 'round_button') {
+      // Botão redondo preto com brilho
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(0, 0, 4.0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Íris
-      ctx.fillStyle = irisColor;
+      ctx.fillStyle = irisColor || '#8C501D';
       ctx.beginPath();
-      ctx.ellipse(side === 'right' ? 0.6 : -0.6, 0.4, 2.6, 3.5, 0, 0, Math.PI * 2);
+      ctx.arc(0.4, 0.2, 3.2, 0, Math.PI * 2);
       ctx.fill();
 
-      // Pupila escura
-      ctx.fillStyle = '#0f172a';
+      ctx.fillStyle = '#0F172A';
       ctx.beginPath();
-      ctx.ellipse(side === 'right' ? 0.6 : -0.6, 0.4, 1.4, 2.0, 0, 0, Math.PI * 2);
+      ctx.arc(0.4, 0.2, 1.8, 0, Math.PI * 2);
       ctx.fill();
 
-      // Brilho de luz branco (Sparkle)
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.arc(side === 'right' ? -0.4 : -1.2, -1.2, 1.2, 0, Math.PI * 2);
-      ctx.arc(side === 'right' ? 1.4 : 0.6, 1.4, 0.6, 0, Math.PI * 2);
+      ctx.arc(-0.6, -1.0, 1.0, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Brilho anime e formatos expressivos
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 3.8, 4.8, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Delineador superior / cílio suave
-      ctx.strokeStyle = '#1e293b';
+      ctx.fillStyle = irisColor || '#8C501D';
+      ctx.beginPath();
+      ctx.ellipse(0.6, 0.3, 2.8, 3.8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#0F172A';
+      ctx.beginPath();
+      ctx.ellipse(0.6, 0.3, 1.6, 2.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Destaques de luz branca (sparkles)
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(-0.5, -1.2, 1.2, 0, Math.PI * 2);
+      ctx.arc(1.5, 1.4, 0.6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cílios superiores
+      ctx.strokeStyle = '#8C501D';
       ctx.lineWidth = 1.4;
       ctx.beginPath();
-      ctx.arc(0, -0.4, 3.6, Math.PI * 1.15, Math.PI * 1.85);
+      ctx.arc(0, -0.6, 3.8, Math.PI * 1.15, Math.PI * 1.85);
       ctx.stroke();
+
+      if (eyeDef.type === 'cat_lashes' || eyeDef.type === 'almond_lash') {
+        ctx.beginPath();
+        ctx.moveTo(3.2, -1.5);
+        ctx.lineTo(4.8, -3.0);
+        ctx.moveTo(2.0, -2.8);
+        ctx.lineTo(2.8, -4.5);
+        ctx.stroke();
+      }
+    }
+
+    ctx.restore();
+  }
+
+  drawCheekItem(ctx, x, y, cheekShape, side = 'right') {
+    if (cheekShape === 'none') return;
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    const cheekDef = SVG_CHEEKS.find(c => c.id === cheekShape) || SVG_CHEEKS[0];
+
+    if (cheekDef.type === 'freckles') {
+      ctx.fillStyle = cheekDef.color || '#8C501D';
+      [-2, 0, 2].forEach((fx, i) => {
+        ctx.beginPath();
+        ctx.arc(fx, (i % 2) * 1.5, 0.8, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    } else if (cheekDef.type === 'whiskers') {
+      ctx.strokeStyle = cheekDef.color || '#8C501D';
+      ctx.lineWidth = 1.0;
+      const s = side === 'left' ? -1 : 1;
+      ctx.beginPath();
+      ctx.moveTo(0, -1);
+      ctx.lineTo(s * 6, -2);
+      ctx.moveTo(0, 1.5);
+      ctx.lineTo(s * 6, 2.5);
+      ctx.stroke();
+    } else {
+      // Blush oval corado
+      ctx.fillStyle = cheekDef.color || 'rgba(255, 186, 165, 0.75)';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, cheekDef.rx * 0.6, cheekDef.ry * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     ctx.restore();
   }
 
   drawHairFront(ctx, x, y, cfg, dir) {
-    const style = cfg.hairStyle || 'fluffy_curls';
+    const hairDef = SVG_HAIRS.find(h => h.id === cfg.hairStyle) || SVG_HAIRS[1];
     const color = cfg.hairColor || '#3d2314';
     const shadow = cfg.hairShadow || '#241208';
 
     ctx.save();
     ctx.translate(x, y);
+
     ctx.fillStyle = color;
     ctx.strokeStyle = shadow;
     ctx.lineWidth = 1.4;
     ctx.lineJoin = 'round';
 
-    ctx.beginPath();
-    switch (style) {
-      case 'spiky_hero': {
-        ctx.moveTo(-16, -4);
-        ctx.lineTo(-14, -16);
-        ctx.lineTo(-8, -12);
-        ctx.lineTo(0, -20);
-        ctx.lineTo(8, -12);
-        ctx.lineTo(14, -16);
-        ctx.lineTo(16, -4);
-        ctx.lineTo(10, -6);
-        ctx.lineTo(0, -8);
-        ctx.lineTo(-10, -6);
-        break;
-      }
-      case 'wavy_bob': {
-        ctx.arc(0, -5, 17, Math.PI * 1.05, Math.PI * 1.95);
-        ctx.bezierCurveTo(18, 5, 16, 12, 13, 15);
-        ctx.quadraticCurveTo(10, 10, 8, -4);
-        ctx.quadraticCurveTo(0, -1, -8, -4);
-        ctx.quadraticCurveTo(-10, 10, -13, 15);
-        ctx.bezierCurveTo(-16, 12, -18, 5, -16, -5);
-        break;
-      }
-      case 'curtains_middle': {
-        ctx.arc(0, -6, 16.5, Math.PI * 1.0, Math.PI * 2.0);
-        ctx.quadraticCurveTo(15, 6, 13, 8);
-        ctx.quadraticCurveTo(6, 2, 2, -6);
-        ctx.quadraticCurveTo(-2, -6, -6, 2);
-        ctx.quadraticCurveTo(-13, 8, -15, 6);
-        break;
-      }
-      case 'afro_puff': {
-        // Grandes nuvens de cachos
-        ctx.arc(0, -10, 19, 0, Math.PI * 2);
-        break;
-      }
-      default: {
-        // Fluffy curls padrão
-        ctx.arc(0, -6, 16.5, Math.PI * 1.0, Math.PI * 2.0);
-        ctx.quadraticCurveTo(15, 4, 12, 6);
-        ctx.quadraticCurveTo(6, -2, 2, -5);
-        ctx.quadraticCurveTo(-2, -5, -6, -2);
-        ctx.quadraticCurveTo(-12, 4, -15, 6);
-        break;
-      }
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+    const path = this.getPath2D(hairDef.d);
+    ctx.scale(hairDef.scale || 0.15, hairDef.scale || 0.15);
+    ctx.fill(path);
+    ctx.stroke(path);
 
-    // Destaque brilhante de mecha no topo
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-    ctx.lineWidth = 1.8;
+    // Destaque luminoso
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.lineWidth = 2.0;
     ctx.beginPath();
-    ctx.arc(0, -12, 11, Math.PI * 1.25, Math.PI * 1.65);
+    ctx.arc(0, -40, 45, Math.PI * 1.25, Math.PI * 1.65);
     ctx.stroke();
 
     ctx.restore();
   }
 
   drawHairBack(ctx, x, y, cfg, dir) {
-    const style = cfg.hairStyle || 'fluffy_curls';
     const color = cfg.hairColor || '#3d2314';
     const shadow = cfg.hairShadow || '#241208';
 
@@ -518,24 +534,18 @@ export class ModularAvatarRenderer {
     ctx.strokeStyle = shadow;
     ctx.lineWidth = 1.4;
 
-    if (style === 'high_ponytail') {
+    if (cfg.hairStyle === 'hair_long_straight') {
       ctx.beginPath();
-      ctx.ellipse(0, -18, 8, 12, 0.2, 0, Math.PI * 2);
+      ctx.roundRect(-16, -4, 32, 26, 4);
       ctx.fill();
       ctx.stroke();
-    } else if (style === 'twin_braids') {
-      // Duas trancinhas laterais
-      [-14, 14].forEach(bx => {
+    } else if (cfg.hairStyle === 'hair_twin_buns') {
+      [-15, 15].forEach(bx => {
         ctx.beginPath();
-        ctx.ellipse(bx, 6, 4, 10, bx < 0 ? 0.2 : -0.2, 0, Math.PI * 2);
+        ctx.arc(bx, -12, 6, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
       });
-    } else if (style === 'straight_long') {
-      ctx.beginPath();
-      ctx.rect(-15, -4, 30, 24);
-      ctx.fill();
-      ctx.stroke();
     }
 
     ctx.restore();
@@ -550,7 +560,7 @@ export class ModularAvatarRenderer {
     ctx.translate(x, y);
     ctx.rotate(rot);
 
-    // 1. Camisa / Top
+    // 1. Camisa / Tronco (base_character.png)
     ctx.fillStyle = primary;
     ctx.strokeStyle = '#0f8e83';
     ctx.lineWidth = 1.2;
@@ -571,7 +581,7 @@ export class ModularAvatarRenderer {
     ctx.fill();
     ctx.stroke();
 
-    // Estampa / Listras se for estilo listrado
+    // Listras
     if (cfg.topStyle === 'shirt_striped_teal' && dir !== 'north') {
       ctx.fillStyle = secondary;
       [-4, 0].forEach(sy => {
@@ -608,13 +618,13 @@ export class ModularAvatarRenderer {
     ctx.arc(0, 2, 4, 0, Math.PI * 2);
     ctx.fill();
 
-    // Braço / Pele
+    // Braço & Mãozinha esférica (base_character.png)
     ctx.fillStyle = skin;
     ctx.strokeStyle = cfg.skinShadow || '#e0ae82';
     ctx.lineWidth = 1.0;
     ctx.beginPath();
     ctx.rect(-2.5, 3, 5, 8);
-    ctx.arc(0, 11, 3.2, 0, Math.PI * 2); // Mão esférica tátil
+    ctx.arc(0, 11, 3.2, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
@@ -630,11 +640,11 @@ export class ModularAvatarRenderer {
     ctx.translate(x, y);
     ctx.rotate(rot);
 
-    // Perna / Pele (shorts visível)
+    // Perna / Pele
     ctx.fillStyle = skin;
     ctx.fillRect(-2.5, 0, 5, 8);
 
-    // Sapato / Tênis 3D
+    // Sapato 3D
     ctx.fillStyle = shoeColor;
     ctx.strokeStyle = '#9a3412';
     ctx.lineWidth = 1.0;
@@ -648,7 +658,7 @@ export class ModularAvatarRenderer {
     ctx.fill();
     ctx.stroke();
 
-    // Sola branca do tênis
+    // Sola branca
     ctx.fillStyle = shoeTrim;
     ctx.fillRect(dir === 'east' ? -3 : -3.5, 11.5, dir === 'east' ? 10 : 7, 1.8);
 
@@ -683,7 +693,6 @@ export class ModularAvatarRenderer {
         ctx.stroke();
       }
     } else {
-      // Óculos redondos clássicos
       ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
       if (dir === 'south') {
         [-7, 7].forEach(gx => {
@@ -710,27 +719,22 @@ export class ModularAvatarRenderer {
   drawHat(ctx, x, y, cfg, dir) {
     ctx.save();
     ctx.translate(x, y);
-    const hatColor = cfg.hatColor || '#f59e0b';
 
     if (cfg.hatStyle === 'straw_hat') {
-      // Chapéu de Palha clássico Animal Crossing
       ctx.fillStyle = '#fde68a';
       ctx.strokeStyle = '#d97706';
       ctx.lineWidth = 1.2;
 
-      // Aba larga
       ctx.beginPath();
       ctx.ellipse(0, -12, 22, 7, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
-      // Copa do chapéu
       ctx.beginPath();
       ctx.arc(0, -17, 10, Math.PI * 1.0, Math.PI * 2.0);
       ctx.fill();
       ctx.stroke();
 
-      // Fita vermelha
       ctx.strokeStyle = '#dc2626';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
@@ -738,18 +742,15 @@ export class ModularAvatarRenderer {
       ctx.stroke();
 
     } else if (cfg.hatStyle === 'witch_hat') {
-      // Chapéu pontudo de bruxo
       ctx.fillStyle = '#4c1d95';
       ctx.strokeStyle = '#2e1065';
       ctx.lineWidth = 1.2;
 
-      // Aba
       ctx.beginPath();
       ctx.ellipse(0, -13, 20, 6, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
-      // Cone pontudo inclinado
       ctx.beginPath();
       ctx.moveTo(-11, -14);
       ctx.quadraticCurveTo(0, -28, 6, -34);
@@ -759,14 +760,12 @@ export class ModularAvatarRenderer {
       ctx.stroke();
 
     } else if (cfg.hatStyle === 'cat_ears_band') {
-      // Tiara com Orelhinhas de Gato
       ctx.strokeStyle = '#1e293b';
       ctx.lineWidth = 1.8;
       ctx.beginPath();
       ctx.arc(0, -11, 14, Math.PI * 1.15, Math.PI * 1.85);
       ctx.stroke();
 
-      // Orelhas
       [-9, 9].forEach(ox => {
         ctx.fillStyle = cfg.hairColor || '#3d2314';
         ctx.beginPath();
@@ -777,7 +776,6 @@ export class ModularAvatarRenderer {
         ctx.fill();
         ctx.stroke();
 
-        // Interior rosa
         ctx.fillStyle = '#f472b6';
         ctx.beginPath();
         ctx.moveTo(ox - 2, -14);
@@ -791,12 +789,6 @@ export class ModularAvatarRenderer {
     ctx.restore();
   }
 
-  /**
-   * Gera uma imagem DataURL (PNG) do avatar renderizado para usar como retrato em HUDs e cartas.
-   * @param {Object} config - Configuração do avatar
-   * @param {number} size - Tamanho do quadrado em pixels
-   * @returns {string} DataURL em formato PNG
-   */
   getAvatarThumbnail(config, size = 64) {
     const offCanvas = document.createElement('canvas');
     offCanvas.width = size;
