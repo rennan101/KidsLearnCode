@@ -703,6 +703,8 @@ export class DragonManager {
     // Combat Entities & Particle Systems
     this.combatParticles = [];
     this.damageNumbers = [];
+    this.defeatAnimations = [];
+    this.onDragonDefeated = null;
     this.combatCooldown = 0;
 
     // Training Targets in World (placed dynamically by ADM in Edit Mode)
@@ -713,6 +715,19 @@ export class DragonManager {
 
     // Autonomous Wild Dragons FSM Map (placed by ADM in Edit Mode)
     this.wildDragons = new Map();
+
+    // Out of Combat Timer for Gradual HP Regeneration
+    this.outOfCombatTimer = 0; // When > 0, dragon is in battle
+  }
+
+  // Trigger Combat Activity (resets out-of-battle timer)
+  triggerCombatActivity(duration = 5.0) {
+    this.outOfCombatTimer = Math.max(this.outOfCombatTimer, duration);
+  }
+
+  // Check if player's dragon is currently in battle
+  isInCombat() {
+    return this.outOfCombatTimer > 0 || this.state === 'combat';
   }
 
   // Formation Management Methods (4 Slots)
@@ -968,6 +983,9 @@ export class DragonManager {
         message: `Esquiva Tática! ${skill.name}`
       };
     }
+
+    // Slots 1, 2, 3: Offensive & Terrain Skills trigger in-battle state
+    this.triggerCombatActivity(5.0);
 
     // Slots 1, 2, 3: Calculate Level-Scaled AoE Tiles
     const affectedTiles = this.calculateSkillAoETiles(dragon, slotIndex, player);
@@ -1263,8 +1281,74 @@ export class DragonManager {
     return { success: true, dragon: newDragon };
   }
 
+  triggerDragonDefeat(dragon, player, inventorySystem = null) {
+    if (!dragon) return { success: false };
+
+    const animX = (player && this.mode === 'mounted') ? (player.x + 24) : (this.x + 24);
+    const animY = (player && this.mode === 'mounted') ? (player.y + 24) : (this.y + 24);
+
+    // Dismount rider safely if mounted
+    if (this.mode === 'mounted') {
+      this.mode = 'follow';
+      this.flightAltitude = 0;
+      this.targetFlightAltitude = 0;
+      if (player) {
+        player.isMounted = false;
+        player.spawnCraftPoof?.();
+      }
+    }
+
+    // Create Defeat & Reverse Hatch Egg Transformation Animation
+    this.defeatAnimations.push({
+      x: animX,
+      y: animY,
+      dragon: { ...dragon },
+      timer: 0,
+      duration: 2.6,
+      color: dragon.color || '#38bdf8',
+      secondaryColor: dragon.secondaryColor || '#fef08a'
+    });
+
+    // Spawn initial magical summoning poof
+    this.spawnSummonParticles(animX, animY, dragon);
+
+    // Convert dragon to Egg and insert into Inventory System
+    let egg = null;
+    if (inventorySystem && typeof inventorySystem.addEggFromDragon === 'function') {
+      egg = inventorySystem.addEggFromDragon(dragon);
+    }
+
+    // Remove defeated dragon from player's active party
+    this.dragonParty = this.dragonParty.filter(d => d.id !== dragon.id);
+
+    // Clear from active formation slots
+    for (let i = 0; i < 4; i++) {
+      if (this.activeFormation[i] === dragon.id) {
+        this.activeFormation[i] = null;
+      }
+    }
+
+    // Automatically switch to next available dragon in formation if available
+    const nextSlotIndex = this.activeFormation.findIndex(id => !!id);
+    if (nextSlotIndex !== -1) {
+      this.switchActiveDragonFromSlot(nextSlotIndex);
+    } else if (this.dragonParty.length > 0) {
+      this.activeDragonId = this.dragonParty[0].id;
+    } else {
+      this.activeDragonId = null;
+      this.mode = 'none';
+    }
+
+    // Trigger onDragonDefeated callback
+    if (typeof this.onDragonDefeated === 'function') {
+      this.onDragonDefeated(dragon, egg);
+    }
+
+    return { success: true, transformedToEgg: true, dragon, egg };
+  }
+
   // Update Game Loop AI & Combat Logic
-  update(deltaTime, player, tileMap) {
+  update(deltaTime, player, tileMap, inventorySystem = null) {
     const dt = Math.min(deltaTime / 1000, 0.1);
     this.floatTimer += dt;
 
@@ -1273,6 +1357,41 @@ export class DragonManager {
       this.syncWildDragonsFromMap(tileMap);
     }
     this.updateWildDragons(dt, player, tileMap);
+
+    // 0b. Check if Active Dragon was Defeated (HP <= 0) -> Trigger Reverse Egg Crystallization
+    const activeDragon = this.getActiveDragon();
+    if (activeDragon && activeDragon.hp !== undefined && activeDragon.hp <= 0) {
+      this.triggerDragonDefeat(activeDragon, player, inventorySystem);
+    }
+
+    // 0c. Update active defeat & egg transformation animations
+    for (let i = this.defeatAnimations.length - 1; i >= 0; i--) {
+      const anim = this.defeatAnimations[i];
+      anim.timer += dt;
+
+      // Spawn swirling spiral particles converging inward
+      if (Math.random() < 0.65) {
+        const angle = Math.random() * Math.PI * 2;
+        const rad = 24 + Math.random() * 22;
+        const pSpeed = 65 + Math.random() * 45;
+        this.combatParticles.push({
+          x: anim.x + Math.cos(angle) * rad,
+          y: anim.y + Math.sin(angle) * rad,
+          vx: -Math.cos(angle) * pSpeed,
+          vy: -Math.sin(angle) * pSpeed,
+          color: Math.random() < 0.5 ? (anim.color || '#38bdf8') : (anim.secondaryColor || '#fef08a'),
+          size: 3 + Math.random() * 3.5,
+          life: 0,
+          maxLife: 0.5,
+          alpha: 1.0,
+          type: 'spiral'
+        });
+      }
+
+      if (anim.timer >= anim.duration) {
+        this.defeatAnimations.splice(i, 1);
+      }
+    }
 
     // Update Skill Cooldowns for Slots 1 to 4
     for (let i = 0; i < 4; i++) {
@@ -1304,6 +1423,47 @@ export class DragonManager {
     } else {
       this.targetFlightAltitude = 0;
       this.flightAltitude += (0 - this.flightAltitude) * Math.min(1.0, 10.0 * dt);
+    }
+
+    // 0d. Energy & HP Gradual Regeneration System
+    this.outOfCombatTimer = Math.max(0, this.outOfCombatTimer - dt);
+    const inCombat = this.isInCombat();
+
+    // 1. Energy Regeneration (gradual continuous recovery for all dragons in party)
+    const energyRegenRate = 12.0; // 12 points per second
+    for (const d of this.dragonParty) {
+      if (d.energy !== undefined && d.energy < (d.maxEnergy || 100)) {
+        d.energy = Math.min(d.maxEnergy || 100, d.energy + energyRegenRate * dt);
+      }
+    }
+
+    // 2. HP Regeneration (gradual recovery ONLY when OUT OF BATTLE)
+    if (!inCombat) {
+      for (const d of this.dragonParty) {
+        const maxHp = d.maxHp || 100;
+        if (d.hp !== undefined && d.hp > 0 && d.hp < maxHp) {
+          // Regenerates ~3.5% max HP per second (~3 to 6 HP/s)
+          const hpRegenRate = Math.max(2.5, maxHp * 0.035);
+          d.hp = Math.min(maxHp, d.hp + hpRegenRate * dt);
+
+          // Spawn subtle green healing sparkles floating up from active dragon
+          if (d.id === this.activeDragonId && Math.random() < 0.12) {
+            const hx = (player && this.mode === 'mounted') ? (player.x + 24) : (this.x + 24);
+            const hy = (player && this.mode === 'mounted') ? (player.y + 24) : (this.y + 24);
+            this.combatParticles.push({
+              x: hx + (Math.random() - 0.5) * 32,
+              y: hy + (Math.random() - 0.5) * 20,
+              vx: (Math.random() - 0.5) * 12,
+              vy: -22 - Math.random() * 18,
+              color: '#34d399',
+              size: 2.2 + Math.random() * 2,
+              life: 0,
+              maxLife: 0.6,
+              alpha: 0.85
+            });
+          }
+        }
+      }
     }
 
     const dragon = this.getActiveDragon();
@@ -1344,6 +1504,7 @@ export class DragonManager {
       const dist = Math.hypot(target.x - (this.x + 24), target.y - (this.y + 24));
       if (dist < 140 && target.hp > 0) {
         this.state = 'combat';
+        this.triggerCombatActivity(5.0);
         target.isAggro = true;
 
         // Companion Auto-Attack every 1.2s
@@ -1499,10 +1660,17 @@ export class DragonManager {
 
       // Energy regeneration & Attack Cooldown
       if (entity.energy < (entity.maxEnergy || 100)) {
-        entity.energy = Math.min(entity.maxEnergy || 100, entity.energy + 10 * dt);
+        entity.energy = Math.min(entity.maxEnergy || 100, entity.energy + 12 * dt);
       }
       if (entity.attackCooldown > 0) {
         entity.attackCooldown = Math.max(0, entity.attackCooldown - dt);
+      }
+
+      // Wild Dragon HP Regeneration out of battle (when not chasing or attacking)
+      const isWildInCombat = entity.fsmState === 'chase' || entity.fsmState === 'attack';
+      if (!isWildInCombat && entity.hp < (entity.maxHp || 100)) {
+        const wildHpRegenRate = (entity.fsmState === 'sleep' ? 12 : 3.5);
+        entity.hp = Math.min(entity.maxHp || 100, entity.hp + wildHpRegenRate * dt);
       }
 
       // Update Emote Timer
@@ -1649,6 +1817,7 @@ export class DragonManager {
             entity.direction = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'east' : 'west') : (dy > 0 ? 'south' : 'north');
 
             if (entity.attackCooldown <= 0) {
+              this.triggerCombatActivity(5.0);
               this.spawnAttackParticles(entity.x + 32, entity.y + 32, player.x + 24, player.y + 24, entity);
 
               if (!this.isDodging) {
@@ -1784,10 +1953,13 @@ export class DragonManager {
       this.renderDragonEntity(ctx, dragon, player);
     }
 
-    // 5. Render Combat Particles
+    // 5. Render Defeat & Reverse Hatch Egg Transformation Animations
+    this.renderDefeatEggAnimations(ctx);
+
+    // 6. Render Combat Particles
     this.renderParticles(ctx);
 
-    // 6. Render Floating Damage Numbers
+    // 7. Render Floating Damage Numbers
     this.renderDamageNumbers(ctx);
   }
 
@@ -2508,4 +2680,177 @@ export class DragonManager {
       ctx.restore();
     }
   }
+
+  // Render Reverse Hatching / Egg Crystallization Animation when Player's Dragon is Defeated
+  renderDefeatEggAnimations(ctx) {
+    if (!this.defeatAnimations || this.defeatAnimations.length === 0) return;
+
+    for (const anim of this.defeatAnimations) {
+      const { x, y, dragon, timer, duration, color, secondaryColor } = anim;
+      const progress = Math.min(1, timer / duration);
+
+      ctx.save();
+      ctx.translate(x, y);
+
+      // Phase 1 (0.0s - 1.2s): Dragon collapsing / condensing into light sphere
+      if (timer < 1.2) {
+        const p1 = timer / 1.2;
+        const scale = 1.0 - (p1 * 0.75);
+        const pulse = 1.0 + Math.sin(timer * 18) * 0.12;
+
+        // Converging Energy Rings
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.5;
+        ctx.globalAlpha = Math.max(0, 1.0 - p1 * 0.5);
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(2, 38 * (1 - p1 * 0.8)), 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = secondaryColor;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(2, 22 * (1 - p1 * 0.6)), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        // Shrinking Dragon Silhouette in Element Light
+        ctx.save();
+        ctx.scale(scale * pulse, scale * pulse);
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.85;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 18, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = secondaryColor;
+        ctx.beginPath();
+        ctx.arc(0, -6, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      // Phase 2 (1.2s - 2.0s): Crystal Egg Formation & Shimmering
+      else if (timer < 2.0) {
+        const p2 = (timer - 1.2) / 0.8;
+        const eggScale = Math.min(1.0, 0.3 + p2 * 0.7);
+        const hoverY = Math.sin((timer - 1.2) * 6) * 4;
+
+        ctx.save();
+        ctx.translate(0, hoverY);
+        ctx.scale(eggScale, eggScale);
+
+        // Rotating Runic Circle
+        ctx.save();
+        ctx.rotate(timer * 2.5);
+        ctx.strokeStyle = secondaryColor;
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.7;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        ctx.arc(0, 0, 28, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+
+        // Radiant Outer Glow
+        const grad = ctx.createRadialGradient(0, 0, 4, 0, 0, 24);
+        grad.addColorStop(0, color);
+        grad.addColorStop(0.7, secondaryColor);
+        grad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = grad;
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath();
+        ctx.arc(0, 0, 24, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Crystal Dragon Egg Body
+        ctx.globalAlpha = 1.0;
+        ctx.fillStyle = '#fdfbf7';
+        ctx.beginPath();
+        // Draw Egg geometry
+        ctx.moveTo(0, -18);
+        ctx.bezierCurveTo(12, -18, 14, 12, 0, 16);
+        ctx.bezierCurveTo(-14, 12, -12, -18, 0, -18);
+        ctx.fill();
+
+        // Egg Shell Contour
+        ctx.strokeStyle = '#7a583e';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // Elemental Shell Pattern
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.ellipse(0, 4, 8, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = secondaryColor;
+        ctx.beginPath();
+        ctx.arc(-2, -6, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(3, 8, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
+      // Phase 3 (2.0s - 2.6s): Egg Ascending and Poofing into Inventory Pocket
+      else {
+        const p3 = (timer - 2.0) / 0.6;
+        const ascendY = -p3 * 45;
+        const fadeAlpha = Math.max(0, 1.0 - p3);
+
+        ctx.save();
+        ctx.translate(0, ascendY);
+        ctx.globalAlpha = fadeAlpha;
+
+        // Egg Body floating
+        ctx.fillStyle = '#fdfbf7';
+        ctx.beginPath();
+        ctx.moveTo(0, -18);
+        ctx.bezierCurveTo(12, -18, 14, 12, 0, 16);
+        ctx.bezierCurveTo(-14, 12, -12, -18, 0, -18);
+        ctx.fill();
+
+        ctx.strokeStyle = '#7a583e';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Burst Expansion Ring
+        ctx.strokeStyle = secondaryColor;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 12 + p3 * 30, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      // Overhead Animal Island UI Badge: "✦ Retornando à forma de Ovo..."
+      ctx.save();
+      const badgeY = -36 - (timer > 2.0 ? (timer - 2.0) * 20 : 0);
+      const text = `✦ ${dragon.name || 'Dragão'} voltou ao Ovo`;
+      ctx.font = 'bold 10px Outfit, sans-serif';
+      const textW = ctx.measureText(text).width;
+      const pillW = textW + 18;
+      const pillH = 18;
+
+      ctx.fillStyle = '#fdfbf7';
+      ctx.strokeStyle = '#7a583e';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.roundRect(-pillW / 2, badgeY - pillH / 2, pillW, pillH, 9);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#794f27';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, 0, badgeY);
+      ctx.restore();
+
+      ctx.restore();
+    }
+  }
 }
+

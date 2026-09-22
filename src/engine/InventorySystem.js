@@ -145,6 +145,33 @@ export class InventorySystem {
     this.notify();
   }
 
+  addEggFromDragon(dragon) {
+    if (!dragon) return null;
+    let iconKey = 'egg_solar';
+    if (dragon.element?.includes('Gelo') || dragon.element?.includes('Água') || dragon.id?.includes('water') || dragon.id?.includes('frost')) {
+      iconKey = 'egg_frost';
+    } else if (dragon.element?.includes('Fogo') || dragon.id?.includes('fire') || dragon.id?.includes('ignis')) {
+      iconKey = 'egg_solar';
+    } else if (dragon.element?.includes('Terra') || dragon.id?.includes('land') || dragon.id?.includes('boulder')) {
+      iconKey = 'egg_solar';
+    }
+
+    const egg = {
+      id: `egg_${dragon.id}_${Date.now()}`,
+      name: `Ovo de ${dragon.name.split(',')[0]}`,
+      iconKey,
+      speciesId: dragon.id,
+      dragonLevel: dragon.level || 1,
+      warmth: 0,
+      maxWarmth: 100,
+      desc: `Ovo místico de ${dragon.name}. O dragão descansou após a batalha e retornou à forma de ovo. Aqueça-o no ninho para chocá-lo novamente!`
+    };
+
+    this.eggs.push(egg);
+    this.notify();
+    return egg;
+  }
+
   subscribe(listener) {
     this.listeners.push(listener);
     return () => {

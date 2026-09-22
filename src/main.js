@@ -2305,9 +2305,9 @@ class RPGApplication {
       // Move player with collision checking against tile colliders (4-way)
       this.player.update(deltaTime, this.tileMap, this.assetLoader);
 
-      // Update Dragon Manager (Pet Follow AI, Combat, Particles)
+      // Update Dragon Manager (Pet Follow AI, Combat, Particles, Defeat to Egg)
       if (this.dragonManager) {
-        this.dragonManager.update(deltaTime, this.player, this.tileMap);
+        this.dragonManager.update(deltaTime, this.player, this.tileMap, this.inventorySystem);
         this.updateDragonQuickHUD?.();
         this.updateDragonSkillBar?.();
       }
@@ -3343,6 +3343,22 @@ class RPGApplication {
         }
       }
     };
+
+    // Callback when player dragon is defeated and transforms back into egg
+    if (this.dragonManager) {
+      this.dragonManager.onDragonDefeated = (dragon, egg) => {
+        this.soundSystem?.playHitSound?.();
+        this.showToast(`✦ ${dragon.name || 'Seu dragão'} retornou à forma de Ovo e foi guardado na sua Mochila!`, 'warning');
+        
+        lastFormationState = '';
+        lastSkillDragonId = '';
+        this.updateDragonQuickHUD?.();
+        this.updateDragonSkillBar?.();
+        if (this.inventorySystem) {
+          this.inventorySystem.renderBackpack?.();
+        }
+      };
+    }
   }
 
   setupHeroSelectionUI() {
@@ -3894,11 +3910,11 @@ class RPGApplication {
         dragonDetailStats.innerHTML = `
           <div class="ac-pocket-stat-row">
             <span class="ac-pocket-stat-label">Vida (HP)</span>
-            <span class="ac-pocket-stat-val">${drag.hp}/${drag.maxHp}</span>
+            <span class="ac-pocket-stat-val">${Math.round(drag.hp || 0)}/${drag.maxHp || 100}</span>
           </div>
           <div class="ac-pocket-stat-row">
             <span class="ac-pocket-stat-label">Energia</span>
-            <span class="ac-pocket-stat-val">${drag.energy || 100}/${drag.maxEnergy || 100}</span>
+            <span class="ac-pocket-stat-val">${Math.round(drag.energy !== undefined ? drag.energy : 100)}/${drag.maxEnergy || 100}</span>
           </div>
           <div class="ac-pocket-stat-row">
             <span class="ac-pocket-stat-label">Alcance da Skill</span>

@@ -90,7 +90,7 @@ Cada spritesheet segue uma **grade estrita de 4 linhas horizontais x 8 frames po
 
 ##### 4. Prompt de Montado no Dragão (`Mounted / Riding` - 4 Direções x 8 Frames):
 ```text
-2D game character spritesheet of cute anthropomorphic wolf boy hunter riding dragon mount pose, Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down perspective, charcoal-gray fur, forest-green tunic, character seated in riding saddle pose holding reins with natural riding bobbing motion, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid pure plain white background without any grid lines or boxes, clean 2.5D vector art, smooth 3D clay lighting
+2D game character spritesheet of cute anthropomorphic wolf boy hunter riding mount pose(without the mount animal), Animal Crossing New Horizons art style, Sea of Stars 3/4 high top-down perspective, charcoal-gray fur, forest-green tunic, character seated in riding saddle pose holding reins with natural riding bobbing motion, neatly organized in exactly 4 horizontal rows of 8 animation frames each (Row 1: 8 frames riding South facing front, Row 2: 8 frames riding North facing back, Row 3: 8 frames riding West facing left, Row 4: 8 frames riding East facing right), solid pure plain white background without any grid lines or boxes, clean 2.5D vector art, smooth 3D clay lighting
 ```
 
 ---
