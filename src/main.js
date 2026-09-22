@@ -903,17 +903,34 @@ class RPGApplication {
           return;
         }
 
-        // Keys 1, 2, 3, 4: Cast Dragon Skills (Key 4 is Universal Dodge)
+        // Keys 1, 2, 3, 4: Cast Dragon Skills (when mounted/combat) OR Switch Active Dragon (when walking)
         if (['1', '2', '3', '4'].includes(e.key)) {
           if (this.dragonManager) {
             const slotIndex = parseInt(e.key, 10) - 1;
-            const res = this.dragonManager.castSkill(slotIndex, this.player, this.tileMap, this.camera);
-            if (res.success) {
-              if (res.message) this.showToast(res.message);
-              this.updateDragonSkillBar?.();
-              return;
-            } else if (res.reason && (this.player.isMounted || this.dragonManager.state === 'combat')) {
-              this.showToast(res.reason);
+            const isMountedOrCombat = (this.player.isMounted || this.dragonManager.isMounted() || this.dragonManager.state === 'combat');
+
+            if (isMountedOrCombat) {
+              const res = this.dragonManager.castSkill(slotIndex, this.player, this.tileMap, this.camera);
+              if (res.success) {
+                if (res.message) this.showToast(res.message);
+                this.updateDragonSkillBar?.();
+                return;
+              } else if (res.reason) {
+                this.showToast(res.reason);
+                return;
+              }
+            } else {
+              // When walking (not mounted): Keys 1, 2, 3, 4 swap active dragon using formation slots 1 to 4
+              const switchRes = this.dragonManager.switchActiveDragonFromSlot(slotIndex);
+              if (switchRes.success) {
+                this.soundSystem?.playClickSound?.();
+                this.updateDragonQuickHUD?.();
+                this.updateDragonSkillBar?.();
+                const dName = switchRes.dragon.name.split(',')[0];
+                this.showToast(`✦ [${e.key}] ${dName} agora está te acompanhando!`);
+              } else if (switchRes.reason) {
+                this.showToast(`Slot ${e.key} da formação está vazio.`, 'warning');
+              }
               return;
             }
           }
@@ -3894,31 +3911,35 @@ class RPGApplication {
       if (dragonDetailSkillsList) {
         const skills = drag.skills || DRAGON_CATALOG.find(d => d.id === drag.id)?.skills || [];
         dragonDetailSkillsList.innerHTML = `
-          <div style="font-weight: 800; font-size: 0.78rem; color: #794f27; margin-bottom: 4px;">4 Habilidades Elementais [Teclas 1 a 4]:</div>
-          ${skills.map((s, idx) => `
-            <div class="pocket-skill-row">
-              <span class="pocket-skill-key">${s.key || (idx + 1)}</span>
-              <span class="pocket-skill-name">${s.name}</span>
-              <span class="pocket-skill-tag" style="${s.type === 'dodge' ? 'background: #fef3c7; color: #d97706;' : ''}">${s.type === 'dodge' ? 'Esquiva' : (s.type === 'ultimate' ? 'Ultimate' : (s.type === 'terrain' ? 'Terreno' : 'Ataque'))}</span>
-            </div>
-          `).join('')}
+          <div style="font-weight: 800; font-size: 0.76rem; color: #794f27; margin-bottom: 4px; text-align: left; width: 100%;">4 Habilidades Elementais [Teclas 1 a 4]:</div>
+          <div class="pocket-skills-grid">
+            ${skills.map((s, idx) => `
+              <div class="pocket-skill-row" title="${s.desc || s.name}">
+                <span class="pocket-skill-key">${s.key || (idx + 1)}</span>
+                <span class="pocket-skill-name">${s.name}</span>
+                <span class="pocket-skill-tag" style="${s.type === 'dodge' ? 'background: #fef3c7; color: #d97706;' : (s.type === 'ultimate' ? 'background: #ede9fe; color: #7c3aed;' : '')}">${s.type === 'dodge' ? 'Esquiva' : (s.type === 'ultimate' ? 'Ult' : (s.type === 'terrain' ? 'Terreno' : 'Ataque'))}</span>
+              </div>
+            `).join('')}
+          </div>
         `;
       }
 
       if (dragonDetailStats) {
         dragonDetailStats.style.display = 'block';
         dragonDetailStats.innerHTML = `
-          <div class="ac-pocket-stat-row">
-            <span class="ac-pocket-stat-label">Vida (HP)</span>
-            <span class="ac-pocket-stat-val">${Math.round(drag.hp || 0)}/${drag.maxHp || 100}</span>
-          </div>
-          <div class="ac-pocket-stat-row">
-            <span class="ac-pocket-stat-label">Energia</span>
-            <span class="ac-pocket-stat-val">${Math.round(drag.energy !== undefined ? drag.energy : 100)}/${drag.maxEnergy || 100}</span>
-          </div>
-          <div class="ac-pocket-stat-row">
-            <span class="ac-pocket-stat-label">Alcance da Skill</span>
-            <span class="ac-pocket-stat-val">${(drag.level || 1) <= 4 ? '1 Tile Frontal' : ((drag.level || 1) <= 14 ? '2-3 Tiles' : ((drag.level || 1) <= 39 ? '4-6 Tiles' : ((drag.level || 1) <= 79 ? '8-12 Tiles' : 'Tela Toda (Mega AoE)')))}</span>
+          <div class="ac-pocket-stats-grid">
+            <div class="ac-pocket-stat-row">
+              <span class="ac-pocket-stat-label">Vida (HP)</span>
+              <span class="ac-pocket-stat-val">${Math.round(drag.hp || 0)}/${drag.maxHp || 100}</span>
+            </div>
+            <div class="ac-pocket-stat-row">
+              <span class="ac-pocket-stat-label">Energia</span>
+              <span class="ac-pocket-stat-val">${Math.round(drag.energy !== undefined ? drag.energy : 100)}/${drag.maxEnergy || 100}</span>
+            </div>
+            <div class="ac-pocket-stat-row full-width">
+              <span class="ac-pocket-stat-label">Alcance da Skill</span>
+              <span class="ac-pocket-stat-val">${(drag.level || 1) <= 4 ? '1 Tile Frontal' : ((drag.level || 1) <= 14 ? '2-3 Tiles' : ((drag.level || 1) <= 39 ? '4-6 Tiles' : ((drag.level || 1) <= 79 ? '8-12 Tiles' : 'Tela Toda (Mega AoE)')))}</span>
+            </div>
           </div>
         `;
       }
