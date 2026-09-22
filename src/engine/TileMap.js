@@ -35,9 +35,13 @@ export class TileMap {
     };
 
     // Animated tile clock (for water)
-    this.waterAnimFrame = 0;
     this.waterTimer = 0;
-    this.waterFrameDuration = 140; // ms per frame (~7 FPS)
+    this.waterAnimFrame = 0;
+    this.waterFrameDuration = 120; // 120ms per animation frame
+
+    // Dynamic Terrain Modification Systems (Ice Bridges, Water Evaporation, Puddles)
+    this.temporaryIceTiles = new Map(); // key -> { tx, ty, originalTileId, expiresAt }
+    this.temporaryPuddleTiles = new Map(); // key -> { tx, ty, expiresAt }
 
     // Player default spawn position (snapped to 64px grid)
     this.spawnPoint = { x: 320, y: 320 };
@@ -155,6 +159,11 @@ export class TileMap {
     const tx = Math.floor(worldX / this.tileSize);
     const ty = Math.floor(worldY / this.tileSize);
     const key = this.getKey(tx, ty);
+
+    // If temporarily frozen with ice, it acts as solid ice surface (not water)
+    if (this.temporaryIceTiles && this.temporaryIceTiles.has(key)) {
+      return false;
+    }
 
     const groundCell = this.layers.ground?.get(key);
     if (groundCell && groundCell.tileId) {
@@ -292,6 +301,181 @@ export class TileMap {
       this.waterTimer = 0;
       this.waterAnimFrame = (this.waterAnimFrame + 1) % 8; // 8 water frames
     }
+
+    // Update Temporary Ice Bridges Melting & Puddles Drying Cycle
+    const now = Date.now();
+    for (const [key, ice] of this.temporaryIceTiles.entries()) {
+      if (now >= ice.expiresAt) {
+        // Revert back to original water tile
+        this.setTile('ground', ice.tx, ice.ty, ice.originalTileId || 'water-animated');
+        this.temporaryIceTiles.delete(key);
+      }
+    }
+
+    for (const [key, puddle] of this.temporaryPuddleTiles.entries()) {
+      if (now >= puddle.expiresAt) {
+        this.temporaryPuddleTiles.delete(key);
+      }
+    }
+  }
+
+  // 1. Destroy Trees, Foliage, and Plants (Fire, Nature, Wind, Earth)
+  destroyVegetationAt(worldX, worldY, radius = 48, assetLoader = null) {
+    const destroyed = [];
+    const minTx = Math.floor((worldX - radius) / this.tileSize);
+    const maxTx = Math.floor((worldX + radius) / this.tileSize);
+    const minTy = Math.floor((worldY - radius) / this.tileSize);
+    const maxTy = Math.floor((worldY + radius) / this.tileSize);
+
+    const layers = ['solid', 'decor'];
+    for (let ty = minTy; ty <= maxTy; ty++) {
+      for (let tx = minTx; tx <= maxTx; tx++) {
+        const cx = tx * this.tileSize + 32;
+        const cy = ty * this.tileSize + 32;
+        if (Math.hypot(cx - worldX, cy - worldY) <= radius) {
+          for (const layerName of layers) {
+            const cell = this.getTile(layerName, tx, ty);
+            if (cell && cell.tileId) {
+              const id = cell.tileId.toLowerCase();
+              if (
+                id.includes('tree') || id.includes('pine') || id.includes('palm') ||
+                id.includes('bush') || id.includes('plant') || id.includes('flower') ||
+                id.includes('grass') || id.includes('crop') || id.includes('mushroom') ||
+                id.includes('stump') || id.includes('wood')
+              ) {
+                this.deleteTile(tx, ty, layerName, assetLoader);
+                destroyed.push({ x: cx, y: cy, tileId: cell.tileId });
+              }
+            }
+          }
+        }
+      }
+    }
+    return destroyed;
+  }
+
+  // 2. Destroy Rocks, Boulders, and Stones (Earth, Magma, Strength)
+  destroyRockAt(worldX, worldY, radius = 48, assetLoader = null) {
+    const destroyed = [];
+    const minTx = Math.floor((worldX - radius) / this.tileSize);
+    const maxTx = Math.floor((worldX + radius) / this.tileSize);
+    const minTy = Math.floor((worldY - radius) / this.tileSize);
+    const maxTy = Math.floor((worldY + radius) / this.tileSize);
+
+    const layers = ['solid', 'decor'];
+    for (let ty = minTy; ty <= maxTy; ty++) {
+      for (let tx = minTx; tx <= maxTx; tx++) {
+        const cx = tx * this.tileSize + 32;
+        const cy = ty * this.tileSize + 32;
+        if (Math.hypot(cx - worldX, cy - worldY) <= radius) {
+          for (const layerName of layers) {
+            const cell = this.getTile(layerName, tx, ty);
+            if (cell && cell.tileId) {
+              const id = cell.tileId.toLowerCase();
+              if (
+                id.includes('rock') || id.includes('stone') || id.includes('boulder') ||
+                id.includes('ore') || id.includes('mineral') || id.includes('crystal')
+              ) {
+                this.deleteTile(tx, ty, layerName, assetLoader);
+                destroyed.push({ x: cx, y: cy, tileId: cell.tileId });
+              }
+            }
+          }
+        }
+      }
+    }
+    return destroyed;
+  }
+
+  // 3. Evaporate Water & Puddles into Dry Soil (Fire, Solar Heat)
+  evaporateWaterAt(worldX, worldY, radius = 48, assetLoader = null) {
+    const evaporated = [];
+    const minTx = Math.floor((worldX - radius) / this.tileSize);
+    const maxTx = Math.floor((worldX + radius) / this.tileSize);
+    const minTy = Math.floor((worldY - radius) / this.tileSize);
+    const maxTy = Math.floor((worldY + radius) / this.tileSize);
+
+    for (let ty = minTy; ty <= maxTy; ty++) {
+      for (let tx = minTx; tx <= maxTx; tx++) {
+        const cx = tx * this.tileSize + 32;
+        const cy = ty * this.tileSize + 32;
+        if (Math.hypot(cx - worldX, cy - worldY) <= radius) {
+          const key = this.getKey(tx, ty);
+          if (this.temporaryPuddleTiles.has(key)) {
+            this.temporaryPuddleTiles.delete(key);
+            evaporated.push({ x: cx, y: cy, type: 'puddle' });
+          }
+          const groundCell = this.layers.ground?.get(key);
+          if (groundCell && groundCell.tileId) {
+            const id = groundCell.tileId.toLowerCase();
+            if (id === 'water-animated' || id.includes('water') || id.includes('river') || id.includes('ocean')) {
+              this.setTile('ground', tx, ty, 'soil-01');
+              evaporated.push({ x: cx, y: cy, type: 'water' });
+            }
+          }
+        }
+      }
+    }
+    return evaporated;
+  }
+
+  // 4. Freeze Water into Solid Walkable Ice Bridges (Ice, Frost)
+  freezeWaterAt(worldX, worldY, radius = 48, durationSeconds = 10, assetLoader = null) {
+    const frozen = [];
+    const minTx = Math.floor((worldX - radius) / this.tileSize);
+    const maxTx = Math.floor((worldX + radius) / this.tileSize);
+    const minTy = Math.floor((worldY - radius) / this.tileSize);
+    const maxTy = Math.floor((worldY + radius) / this.tileSize);
+
+    for (let ty = minTy; ty <= maxTy; ty++) {
+      for (let tx = minTx; tx <= maxTx; tx++) {
+        const cx = tx * this.tileSize + 32;
+        const cy = ty * this.tileSize + 32;
+        if (Math.hypot(cx - worldX, cy - worldY) <= radius) {
+          const key = this.getKey(tx, ty);
+          const groundCell = this.layers.ground?.get(key);
+          if (groundCell && groundCell.tileId) {
+            const id = groundCell.tileId.toLowerCase();
+            if (id === 'water-animated' || id.includes('water') || id.includes('river') || id.includes('ocean')) {
+              this.temporaryIceTiles.set(key, {
+                tx,
+                ty,
+                originalTileId: groundCell.tileId,
+                expiresAt: Date.now() + durationSeconds * 1000
+              });
+              frozen.push({ x: cx, y: cy, tx, ty });
+            }
+          }
+        }
+      }
+    }
+    return frozen;
+  }
+
+  // 5. Create Water Puddles on Soil / Grass (Water, Ocean, Rain)
+  createPuddleAt(worldX, worldY, radius = 48, durationSeconds = 14) {
+    const puddles = [];
+    const minTx = Math.floor((worldX - radius) / this.tileSize);
+    const maxTx = Math.floor((worldX + radius) / this.tileSize);
+    const minTy = Math.floor((worldY - radius) / this.tileSize);
+    const maxTy = Math.floor((worldY + radius) / this.tileSize);
+
+    for (let ty = minTy; ty <= maxTy; ty++) {
+      for (let tx = minTx; tx <= maxTx; tx++) {
+        const cx = tx * this.tileSize + 32;
+        const cy = ty * this.tileSize + 32;
+        if (Math.hypot(cx - worldX, cy - worldY) <= radius) {
+          const key = this.getKey(tx, ty);
+          this.temporaryPuddleTiles.set(key, {
+            tx,
+            ty,
+            expiresAt: Date.now() + durationSeconds * 1000
+          });
+          puddles.push({ x: cx, y: cy, tx, ty });
+        }
+      }
+    }
+    return puddles;
   }
 
   drawTileCell(ctx, cell, x, y, assetLoader, isEditor = false, showColliders = true) {
@@ -526,6 +710,58 @@ export class TileMap {
       } else {
         ctx.drawImage(img, destX, destY, rawW, rawH);
       }
+    }
+
+    // Dynamic Frozen Ice Crystal Overlay on Water
+    const cellKey = this.getKey(x, y);
+    if (this.temporaryIceTiles && this.temporaryIceTiles.has(cellKey)) {
+      ctx.save();
+      // Frosted ice base
+      ctx.fillStyle = 'rgba(186, 230, 253, 0.72)';
+      ctx.fillRect(destX, destY, this.tileSize, this.tileSize);
+
+      // Ice crystal borders & highlights
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(destX + 1, destY + 1, this.tileSize - 2, this.tileSize - 2);
+
+      // Geometric frost cracks
+      ctx.strokeStyle = 'rgba(224, 242, 254, 0.9)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(destX + 8, destY + 12);
+      ctx.lineTo(destX + 28, destY + 32);
+      ctx.lineTo(destX + 44, destY + 20);
+      ctx.moveTo(destX + 28, destY + 32);
+      ctx.lineTo(destX + 24, destY + 54);
+      ctx.moveTo(destX + 38, destY + 42);
+      ctx.lineTo(destX + 56, destY + 48);
+      ctx.stroke();
+
+      // Ice sparkle diamond
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(destX + 48, destY + 16, 2.5, 0, Math.PI * 2);
+      ctx.arc(destX + 16, destY + 46, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Dynamic Water Puddle Overlay
+    if (this.temporaryPuddleTiles && this.temporaryPuddleTiles.has(cellKey)) {
+      ctx.save();
+      const wavePhase = (Date.now() / 400 + (x * 3 + y * 5)) % (Math.PI * 2);
+      ctx.fillStyle = 'rgba(6, 182, 212, 0.35)';
+      ctx.beginPath();
+      ctx.ellipse(destX + 32, destY + 32, 24 + Math.sin(wavePhase) * 2, 16 + Math.cos(wavePhase) * 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(destX + 32, destY + 32, 20 + Math.sin(wavePhase + 1) * 3, 12 + Math.cos(wavePhase + 1) * 2, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
     }
   }
 

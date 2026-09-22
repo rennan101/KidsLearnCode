@@ -128,6 +128,7 @@ class RPGApplication {
       safeCall(this.setupCraftingUI, 'setupCraftingUI');
       safeCall(this.setupCodingStudioUI, 'setupCodingStudioUI');
       safeCall(this.setupQuickMountButton, 'setupQuickMountButton');
+      safeCall(this.setupDragonBattleUI, 'setupDragonBattleUI');
       safeCall(this.setupNetworkDisconnectionMonitor, 'setupNetworkDisconnectionMonitor');
       safeCall(this.setupTimeWidget, 'setupTimeWidget');
       safeCall(this.bindDOMEvents, 'bindDOMEvents');
@@ -902,15 +903,20 @@ class RPGApplication {
           return;
         }
 
-        // Key 1: Tactical Dodge (Sprint 5)
-        if (e.key === '1') {
-          const res = this.dragonManager.triggerTacticalDodge();
-          if (res.success) {
-            this.showToast(`Esquiva Tática! ${res.abilityName}`);
-          } else if (res.reason) {
-            this.showToast(res.reason);
+        // Keys 1, 2, 3, 4: Cast Dragon Skills (Key 4 is Universal Dodge)
+        if (['1', '2', '3', '4'].includes(e.key)) {
+          if (this.dragonManager) {
+            const slotIndex = parseInt(e.key, 10) - 1;
+            const res = this.dragonManager.castSkill(slotIndex, this.player, this.tileMap, this.camera);
+            if (res.success) {
+              if (res.message) this.showToast(res.message);
+              this.updateDragonSkillBar?.();
+              return;
+            } else if (res.reason && (this.player.isMounted || this.dragonManager.state === 'combat')) {
+              this.showToast(res.reason);
+              return;
+            }
           }
-          return;
         }
 
         // Key Q: Flight Descend (when mounted on flying dragon)
@@ -2302,6 +2308,8 @@ class RPGApplication {
       // Update Dragon Manager (Pet Follow AI, Combat, Particles)
       if (this.dragonManager) {
         this.dragonManager.update(deltaTime, this.player, this.tileMap);
+        this.updateDragonQuickHUD?.();
+        this.updateDragonSkillBar?.();
       }
 
       // Update Multiplayer Client & Broadcast Local Movement
@@ -3147,6 +3155,171 @@ class RPGApplication {
     };
   }
 
+  setupDragonBattleUI() {
+    const quickHud = document.getElementById('dragon-quick-hud');
+    const skillBar = document.getElementById('dragon-skill-bar');
+
+    let lastFormationState = '';
+    let lastSkillDragonId = '';
+
+    const getSkillSvgIcon = (type, element) => {
+      if (type === 'dodge') {
+        return `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>`;
+      }
+      if (element === 'Fogo') {
+        return `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>`;
+      }
+      if (element === 'Água' || element === 'Gelo') {
+        return `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>`;
+      }
+      if (element === 'Vento') {
+        return `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path></svg>`;
+      }
+      if (element === 'Terra' || element === 'Terra / Rocha') {
+        return `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 22 22 22"></polygon><polygon points="12 9 6 22 18 22"></polygon></svg>`;
+      }
+      if (element === 'Elétrico') {
+        return `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
+      }
+      if (element === 'Natureza') {
+        return `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path></svg>`;
+      }
+      if (element === 'Sombra') {
+        return `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
+      }
+      return `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
+    };
+
+    this.updateDragonQuickHUD = () => {
+      if (!quickHud || !this.dragonManager) return;
+      if (this.mode !== 'play') {
+        quickHud.style.display = 'none';
+        return;
+      }
+
+      quickHud.style.display = 'flex';
+      const formation = this.dragonManager.getFormation();
+      const activeDragon = this.dragonManager.getActiveDragon();
+
+      const currentState = JSON.stringify({
+        formation: formation.map(d => d ? { id: d.id, level: d.level } : null),
+        active: activeDragon?.id
+      });
+
+      if (currentState === lastFormationState) return;
+      lastFormationState = currentState;
+
+      quickHud.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        const drag = formation[i];
+        const isActive = drag && activeDragon?.id === drag.id;
+
+        const slotBtn = document.createElement('button');
+        slotBtn.className = `dragon-hud-slot ${isActive ? 'active' : ''} ${!drag ? 'empty' : ''}`;
+        slotBtn.setAttribute('data-slot', i);
+        slotBtn.title = drag ? `${drag.name} (Nv. ${drag.level || 1}) - Clique para alternar` : `Slot ${i + 1} Vazio`;
+
+        if (drag) {
+          slotBtn.innerHTML = `
+            <span class="dragon-hud-key-pill">${i + 1}</span>
+            <div class="dragon-hud-avatar" style="background: ${drag.color || '#38bdf8'}; border-color: ${drag.secondaryColor || '#fef08a'};">
+              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 20px; height: 20px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </div>
+            <span class="dragon-hud-level-badge">Nv.${drag.level || 1}</span>
+          `;
+          slotBtn.addEventListener('click', () => {
+            soundFX.playPop(1.1 + i * 0.1);
+            const res = this.dragonManager.switchActiveDragonFromSlot(i);
+            if (res.success) {
+              this.player?.spawnCraftPoof();
+              this.showToast(`Dragão ativo: ${res.dragon.name}!`);
+            }
+          });
+        } else {
+          slotBtn.innerHTML = `
+            <span class="dragon-hud-key-pill">${i + 1}</span>
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; opacity: 0.35;"><path d="M12 5v14M5 12h14"></path></svg>
+          `;
+          slotBtn.addEventListener('click', () => {
+            this.showToast(`Slot ${i + 1} está vazio. Abra a mochila para adicionar dragões à formação.`);
+          });
+        }
+
+        quickHud.appendChild(slotBtn);
+      }
+    };
+
+    this.updateDragonSkillBar = () => {
+      if (!skillBar || !this.dragonManager) return;
+      const activeDragon = this.dragonManager.getActiveDragon();
+      const isCombatReady = this.mode === 'play' && (this.dragonManager.isMounted() || this.dragonManager.state === 'combat') && !!activeDragon;
+
+      if (!isCombatReady) {
+        skillBar.style.display = 'none';
+        lastSkillDragonId = '';
+        return;
+      }
+
+      skillBar.style.display = 'flex';
+      const skills = activeDragon.skills || [];
+      const cooldowns = this.dragonManager.skillCooldowns || [0, 0, 0, 0];
+
+      // Rebuild structure if dragon changed
+      if (lastSkillDragonId !== activeDragon.id) {
+        lastSkillDragonId = activeDragon.id;
+        skillBar.innerHTML = '';
+
+        for (let i = 0; i < 4; i++) {
+          const skill = skills[i] || { name: `Habilidade ${i + 1}`, key: `${i + 1}`, type: i === 3 ? 'dodge' : 'attack', cooldown: 3 };
+          const skillBtn = document.createElement('button');
+          skillBtn.className = `dragon-skill-btn ${skill.type === 'dodge' ? 'dodge-skill' : ''}`;
+          skillBtn.id = `dragon-skill-btn-${i}`;
+          skillBtn.setAttribute('data-skill-idx', i);
+
+          const aoeDesc = this.dragonManager.getAoEDescription(activeDragon);
+          skillBtn.title = `[Tecla ${i + 1}] ${skill.name} - ${skill.desc || ''} (Alcance: ${aoeDesc})`;
+
+          skillBtn.innerHTML = `
+            <span class="dragon-skill-key-badge">${i + 1}</span>
+            <div class="dragon-skill-icon-wrap">
+              ${getSkillSvgIcon(skill.type, activeDragon.element)}
+            </div>
+            <span class="dragon-skill-name-label">${skill.name.split(' ')[0]}</span>
+            <div class="dragon-skill-cooldown-overlay" id="dragon-skill-cd-${i}" style="display: none;">
+              <span class="dragon-skill-cd-text">0</span>
+            </div>
+          `;
+
+          skillBtn.addEventListener('click', () => {
+            if (this.dragonManager.skillCooldowns[i] > 0) {
+              soundFX.playPop(0.8);
+              return;
+            }
+            this.dragonManager.castSkill(i, this.player, this.tileMap, this.camera);
+          });
+
+          skillBar.appendChild(skillBtn);
+        }
+      }
+
+      // Update cooldown overlays dynamically
+      for (let i = 0; i < 4; i++) {
+        const cdOverlay = document.getElementById(`dragon-skill-cd-${i}`);
+        const cdText = cdOverlay?.querySelector('.dragon-skill-cd-text');
+        const cd = cooldowns[i] || 0;
+
+        if (cdOverlay && cdText) {
+          if (cd > 0) {
+            cdOverlay.style.display = 'flex';
+            cdText.innerText = (cd >= 1 ? Math.ceil(cd) : cd.toFixed(1)) + 's';
+          } else {
+            cdOverlay.style.display = 'none';
+          }
+        }
+      }
+    };
+  }
+
   setupHeroSelectionUI() {
     const modal = document.getElementById('hero-selection-modal');
     const closeBtn = document.getElementById('btn-close-hero-selection');
@@ -3634,12 +3807,14 @@ class RPGApplication {
     });
 
     // ==========================================
-    // TAB 4: DRAGÕES
+    // TAB 4: DRAGÕES (FORMAÇÃO 4 SLOTS & DRAG & DROP)
     // ==========================================
+    const formationSlotsEl = document.getElementById('backpack-formation-slots');
     const dragonsGrid = document.getElementById('backpack-dragons-grid');
     const dragonDetailIcon = document.getElementById('pocket-dragons-icon');
     const dragonDetailName = document.getElementById('pocket-dragons-name');
     const dragonDetailDesc = document.getElementById('pocket-dragons-desc');
+    const dragonDetailSkillsList = document.getElementById('pocket-dragons-skills-list');
     const dragonDetailStats = document.getElementById('pocket-dragons-stats');
     const dragonDetailActions = document.getElementById('pocket-dragons-actions');
     const btnMountDragon = document.getElementById('btn-pocket-mount-dragon');
@@ -3652,6 +3827,7 @@ class RPGApplication {
         if (dragonDetailName) dragonDetailName.innerText = 'Selecione um dragão';
         if (dragonDetailDesc) dragonDetailDesc.innerText = 'Escolha um dragão do seu grupo para montar ou acompanhar sua exploração.';
         if (dragonDetailIcon) dragonDetailIcon.innerHTML = `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+        if (dragonDetailSkillsList) dragonDetailSkillsList.innerHTML = '';
         if (dragonDetailStats) dragonDetailStats.style.display = 'none';
         if (dragonDetailActions) dragonDetailActions.style.display = 'none';
         return;
@@ -3662,13 +3838,30 @@ class RPGApplication {
       const isActive = activeDragon?.id === drag.id;
 
       if (dragonDetailIcon) {
+        dragonDetailIcon.style.borderColor = drag.color || '#38bdf8';
+        dragonDetailIcon.style.color = drag.color || '#38bdf8';
         dragonDetailIcon.innerHTML = `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
       }
       if (dragonDetailName) {
-        dragonDetailName.innerText = `${drag.name} (Nv. ${drag.level})`;
+        dragonDetailName.innerText = `${drag.name} (Nv. ${drag.level || 1})`;
       }
       if (dragonDetailDesc) {
-        dragonDetailDesc.innerText = `Elemento: ${drag.element} • Habilidade: ${drag.fieldMove || 'Voo Rápido'}`;
+        dragonDetailDesc.innerText = `Elemento: ${drag.element} • Categoria: ${drag.category.toUpperCase()} • ${drag.desc}`;
+      }
+
+      // Render 4 Skills preview with level progression notes
+      if (dragonDetailSkillsList) {
+        const skills = drag.skills || DRAGON_CATALOG.find(d => d.id === drag.id)?.skills || [];
+        dragonDetailSkillsList.innerHTML = `
+          <div style="font-weight: 800; font-size: 0.78rem; color: #794f27; margin-bottom: 4px;">4 Habilidades Elementais [Teclas 1 a 4]:</div>
+          ${skills.map((s, idx) => `
+            <div class="pocket-skill-row">
+              <span class="pocket-skill-key">${s.key || (idx + 1)}</span>
+              <span class="pocket-skill-name">${s.name}</span>
+              <span class="pocket-skill-tag" style="${s.type === 'dodge' ? 'background: #fef3c7; color: #d97706;' : ''}">${s.type === 'dodge' ? 'Esquiva' : (s.type === 'ultimate' ? 'Ultimate' : (s.type === 'terrain' ? 'Terreno' : 'Ataque'))}</span>
+            </div>
+          `).join('')}
+        `;
       }
 
       if (dragonDetailStats) {
@@ -3679,8 +3872,12 @@ class RPGApplication {
             <span class="ac-pocket-stat-val">${drag.hp}/${drag.maxHp}</span>
           </div>
           <div class="ac-pocket-stat-row">
-            <span class="ac-pocket-stat-label">Amizade</span>
-            <span class="ac-pocket-stat-val">${drag.bond}%</span>
+            <span class="ac-pocket-stat-label">Energia</span>
+            <span class="ac-pocket-stat-val">${drag.energy || 100}/${drag.maxEnergy || 100}</span>
+          </div>
+          <div class="ac-pocket-stat-row">
+            <span class="ac-pocket-stat-label">Alcance da Skill</span>
+            <span class="ac-pocket-stat-val">${(drag.level || 1) <= 4 ? '1 Tile Frontal' : ((drag.level || 1) <= 14 ? '2-3 Tiles' : ((drag.level || 1) <= 39 ? '4-6 Tiles' : ((drag.level || 1) <= 79 ? '8-12 Tiles' : 'Tela Toda (Mega AoE)')))}</span>
           </div>
         `;
       }
@@ -3688,7 +3885,7 @@ class RPGApplication {
       if (dragonDetailActions) {
         dragonDetailActions.style.display = 'flex';
         if (btnMountLabel) {
-          btnMountLabel.innerText = isActive && isMounted ? 'Desmontar' : 'Montar Dragão';
+          btnMountLabel.innerText = isActive && isMounted ? 'Desmontar' : 'Montar [R]';
         }
         if (btnMountDragon) {
           btnMountDragon.className = `ac-pocket-action-btn ${isActive && isMounted ? 'danger' : ''}`;
@@ -3700,51 +3897,130 @@ class RPGApplication {
     };
 
     const renderDragonsTab = () => {
-      if (!dragonsGrid) return;
-      dragonsGrid.innerHTML = '';
+      // 1. Render Top 4-Slot Battle Formation with Drag & Drop
+      if (formationSlotsEl) {
+        formationSlotsEl.innerHTML = '';
+        const formation = this.dragonManager.getFormation();
+        const activeDragon = this.dragonManager.getActiveDragon();
 
-      const party = this.dragonManager.getParty();
-      const activeDragon = this.dragonManager.getActiveDragon();
-      const isMounted = this.dragonManager.isMounted();
-      const slotsCount = 20;
+        for (let i = 0; i < 4; i++) {
+          const drag = formation[i];
+          const isActive = drag && activeDragon?.id === drag.id;
+          const slotCard = document.createElement('div');
+          slotCard.className = `ac-formation-slot-card ${drag ? 'filled' : 'empty'} ${isActive ? 'active-leader' : ''}`;
+          slotCard.dataset.slotIndex = i;
 
-      for (let i = 0; i < slotsCount; i++) {
-        const drag = party[i] || null;
-        const isActive = drag && activeDragon?.id === drag.id;
-        const isSelected = selectedDragon?.id === drag?.id && drag;
+          if (drag) {
+            slotCard.draggable = true;
+            slotCard.innerHTML = `
+              <span class="ac-formation-slot-badge">Slot ${i + 1}</span>
+              <div class="dragon-hud-avatar" style="background: ${drag.color || '#38bdf8'}; border-color: ${drag.secondaryColor || '#fef08a'};">
+                <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 20px; height: 20px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              </div>
+              <span style="font-size: 0.72rem; font-weight: 800; color: #794f27; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%;">${drag.name.split(',')[0]}</span>
+              <span class="dragon-hud-level-badge">Nv.${drag.level || 1}</span>
+            `;
 
-        const slotEl = document.createElement('div');
-        slotEl.className = `ac-pocket-slot ${drag ? 'filled' : 'empty'} ${isSelected ? 'selected' : ''} ${isActive ? 'equipped' : ''}`;
-        slotEl.dataset.slot = i;
+            slotCard.addEventListener('dragstart', (e) => {
+              e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'formation_slot', fromIndex: i, dragonId: drag.id }));
+              slotCard.style.opacity = '0.5';
+            });
+            slotCard.addEventListener('dragend', () => {
+              slotCard.style.opacity = '1';
+            });
+            slotCard.addEventListener('click', () => {
+              selectedDragon = drag;
+              renderDragonsTab();
+              updateDragonDetailPanel(drag);
+            });
+          } else {
+            slotCard.innerHTML = `
+              <span class="ac-formation-slot-badge">Slot ${i + 1}</span>
+              <div style="font-size: 1.4rem; color: #b3a082; font-weight: 700;">+</div>
+              <span style="font-size: 0.68rem; color: #8a7b66; font-weight: 700;">Vazio</span>
+            `;
+          }
 
-        if (drag) {
-          slotEl.innerHTML = `
-            <div class="ac-pocket-slot-icon" style="color: #38bdf8;">
-              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-            </div>
-            <span class="ac-pocket-slot-badge" style="background: #0369a1; border-color: #38bdf8;">Nv.${drag.level}</span>
-          `;
-          slotEl.title = `${drag.name} (Nv.${drag.level})${isActive ? (isMounted ? ' - Montado' : ' - Acompanhando') : ''}`;
-
-          slotEl.addEventListener('click', () => {
-            selectedDragon = drag;
-            renderDragonsTab();
-            updateDragonDetailPanel(drag);
+          // Drag and drop listeners on formation slots
+          slotCard.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            slotCard.classList.add('drag-over');
           });
-        } else {
-          slotEl.title = `Bolso Vazio ${i + 1}`;
-          slotEl.addEventListener('click', () => {
-            selectedDragon = null;
-            renderDragonsTab();
-            updateDragonDetailPanel(null);
+          slotCard.addEventListener('dragleave', () => {
+            slotCard.classList.remove('drag-over');
           });
+          slotCard.addEventListener('drop', (e) => {
+            e.preventDefault();
+            slotCard.classList.remove('drag-over');
+            try {
+              const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+              if (data.type === 'formation_slot') {
+                this.dragonManager.swapFormation(data.fromIndex, i);
+                this.showToast(`Posições de dragão trocadas!`);
+              } else if (data.type === 'reserve_dragon') {
+                this.dragonManager.setFormationSlot(i, data.dragonId);
+                this.showToast(`Dragão definido no Slot ${i + 1}!`);
+              }
+              renderDragonsTab();
+              this.updateDragonQuickHUD?.();
+            } catch (err) {}
+          });
+
+          formationSlotsEl.appendChild(slotCard);
         }
+      }
 
-        slotEl.addEventListener('mouseenter', () => {
-          soundFX.playPop(1.1 + (i % 5) * 0.04);
-        });
+      // 2. Render Reserve Grid Pockets (Draggable to formation)
+      if (dragonsGrid) {
+        dragonsGrid.innerHTML = '';
+        const party = this.dragonManager.getParty();
+        const activeDragon = this.dragonManager.getActiveDragon();
+        const isMounted = this.dragonManager.isMounted();
+        const slotsCount = 20;
 
-        dragonsGrid.appendChild(slotEl);
+        for (let i = 0; i < slotsCount; i++) {
+          const drag = party[i] || null;
+          const isActive = drag && activeDragon?.id === drag.id;
+          const isSelected = selectedDragon?.id === drag?.id && drag;
+
+          const slotEl = document.createElement('div');
+          slotEl.className = `ac-pocket-slot ${drag ? 'filled' : 'empty'} ${isSelected ? 'selected' : ''} ${isActive ? 'equipped' : ''}`;
+          slotEl.dataset.slot = i;
+
+          if (drag) {
+            slotEl.draggable = true;
+            slotEl.innerHTML = `
+              <div class="ac-pocket-slot-icon" style="color: ${drag.color || '#38bdf8'};">
+                <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              </div>
+              <span class="ac-pocket-slot-badge" style="background: #0369a1; border-color: #38bdf8;">Nv.${drag.level || 1}</span>
+            `;
+            slotEl.title = `${drag.name} (Nv.${drag.level || 1})${isActive ? (isMounted ? ' - Montado' : ' - Acompanhando') : ''} (Arraste para a formação)`;
+
+            slotEl.addEventListener('dragstart', (e) => {
+              e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'reserve_dragon', dragonId: drag.id }));
+            });
+
+            slotEl.addEventListener('click', () => {
+              selectedDragon = drag;
+              renderDragonsTab();
+              updateDragonDetailPanel(drag);
+            });
+          } else {
+            slotEl.title = `Bolso Vazio ${i + 1}`;
+            slotEl.addEventListener('click', () => {
+              selectedDragon = null;
+              renderDragonsTab();
+              updateDragonDetailPanel(null);
+            });
+          }
+
+          slotEl.addEventListener('mouseenter', () => {
+            soundFX.playPop(1.1 + (i % 5) * 0.04);
+          });
+
+          dragonsGrid.appendChild(slotEl);
+        }
       }
 
       updateWalletBar();
@@ -3766,6 +4042,8 @@ class RPGApplication {
       }
       renderDragonsTab();
       updateDragonDetailPanel(selectedDragon);
+      this.updateDragonQuickHUD?.();
+      this.updateDragonSkillBar?.();
     });
 
     btnFollowDragon?.addEventListener('click', () => {
@@ -3775,6 +4053,8 @@ class RPGApplication {
       this.showToast(`${selectedDragon.name} agora está te acompanhando!`);
       renderDragonsTab();
       updateDragonDetailPanel(selectedDragon);
+      this.updateDragonQuickHUD?.();
+      this.updateDragonSkillBar?.();
     });
 
     // ==========================================

@@ -527,7 +527,17 @@
         </div>
       </div>
 
-      <!-- Tile Inspector Panel (Shows all layers at selected cell) -->
+      <!-- Right-Center Dragon Quick Switch Formation HUD (4 Slots) -->
+      <div id="dragon-quick-hud" class="dragon-quick-hud" style="display: none;">
+        <!-- Filled dynamically by JavaScript with up to 4 formation slots -->
+      </div>
+
+      <!-- Dragon Combat & Field Skill Bar (Bottom Center, Keys 1 to 4) -->
+      <div id="dragon-skill-bar" class="dragon-skill-bar" style="display: none;">
+        <!-- Filled dynamically with active dragon's 4 skills -->
+      </div>
+
+      <!-- Quick Transform Toolbar (Placed Object Contextual Sub-bar: Edit / Reset / Delete) -->
       <div class="tile-inspector-panel" id="tile-inspector-panel">
         <div class="inspector-header">
           <div class="inspector-title">
@@ -853,10 +863,29 @@
         </div>
       </div>
 
-      <!-- Tab 4: Dragões (20 Circular Pockets Grid + Detail Panel) -->
-      <div class="backpack-tab-content" id="tab-content-dragons" style="display: none; flex: 1; flex-direction: column; min-height: 0;">
-        <div class="ac-pocket-layout">
+      <!-- Tab 4: Dragões (Formação Ativa 4 Slots + Reserva Drag & Drop) -->
+      <div class="backpack-tab-content" id="tab-content-dragons" style="display: none; flex: 1; flex-direction: column; min-height: 0; overflow-y: auto;">
+        
+        <!-- Top Section: 4-Slot Battle Formation (Drag & Drop targets) -->
+        <div class="ac-dragon-formation-section">
+          <div class="ac-formation-header">
+            <div class="ac-formation-title-wrap">
+              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              <span>Formação de Batalha (4 Slots Ativos)</span>
+            </div>
+            <span class="ac-formation-hint">Arraste e solte para definir seus 4 dragões rápidos no jogo</span>
+          </div>
+          <div class="ac-formation-slots-grid" id="backpack-formation-slots">
+            <!-- 4 Droppable Slots (0, 1, 2, 3) -->
+          </div>
+        </div>
+
+        <!-- Bottom Section: Reserve Dragon Grid + Details Panel -->
+        <div class="ac-pocket-layout" style="margin-top: 8px;">
           <div class="ac-pocket-grid-wrapper">
+            <div class="ac-formation-reserve-label">Dragões na Mochila (Arraste para a Formação):</div>
             <div class="ac-pocket-grid" id="backpack-dragons-grid"></div>
           </div>
           <div class="ac-pocket-detail-card" id="pocket-dragons-detail-card">
@@ -868,6 +897,10 @@
             <div class="ac-pocket-detail-text">
               <h4 id="pocket-dragons-name">Selecione um dragão</h4>
               <p id="pocket-dragons-desc">Escolha um dragão do seu grupo para montar ou acompanhar sua exploração.</p>
+              
+              <!-- 4 Skills List Preview -->
+              <div id="pocket-dragons-skills-list" class="pocket-dragons-skills-list"></div>
+
               <div id="pocket-dragons-stats" style="display: none; width: 100%; margin-top: 8px;"></div>
             </div>
             <div class="ac-pocket-actions" id="pocket-dragons-actions" style="display: none;">
@@ -875,7 +908,7 @@
                 <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polygon points="5 3 19 12 5 21 5 3"></polygon>
                 </svg>
-                <span id="btn-pocket-mount-label">Montar</span>
+                <span id="btn-pocket-mount-label">Montar [R]</span>
               </button>
               <button class="ac-pocket-action-btn secondary" id="btn-pocket-follow-dragon">
                 <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

@@ -6236,16 +6236,366 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
 }
 
 /* Highlight Pulsing Element */
-.tut-highlight {
-  box-shadow: 0 0 0 4px #ffcc00, 0 0 20px rgba(255, 204, 0, 0.8) !important;
-  animation: tutPulseHighlight 1s infinite alternate ease-in-out !important;
-  position: relative;
-  z-index: 1002 !important;
+/* ==========================================================================
+   ANIMAL ISLAND UI - DRAGON COMBAT, 4-SKILL BAR & QUICK HUD (SPRINT 5+)
+   ========================================================================== */
+
+/* 1. Right-Center Dragon Quick Switch Formation HUD (4 Slots) */
+.dragon-quick-hud {
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 120;
+  pointer-events: auto;
+  background: rgba(253, 251, 247, 0.92);
+  border: 3px solid #7a583e;
+  border-radius: 24px;
+  padding: 12px 10px;
+  box-shadow: 0 8px 24px rgba(80, 50, 20, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(4px);
 }
 
-@keyframes tutPulseHighlight {
-  0% { transform: scale(1); box-shadow: 0 0 0 4px #ffcc00, 0 0 10px rgba(255, 204, 0, 0.5); }
-  100% { transform: scale(1.02); box-shadow: 0 0 0 6px #ffcc00, 0 0 24px rgba(255, 204, 0, 0.95); }
+.dragon-hud-slot {
+  position: relative;
+  width: 62px;
+  height: 62px;
+  border-radius: 18px;
+  background: #f8f8f0;
+  border: 2.5px solid #d4c5a9;
+  box-shadow: 0 4px 0 0 #b3a082;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
 }
+
+.dragon-hud-slot:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 0 #b3a082;
+  border-color: #19c8b9;
+}
+
+.dragon-hud-slot:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 #b3a082;
+}
+
+.dragon-hud-slot.active {
+  background: #e6f9f6;
+  border-color: #19c8b9;
+  box-shadow: 0 4px 0 0 #0f8e83, 0 0 12px rgba(25, 200, 185, 0.45);
+}
+
+.dragon-hud-slot.empty {
+  border-style: dashed;
+  border-color: #c4b89e;
+  background: rgba(248, 248, 240, 0.5);
+  box-shadow: none;
+  cursor: default;
+}
+
+.dragon-hud-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.dragon-hud-level-badge {
+  position: absolute;
+  bottom: -6px;
+  background: #fdfbf7;
+  border: 1.5px solid #f59e0b;
+  border-radius: 50px;
+  padding: 1px 6px;
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #794f27;
+  box-shadow: 0 2px 0 #d97706;
+}
+
+.dragon-hud-key-pill {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  background: #f59e0b;
+  border: 1.5px solid #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #0f172a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* 2. Bottom Dragon Combat & Field Skill Bar (Keys 1 to 4) */
+.dragon-skill-bar {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 120;
+  pointer-events: auto;
+  background: rgba(253, 251, 247, 0.94);
+  border: 3px solid #7a583e;
+  border-radius: 50px;
+  padding: 8px 18px;
+  box-shadow: 0 8px 24px rgba(80, 50, 20, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(6px);
+}
+
+.dragon-skill-slot {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border-radius: 50px;
+  background: #f8f8f0;
+  border: 2.5px solid #7a583e;
+  box-shadow: 0 4px 0 0 #5c3c26;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+}
+
+.dragon-skill-slot:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 0 #5c3c26;
+  border-color: #19c8b9;
+}
+
+.dragon-skill-slot:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 #5c3c26;
+}
+
+.dragon-skill-slot.dodge-slot {
+  border-color: #f59e0b;
+  box-shadow: 0 4px 0 0 #b45309;
+}
+
+.dragon-skill-slot.on-cooldown {
+  opacity: 0.65;
+  filter: grayscale(40%);
+  cursor: not-allowed;
+}
+
+.dragon-skill-cooldown-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50px;
+  background: rgba(15, 23, 42, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 800;
+  z-index: 5;
+}
+
+.dragon-skill-icon-svg {
+  width: 26px;
+  height: 26px;
+  color: #794f27;
+}
+
+.dragon-skill-keycap {
+  position: absolute;
+  bottom: -6px;
+  background: #f59e0b;
+  border: 1.5px solid #fffdf5;
+  border-radius: 50px;
+  padding: 1px 7px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #0f172a;
+  box-shadow: 0 2px 0 #b45309;
+}
+
+.dragon-skill-tooltip {
+  position: absolute;
+  bottom: 74px;
+  background: #fdfbf7;
+  border: 2px solid #7a583e;
+  border-radius: 14px;
+  padding: 8px 12px;
+  width: 170px;
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-size: 0.75rem;
+  color: #794f27;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  display: none;
+  text-align: center;
+  z-index: 20;
+}
+
+.dragon-skill-slot:hover .dragon-skill-tooltip {
+  display: block;
+}
+
+/* 3. Backpack Tab 4: 4-Slot Battle Formation & Drag & Drop */
+.ac-dragon-formation-section {
+  background: #f8f8f0;
+  border: 2.5px solid #7a583e;
+  border-radius: 20px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.ac-formation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.ac-formation-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #794f27;
+}
+
+.ac-formation-hint {
+  font-size: 0.74rem;
+  color: #8a7b66;
+  font-weight: 600;
+}
+
+.ac-formation-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.ac-formation-slot-card {
+  height: 84px;
+  background: #fdfbf7;
+  border: 2.5px solid #c4b89e;
+  border-radius: 18px;
+  box-shadow: 0 4px 0 0 #b3a082;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.ac-formation-slot-card.drag-over {
+  border-color: #19c8b9;
+  background: #e6f9f6;
+  box-shadow: 0 0 12px rgba(25, 200, 185, 0.6);
+  transform: scale(1.04);
+}
+
+.ac-formation-slot-card.active-leader {
+  border-color: #f59e0b;
+  box-shadow: 0 4px 0 0 #d97706;
+}
+
+.ac-formation-slot-badge {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #8a7b66;
+}
+
+.ac-formation-reserve-label {
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #794f27;
+  margin-bottom: 6px;
+}
+
+.pocket-dragons-skills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.pocket-skill-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8f8f0;
+  border: 1.5px solid #d4c5a9;
+  border-radius: 12px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+}
+
+.pocket-skill-key {
+  width: 18px;
+  height: 18px;
+  background: #f59e0b;
+  border-radius: 50%;
+  color: #0f172a;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  font-size: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pocket-skill-name {
+  font-weight: 800;
+  color: #794f27;
+  flex: 1;
+}
+
+.pocket-skill-tag {
+  font-size: 0.65rem;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 1px 6px;
+  border-radius: 50px;
+  font-weight: 700;
+}
+
 
 
