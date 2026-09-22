@@ -74,18 +74,19 @@
 
 .cc-title {
   margin: 0;
-  font-family: 'Cinzel', serif;
+  font-family: 'Nunito', 'Outfit', sans-serif;
   font-size: 1.5rem;
-  font-weight: 800;
-  color: #5c3c26;
-  letter-spacing: 0.5px;
+  font-weight: 900;
+  color: #794f27;
+  letter-spacing: -0.2px;
 }
 
 .cc-subtitle {
   margin: 0;
-  font-size: 0.88rem;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.92rem;
   color: #8a7b66;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .cc-close-btn {
@@ -119,10 +120,10 @@
   overflow: hidden;
 }
 
-/* Left Stage: Spacious 3D Preview */
+/* Left Stage: Spacious Organic Preview */
 .cc-stage-panel {
   width: 420px;
-  background: radial-gradient(circle at center, #eef9f7 0%, #daf0eb 100%);
+  background: radial-gradient(circle at center, #f4fbf9 0%, #e6f7f3 100%);
   border-right: 3px solid #d0e4df;
   display: flex;
   flex-direction: column;
@@ -137,10 +138,10 @@
 .cc-preview-stage {
   width: 280px;
   height: 300px;
-  background: #ffffff;
-  border: 3px solid #b8dfd8;
-  border-radius: 28px;
-  box-shadow: 0 10px 24px rgba(25, 200, 185, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.04);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -149,10 +150,11 @@
 }
 
 .cc-canvas {
-  width: 256px;
-  height: 256px;
-  image-rendering: pixelated;
+  width: 260px;
+  height: 280px;
+  image-rendering: auto;
 }
+
 
 /* Stage Controls */
 .cc-stage-controls {

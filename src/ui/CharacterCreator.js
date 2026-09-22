@@ -146,7 +146,7 @@ export class CharacterCreator {
               <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
             </svg>
             <div>
-              <h2 class="cc-title">Criador de Personagem (Tela Cheia)</h2>
+              <h2 class="cc-title">Criador de Personagem</h2>
               <p class="cc-subtitle">Personalize seu avatar de corpo inteiro com animações automáticas por recorte 2D</p>
             </div>
           </div>

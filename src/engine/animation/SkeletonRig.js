@@ -91,59 +91,48 @@ export class SkeletonRig {
 
       case 'walk':
       case 'run': {
-        if (effectiveDir === 'south') {
-          // CAMINHADA SUL (Frontal): Waddle Chibi acolhedor com balanceio lateral e elevação alternada
-          const waddle = Math.sin(phase) * 0.08;
-          pose.root.y += -Math.abs(sinPhase) * (bobAmp * 0.9);
-          pose.root.rot = waddle;
-          pose.head.bobY = -Math.abs(sinPhase) * (bobAmp * 0.6);
-          pose.head.rot = -waddle * 0.7;
+        if (effectiveDir === 'south' || effectiveDir === 'north') {
+          // CAMINHADA FRENTE / COSTAS: Pés sobem e descem (movimento vertical puro de elevação/pisada, sem ir para os lados)
+          const bob = Math.abs(sinPhase) * bobAmp;
+          pose.root.y += -bob;
+          pose.root.rot = 0; // Sem waddle lateral
+          pose.head.bobY = -bob * 0.7;
+          pose.head.rot = 0;
 
-          // Pernas com elevação e passada frontal
-          pose.hip_l.rot = sinPhase * (legAmp * 0.55);
-          pose.hip_r.rot = -sinPhase * (legAmp * 0.55);
-          pose.leg_l.rot = Math.max(0, -sinPhase) * 0.35;
-          pose.leg_r.rot = Math.max(0, sinPhase) * 0.35;
+          // Elevação e descida alternada estrita dos pés (passo para cima e para baixo)
+          const stepLiftL = Math.max(0, -sinPhase);
+          const stepLiftR = Math.max(0, sinPhase);
 
-          // Braços balançando alternadamente
-          pose.arm_l.rot = -sinPhase * (armAmp * 0.75);
-          pose.arm_r.rot = sinPhase * (armAmp * 0.75);
+          pose.hip_l.rot = 0;
+          pose.hip_r.rot = 0;
+          pose.leg_l.rot = 0;
+          pose.leg_r.rot = 0;
 
-        } else if (effectiveDir === 'north') {
-          // CAMINHADA NORTE (Costas): Passadas firmes com passos apontando para frente
-          pose.root.y += -Math.abs(sinPhase) * (bobAmp * 0.85);
-          pose.root.rot = -Math.sin(phase) * 0.05;
-          pose.head.bobY = -Math.abs(sinPhase) * (bobAmp * 0.55);
-          pose.head.rot = Math.sin(phase) * 0.04;
+          // Translação vertical pura da perna/pé subindo e descendo
+          pose.hip_l.y = 6 - (stepLiftL * 9);
+          pose.hip_r.y = 6 - (stepLiftR * 9);
 
-          pose.hip_l.rot = sinPhase * (legAmp * 0.5);
-          pose.hip_r.rot = -sinPhase * (legAmp * 0.5);
-          pose.leg_l.rot = Math.max(0, sinPhase) * 0.3;
-          pose.leg_r.rot = Math.max(0, -sinPhase) * 0.3;
-
-          pose.arm_l.rot = sinPhase * (armAmp * 0.7);
-          pose.arm_r.rot = -sinPhase * (armAmp * 0.7);
+          // Braços oscilam suavemente na vertical/frontal
+          pose.arm_l.rot = -sinPhase * (armAmp * 0.5);
+          pose.arm_r.rot = sinPhase * (armAmp * 0.5);
 
         } else {
-          // CAMINHADA LESTE / OESTE (Perfil / Lateral): Ciclo de passada em tesoura clássico com stride e flexão de joelho
-          pose.root.y += -Math.abs(sinPhase) * bobAmp;
-          pose.root.rot = bodyTilt + (sinPhase * 0.04);
-          pose.head.bobY = -Math.abs(sinPhase) * (bobAmp * 0.75);
-          pose.head.rot = -sinPhase * 0.05;
+          // CAMINHADA DIREITA / ESQUERDA (LATERAL): Pés e pernas mexem de um lado para o outro coerentemente
+          const sidePhase = Math.sin(phase);
+          pose.root.y += -Math.abs(sidePhase) * (bobAmp * 0.8);
+          pose.head.bobY = -Math.abs(sidePhase) * (bobAmp * 0.5);
 
-          // Movimento em tesoura das pernas (stride amplo)
-          pose.hip_l.rot = -sinPhase * legAmp;       // Perna traseira (esquerda)
-          pose.hip_r.rot = sinPhase * legAmp;        // Perna dianteira (direita)
+          // Perna esquerda e direita balançam para um lado e para o outro
+          pose.hip_l.rot = -sidePhase * legAmp;
+          pose.hip_r.rot = sidePhase * legAmp;
+          pose.leg_l.rot = sidePhase > 0 ? Math.abs(sidePhase) * 0.35 : 0;
+          pose.leg_r.rot = sidePhase < 0 ? Math.abs(sidePhase) * 0.35 : 0;
 
-          // Flexão do joelho quando a perna é levantada/recolhida
-          pose.leg_l.rot = sinPhase > 0 ? Math.abs(sinPhase) * 0.7 : 0;
-          pose.leg_r.rot = sinPhase < 0 ? Math.abs(sinPhase) * 0.7 : 0;
-
-          // Balanço oposto de braços com alcance completo de perfil
-          pose.arm_l.rot = sinPhase * armAmp;        // Braço traseiro
-          pose.arm_r.rot = -sinPhase * armAmp;       // Braço dianteiro
+          // Braços balançando de um lado para o outro em oposição
+          pose.arm_l.rot = sidePhase * armAmp;
+          pose.arm_r.rot = -sidePhase * armAmp;
         }
-        pose.shadow.scale = 1.0 - Math.abs(sinPhase) * 0.12;
+        pose.shadow.scale = 1.0 - Math.abs(sinPhase) * 0.1;
         break;
       }
 

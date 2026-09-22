@@ -182,19 +182,17 @@ export class ModularAvatarRenderer {
     // 1. Cabelo Traseiro / Lateral
     this.drawHairBack(ctx, headX, headY, cfg, 'east');
 
-    // 2. Braço de Trás (Esquerdo / Back Arm)
-    this.drawSingleArm(ctx, cx, torsoY + 22, pose.arm_l.rot, cfg, 'east', 'back');
-
-    // 3. Pernas e Pés de Perfil
+    // 2. Pernas e Pés
     this.drawLegs(ctx, cx, torsoY + 75, pose, cfg, 'east');
 
-    // 4. Tronco e Roupas de Perfil
+    // 3. Tronco e Roupas (mesma base frontal do corpo)
     this.drawTorso(ctx, cx, torsoY, pose.root.rot, cfg, 'east');
 
-    // 5. Braço da Frente (se não estiver comemorando, fica na frente do tronco)
+    // 4. Braços e Mãos
     if (!isCelebrating) {
-      this.drawSingleArm(ctx, cx, torsoY + 22, pose.arm_r.rot, cfg, 'east', 'front');
+      this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'east');
     }
+
 
     // 6. Cabeça e Feições de Perfil
     ctx.save();
@@ -211,11 +209,12 @@ export class ModularAvatarRenderer {
 
     ctx.restore();
 
-    // 7. Se estiver comemorando de perfil, o braço dianteiro fica na frente de tudo
+    // 5. Se estiver comemorando de perfil, os braços ficam na frente de tudo
     if (isCelebrating) {
-      this.drawSingleArm(ctx, cx, torsoY + 22, pose.arm_r.rot, cfg, 'east', 'front');
+      this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'east');
     }
   }
+
 
   /* ========================================================================= */
   /*  COMPONENTES ANATÔMICOS OFICIAIS (samples.svg)                           */
@@ -935,90 +934,49 @@ export class ModularAvatarRenderer {
     ctx.save();
     ctx.translate(x, y);
 
-    if (dir === 'south' || dir === 'north') {
-      // Perna Esquerda
-      ctx.save();
-      ctx.translate(-22, 0);
-      ctx.rotate(pose.hip_l.rot + pose.leg_l.rot);
+    // Perna Esquerda
+    const liftL = (pose.hip_l && pose.hip_l.y !== undefined) ? (pose.hip_l.y - 6) : 0;
+    const liftR = (pose.hip_r && pose.hip_r.y !== undefined) ? (pose.hip_r.y - 6) : 0;
 
-      ctx.fillStyle = skin;
-      ctx.fillRect(-10, 0, 20, 35);
+    ctx.save();
+    ctx.translate(-22, liftL);
+    ctx.rotate(pose.hip_l.rot + pose.leg_l.rot);
 
-      // Sapato 3D
-      ctx.fillStyle = shoeColor;
-      ctx.strokeStyle = '#9a3412';
-      ctx.lineWidth = 2.0;
-      ctx.beginPath();
-      ctx.roundRect(-14, 30, 28, 22, 8);
-      ctx.fill();
-      ctx.stroke();
+    ctx.fillStyle = skin;
+    ctx.fillRect(-10, 0, 20, 35);
 
-      ctx.fillStyle = shoeTrim;
-      ctx.fillRect(-14, 46, 28, 6);
-      ctx.restore();
+    // Sapato 3D
+    ctx.fillStyle = shoeColor;
+    ctx.strokeStyle = '#9a3412';
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.roundRect(-14, 30, 28, 22, 8);
+    ctx.fill();
+    ctx.stroke();
 
-      // Perna Direita
-      ctx.save();
-      ctx.translate(22, 0);
-      ctx.rotate(pose.hip_r.rot + pose.leg_r.rot);
+    ctx.fillStyle = shoeTrim;
+    ctx.fillRect(-14, 46, 28, 6);
+    ctx.restore();
 
-      ctx.fillStyle = skin;
-      ctx.fillRect(-10, 0, 20, 35);
+    // Perna Direita
+    ctx.save();
+    ctx.translate(22, liftR);
+    ctx.rotate(pose.hip_r.rot + pose.leg_r.rot);
 
-      ctx.fillStyle = shoeColor;
-      ctx.strokeStyle = '#9a3412';
-      ctx.lineWidth = 2.0;
-      ctx.beginPath();
-      ctx.roundRect(-14, 30, 28, 22, 8);
-      ctx.fill();
-      ctx.stroke();
+    ctx.fillStyle = skin;
+    ctx.fillRect(-10, 0, 20, 35);
 
-      ctx.fillStyle = shoeTrim;
-      ctx.fillRect(-14, 46, 28, 6);
-      ctx.restore();
+    ctx.fillStyle = shoeColor;
+    ctx.strokeStyle = '#9a3412';
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.roundRect(-14, 30, 28, 22, 8);
+    ctx.fill();
+    ctx.stroke();
 
-    } else {
-      // PERNAS DE PERFIL (EAST / WEST): Perna Traseira -> Perna Dianteira
-      // 1. Perna de Trás (Esquerda)
-      ctx.save();
-      ctx.translate(-8, 0);
-      ctx.rotate(pose.hip_l.rot + pose.leg_l.rot);
-
-      ctx.fillStyle = skin;
-      ctx.fillRect(-9, 0, 18, 35);
-
-      ctx.fillStyle = shoeColor;
-      ctx.strokeStyle = '#9a3412';
-      ctx.lineWidth = 2.0;
-      ctx.beginPath();
-      ctx.roundRect(-10, 30, 32, 22, 8);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = shoeTrim;
-      ctx.fillRect(-10, 46, 32, 6);
-      ctx.restore();
-
-      // 2. Perna da Frente (Direita)
-      ctx.save();
-      ctx.translate(8, 0);
-      ctx.rotate(pose.hip_r.rot + pose.leg_r.rot);
-
-      ctx.fillStyle = skin;
-      ctx.fillRect(-9, 0, 18, 35);
-
-      ctx.fillStyle = shoeColor;
-      ctx.strokeStyle = '#9a3412';
-      ctx.lineWidth = 2.0;
-      ctx.beginPath();
-      ctx.roundRect(-10, 30, 32, 22, 8);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = shoeTrim;
-      ctx.fillRect(-10, 46, 32, 6);
-      ctx.restore();
-    }
+    ctx.fillStyle = shoeTrim;
+    ctx.fillRect(-14, 46, 28, 6);
+    ctx.restore();
 
     ctx.restore();
   }
