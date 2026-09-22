@@ -14,7 +14,8 @@ import {
   SVG_MOUTHS,
   SVG_EYES,
   SVG_CHEEKS,
-  SVG_HAIRS
+  SVG_HAIRS,
+  SVG_TOPS
 } from '../engine/animation/SvgAssetCatalog.js';
 
 export const CREATOR_CATEGORIES = [
@@ -85,12 +86,11 @@ export const CHEEKS_OPTIONS = SVG_CHEEKS.map(c => ({
   desc: 'Detalhes faciais e corados'
 }));
 
-export const TOP_OPTIONS = [
-  { id: 'shirt_striped_teal', name: 'Listrada da Ilha', desc: 'Camiseta náutica de algodão' },
-  { id: 'tshirt_basic', name: 'Camiseta Básica', desc: 'Camiseta lisa' },
-  { id: 'hoodie_pocket', name: 'Moletom Confortável', desc: 'Moletom com bolso frontal' },
-  { id: 'wizard_tunic', name: 'Túnica de Aprendiz', desc: 'Traje de explorador de magia' }
-];
+export const TOP_OPTIONS = SVG_TOPS.map(t => ({
+  id: t.id,
+  name: t.name,
+  desc: t.desc
+}));
 
 export const BOTTOM_OPTIONS = [
   { id: 'shorts_denim', name: 'Shorts Jeans', desc: 'Shorts de brim azul' },

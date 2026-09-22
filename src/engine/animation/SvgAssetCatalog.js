@@ -310,3 +310,57 @@ export const SVG_HAIRS = [
     ]
   }
 ];
+
+export const SVG_TOPS = [
+  {
+    id: 'top_tee',
+    name: 'Camiseta ACNH (Tee)',
+    desc: 'Camiseta clássica com mangas curtas',
+    type: 'tee',
+    sleeveType: 'short'
+  },
+  {
+    id: 'top_cupcake_dress',
+    name: 'Vestido Cupcake',
+    desc: 'Vestido com saia rodada e babados',
+    type: 'dress',
+    sleeveType: 'short',
+    skirt: true
+  },
+  {
+    id: 'top_sweater',
+    name: 'Suéter de Lã',
+    desc: 'Suéter aconchegante com gola estruturada',
+    type: 'sweater',
+    sleeveType: 'long',
+    collar: true
+  },
+  {
+    id: 'top_long_sleeve',
+    name: 'Manga Longa',
+    desc: 'Blusa confortável de mangas compridas',
+    type: 'long_sleeve',
+    sleeveType: 'long'
+  },
+  {
+    id: 'top_puffy_sleeve',
+    name: 'Manga Bufante',
+    desc: 'Blusa charmosa com mangas volumosas',
+    type: 'puffy',
+    sleeveType: 'puffy'
+  },
+  {
+    id: 'top_sleeveless',
+    name: 'Regata Sem Mangas',
+    desc: 'Regata leve para dias ensolarados',
+    type: 'sleeveless',
+    sleeveType: 'none'
+  },
+  {
+    id: 'top_crop_top',
+    name: 'Top Cropped',
+    desc: 'Top curto e despojado',
+    type: 'crop',
+    sleeveType: 'none'
+  }
+];

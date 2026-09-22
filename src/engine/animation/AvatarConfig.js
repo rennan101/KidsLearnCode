@@ -72,7 +72,7 @@ export const DEFAULT_AVATAR_CONFIG = {
   mouthShape: 'mouth_smile_arc',
   cheeksShape: 'cheeks_peach_oval',
   cheeksColor: 'rgba(255, 186, 165, 0.75)',
-  topStyle: 'shirt_striped_teal',
+  topStyle: 'top_tee',
   topColorPrimary: '#19c8b9',
   topColorSecondary: '#ffffff',
   bottomStyle: 'shorts_denim',
@@ -100,9 +100,10 @@ export function randomizeAvatarConfig(currentName) {
   const clothP = CLOTH_PALETTES[Math.floor(Math.random() * CLOTH_PALETTES.length)];
 
   const hairStyles = [
-    'hair_short_bangs', 'hair_wavy_medium', 'hair_curtains_bob',
+    'hair_short_spikes', 'hair_wavy_bob', 'hair_curtains_bob',
     'hair_fluffy_afro', 'hair_long_straight', 'hair_classic_bowl',
-    'hair_twin_buns', 'hair_hero_spikes'
+    'hair_side_swoosh', 'hair_twin_buns', 'hair_twin_braids',
+    'hair_hero_spikes', 'hair_high_ponytail'
   ];
 
   const eyeShapes = [
@@ -119,12 +120,12 @@ export function randomizeAvatarConfig(currentName) {
   const cheekShapes = ['cheeks_peach_oval', 'cheeks_coral_vibrant', 'cheeks_freckles', 'cheeks_whiskers', 'none'];
 
   const topStyles = [
-    'shirt_striped_teal', 'tshirt_basic', 'hoodie_pocket',
-    'wizard_tunic', 'hunter_vest', 'overalls_dungaree', 'dress_cottage'
+    'top_tee', 'top_cupcake_dress', 'top_sweater',
+    'top_long_sleeve', 'top_puffy_sleeve', 'top_sleeveless', 'top_crop_top'
   ];
 
-  const bottomStyles = ['shorts_denim', 'pants_cargo', 'skirt_pleated', 'pants_adventurer'];
-  const shoeStyles = ['sneakers_classic', 'boots_hunter', 'sandals_beach', 'slippers_mage'];
+  const bottomStyles = ['shorts_denim', 'pants_cargo', 'skirt_pleated'];
+  const shoeStyles = ['sneakers_classic', 'boots_hunter', 'sandals_beach'];
   const hatStyles = ['none', 'none', 'straw_hat', 'cat_ears_band', 'witch_hat'];
   const glassesStyles = ['none', 'none', 'none', 'round_wire', 'sunglasses_cool'];
 
@@ -157,3 +158,4 @@ export function randomizeAvatarConfig(currentName) {
     glassesColor: '#5c3c26'
   };
 }
+
