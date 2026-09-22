@@ -120,7 +120,7 @@ export const SVG_MOUTHS = [
 export const SVG_EYES = [
   {
     id: 'eye_anime_sparkle',
-    name: 'Brilho Anime Oficial (samples.svg)',
+    name: 'Brilho Anime Oficial',
     type: 'anime_sparkle'
   },
   {
@@ -140,7 +140,7 @@ export const SVG_EYES = [
   },
   {
     id: 'eye_cheerful_crescent',
-    name: 'Arco Sorridente ^_^',
+    name: 'Arco Sorridente',
     type: 'cheerful_crescent'
   },
   {
@@ -233,7 +233,7 @@ export const SVG_HAIRS = [
   },
   {
     id: 'hair_curtains_bob',
-    name: 'Franja Repartida (Curtains)',
+    name: 'Franja Repartida',
     desc: 'Clássico estilo dividido ao meio',
     cx: 441.5,
     topY: 23,
@@ -335,7 +335,7 @@ export const SVG_HAIRS = [
   },
   {
     id: 'hair_twin_braids',
-    name: 'Tranças Duplas (samples.svg)',
+    name: 'Tranças Duplas',
     desc: 'Trancinhas delicadas e franja curva',
     cx: 736.5,
     topY: 574,
@@ -406,7 +406,7 @@ export const SVG_HAIRS = [
 export const SVG_TOPS = [
   {
     id: 'top_tee',
-    name: 'Camiseta ACNH (Tee)',
+    name: 'Camiseta Clássica',
     desc: 'Camiseta clássica com mangas curtas',
     type: 'tee',
     sleeveType: 'short'

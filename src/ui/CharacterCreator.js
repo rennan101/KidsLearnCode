@@ -26,7 +26,16 @@ import {
   TOP_OPTIONS,
   BOTTOM_OPTIONS,
   SHOES_OPTIONS,
-  GLASSES_OPTIONS
+  GLASSES_OPTIONS,
+  getHairSvg,
+  getEyeSvg,
+  getNoseSvg,
+  getMouthSvg,
+  getCheeksSvg,
+  getTopSvg,
+  getBottomSvg,
+  getShoesSvg,
+  getGlassesSvg
 } from './CharacterCreatorAssets.js';
 
 export class CharacterCreator {
@@ -111,10 +120,10 @@ export class CharacterCreator {
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Enquadra perfeitamente o personagem de corpo inteiro no Canvas (280x300)
-    const scale = 0.92;
+    // Enquadra perfeitamente o avatar de corpo inteiro sem qualquer recorte
+    const scale = 0.96;
     const targetX = (this.canvas.width / 2) - (140 * scale);
-    const targetY = (this.canvas.height / 2) - (135 * scale);
+    const targetY = (this.canvas.height / 2) - (130 * scale);
 
     this.renderer.render(
       this.ctx,
@@ -142,9 +151,6 @@ export class CharacterCreator {
         <!-- Header -->
         <div class="cc-header">
           <div class="cc-title-group">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cc-title-icon">
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-            </svg>
             <div>
               <h2 class="cc-title">Criador de Personagem</h2>
               <p class="cc-subtitle">Personalize seu avatar de corpo inteiro com animações automáticas por recorte 2D</p>
@@ -163,7 +169,7 @@ export class CharacterCreator {
           <!-- Left Stage -->
           <div class="cc-stage-panel">
             <div class="cc-preview-stage">
-              <canvas id="cc-preview-canvas" width="280" height="300" class="cc-canvas"></canvas>
+              <canvas id="cc-preview-canvas" width="320" height="340" class="cc-canvas"></canvas>
             </div>
 
             <div class="cc-stage-controls">
@@ -201,7 +207,7 @@ export class CharacterCreator {
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
                   <path d="M16 8h.01M8 8h.01M8 16h.01M16 16h.01M12 12h.01"/>
                 </svg>
-                Dado da Sorte (Aleatório)
+                Dado da Sorte
               </button>
             </div>
           </div>
@@ -347,7 +353,7 @@ export class CharacterCreator {
     section.innerHTML = `
       <div class="cc-section-title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ui-icon icon-sm"><circle cx="12" cy="12" r="10"/></svg>
-        Tom de Pele Acolhedor (base_character.png)
+        Tom de Pele Acolhedor
       </div>
       <div class="cc-swatches-grid">
         ${SKIN_TONES.map(s => `
@@ -393,18 +399,18 @@ export class CharacterCreator {
         sw.classList.add('active');
         this.currentConfig.hairColor = sw.dataset.color;
         this.currentConfig.hairShadow = sw.dataset.shadow;
+        this.renderCategoryContent();
       });
     });
 
     const sectionStyles = document.createElement('div');
     sectionStyles.innerHTML = `
-      <div class="cc-section-title" style="margin-top: 18px;">Penteados (Extraídos de Hairs.svg)</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Penteados</div>
       <div class="cc-items-grid">
         ${HAIR_STYLE_OPTIONS.map(opt => `
-          <div class="cc-item-card ${this.currentConfig.hairStyle === opt.id ? 'active' : ''}" data-style="${opt.id}">
-            <div class="cc-item-name">${opt.name}</div>
-            <div class="cc-item-desc">${opt.desc}</div>
-          </div>
+          <button class="cc-item-card ${this.currentConfig.hairStyle === opt.id ? 'active' : ''}" data-style="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
+            ${getHairSvg(opt.id, this.currentConfig.hairColor)}
+          </button>
         `).join('')}
       </div>
     `;
@@ -422,10 +428,10 @@ export class CharacterCreator {
   }
 
   renderFaceTab(container) {
-    // 1. Olhos (Face Components.svg)
+    // 1. Olhos
     const sectionEyes = document.createElement('div');
     sectionEyes.innerHTML = `
-      <div class="cc-section-title">Cor dos Olhos (Íris)</div>
+      <div class="cc-section-title">Cor dos Olhos</div>
       <div class="cc-swatches-grid">
         ${EYE_COLORS.map(e => `
           <button class="cc-swatch ${this.currentConfig.eyeColor === e.color ? 'active' : ''}" 
@@ -435,13 +441,12 @@ export class CharacterCreator {
         `).join('')}
       </div>
 
-      <div class="cc-section-title" style="margin-top: 18px;">Formato dos Olhos (Face Components.svg)</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Formato dos Olhos</div>
       <div class="cc-items-grid">
         ${EYE_SHAPE_OPTIONS.map(opt => `
-          <div class="cc-item-card ${this.currentConfig.eyeShape === opt.id ? 'active' : ''}" data-eye="${opt.id}">
-            <div class="cc-item-name">${opt.name}</div>
-            <div class="cc-item-desc">${opt.desc}</div>
-          </div>
+          <button class="cc-item-card ${this.currentConfig.eyeShape === opt.id ? 'active' : ''}" data-eye="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
+            ${getEyeSvg(opt.id, this.currentConfig.eyeColor)}
+          </button>
         `).join('')}
       </div>
     `;
@@ -451,47 +456,45 @@ export class CharacterCreator {
         sectionEyes.querySelectorAll('.cc-swatch').forEach(s => s.classList.remove('active'));
         sw.classList.add('active');
         this.currentConfig.eyeColor = sw.dataset.color;
+        this.renderCategoryContent();
       });
     });
 
-    sectionEyes.querySelectorAll('.cc-item-card').forEach(card => {
+    sectionEyes.querySelectorAll('[data-eye]').forEach(card => {
       card.addEventListener('click', () => {
-        sectionEyes.querySelectorAll('.cc-item-card').forEach(c => c.classList.remove('active'));
+        sectionEyes.querySelectorAll('[data-eye]').forEach(c => c.classList.remove('active'));
         card.classList.add('active');
         this.currentConfig.eyeShape = card.dataset.eye;
       });
     });
 
-    // 2. Nariz & Boca & Bochechas (Face Components.svg)
+    // 2. Nariz, Boca e Bochechas
     const sectionMouth = document.createElement('div');
     sectionMouth.innerHTML = `
-      <div class="cc-section-title" style="margin-top: 18px;">Formato do Nariz (Face Components.svg)</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Formato do Nariz</div>
       <div class="cc-items-grid">
         ${NOSE_OPTIONS.map(opt => `
-          <div class="cc-item-card ${this.currentConfig.noseShape === opt.id ? 'active' : ''}" data-nose="${opt.id}">
-            <div class="cc-item-name">${opt.name}</div>
-            <div class="cc-item-desc">${opt.desc}</div>
-          </div>
+          <button class="cc-item-card ${this.currentConfig.noseShape === opt.id ? 'active' : ''}" data-nose="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
+            ${getNoseSvg(opt.id)}
+          </button>
         `).join('')}
       </div>
 
-      <div class="cc-section-title" style="margin-top: 18px;">Boca & Expressão (Face Components.svg)</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Boca & Expressão</div>
       <div class="cc-items-grid">
         ${MOUTH_OPTIONS.map(opt => `
-          <div class="cc-item-card ${this.currentConfig.mouthShape === opt.id ? 'active' : ''}" data-mouth="${opt.id}">
-            <div class="cc-item-name">${opt.name}</div>
-            <div class="cc-item-desc">${opt.desc}</div>
-          </div>
+          <button class="cc-item-card ${this.currentConfig.mouthShape === opt.id ? 'active' : ''}" data-mouth="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
+            ${getMouthSvg(opt.id)}
+          </button>
         `).join('')}
       </div>
 
-      <div class="cc-section-title" style="margin-top: 18px;">Bochechas & Detalhes (Face Components.svg)</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Bochechas & Detalhes</div>
       <div class="cc-items-grid">
         ${CHEEKS_OPTIONS.map(opt => `
-          <div class="cc-item-card ${this.currentConfig.cheeksShape === opt.id ? 'active' : ''}" data-cheeks="${opt.id}">
-            <div class="cc-item-name">${opt.name}</div>
-            <div class="cc-item-desc">${opt.desc}</div>
-          </div>
+          <button class="cc-item-card ${this.currentConfig.cheeksShape === opt.id ? 'active' : ''}" data-cheeks="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
+            ${getCheeksSvg(opt.id)}
+          </button>
         `).join('')}
       </div>
     `;
@@ -541,10 +544,9 @@ export class CharacterCreator {
       <div class="cc-section-title" style="margin-top: 18px;">Estilo da Camisa / Roupa Superior</div>
       <div class="cc-items-grid">
         ${TOP_OPTIONS.map(opt => `
-          <div class="cc-item-card ${this.currentConfig.topStyle === opt.id ? 'active' : ''}" data-top="${opt.id}">
-            <div class="cc-item-name">${opt.name}</div>
-            <div class="cc-item-desc">${opt.desc}</div>
-          </div>
+          <button class="cc-item-card ${this.currentConfig.topStyle === opt.id ? 'active' : ''}" data-top="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
+            ${getTopSvg(opt.id, this.currentConfig.topColorPrimary)}
+          </button>
         `).join('')}
       </div>
     `;
@@ -555,12 +557,13 @@ export class CharacterCreator {
         sw.classList.add('active');
         this.currentConfig.topColorPrimary = sw.dataset.primary;
         this.currentConfig.topColorSecondary = sw.dataset.secondary;
+        this.renderCategoryContent();
       });
     });
 
-    section.querySelectorAll('.cc-item-card').forEach(card => {
+    section.querySelectorAll('[data-top]').forEach(card => {
       card.addEventListener('click', () => {
-        section.querySelectorAll('.cc-item-card').forEach(c => c.classList.remove('active'));
+        section.querySelectorAll('[data-top]').forEach(c => c.classList.remove('active'));
         card.classList.add('active');
         this.currentConfig.topStyle = card.dataset.top;
       });
@@ -585,10 +588,9 @@ export class CharacterCreator {
       <div class="cc-section-title" style="margin-top: 18px;">Modelo Inferior</div>
       <div class="cc-items-grid">
         ${BOTTOM_OPTIONS.map(opt => `
-          <div class="cc-item-card ${this.currentConfig.bottomStyle === opt.id ? 'active' : ''}" data-bottom="${opt.id}">
-            <div class="cc-item-name">${opt.name}</div>
-            <div class="cc-item-desc">${opt.desc}</div>
-          </div>
+          <button class="cc-item-card ${this.currentConfig.bottomStyle === opt.id ? 'active' : ''}" data-bottom="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
+            ${getBottomSvg(opt.id, this.currentConfig.bottomColor)}
+          </button>
         `).join('')}
       </div>
     `;
@@ -598,12 +600,13 @@ export class CharacterCreator {
         section.querySelectorAll('.cc-swatch').forEach(s => s.classList.remove('active'));
         sw.classList.add('active');
         this.currentConfig.bottomColor = sw.dataset.color;
+        this.renderCategoryContent();
       });
     });
 
-    section.querySelectorAll('.cc-item-card').forEach(card => {
+    section.querySelectorAll('[data-bottom]').forEach(card => {
       card.addEventListener('click', () => {
-        section.querySelectorAll('.cc-item-card').forEach(c => c.classList.remove('active'));
+        section.querySelectorAll('[data-bottom]').forEach(c => c.classList.remove('active'));
         card.classList.add('active');
         this.currentConfig.bottomStyle = card.dataset.bottom;
       });
@@ -628,10 +631,9 @@ export class CharacterCreator {
       <div class="cc-section-title" style="margin-top: 18px;">Tipo de Calçado</div>
       <div class="cc-items-grid">
         ${SHOES_OPTIONS.map(opt => `
-          <div class="cc-item-card ${this.currentConfig.shoesStyle === opt.id ? 'active' : ''}" data-shoes="${opt.id}">
-            <div class="cc-item-name">${opt.name}</div>
-            <div class="cc-item-desc">${opt.desc}</div>
-          </div>
+          <button class="cc-item-card ${this.currentConfig.shoesStyle === opt.id ? 'active' : ''}" data-shoes="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
+            ${getShoesSvg(opt.id, this.currentConfig.shoesColor)}
+          </button>
         `).join('')}
       </div>
     `;
@@ -641,12 +643,13 @@ export class CharacterCreator {
         section.querySelectorAll('.cc-swatch').forEach(s => s.classList.remove('active'));
         sw.classList.add('active');
         this.currentConfig.shoesColor = sw.dataset.color;
+        this.renderCategoryContent();
       });
     });
 
-    section.querySelectorAll('.cc-item-card').forEach(card => {
+    section.querySelectorAll('[data-shoes]').forEach(card => {
       card.addEventListener('click', () => {
-        section.querySelectorAll('.cc-item-card').forEach(c => c.classList.remove('active'));
+        section.querySelectorAll('[data-shoes]').forEach(c => c.classList.remove('active'));
         card.classList.add('active');
         this.currentConfig.shoesStyle = card.dataset.shoes;
       });
@@ -661,10 +664,9 @@ export class CharacterCreator {
       <div class="cc-section-title">Óculos & Acessórios Faciais</div>
       <div class="cc-items-grid">
         ${GLASSES_OPTIONS.map(opt => `
-          <div class="cc-item-card ${this.currentConfig.glassesStyle === opt.id ? 'active' : ''}" data-glasses="${opt.id}">
-            <div class="cc-item-name">${opt.name}</div>
-            <div class="cc-item-desc">${opt.desc}</div>
-          </div>
+          <button class="cc-item-card ${this.currentConfig.glassesStyle === opt.id ? 'active' : ''}" data-glasses="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
+            ${getGlassesSvg(opt.id)}
+          </button>
         `).join('')}
       </div>
     `;
