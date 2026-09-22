@@ -3233,6 +3233,9 @@ class RPGApplication {
             if (res.success) {
               this.player?.spawnCraftPoof();
               this.showToast(`Dragão ativo: ${res.dragon.name}!`);
+              lastFormationState = '';
+              this.updateDragonQuickHUD();
+              this.updateDragonSkillBar();
             }
           });
         } else {
