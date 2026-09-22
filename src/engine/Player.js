@@ -483,15 +483,19 @@ export class Player {
         animState = 'walk';
       }
 
+      const avatarScale = 0.22 * s;
+      const targetX = drawX + (32 * s) - (140 * avatarScale);
+      const targetY = drawY + (60 * s) - (260 * avatarScale);
+
       this.modularAvatarRenderer.render(
         ctx,
-        drawX,
-        drawY,
+        targetX,
+        targetY,
         dir,
         animState,
         this.animTimer,
         this.customAvatarConfig || DEFAULT_AVATAR_CONFIG,
-        s
+        avatarScale
       );
 
       // Efeito de Nuvem Poof de Construção no Workbench estilo Animal Crossing

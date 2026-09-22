@@ -2,8 +2,8 @@
  * ModularAvatarRenderer.js - KidsLearnCode
  * Renderizador Vetorial 2D por Cutout / Paper-Doll para Personagens Customizáveis.
  * 
- * Utiliza as proporções oficiais de base_character.png e os componentes vetoriais
- * extraídos de Face Components.svg e Hairs.svg.
+ * Implementação fiel às proporções e alinhamento visual de samples.svg,
+ * Face Components.svg e Hairs.svg para o corpo inteiro.
  */
 
 import { SkeletonRig } from './SkeletonRig.js';
@@ -19,14 +19,14 @@ import {
 export class ModularAvatarRenderer {
   constructor() {
     this.rig = new SkeletonRig();
-    this.path2dCache = new Map();
+    this.pathCache = new Map();
   }
 
   getPath2D(d) {
-    if (!this.path2dCache.has(d)) {
-      this.path2dCache.set(d, new Path2D(d));
+    if (!this.pathCache.has(d)) {
+      this.pathCache.set(d, new Path2D(d));
     }
-    return this.path2dCache.get(d);
+    return this.pathCache.get(d);
   }
 
   /**
@@ -38,9 +38,9 @@ export class ModularAvatarRenderer {
    * @param {string} state - 'idle' | 'walk' | 'riding' | 'craft' | 'celebrate'
    * @param {number} time - Tempo decorrido em segundos
    * @param {Object} config - Configuração do avatar
-   * @param {number} scale - Escala global do avatar
+   * @param {number} scale - Escala global do avatar (padrão 0.22 para in-game, ~0.72 para preview)
    */
-  render(ctx, x, y, direction = 'south', state = 'idle', time = 0, config = DEFAULT_AVATAR_CONFIG, scale = 1.0) {
+  render(ctx, x, y, direction = 'south', state = 'idle', time = 0, config = DEFAULT_AVATAR_CONFIG, scale = 0.22) {
     const isWest = direction === 'west';
     const effectiveDir = isWest ? 'east' : direction;
     const pose = this.rig.evaluate(state, direction, time);
@@ -48,27 +48,32 @@ export class ModularAvatarRenderer {
     ctx.save();
     ctx.translate(Math.round(x), Math.round(y));
 
+    // Se for 'west', espelha horizontalmente em torno do centro do sprite (32 * scale / 0.22)
     if (isWest) {
-      ctx.translate(32 * scale, 0);
+      ctx.translate(32 * (scale / 0.22), 0);
       ctx.scale(-1, 1);
-      ctx.translate(-32 * scale, 0);
+      ctx.translate(-32 * (scale / 0.22), 0);
     }
 
     if (scale !== 1.0) {
       ctx.scale(scale, scale);
     }
 
+    // Ponto de ancoragem central da cabeça e corpo no espaço SVG (~140x260px)
+    const centerX = 140;
+    const headCenterY = 95;
+
     // Sombra elíptica no chão (exceto se montado)
     if (state !== 'riding') {
-      this.drawShadow(ctx, pose.root.x, 60, pose.shadow.scale);
+      this.drawShadow(ctx, centerX, 260, pose.shadow.scale);
     }
 
     if (effectiveDir === 'north') {
-      this.renderNorth(ctx, pose, config);
+      this.renderNorth(ctx, pose, config, centerX, headCenterY);
     } else if (effectiveDir === 'east') {
-      this.renderEast(ctx, pose, config);
+      this.renderEast(ctx, pose, config, centerX, headCenterY);
     } else {
-      this.renderSouth(ctx, pose, config);
+      this.renderSouth(ctx, pose, config, centerX, headCenterY);
     }
 
     ctx.restore();
@@ -77,51 +82,48 @@ export class ModularAvatarRenderer {
   /* ========================================================================= */
   /*  RENDERIZAÇÃO: VISTA FRONTAL (SOUTH)                                      */
   /* ========================================================================= */
-  renderSouth(ctx, pose, cfg) {
+  renderSouth(ctx, pose, cfg, cx, cy) {
     const skin = cfg.skinTone || '#ffd0a8';
     const skinShadow = cfg.skinShadow || '#e0ae82';
 
-    // 1. Cabelo Traseiro
-    this.drawHairBack(ctx, pose.root.x + pose.head.x, pose.root.y + pose.head.y + pose.head.bobY, cfg, 'south');
+    const headX = cx + (pose.head.x * 2.5);
+    const headY = cy + (pose.head.y * 2.5) + (pose.head.bobY * 2.5);
+    const torsoY = headY + 82;
 
-    // 2. Braço Esquerdo (Traseiro)
-    this.drawArm(ctx, pose.root.x + pose.shoulder_l.x, pose.root.y + pose.shoulder_l.y, pose.arm_l.rot, cfg, 'left', 'south');
+    // 1. Cabelo Traseiro / Longo (atrás de tudo)
+    this.drawHairBack(ctx, headX, headY, cfg, 'south');
 
-    // 3. Pernas e Pés
-    this.drawLeg(ctx, pose.root.x + pose.hip_l.x, pose.root.y + pose.hip_l.y, pose.hip_l.rot + pose.leg_l.rot, cfg, 'left', 'south');
-    this.drawLeg(ctx, pose.root.x + pose.hip_r.x, pose.root.y + pose.hip_r.y, pose.hip_r.rot + pose.leg_r.rot, cfg, 'right', 'south');
+    // 2. Pernas e Pés
+    this.drawLegs(ctx, cx, torsoY + 75, pose, cfg, 'south');
 
-    // 4. Tronco & Roupas
-    this.drawTorso(ctx, pose.root.x + pose.torso.x, pose.root.y + pose.torso.y, pose.root.rot, cfg, 'south');
+    // 3. Tronco e Roupas (Corpo Chibi de samples.svg)
+    this.drawTorso(ctx, cx, torsoY, pose.root.rot, cfg, 'south');
 
-    // 5. Braço Direito (Dianteiro)
-    this.drawArm(ctx, pose.root.x + pose.shoulder_r.x, pose.root.y + pose.shoulder_r.y, pose.arm_r.rot, cfg, 'right', 'south');
+    // 4. Braços e Mãos (NA FRENTE DO TRONCO - NUNCA ATRÁS DO CABELO!)
+    this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'south');
 
-    // 6. Cabeça, Rosto & Acessórios
-    const headX = pose.root.x + pose.head.x;
-    const headY = pose.root.y + pose.head.y + pose.head.bobY;
-
+    // 5. Cabeça e Rosto
     ctx.save();
     ctx.translate(headX, headY);
     ctx.rotate(pose.head.rot);
 
-    // Formato da Cabeça Chibi (base_character.png)
-    this.drawHeadBase(ctx, 0, 0, skin, skinShadow, 'south');
+    // Formato oficial da Cabeça Chibi (samples.svg)
+    this.drawHeadBase(ctx, skin, skinShadow, 'south');
 
-    // Feições faciais (Face Components.svg)
-    this.drawFaceFeatures(ctx, 0, 0, cfg, 'south');
+    // Feições faciais (Face Components.svg alinhadas exatamente a samples.svg)
+    this.drawFaceFeatures(ctx, cfg, 'south');
 
-    // Cabelo Frontal (Hairs.svg)
-    this.drawHairFront(ctx, 0, 0, cfg, 'south');
+    // Cabelo Frontal (Hairs.svg encaixado perfeitamente no topo e laterais)
+    this.drawHairFront(ctx, cfg, 'south');
 
     // Óculos
     if (cfg.glassesStyle && cfg.glassesStyle !== 'none') {
-      this.drawGlasses(ctx, 0, 0, cfg, 'south');
+      this.drawGlasses(ctx, cfg, 'south');
     }
 
-    // Chapéus & Acessórios
+    // Chapéus
     if (cfg.hatStyle && cfg.hatStyle !== 'none') {
-      this.drawHat(ctx, 0, 0, cfg, 'south');
+      this.drawHat(ctx, cfg, 'south');
     }
 
     ctx.restore();
@@ -130,31 +132,28 @@ export class ModularAvatarRenderer {
   /* ========================================================================= */
   /*  RENDERIZAÇÃO: VISTA TRASEIRA (NORTH)                                     */
   /* ========================================================================= */
-  renderNorth(ctx, pose, cfg) {
+  renderNorth(ctx, pose, cfg, cx, cy) {
     const skin = cfg.skinTone || '#ffd0a8';
     const skinShadow = cfg.skinShadow || '#e0ae82';
 
-    this.drawArm(ctx, pose.root.x + pose.shoulder_l.x, pose.root.y + pose.shoulder_l.y, pose.arm_l.rot, cfg, 'left', 'north');
-    this.drawArm(ctx, pose.root.x + pose.shoulder_r.x, pose.root.y + pose.shoulder_r.y, pose.arm_r.rot, cfg, 'right', 'north');
+    const headX = cx + (pose.head.x * 2.5);
+    const headY = cy + (pose.head.y * 2.5) + (pose.head.bobY * 2.5);
+    const torsoY = headY + 82;
 
-    this.drawLeg(ctx, pose.root.x + pose.hip_l.x, pose.root.y + pose.hip_l.y, pose.hip_l.rot + pose.leg_l.rot, cfg, 'left', 'north');
-    this.drawLeg(ctx, pose.root.x + pose.hip_r.x, pose.root.y + pose.hip_r.y, pose.hip_r.rot + pose.leg_r.rot, cfg, 'right', 'north');
-
-    this.drawTorso(ctx, pose.root.x + pose.torso.x, pose.root.y + pose.torso.y, pose.root.rot, cfg, 'north');
-
-    const headX = pose.root.x + pose.head.x;
-    const headY = pose.root.y + pose.head.y + pose.head.bobY;
+    this.drawLegs(ctx, cx, torsoY + 75, pose, cfg, 'north');
+    this.drawTorso(ctx, cx, torsoY, pose.root.rot, cfg, 'north');
+    this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'north');
 
     ctx.save();
     ctx.translate(headX, headY);
     ctx.rotate(pose.head.rot);
 
-    this.drawHeadBase(ctx, 0, 0, skin, skinShadow, 'north');
+    this.drawHeadBase(ctx, skin, skinShadow, 'north');
     this.drawHairBack(ctx, 0, 0, cfg, 'north');
-    this.drawHairFront(ctx, 0, 0, cfg, 'north');
+    this.drawHairFront(ctx, cfg, 'north');
 
     if (cfg.hatStyle && cfg.hatStyle !== 'none') {
-      this.drawHat(ctx, 0, 0, cfg, 'north');
+      this.drawHat(ctx, cfg, 'north');
     }
 
     ctx.restore();
@@ -163,87 +162,93 @@ export class ModularAvatarRenderer {
   /* ========================================================================= */
   /*  RENDERIZAÇÃO: VISTA LATERAL (EAST / PERFIL)                              */
   /* ========================================================================= */
-  renderEast(ctx, pose, cfg) {
+  renderEast(ctx, pose, cfg, cx, cy) {
     const skin = cfg.skinTone || '#ffd0a8';
     const skinShadow = cfg.skinShadow || '#e0ae82';
 
-    this.drawHairBack(ctx, pose.root.x + pose.head.x, pose.root.y + pose.head.y + pose.head.bobY, cfg, 'east');
+    const headX = cx + (pose.head.x * 2.5);
+    const headY = cy + (pose.head.y * 2.5) + (pose.head.bobY * 2.5);
+    const torsoY = headY + 82;
 
-    this.drawArm(ctx, pose.root.x - 2, pose.root.y + pose.shoulder_l.y, pose.arm_l.rot, cfg, 'left', 'east');
-    this.drawLeg(ctx, pose.root.x - 3, pose.root.y + pose.hip_l.y, pose.hip_l.rot + pose.leg_l.rot, cfg, 'left', 'east');
-    this.drawTorso(ctx, pose.root.x + pose.torso.x, pose.root.y + pose.torso.y, pose.root.rot, cfg, 'east');
-    this.drawLeg(ctx, pose.root.x + 3, pose.root.y + pose.hip_r.y, pose.hip_r.rot + pose.leg_r.rot, cfg, 'right', 'east');
-    this.drawArm(ctx, pose.root.x + 2, pose.root.y + pose.shoulder_r.y, pose.arm_r.rot, cfg, 'right', 'east');
-
-    const headX = pose.root.x + pose.head.x;
-    const headY = pose.root.y + pose.head.y + pose.head.bobY;
+    this.drawHairBack(ctx, headX, headY, cfg, 'east');
+    this.drawLegs(ctx, cx, torsoY + 75, pose, cfg, 'east');
+    this.drawTorso(ctx, cx, torsoY, pose.root.rot, cfg, 'east');
+    this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'east');
 
     ctx.save();
     ctx.translate(headX, headY);
     ctx.rotate(pose.head.rot);
 
-    this.drawHeadBase(ctx, 0, 0, skin, skinShadow, 'east');
-    this.drawFaceFeatures(ctx, 0, 0, cfg, 'east');
-    this.drawHairFront(ctx, 0, 0, cfg, 'east');
+    this.drawHeadBase(ctx, skin, skinShadow, 'east');
+    this.drawFaceFeatures(ctx, cfg, 'east');
+    this.drawHairFront(ctx, cfg, 'east');
 
     if (cfg.glassesStyle && cfg.glassesStyle !== 'none') {
-      this.drawGlasses(ctx, 0, 0, cfg, 'east');
+      this.drawGlasses(ctx, cfg, 'east');
     }
 
     if (cfg.hatStyle && cfg.hatStyle !== 'none') {
-      this.drawHat(ctx, 0, 0, cfg, 'east');
+      this.drawHat(ctx, cfg, 'east');
     }
 
     ctx.restore();
   }
 
   /* ========================================================================= */
-  /*  SUB-RENDERIZADORES VETORIAIS (Face Components.svg & Hairs.svg)          */
+  /*  COMPONENTES ANATÔMICOS OFICIAIS (samples.svg)                           */
   /* ========================================================================= */
 
   drawShadow(ctx, x, y, scale = 1.0) {
     ctx.save();
     ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
     ctx.beginPath();
-    ctx.ellipse(x, y, 14 * scale, 5 * scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y, 65 * scale, 22 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
 
-  drawHeadBase(ctx, x, y, skin, skinShadow, dir) {
+  drawHeadBase(ctx, skin, skinShadow, dir) {
     ctx.save();
-    ctx.translate(x, y);
 
     ctx.fillStyle = skin;
     ctx.strokeStyle = skinShadow;
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
 
-    ctx.beginPath();
-    if (dir === 'east') {
-      ctx.moveTo(-12, -14);
-      ctx.bezierCurveTo(8, -16, 15, -6, 15, 3);
-      ctx.bezierCurveTo(15, 11, 4, 15, -4, 15);
-      ctx.bezierCurveTo(-14, 15, -16, 8, -16, -2);
-      ctx.bezierCurveTo(-16, -10, -14, -14, -12, -14);
+    if (dir === 'south' || dir === 'north') {
+      // Orelha Esquerda (samples.svg: cx=1324 cy=144 rx=22 ry=19)
+      ctx.beginPath();
+      ctx.ellipse(-84, 18, 22, 19, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Orelha Direita (samples.svg: cx=1493 cy=144 rx=22 ry=19)
+      ctx.beginPath();
+      ctx.ellipse(85, 18, 22, 19, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Formato Oficial da Cabeça Chibi (samples.svg: d="M1408 43C1377 43 1325.5 54.2...")
+      const headD = 'M0 -83.5C-31 -83.5 -82.5 -72.3 -82.5 -1.5C-82.39 -1.5 -82.28 -1.5 -82.18 -1.5C-84.02 9.556 -84.59 20.525 -83.31 30C-80.11 53.6 -49.64 71.5 -34.81 77.5C-29.97 79.5 -16.11 83.5 0.69 83.5C17.49 83.5 31.36 79.5 36.19 77.5C51.03 71.5 81.49 53.6 84.69 30C85.99 20.446 85.39 9.382 83.5 -1.758C83.37 -72.327 31.96 -83.5 1 -83.5H0Z';
+      const headPath = this.getPath2D(headD);
+      ctx.fill(headPath);
+      ctx.stroke(headPath);
+
     } else {
-      ctx.ellipse(0, 0, 16.5, 14.5, 0, 0, Math.PI * 2);
-    }
-    ctx.fill();
-    ctx.stroke();
+      // Perfil da cabeça
+      ctx.beginPath();
+      ctx.moveTo(-60, -75);
+      ctx.bezierCurveTo(40, -85, 80, -30, 80, 15);
+      ctx.bezierCurveTo(80, 55, 20, 78, -20, 78);
+      ctx.bezierCurveTo(-70, 78, -80, 40, -80, -10);
+      ctx.bezierCurveTo(-80, -50, -70, -70, -60, -75);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
 
-    // Orelhas arredondadas
-    if (dir === 'south') {
+      // Orelha lateral
       ctx.beginPath();
-      ctx.arc(-16.5, 0, 3.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(16.5, 0, 3.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-    } else if (dir === 'east') {
-      ctx.beginPath();
-      ctx.arc(-6, 1, 3.5, 0, Math.PI * 2);
+      ctx.ellipse(-30, 18, 22, 19, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
     }
@@ -251,33 +256,32 @@ export class ModularAvatarRenderer {
     ctx.restore();
   }
 
-  drawFaceFeatures(ctx, x, y, cfg, dir) {
+  drawFaceFeatures(ctx, cfg, dir) {
     if (dir === 'north') return;
 
     ctx.save();
-    ctx.translate(x, y);
 
     if (dir === 'south') {
-      // 1. Bochechas (Face Components.svg)
-      this.drawCheekItem(ctx, -9, 3.5, cfg.cheeksShape, 'left');
-      this.drawCheekItem(ctx, 9, 3.5, cfg.cheeksShape, 'right');
+      // 1. Bochechas / Blush (samples.svg: cx=1349.5 & 1469.5 cy=160.5)
+      this.drawCheekItem(ctx, -58.5, 34, cfg.cheeksShape, 'left');
+      this.drawCheekItem(ctx, 61.5, 34, cfg.cheeksShape, 'right');
 
-      // 2. Olhos (Face Components.svg)
-      this.drawEyeItem(ctx, -7.5, -0.5, cfg.eyeShape, cfg.eyeColor, 'left');
-      this.drawEyeItem(ctx, 7.5, -0.5, cfg.eyeShape, cfg.eyeColor, 'right');
+      // 2. Olhos (samples.svg: cx=1372.5 & 1448.5 cy=130.5)
+      this.drawEyeItem(ctx, -38, 4, cfg.eyeShape, cfg.eyeColor, 'left');
+      this.drawEyeItem(ctx, 40, 4, cfg.eyeShape, cfg.eyeColor, 'right');
 
-      // 3. Nariz (Face Components.svg)
-      this.drawNoseItem(ctx, 0, 1.8, cfg.noseShape);
+      // 3. Nariz (samples.svg: cx=1411 cy=143)
+      this.drawNoseItem(ctx, 2.5, 16.5, cfg.noseShape);
 
-      // 4. Boca (Face Components.svg)
-      this.drawMouthItem(ctx, 0, 5.5, cfg.mouthShape);
+      // 4. Boca (samples.svg: y=164 - 175)
+      this.drawMouthItem(ctx, 0.5, 42, cfg.mouthShape);
 
-    } else if (dir === 'east') {
-      // Perfil
-      this.drawCheekItem(ctx, 7.5, 3.5, cfg.cheeksShape, 'right');
-      this.drawEyeItem(ctx, 7.5, -0.5, cfg.eyeShape, cfg.eyeColor, 'right');
-      this.drawNoseItem(ctx, 14, 1.8, cfg.noseShape, 'east');
-      this.drawMouthItem(ctx, 11, 5.5, cfg.mouthShape, 'east');
+    } else {
+      // Perfil lateral
+      this.drawCheekItem(ctx, 45, 34, cfg.cheeksShape, 'right');
+      this.drawEyeItem(ctx, 38, 4, cfg.eyeShape, cfg.eyeColor, 'right');
+      this.drawNoseItem(ctx, 75, 16.5, cfg.noseShape, 'east');
+      this.drawMouthItem(ctx, 55, 42, cfg.mouthShape, 'east');
     }
 
     ctx.restore();
@@ -290,28 +294,27 @@ export class ModularAvatarRenderer {
     const noseDef = SVG_NOSES.find(n => n.id === noseShape) || SVG_NOSES[0];
     ctx.fillStyle = noseDef.color || '#FF7E36';
     ctx.strokeStyle = '#D96522';
-    ctx.lineWidth = 0.8;
+    ctx.lineWidth = 1.2;
 
     if (noseDef.type === 'circle') {
       ctx.beginPath();
-      ctx.arc(0, 0, noseDef.r * 0.45, 0, Math.PI * 2);
+      ctx.arc(0, 0, noseDef.r || 7, 0, Math.PI * 2);
       ctx.fill();
     } else if (noseDef.type === 'ellipse') {
       ctx.beginPath();
-      ctx.ellipse(0, 0, noseDef.rx * 0.45, noseDef.ry * 0.45, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, noseDef.rx || 9, noseDef.ry || 5.5, 0, 0, Math.PI * 2);
       ctx.fill();
     } else if (noseDef.type === 'rect') {
       ctx.beginPath();
-      ctx.roundRect(-noseDef.w * 0.25, -noseDef.h * 0.25, noseDef.w * 0.5, noseDef.h * 0.5, 1);
+      ctx.roundRect(-8.5, -4, 17, 8, 2);
       ctx.fill();
     } else {
-      // Triângulo clássico ACNH
-      ctx.beginPath();
-      ctx.moveTo(0, -2.5);
-      ctx.lineTo(2.5, 1.5);
-      ctx.lineTo(-2.5, 1.5);
-      ctx.closePath();
-      ctx.fill();
+      // Triângulo clássico ACNH de Face Components.svg
+      const path = this.getPath2D(noseDef.d);
+      ctx.save();
+      ctx.translate(-noseDef.cx, -noseDef.cy);
+      ctx.fill(path);
+      ctx.restore();
     }
 
     ctx.restore();
@@ -324,53 +327,55 @@ export class ModularAvatarRenderer {
     const mouthDef = SVG_MOUTHS.find(m => m.id === mouthShape) || SVG_MOUTHS[0];
 
     if (dir === 'east') {
-      // Perfil da boca
       ctx.strokeStyle = '#8C501D';
-      ctx.lineWidth = 1.2;
+      ctx.lineWidth = 2.5;
       ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.moveTo(-1, 0);
-      ctx.lineTo(3, 0);
+      ctx.moveTo(-5, 0);
+      ctx.lineTo(8, 0);
       ctx.stroke();
       ctx.restore();
       return;
     }
 
-    ctx.scale(mouthDef.scale || 0.45, mouthDef.scale || 0.45);
-
     if (mouthDef.type === 'fill') {
       ctx.fillStyle = mouthDef.color || '#8C501D';
       ctx.beginPath();
-      ctx.ellipse(0, 0, mouthDef.rx, mouthDef.ry, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, mouthDef.rx || 6.5, mouthDef.ry || 7.5, 0, 0, Math.PI * 2);
       ctx.fill();
-    } else if (mouthDef.type === 'fill_stroke') {
-      const path = this.getPath2D(mouthDef.d);
-      ctx.fillStyle = mouthDef.fillColor || '#FFFFFF';
-      ctx.strokeStyle = mouthDef.strokeColor || '#8C501D';
-      ctx.lineWidth = mouthDef.strokeWidth || 2;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.fill(path);
-      ctx.stroke(path);
-    } else if (mouthDef.type === 'tooth') {
-      const path = this.getPath2D(mouthDef.d);
-      ctx.strokeStyle = mouthDef.color || '#8C501D';
-      ctx.lineWidth = mouthDef.strokeWidth || 2;
-      ctx.lineCap = 'round';
-      ctx.stroke(path);
-      // Dente branco
-      const toothPath = this.getPath2D(mouthDef.toothD);
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fill(toothPath);
-      ctx.stroke(toothPath);
     } else {
-      // Traço de linha
-      const path = this.getPath2D(mouthDef.d);
-      ctx.strokeStyle = mouthDef.color || '#8C501D';
-      ctx.lineWidth = mouthDef.strokeWidth || 2.2;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.stroke(path);
+      ctx.save();
+      ctx.translate(-mouthDef.cx, -mouthDef.cy);
+
+      if (mouthDef.type === 'fill_stroke') {
+        const path = this.getPath2D(mouthDef.d);
+        ctx.fillStyle = mouthDef.fillColor || '#FFFFFF';
+        ctx.strokeStyle = mouthDef.strokeColor || '#8C501D';
+        ctx.lineWidth = mouthDef.strokeWidth || 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.fill(path);
+        ctx.stroke(path);
+      } else if (mouthDef.type === 'tooth') {
+        const path = this.getPath2D(mouthDef.d);
+        ctx.strokeStyle = mouthDef.color || '#8C501D';
+        ctx.lineWidth = mouthDef.strokeWidth || 3;
+        ctx.lineCap = 'round';
+        ctx.stroke(path);
+
+        const toothPath = this.getPath2D(mouthDef.toothD);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill(toothPath);
+        ctx.stroke(toothPath);
+      } else {
+        const path = this.getPath2D(mouthDef.d);
+        ctx.strokeStyle = mouthDef.color || '#8C501D';
+        ctx.lineWidth = mouthDef.strokeWidth || 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke(path);
+      }
+      ctx.restore();
     }
 
     ctx.restore();
@@ -388,71 +393,73 @@ export class ModularAvatarRenderer {
     const eyeDef = SVG_EYES.find(e => e.id === eyeShape) || SVG_EYES[0];
 
     if (eyeDef.type === 'cheerful_crescent') {
-      // Arco fechado feliz
+      // Arco fechado sorrindo
       ctx.strokeStyle = '#8C501D';
-      ctx.lineWidth = 1.8;
+      ctx.lineWidth = 4.0;
       ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.arc(0, 0, 3.8, Math.PI * 1.1, Math.PI * 1.9);
+      ctx.arc(0, 0, 16, Math.PI * 1.12, Math.PI * 1.88);
       ctx.stroke();
     } else if (eyeDef.type === 'round_button') {
-      // Botão redondo preto com brilho
+      // Botão redondo
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.arc(0, 0, 4.0, 0, Math.PI * 2);
+      ctx.arc(0, 0, 18, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = irisColor || '#8C501D';
       ctx.beginPath();
-      ctx.arc(0.4, 0.2, 3.2, 0, Math.PI * 2);
+      ctx.arc(2, 0, 14, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#0F172A';
       ctx.beginPath();
-      ctx.arc(0.4, 0.2, 1.8, 0, Math.PI * 2);
+      ctx.arc(2, 0, 8, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.arc(-0.6, -1.0, 1.0, 0, Math.PI * 2);
+      ctx.arc(-3, -5, 4.5, 0, Math.PI * 2);
       ctx.fill();
     } else {
-      // Brilho anime e formatos expressivos
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 3.8, 4.8, 0, 0, Math.PI * 2);
-      ctx.fill();
-
+      // Olho Oficial de samples.svg (ellipse rx=14.5 ry=19.5 com sparkles)
       ctx.fillStyle = irisColor || '#8C501D';
       ctx.beginPath();
-      ctx.ellipse(0.6, 0.3, 2.8, 3.8, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 14.5, 19.5, 0, 0, Math.PI * 2);
       ctx.fill();
 
+      // Pupila escura
       ctx.fillStyle = '#0F172A';
       ctx.beginPath();
-      ctx.ellipse(0.6, 0.3, 1.6, 2.2, 0, 0, Math.PI * 2);
+      ctx.ellipse(1.5, 1.0, 9.0, 13.0, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Destaques de luz branca (sparkles)
+      // Brilho Grande Superior (samples.svg: circle r=5.5)
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.arc(-0.5, -1.2, 1.2, 0, Math.PI * 2);
-      ctx.arc(1.5, 1.4, 0.6, 0, Math.PI * 2);
+      ctx.arc(-4, -8, 5.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Cílios superiores
-      ctx.strokeStyle = '#8C501D';
-      ctx.lineWidth = 1.4;
+      // Brilho Pequeno Inferior (samples.svg: ellipse rx=2.5 ry=3)
       ctx.beginPath();
-      ctx.arc(0, -0.6, 3.8, Math.PI * 1.15, Math.PI * 1.85);
+      ctx.ellipse(6, 7.5, 2.5, 3.0, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cílios superiores delicados (samples.svg)
+      ctx.strokeStyle = '#8C501D';
+      ctx.lineWidth = 2.2;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-15.5, -16.5);
+      ctx.quadraticCurveTo(-7, -21.5, 5.5, -21.5);
       ctx.stroke();
 
       if (eyeDef.type === 'cat_lashes' || eyeDef.type === 'almond_lash') {
         ctx.beginPath();
-        ctx.moveTo(3.2, -1.5);
-        ctx.lineTo(4.8, -3.0);
-        ctx.moveTo(2.0, -2.8);
-        ctx.lineTo(2.8, -4.5);
+        ctx.moveTo(10, -18);
+        ctx.lineTo(16, -24);
+        ctx.moveTo(6, -20);
+        ctx.lineTo(11, -27);
         ctx.stroke();
       }
     }
@@ -470,56 +477,54 @@ export class ModularAvatarRenderer {
 
     if (cheekDef.type === 'freckles') {
       ctx.fillStyle = cheekDef.color || '#8C501D';
-      [-2, 0, 2].forEach((fx, i) => {
+      [-8, 0, 8].forEach((fx, i) => {
         ctx.beginPath();
-        ctx.arc(fx, (i % 2) * 1.5, 0.8, 0, Math.PI * 2);
+        ctx.arc(fx, (i % 2) * 5, 2.2, 0, Math.PI * 2);
         ctx.fill();
       });
     } else if (cheekDef.type === 'whiskers') {
       ctx.strokeStyle = cheekDef.color || '#8C501D';
-      ctx.lineWidth = 1.0;
+      ctx.lineWidth = 2.5;
       const s = side === 'left' ? -1 : 1;
       ctx.beginPath();
-      ctx.moveTo(0, -1);
-      ctx.lineTo(s * 6, -2);
-      ctx.moveTo(0, 1.5);
-      ctx.lineTo(s * 6, 2.5);
+      ctx.moveTo(0, -4);
+      ctx.lineTo(s * 20, -8);
+      ctx.moveTo(0, 6);
+      ctx.lineTo(s * 20, 10);
       ctx.stroke();
     } else {
-      // Blush oval corado
+      // Blush Oficial de samples.svg (rx=12.5 ry=10.5)
       ctx.fillStyle = cheekDef.color || 'rgba(255, 186, 165, 0.75)';
       ctx.beginPath();
-      ctx.ellipse(0, 0, cheekDef.rx * 0.6, cheekDef.ry * 0.6, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, cheekDef.rx || 12.5, cheekDef.ry || 10.5, 0, 0, Math.PI * 2);
       ctx.fill();
     }
 
     ctx.restore();
   }
 
-  drawHairFront(ctx, x, y, cfg, dir) {
-    const hairDef = SVG_HAIRS.find(h => h.id === cfg.hairStyle) || SVG_HAIRS[1];
+  drawHairFront(ctx, cfg, dir) {
+    const hairDef = SVG_HAIRS.find(h => h.id === cfg.hairStyle) || SVG_HAIRS[0];
     const color = cfg.hairColor || '#3d2314';
     const shadow = cfg.hairShadow || '#241208';
 
     ctx.save();
-    ctx.translate(x, y);
 
     ctx.fillStyle = color;
     ctx.strokeStyle = shadow;
-    ctx.lineWidth = 1.4;
+    ctx.lineWidth = 2.2;
     ctx.lineJoin = 'round';
 
-    const path = this.getPath2D(hairDef.d);
-    ctx.scale(hairDef.scale || 0.15, hairDef.scale || 0.15);
-    ctx.fill(path);
-    ctx.stroke(path);
+    // Alinhamento perfeito com o topo da cabeça em samples.svg: cx alinhado com 0, topY alinhado com -83.5
+    ctx.translate(-hairDef.cx, -hairDef.topY - 83.5);
 
-    // Destaque luminoso
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-    ctx.lineWidth = 2.0;
-    ctx.beginPath();
-    ctx.arc(0, -40, 45, Math.PI * 1.25, Math.PI * 1.65);
-    ctx.stroke();
+    if (Array.isArray(hairDef.frontPaths)) {
+      for (const d of hairDef.frontPaths) {
+        const path = this.getPath2D(d);
+        ctx.fill(path);
+        ctx.stroke(path);
+      }
+    }
 
     ctx.restore();
   }
@@ -532,17 +537,17 @@ export class ModularAvatarRenderer {
     ctx.translate(x, y);
     ctx.fillStyle = color;
     ctx.strokeStyle = shadow;
-    ctx.lineWidth = 1.4;
+    ctx.lineWidth = 2.2;
 
     if (cfg.hairStyle === 'hair_long_straight') {
       ctx.beginPath();
-      ctx.roundRect(-16, -4, 32, 26, 4);
+      ctx.roundRect(-80, -20, 160, 180, 18);
       ctx.fill();
       ctx.stroke();
     } else if (cfg.hairStyle === 'hair_twin_buns') {
-      [-15, 15].forEach(bx => {
+      [-78, 78].forEach(bx => {
         ctx.beginPath();
-        ctx.arc(bx, -12, 6, 0, Math.PI * 2);
+        ctx.arc(bx, -55, 26, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
       });
@@ -550,6 +555,10 @@ export class ModularAvatarRenderer {
 
     ctx.restore();
   }
+
+  /* ========================================================================= */
+  /*  CORPO INTEIRO & BRAÇOS NA FRENTE DO TRONCO (samples.svg)                 */
+  /* ========================================================================= */
 
   drawTorso(ctx, x, y, rot, cfg, dir) {
     const primary = cfg.topColorPrimary || '#19c8b9';
@@ -560,43 +569,36 @@ export class ModularAvatarRenderer {
     ctx.translate(x, y);
     ctx.rotate(rot);
 
-    // 1. Camisa / Tronco (base_character.png)
+    // 1. Camisa / Tronco Oficial de samples.svg
     ctx.fillStyle = primary;
     ctx.strokeStyle = '#0f8e83';
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 2.5;
 
     ctx.beginPath();
-    if (dir === 'east') {
-      ctx.moveTo(-7, -10);
-      ctx.lineTo(8, -10);
-      ctx.lineTo(6, 6);
-      ctx.lineTo(-6, 6);
-    } else {
-      ctx.moveTo(-11, -10);
-      ctx.lineTo(11, -10);
-      ctx.lineTo(8, 6);
-      ctx.lineTo(-8, 6);
-    }
+    ctx.moveTo(-55, -2);
+    ctx.lineTo(55, -2);
+    ctx.lineTo(44, 60);
+    ctx.lineTo(-44, 60);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // Listras
+    // Listras decorativas
     if (cfg.topStyle === 'shirt_striped_teal' && dir !== 'north') {
       ctx.fillStyle = secondary;
-      [-4, 0].forEach(sy => {
-        ctx.fillRect(-8, sy, 16, 2.2);
+      [12, 28, 44].forEach(sy => {
+        ctx.fillRect(-45, sy, 90, 7);
       });
     }
 
-    // 2. Calça / Shorts (Pelve)
+    // 2. Shorts / Calça (Pelve)
     ctx.fillStyle = bottomColor;
     ctx.strokeStyle = '#1e3a8a';
     ctx.beginPath();
-    ctx.moveTo(-8, 6);
-    ctx.lineTo(8, 6);
-    ctx.lineTo(7, 12);
-    ctx.lineTo(-7, 12);
+    ctx.moveTo(-45, 60);
+    ctx.lineTo(45, 60);
+    ctx.lineTo(40, 85);
+    ctx.lineTo(-40, 85);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
@@ -604,183 +606,215 @@ export class ModularAvatarRenderer {
     ctx.restore();
   }
 
-  drawArm(ctx, x, y, rot, cfg, side = 'left', dir = 'south') {
+  drawArms(ctx, x, y, pose, cfg, dir) {
     const skin = cfg.skinTone || '#ffd0a8';
+    const skinShadow = cfg.skinShadow || '#e0ae82';
     const primary = cfg.topColorPrimary || '#19c8b9';
 
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate(rot);
+
+    // Braço Esquerdo (Ombro x=-55)
+    ctx.save();
+    ctx.translate(-55, 0);
+    ctx.rotate(pose.arm_l.rot);
 
     // Manga
     ctx.fillStyle = primary;
     ctx.beginPath();
-    ctx.arc(0, 2, 4, 0, Math.PI * 2);
+    ctx.arc(0, 8, 16, 0, Math.PI * 2);
     ctx.fill();
 
-    // Braço & Mãozinha esférica (base_character.png)
+    // Braço & Mãozinha Esférica
     ctx.fillStyle = skin;
-    ctx.strokeStyle = cfg.skinShadow || '#e0ae82';
-    ctx.lineWidth = 1.0;
+    ctx.strokeStyle = skinShadow;
+    ctx.lineWidth = 2.0;
     ctx.beginPath();
-    ctx.rect(-2.5, 3, 5, 8);
-    ctx.arc(0, 11, 3.2, 0, Math.PI * 2);
+    ctx.rect(-10, 10, 20, 32);
+    ctx.arc(0, 42, 16, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
+    ctx.restore();
+
+    // Braço Direito (Ombro x=+55)
+    ctx.save();
+    ctx.translate(55, 0);
+    ctx.rotate(pose.arm_r.rot);
+
+    ctx.fillStyle = primary;
+    ctx.beginPath();
+    ctx.arc(0, 8, 16, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = skin;
+    ctx.strokeStyle = skinShadow;
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.rect(-10, 10, 20, 32);
+    ctx.arc(0, 42, 16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
 
     ctx.restore();
   }
 
-  drawLeg(ctx, x, y, rot, cfg, side = 'left', dir = 'south') {
+  drawLegs(ctx, x, y, pose, cfg, dir) {
     const skin = cfg.skinTone || '#ffd0a8';
     const shoeColor = cfg.shoesColor || '#ea580c';
     const shoeTrim = cfg.shoesTrim || '#ffffff';
 
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate(rot);
 
-    // Perna / Pele
+    // Perna Esquerda
+    ctx.save();
+    ctx.translate(-22, 0);
+    ctx.rotate(pose.hip_l.rot + pose.leg_l.rot);
+
     ctx.fillStyle = skin;
-    ctx.fillRect(-2.5, 0, 5, 8);
+    ctx.fillRect(-10, 0, 20, 35);
 
     // Sapato 3D
     ctx.fillStyle = shoeColor;
     ctx.strokeStyle = '#9a3412';
-    ctx.lineWidth = 1.0;
-
+    ctx.lineWidth = 2.0;
     ctx.beginPath();
-    if (dir === 'east') {
-      ctx.roundRect(-3, 7, 10, 6, 3);
-    } else {
-      ctx.roundRect(-3.5, 7, 7, 6, 3);
-    }
+    ctx.roundRect(-14, 30, 28, 22, 8);
     ctx.fill();
     ctx.stroke();
 
-    // Sola branca
+    // Sola Branca
     ctx.fillStyle = shoeTrim;
-    ctx.fillRect(dir === 'east' ? -3 : -3.5, 11.5, dir === 'east' ? 10 : 7, 1.8);
+    ctx.fillRect(-14, 46, 28, 6);
+    ctx.restore();
+
+    // Perna Direita
+    ctx.save();
+    ctx.translate(22, 0);
+    ctx.rotate(pose.hip_r.rot + pose.leg_r.rot);
+
+    ctx.fillStyle = skin;
+    ctx.fillRect(-10, 0, 20, 35);
+
+    ctx.fillStyle = shoeColor;
+    ctx.strokeStyle = '#9a3412';
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.roundRect(-14, 30, 28, 22, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = shoeTrim;
+    ctx.fillRect(-14, 46, 28, 6);
+    ctx.restore();
 
     ctx.restore();
   }
 
-  drawGlasses(ctx, x, y, cfg, dir) {
+  drawGlasses(ctx, cfg, dir) {
     if (dir === 'north') return;
 
     ctx.save();
-    ctx.translate(x, y);
     ctx.strokeStyle = cfg.glassesColor || '#5c3c26';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 3.5;
 
     if (cfg.glassesStyle === 'sunglasses_cool') {
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-      if (dir === 'south') {
-        [-7, 7].forEach(gx => {
-          ctx.beginPath();
-          ctx.roundRect(gx - 4, -3, 8, 7, 2);
-          ctx.fill();
-          ctx.stroke();
-        });
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      [-38, 40].forEach(gx => {
         ctx.beginPath();
-        ctx.moveTo(-3, 0);
-        ctx.lineTo(3, 0);
-        ctx.stroke();
-      } else {
-        ctx.beginPath();
-        ctx.roundRect(4, -3, 8, 7, 2);
+        ctx.roundRect(gx - 20, -14, 40, 34, 8);
         ctx.fill();
         ctx.stroke();
-      }
+      });
+      ctx.beginPath();
+      ctx.moveTo(-18, 0);
+      ctx.lineTo(20, 0);
+      ctx.stroke();
     } else {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-      if (dir === 'south') {
-        [-7, 7].forEach(gx => {
-          ctx.beginPath();
-          ctx.arc(gx, 0, 4.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-        });
+      [-38, 40].forEach(gx => {
         ctx.beginPath();
-        ctx.moveTo(-2.5, 0);
-        ctx.lineTo(2.5, 0);
-        ctx.stroke();
-      } else {
-        ctx.beginPath();
-        ctx.arc(7, 0, 4.5, 0, Math.PI * 2);
+        ctx.arc(gx, 4, 22, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
-      }
+      });
+      ctx.beginPath();
+      ctx.moveTo(-16, 4);
+      ctx.lineTo(18, 4);
+      ctx.stroke();
     }
 
     ctx.restore();
   }
 
-  drawHat(ctx, x, y, cfg, dir) {
+  drawHat(ctx, cfg, dir) {
     ctx.save();
-    ctx.translate(x, y);
 
     if (cfg.hatStyle === 'straw_hat') {
       ctx.fillStyle = '#fde68a';
       ctx.strokeStyle = '#d97706';
-      ctx.lineWidth = 1.2;
+      ctx.lineWidth = 3.0;
 
+      // Aba larga
       ctx.beginPath();
-      ctx.ellipse(0, -12, 22, 7, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, -65, 110, 32, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
+      // Copa
       ctx.beginPath();
-      ctx.arc(0, -17, 10, Math.PI * 1.0, Math.PI * 2.0);
+      ctx.arc(0, -90, 52, Math.PI * 1.0, Math.PI * 2.0);
       ctx.fill();
       ctx.stroke();
 
+      // Fita vermelha
       ctx.strokeStyle = '#dc2626';
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 9.0;
       ctx.beginPath();
-      ctx.arc(0, -13.5, 9.8, Math.PI * 1.05, Math.PI * 1.95);
+      ctx.arc(0, -72, 51, Math.PI * 1.05, Math.PI * 1.95);
       ctx.stroke();
 
     } else if (cfg.hatStyle === 'witch_hat') {
       ctx.fillStyle = '#4c1d95';
       ctx.strokeStyle = '#2e1065';
-      ctx.lineWidth = 1.2;
+      ctx.lineWidth = 3.0;
 
       ctx.beginPath();
-      ctx.ellipse(0, -13, 20, 6, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, -70, 105, 30, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
       ctx.beginPath();
-      ctx.moveTo(-11, -14);
-      ctx.quadraticCurveTo(0, -28, 6, -34);
-      ctx.quadraticCurveTo(8, -24, 11, -14);
+      ctx.moveTo(-55, -75);
+      ctx.quadraticCurveTo(0, -150, 35, -180);
+      ctx.quadraticCurveTo(45, -130, 55, -75);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
     } else if (cfg.hatStyle === 'cat_ears_band') {
       ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 1.8;
+      ctx.lineWidth = 4.0;
       ctx.beginPath();
-      ctx.arc(0, -11, 14, Math.PI * 1.15, Math.PI * 1.85);
+      ctx.arc(0, -60, 72, Math.PI * 1.15, Math.PI * 1.85);
       ctx.stroke();
 
-      [-9, 9].forEach(ox => {
+      [-48, 48].forEach(ox => {
         ctx.fillStyle = cfg.hairColor || '#3d2314';
         ctx.beginPath();
-        ctx.moveTo(ox - 4, -13);
-        ctx.lineTo(ox, -24);
-        ctx.lineTo(ox + 4, -13);
+        ctx.moveTo(ox - 22, -70);
+        ctx.lineTo(ox, -125);
+        ctx.lineTo(ox + 22, -70);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
 
         ctx.fillStyle = '#f472b6';
         ctx.beginPath();
-        ctx.moveTo(ox - 2, -14);
-        ctx.lineTo(ox, -21);
-        ctx.lineTo(ox + 2, -14);
+        ctx.moveTo(ox - 12, -75);
+        ctx.lineTo(ox, -110);
+        ctx.lineTo(ox + 12, -75);
         ctx.closePath();
         ctx.fill();
       });
@@ -794,7 +828,7 @@ export class ModularAvatarRenderer {
     offCanvas.width = size;
     offCanvas.height = size;
     const offCtx = offCanvas.getContext('2d');
-    const scale = size / 64;
+    const scale = size / 280;
     this.render(offCtx, 0, 0, 'south', 'idle', 0, config || DEFAULT_AVATAR_CONFIG, scale);
     return offCanvas.toDataURL('image/png');
   }

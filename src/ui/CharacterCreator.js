@@ -112,10 +112,10 @@ export class CharacterCreator {
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Renderiza o personagem centralizado e ampliado no Canvas de Preview em tela cheia (3.2x)
-    const scale = 3.2;
-    const targetX = (this.canvas.width / 2) - (32 * scale);
-    const targetY = (this.canvas.height / 2) - (36 * scale);
+    // Enquadra perfeitamente o personagem de corpo inteiro no Canvas (280x300)
+    const scale = 0.92;
+    const targetX = (this.canvas.width / 2) - (140 * scale);
+    const targetY = (this.canvas.height / 2) - (135 * scale);
 
     this.renderer.render(
       this.ctx,
