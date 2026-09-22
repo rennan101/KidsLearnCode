@@ -1086,6 +1086,7 @@ export class BlocklyLuaSystem {
         montar_ponte_v: (item, vao) => logs.push(`ponte_v_construida:${item}:${vao}`),
 
         montar_vara: (item, mat) => logs.push(`vara_montada:${item}:${mat}`),
+        tecer_rede: (item, mat) => logs.push(`rede_tecida:${item}:${mat}`),
         animar_ondulacao: (item, f) => { logs.push(`agua_animada:${item}:${f}`); logs.push(`agua_animada:${item}:8`); },
         fluxo_vertical: (item, alt) => logs.push(`cachoeira_gerada:${item}:${alt}`),
 
@@ -1121,7 +1122,25 @@ export class BlocklyLuaSystem {
 
       // Convert Portuguese Lua syntax to executable JavaScript in sandbox
       let jsCode = scriptCode
-        .replace(/--.*$/gm, '')
+        .replace(/--.*$/gm, '');
+
+      // Handle key-value tables { k1 = v1, k2 = v2, ... } BEFORE converting blocks to JS { }
+      jsCode = jsCode.replace(/\{\s*([a-zA-Z_]\w*\s*=\s*[^}]+)\s*\}/g, (match, content) => {
+        const pairs = content.split(',').map(pair => {
+          const parts = pair.split('=').map(s => s.trim());
+          return parts.length === 2 ? `${parts[0]}: ${parts[1]}` : pair;
+        });
+        return `{ ${pairs.join(', ')} }`;
+      });
+
+      // Handle Lua array tables { "a", "b" } into 1-based JS arrays [null, "a", "b"]
+      jsCode = jsCode.replace(/\{\s*([^=:]+?)\s*\}/g, (match, content) => {
+        const items = content.split(',').map(s => s.trim());
+        return `[null, ${items.join(', ')}]`;
+      });
+
+      // Now convert Lua keywords to JS
+      jsCode = jsCode
         .replace(/local\s+/g, 'let ')
         .replace(/para\s+([a-zA-Z_]\w*)\s*=\s*([^,\s]+)\s*,\s*([^,\s]+)\s+faca/g, 'for (let $1 = $2; $1 <= $3; $1++) {')
         .replace(/se\s+(.+)\s+entao/g, 'if ($1) {')
@@ -1132,12 +1151,6 @@ export class BlocklyLuaSystem {
         .replace(/\b(e)\b/g, '&&')
         .replace(/\b(ou)\b/g, '||')
         .replace(/\b(nao)\b/g, '!');
-
-      // Handle Lua array tables { "a", "b" } into JS arrays ["a", "b"] where appropriate
-      jsCode = jsCode.replace(/=\s*\{\s*\"([^\"]+)\"\s*,\s*\"([^\"]+)\"\s*\}/g, '= [null, "$1", "$2"]');
-      jsCode = jsCode.replace(/=\s*\{\s*\"([^\"]+)\"\s*,\s*\"([^\"]+)\"\s*,\s*\"([^\"]+)\"\s*\}/g, '= [null, "$1", "$2", "$3"]');
-      // Handle key-value tables
-      jsCode = jsCode.replace(/=\s*\{\s*([a-zA-Z_]\w*)\s*=\s*([^\,\}]+)\s*,\s*([a-zA-Z_]\w*)\s*=\s*([^\,\}]+)\s*\}/g, '= { $1: $2, $3: $4 }');
 
       const fn = new Function('env', `with(env) { ${jsCode} }`);
       fn(sandboxEnv);
