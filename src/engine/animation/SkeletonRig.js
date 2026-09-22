@@ -117,10 +117,12 @@ export class SkeletonRig {
           pose.arm_r.rot = sinPhase * (armAmp * 0.5);
 
         } else {
-          // CAMINHADA DIREITA / ESQUERDA (LATERAL): Pés e pernas mexem de um lado para o outro coerentemente
+          // CAMINHADA DIREITA / ESQUERDA (LATERAL): Cabeça e torso NÃO se movem (fixos em 0). Apenas pernas e braços se movem!
           const sidePhase = Math.sin(phase);
-          pose.root.y += -Math.abs(sidePhase) * (bobAmp * 0.8);
-          pose.head.bobY = -Math.abs(sidePhase) * (bobAmp * 0.5);
+          pose.root.y = 38; // Posição Y fixa do torso
+          pose.root.rot = 0; // Sem rotação do tronco
+          pose.head.bobY = 0; // Cabeça estática sem bobbing
+          pose.head.rot = 0; // Cabeça estática sem rotação
 
           // Perna esquerda e direita balançam para um lado e para o outro
           pose.hip_l.rot = -sidePhase * legAmp;
@@ -132,7 +134,7 @@ export class SkeletonRig {
           pose.arm_l.rot = sidePhase * armAmp;
           pose.arm_r.rot = -sidePhase * armAmp;
         }
-        pose.shadow.scale = 1.0 - Math.abs(sinPhase) * 0.1;
+        pose.shadow.scale = 1.0;
         break;
       }
 

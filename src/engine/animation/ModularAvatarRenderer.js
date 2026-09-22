@@ -156,8 +156,7 @@ export class ModularAvatarRenderer {
     ctx.rotate(pose.head.rot);
 
     this.drawHeadBase(ctx, skin, skinShadow, 'north');
-    this.drawHairBack(ctx, 0, 0, cfg, 'north');
-    this.drawHairFront(ctx, cfg, 'north');
+    this.drawHairBackSolid(ctx, 0, 0, cfg, 'north');
 
     ctx.restore();
 
@@ -526,7 +525,9 @@ export class ModularAvatarRenderer {
     ctx.restore();
   }
 
-  drawHairFront(ctx, cfg, dir) {
+  drawHairFront(ctx, cfg, dir = 'south') {
+    if (dir === 'north') return;
+
     const hairDef = SVG_HAIRS.find(h => h.id === cfg.hairStyle) || SVG_HAIRS[0];
     const color = cfg.hairColor || '#3d2314';
     const shadow = cfg.hairShadow || '#241208';
@@ -539,7 +540,7 @@ export class ModularAvatarRenderer {
     ctx.lineJoin = 'round';
 
     if (dir === 'east') {
-      // PERFIL LATERAL: Preenche o topo e a nuca do crânio com a cor do cabelo (evitando falhas)
+      // PERFIL LATERAL: Preenche o topo e a nuca do crânio com a cor do cabelo (evitando que fique careca)
       ctx.beginPath();
       ctx.moveTo(-75, -5);
       ctx.bezierCurveTo(-75, -50, -45, -88, 0, -88);
@@ -561,7 +562,13 @@ export class ModularAvatarRenderer {
         }
       }
     } else {
-      // VISTA FRONTAL / TRASEIRA
+      // VISTA FRONTAL (SOUTH)
+      // Máscara no canvas para que a franja frontal não sobreponha indevidamente o corpo/roupa abaixo do queixo
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(-140, -140, 280, 218); // Limite vertical no queixo (y <= 78)
+      ctx.clip();
+
       // Preenchimento de base do crânio superior
       ctx.beginPath();
       ctx.arc(0, -25, 68, Math.PI * 1.0, Math.PI * 2.0);
@@ -575,12 +582,14 @@ export class ModularAvatarRenderer {
           ctx.stroke(path);
         }
       }
+      ctx.restore();
     }
 
     ctx.restore();
   }
 
   drawHairBack(ctx, x, y, cfg, dir) {
+    const hairDef = SVG_HAIRS.find(h => h.id === cfg.hairStyle) || SVG_HAIRS[0];
     const color = cfg.hairColor || '#3d2314';
     const shadow = cfg.hairShadow || '#241208';
 
@@ -589,6 +598,7 @@ export class ModularAvatarRenderer {
     ctx.fillStyle = color;
     ctx.strokeStyle = shadow;
     ctx.lineWidth = 2.2;
+    ctx.lineJoin = 'round';
 
     if (dir === 'east') {
       // Cabelo de Trás visto de perfil
@@ -617,26 +627,73 @@ export class ModularAvatarRenderer {
         ctx.stroke();
       }
     } else {
-      if (cfg.hairStyle === 'hair_long_straight') {
-        ctx.beginPath();
-        ctx.roundRect(-80, -20, 160, 180, 18);
-        ctx.fill();
-        ctx.stroke();
-      } else if (cfg.hairStyle === 'hair_twin_buns') {
-        [-78, 78].forEach(bx => {
+      if (Array.isArray(hairDef.backPaths)) {
+        for (const bp of hairDef.backPaths) {
+          ctx.save();
+          ctx.translate(-bp.cx, -bp.topY - 83.5);
+          const path = this.getPath2D(bp.d);
+          ctx.fill(path);
+          ctx.stroke(path);
+          ctx.restore();
+        }
+      } else {
+        if (cfg.hairStyle === 'hair_long_straight') {
           ctx.beginPath();
-          ctx.arc(bx, -55, 26, 0, Math.PI * 2);
+          ctx.roundRect(-80, -20, 160, 180, 18);
           ctx.fill();
           ctx.stroke();
-        });
-      } else if (cfg.hairStyle === 'hair_twin_braids') {
-        [-65, 65].forEach(bx => {
-          ctx.beginPath();
-          ctx.roundRect(bx - 15, 10, 30, 130, 12);
-          ctx.fill();
-          ctx.stroke();
-        });
+        } else if (cfg.hairStyle === 'hair_twin_buns') {
+          [-78, 78].forEach(bx => {
+            ctx.beginPath();
+            ctx.arc(bx, -55, 26, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          });
+        } else if (cfg.hairStyle === 'hair_twin_braids') {
+          [-65, 65].forEach(bx => {
+            ctx.beginPath();
+            ctx.roundRect(bx - 15, 10, 30, 130, 12);
+            ctx.fill();
+            ctx.stroke();
+          });
+        }
       }
+    }
+
+    ctx.restore();
+  }
+
+  drawHairBackSolid(ctx, x, y, cfg, dir = 'north') {
+    const hairDef = SVG_HAIRS.find(h => h.id === cfg.hairStyle) || SVG_HAIRS[0];
+    const color = cfg.hairColor || '#3d2314';
+    const shadow = cfg.hairShadow || '#241208';
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = color;
+    ctx.strokeStyle = shadow;
+    ctx.lineWidth = 2.2;
+    ctx.lineJoin = 'round';
+
+    // Base preenchida do crânio
+    ctx.beginPath();
+    ctx.arc(0, -25, 68, Math.PI * 1.0, Math.PI * 2.0);
+    ctx.fill();
+
+    if (Array.isArray(hairDef.backPaths)) {
+      for (const bp of hairDef.backPaths) {
+        ctx.save();
+        ctx.translate(-bp.cx, -bp.topY - 83.5);
+        const path = this.getPath2D(bp.d);
+        ctx.fill(path);
+        ctx.stroke(path);
+        ctx.restore();
+      }
+    } else {
+      ctx.beginPath();
+      ctx.arc(0, 0, 72, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
     }
 
     ctx.restore();
