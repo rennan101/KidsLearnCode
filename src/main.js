@@ -3249,12 +3249,14 @@ class RPGApplication {
       }
     };
 
+    let wasOnCooldown = [false, false, false, false];
+
     this.updateDragonSkillBar = () => {
       if (!skillBar || !this.dragonManager) return;
       const activeDragon = this.dragonManager.getActiveDragon();
-      const isCombatReady = this.mode === 'play' && (this.dragonManager.isMounted() || this.dragonManager.state === 'combat') && !!activeDragon;
+      const isMountedOrCombat = this.mode === 'play' && (this.dragonManager.isMounted() || this.dragonManager.state === 'combat') && !!activeDragon;
 
-      if (!isCombatReady) {
+      if (!isMountedOrCombat) {
         skillBar.style.display = 'none';
         lastSkillDragonId = '';
         return;
@@ -3263,11 +3265,13 @@ class RPGApplication {
       skillBar.style.display = 'flex';
       const skills = activeDragon.skills || [];
       const cooldowns = this.dragonManager.skillCooldowns || [0, 0, 0, 0];
+      const maxCooldowns = this.dragonManager.skillMaxCooldowns || [2, 3, 8, 3];
 
       // Rebuild structure if dragon changed
       if (lastSkillDragonId !== activeDragon.id) {
         lastSkillDragonId = activeDragon.id;
         skillBar.innerHTML = '';
+        wasOnCooldown = [false, false, false, false];
 
         for (let i = 0; i < 4; i++) {
           const skill = skills[i] || { name: `Habilidade ${i + 1}`, key: `${i + 1}`, type: i === 3 ? 'dodge' : 'attack', cooldown: 3 };
@@ -3286,7 +3290,8 @@ class RPGApplication {
             </div>
             <span class="dragon-skill-name-label">${skill.name.split(' ')[0]}</span>
             <div class="dragon-skill-cooldown-overlay" id="dragon-skill-cd-${i}" style="display: none;">
-              <span class="dragon-skill-cd-text">0</span>
+              <div class="dragon-skill-cooldown-fill" id="dragon-skill-cd-fill-${i}"></div>
+              <span class="dragon-skill-cd-text">0.0s</span>
             </div>
           `;
 
@@ -3302,17 +3307,34 @@ class RPGApplication {
         }
       }
 
-      // Update cooldown overlays dynamically
+      // Update cooldown fill animation & countdown dynamically
       for (let i = 0; i < 4; i++) {
+        const skillBtn = document.getElementById(`dragon-skill-btn-${i}`);
         const cdOverlay = document.getElementById(`dragon-skill-cd-${i}`);
+        const cdFill = document.getElementById(`dragon-skill-cd-fill-${i}`);
         const cdText = cdOverlay?.querySelector('.dragon-skill-cd-text');
         const cd = cooldowns[i] || 0;
+        const maxCd = maxCooldowns[i] || 2.0;
 
-        if (cdOverlay && cdText) {
+        if (cdOverlay && cdText && skillBtn) {
           if (cd > 0) {
+            wasOnCooldown[i] = true;
+            skillBtn.classList.add('on-cooldown');
             cdOverlay.style.display = 'flex';
-            cdText.innerText = (cd >= 1 ? Math.ceil(cd) : cd.toFixed(1)) + 's';
+            
+            // Visual cooldown height percentage loading the square
+            const pct = Math.min(100, Math.max(0, (cd / maxCd) * 100));
+            if (cdFill) {
+              cdFill.style.height = `${pct}%`;
+            }
+            cdText.innerText = cd.toFixed(1) + 's';
           } else {
+            if (wasOnCooldown[i]) {
+              wasOnCooldown[i] = false;
+              skillBtn.classList.remove('on-cooldown');
+              skillBtn.classList.add('ready-flash');
+              setTimeout(() => skillBtn.classList.remove('ready-flash'), 450);
+            }
             cdOverlay.style.display = 'none';
           }
         }

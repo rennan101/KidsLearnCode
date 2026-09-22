@@ -677,6 +677,7 @@ export class DragonManager {
     
     // Skill Cooldown Timers for Slots [1], [2], [3], [4]
     this.skillCooldowns = [0, 0, 0, 0];
+    this.skillMaxCooldowns = [2.0, 3.0, 8.0, 3.0];
 
     // Pet Follow Position and Physics
     this.x = 320;
@@ -946,6 +947,7 @@ export class DragonManager {
     // Deduct energy & set cooldown
     dragon.energy = Math.max(0, dragon.energy - (skill.energyCost || 0));
     this.skillCooldowns[slotIndex] = skill.cooldown || 2.0;
+    this.skillMaxCooldowns[slotIndex] = skill.cooldown || 2.0;
 
     const level = dragon.level || 1;
     const px = player ? (player.x + 32) : (this.x + 32);
@@ -1030,15 +1032,13 @@ export class DragonManager {
       }
     }
 
-    // Check wild dragons in AoE (Push & Battle Reaction)
+    // Check wild dragons in AoE (Damage, Push & AI Combat Reactions)
     for (const wild of this.wildDragons.values()) {
       for (const tile of affectedTiles) {
         if (Math.hypot(wild.x + 32 - tile.x, wild.y + 32 - tile.y) < 54) {
           wild.x += kx * knockbackDist;
           wild.y += ky * knockbackDist;
-          wild.fsmState = 'curious';
-          wild.stateTimer = 2.0;
-          wild.emote = { type: 'curious', timer: 1.8 };
+          wild.hp = Math.max(0, (wild.hp !== undefined ? wild.hp : (wild.maxHp || 100)) - finalDamage);
 
           this.damageNumbers.push({
             x: wild.x + 32,
@@ -1049,6 +1049,25 @@ export class DragonManager {
             life: 0,
             maxLife: 1.0
           });
+
+          if (wild.hp <= 0) {
+            // Dragon defeated/fainted - rests and recovers
+            wild.fsmState = 'sleep';
+            wild.stateTimer = 10.0;
+            wild.emote = { type: 'zzz', timer: 5.0 };
+            wild.hp = wild.maxHp || 100;
+            this.spawnSummonParticles(wild.x + 32, wild.y + 32, wild);
+          } else if (wild.personality === 'timid') {
+            // Timid dragon flees in terror
+            wild.fsmState = 'flee';
+            wild.stateTimer = 5.0;
+            wild.emote = { type: 'flee', timer: 2.5 };
+          } else {
+            // Aggressive or provoked neutral dragon counter-attacks!
+            wild.fsmState = 'chase';
+            wild.stateTimer = 8.0;
+            wild.emote = { type: 'battle', timer: 2.5 };
+          }
           break;
         }
       }
@@ -1418,6 +1437,11 @@ export class DragonManager {
               secondaryColor: '#fef08a'
             };
 
+            const elem = catalogItem.element || '';
+            const isAggressive = catalogItem.id.includes('ignis') || catalogItem.id.includes('nox') || catalogItem.id.includes('boulder') || catalogItem.id.includes('volt') || elem.includes('Fogo') || elem.includes('Sombra') || elem.includes('Terra');
+            const isTimid = catalogItem.id.includes('hydra') || catalogItem.id.includes('fae') || catalogItem.id.includes('frost') || catalogItem.id.includes('zephyr') || elem.includes('Água') || elem.includes('Natureza') || elem.includes('Gelo');
+            const personality = isAggressive ? 'aggressive' : (isTimid ? 'timid' : 'neutral');
+
             entity = {
               key: uniqueKey,
               tileId,
@@ -1437,13 +1461,19 @@ export class DragonManager {
               targetX: tx * 64,
               targetY: ty * 64,
               direction: cellFlip ? 'west' : 'east',
-              fsmState: 'idle', // 'idle', 'roam', 'fly_hover', 'curious', 'sleep'
+              fsmState: 'idle', // 'idle', 'roam', 'fly_hover', 'curious', 'sleep', 'chase', 'attack', 'flee'
+              personality,
+              hp: 120 + (cellLevel - 1) * 30,
+              maxHp: 120 + (cellLevel - 1) * 30,
+              energy: 100,
+              maxEnergy: 100,
+              attackCooldown: 0,
               stateTimer: 2.0 + Math.random() * 3.0,
               flightAltitude: 0,
               targetAltitude: 0,
               animTimer: Math.random() * 10,
               emote: null,
-              territoryRadius: 160
+              territoryRadius: 180
             };
             this.wildDragons.set(uniqueKey, entity);
           } else {
@@ -1462,10 +1492,18 @@ export class DragonManager {
     }
   }
 
-  // Update FSM for all Wild Dragons
+  // Update FSM for all Wild Dragons (Chase, Attack, Flee, Roam, Sleep)
   updateWildDragons(dt, player, tileMap) {
     for (const entity of this.wildDragons.values()) {
       entity.animTimer += dt;
+
+      // Energy regeneration & Attack Cooldown
+      if (entity.energy < (entity.maxEnergy || 100)) {
+        entity.energy = Math.min(entity.maxEnergy || 100, entity.energy + 10 * dt);
+      }
+      if (entity.attackCooldown > 0) {
+        entity.attackCooldown = Math.max(0, entity.attackCooldown - dt);
+      }
 
       // Update Emote Timer
       if (entity.emote) {
@@ -1481,13 +1519,23 @@ export class DragonManager {
       // Distance to player
       const distToPlayer = player ? Math.hypot((player.x + 24) - (entity.x + 32), (player.y + 24) - (entity.y + 32)) : 999;
 
-      // Player proximity curiosity trigger
-      if (distToPlayer < 90 && entity.fsmState !== 'curious' && entity.fsmState !== 'sleep') {
-        if (Math.random() < 0.20) {
-          entity.fsmState = 'curious';
-          entity.stateTimer = 2.5;
-          entity.emote = { type: Math.random() < 0.5 ? 'curious' : 'heart', timer: 2.2 };
-          entity.direction = (player.x < entity.x) ? 'west' : 'east';
+      // Proximity reactions based on personality (Aggressive Chase vs Timid Flee vs Curious)
+      if (entity.fsmState !== 'sleep' && entity.fsmState !== 'chase' && entity.fsmState !== 'attack' && entity.fsmState !== 'flee') {
+        if (entity.personality === 'aggressive' && distToPlayer < 240) {
+          entity.fsmState = 'chase';
+          entity.stateTimer = 8.0;
+          entity.emote = { type: 'battle', timer: 2.5 };
+        } else if (entity.personality === 'timid' && distToPlayer < 180) {
+          entity.fsmState = 'flee';
+          entity.stateTimer = 5.0;
+          entity.emote = { type: 'flee', timer: 2.5 };
+        } else if (distToPlayer < 90 && entity.fsmState !== 'curious') {
+          if (Math.random() < 0.20) {
+            entity.fsmState = 'curious';
+            entity.stateTimer = 2.5;
+            entity.emote = { type: Math.random() < 0.5 ? 'curious' : 'heart', timer: 2.2 };
+            entity.direction = (player.x < entity.x) ? 'west' : 'east';
+          }
         }
       }
 
@@ -1559,6 +1607,110 @@ export class DragonManager {
           }
           break;
 
+        case 'chase':
+          {
+            if (!player || distToPlayer > 360 || entity.stateTimer <= 0) {
+              entity.fsmState = 'idle';
+              entity.stateTimer = 2.5;
+              break;
+            }
+
+            const dx = (player.x + 24) - (entity.x + 32);
+            const dy = (player.y + 24) - (entity.y + 32);
+            const dist = Math.hypot(dx, dy);
+
+            if (Math.abs(dx) > Math.abs(dy)) {
+              entity.direction = dx > 0 ? 'east' : 'west';
+            } else {
+              entity.direction = dy > 0 ? 'south' : 'north';
+            }
+
+            if (dist > 65) {
+              const speed = (entity.category === 'fly' ? 62 : 48);
+              entity.x += (dx / dist) * speed * dt;
+              entity.y += (dy / dist) * speed * dt;
+            } else {
+              // In attack range
+              entity.fsmState = 'attack';
+              entity.stateTimer = 1.2;
+            }
+          }
+          break;
+
+        case 'attack':
+          {
+            if (!player) {
+              entity.fsmState = 'idle';
+              break;
+            }
+
+            const dx = (player.x + 24) - (entity.x + 32);
+            const dy = (player.y + 24) - (entity.y + 32);
+            entity.direction = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'east' : 'west') : (dy > 0 ? 'south' : 'north');
+
+            if (entity.attackCooldown <= 0) {
+              this.spawnAttackParticles(entity.x + 32, entity.y + 32, player.x + 24, player.y + 24, entity);
+
+              if (!this.isDodging) {
+                const dmg = Math.floor(8 + (entity.level || 1) * 2 + Math.random() * 4);
+                const active = this.getActiveDragon();
+                if (active) {
+                  active.hp = Math.max(0, active.hp - dmg);
+                }
+
+                this.damageNumbers.push({
+                  x: player.x + 24,
+                  y: player.y - 18,
+                  text: `-${dmg}`,
+                  color: '#ef4444',
+                  alpha: 1.0,
+                  life: 0,
+                  maxLife: 1.0
+                });
+              }
+
+              entity.attackCooldown = 2.2 + Math.random() * 0.6;
+              entity.stateTimer = 0.8;
+            }
+
+            if (entity.stateTimer <= 0) {
+              entity.fsmState = distToPlayer <= 240 ? 'chase' : 'idle';
+              entity.stateTimer = 3.0;
+            }
+          }
+          break;
+
+        case 'flee':
+          {
+            if (!player || distToPlayer > 300 || entity.stateTimer <= 0) {
+              entity.fsmState = 'idle';
+              entity.stateTimer = 3.0;
+              entity.targetAltitude = 0;
+              entity.emote = { type: 'heart', timer: 2.0 };
+              break;
+            }
+
+            // Run in opposite direction from player
+            const dx = (entity.x + 32) - (player.x + 24);
+            const dy = (entity.y + 32) - (player.y + 24);
+            const dist = Math.max(1, Math.hypot(dx, dy));
+
+            const speed = (entity.category === 'fly' ? 68 : 54);
+            entity.x += (dx / dist) * speed * dt;
+            entity.y += (dy / dist) * speed * dt;
+
+            if (entity.category === 'fly') {
+              entity.targetAltitude = 36;
+            }
+
+            if (Math.abs(dx) > Math.abs(dy)) {
+              entity.direction = dx > 0 ? 'east' : 'west';
+            } else {
+              entity.direction = dy > 0 ? 'south' : 'north';
+            }
+          }
+          break;
+
         case 'curious':
           // Look at player
           if (player) {
@@ -1574,9 +1726,19 @@ export class DragonManager {
           entity.targetAltitude = 0;
           if (distToPlayer < 45) {
             // Player startled sleeping dragon
-            entity.fsmState = 'curious';
-            entity.stateTimer = 2.0;
-            entity.emote = { type: 'curious', timer: 1.8 };
+            if (entity.personality === 'aggressive') {
+              entity.fsmState = 'chase';
+              entity.stateTimer = 6.0;
+              entity.emote = { type: 'battle', timer: 2.0 };
+            } else if (entity.personality === 'timid') {
+              entity.fsmState = 'flee';
+              entity.stateTimer = 5.0;
+              entity.emote = { type: 'flee', timer: 2.0 };
+            } else {
+              entity.fsmState = 'curious';
+              entity.stateTimer = 2.0;
+              entity.emote = { type: 'curious', timer: 1.8 };
+            }
           } else if (entity.stateTimer <= 0) {
             entity.fsmState = 'idle';
             entity.stateTimer = 2.0 + Math.random() * 2.0;
@@ -1762,15 +1924,15 @@ export class DragonManager {
 
     ctx.restore();
 
-    // 3. Overhead Level Badge (Animal Island UI 3D Pill, non-flipped)
+    // 3. Overhead Dragon Name, Level Badge & HP/Energy Bars (Animal Island UI Style)
     ctx.save();
-    const lvlText = `Nv. ${entity.level || 1}`;
-    ctx.font = 'bold 10px "Nunito", sans-serif';
+    const lvlText = `Nv. ${entity.level || 1} • ${entity.name.split(',')[0]}`;
+    ctx.font = 'bold 9px "Nunito", sans-serif';
     const textMetrics = ctx.measureText(lvlText);
-    const badgeW = Math.max(38, textMetrics.width + 12);
-    const badgeH = 16;
+    const badgeW = Math.max(46, textMetrics.width + 10);
+    const badgeH = 14;
     const badgeX = drawX + 32 - badgeW / 2;
-    const badgeY = drawY - 14;
+    const badgeY = drawY - 28;
 
     // Badge shadow 3D
     ctx.fillStyle = '#d97706';
@@ -1787,20 +1949,66 @@ export class DragonManager {
     ctx.fill();
 
     ctx.strokeStyle = '#f59e0b';
-    ctx.lineWidth = 1.3;
+    ctx.lineWidth = 1.2;
     ctx.stroke();
 
     ctx.fillStyle = '#7a583e';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(lvlText, drawX + 32, badgeY + badgeH / 2);
+
+    // 3b. Overhead HP Bar (52px wide)
+    const barW = 52;
+    const barX = drawX + 32 - barW / 2;
+    const hpY = drawY - 12;
+    const curHp = (entity.hp !== undefined) ? entity.hp : (entity.maxHp || 100);
+    const maxHp = entity.maxHp || 100;
+    const hpRatio = Math.max(0, Math.min(1, curHp / maxHp));
+
+    // HP background
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(barX, hpY, barW, 5, 2);
+    else ctx.rect(barX, hpY, barW, 5);
+    ctx.fill();
+
+    // HP Fill
+    const hpColor = hpRatio > 0.5 ? '#10b981' : (hpRatio > 0.25 ? '#f59e0b' : '#ef4444');
+    ctx.fillStyle = hpColor;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(barX, hpY, barW * hpRatio, 5, 2);
+    else ctx.rect(barX, hpY, barW * hpRatio, 5);
+    ctx.fill();
+
+    // HP Border
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+
+    // 3c. Overhead Energy Bar (52px wide)
+    const energyY = drawY - 6;
+    const curEnergy = (entity.energy !== undefined) ? entity.energy : (entity.maxEnergy || 100);
+    const maxEnergy = entity.maxEnergy || 100;
+    const energyRatio = Math.max(0, Math.min(1, curEnergy / maxEnergy));
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(barX, energyY, barW, 3.5, 1.5);
+    else ctx.rect(barX, energyY, barW, 3.5);
+    ctx.fill();
+
+    ctx.fillStyle = '#06b6d4';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(barX, energyY, barW * energyRatio, 3.5, 1.5);
+    else ctx.rect(barX, energyY, barW * energyRatio, 3.5);
+    ctx.fill();
     ctx.restore();
 
-    // 4. Emote Balloon above head (ACNH Style)
+    // 4. Emote Balloon above head (Animal Island Style)
     if (entity.emote) {
       ctx.save();
       const emoteX = drawX + 32;
-      const emoteY = drawY - 34;
+      const emoteY = drawY - 44;
 
       if (entity.emote.type === 'zzz') {
         // Floating Zzz
@@ -1824,6 +2032,36 @@ export class DragonManager {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('♥', emoteX, emoteY);
+      } else if (entity.emote.type === 'battle') {
+        // Battle Alert Mark
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(emoteX, emoteY, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#fee2e2';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px "Outfit", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('⚔', emoteX, emoteY);
+      } else if (entity.emote.type === 'flee') {
+        // Flee Exclamation Alert Mark
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(emoteX, emoteY, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#fffdf5';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '900 12px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('!', emoteX, emoteY + 0.5);
       } else if (entity.emote.type === 'curious') {
         // Curious Question Mark
         ctx.fillStyle = '#10b981';
@@ -1845,11 +2083,11 @@ export class DragonManager {
 
     // 5. Proximity [R] Keycap Prompt when Player is close
     const distToPlayer = player ? Math.hypot((player.x + 24) - (entity.x + 32), (player.y + 24) - (entity.y + 32)) : 999;
-    if (distToPlayer < 90) {
+    if (distToPlayer < 90 && entity.fsmState !== 'chase' && entity.fsmState !== 'attack') {
       ctx.save();
       const badgeSize = 22;
       const badgeX = drawX + 32 - badgeSize / 2;
-      const badgeY = drawY - (entity.emote ? 58 : 38);
+      const badgeY = drawY - (entity.emote ? 68 : 48);
 
       // Sombra suave do badge
       ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
@@ -2000,58 +2238,123 @@ export class DragonManager {
     ctx.arc(drawX + 33, drawY + 15, 2.5, 0, Math.PI * 2);
     ctx.fill();
 
-    // 7. Mini Overhead Companion Badge & Proximity Mount [R] Keycap Balloon
+    // 7. Overhead Dragon Name, Level Badge, and HP & Energy Bars (Always visible in Play Mode)
+    ctx.save();
+    const lvlText = `Nv. ${dragon.level || 1} • ${dragon.name.split(',')[0]}`;
+    ctx.font = 'bold 9.5px "Nunito", sans-serif';
+    const textMetrics = ctx.measureText(lvlText);
+    const badgeW = Math.max(50, textMetrics.width + 12);
+    const badgeH = 15;
+    const badgeX = drawX + 24 - badgeW / 2;
+    const badgeY = drawY - 30;
+
+    // 3D Level Badge shadow & body
+    ctx.fillStyle = '#0f8e83';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(badgeX, badgeY + 2, badgeW, badgeH, 50);
+    else ctx.rect(badgeX, badgeY + 2, badgeW, badgeH);
+    ctx.fill();
+
+    ctx.fillStyle = '#fffdf5';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 50);
+    else ctx.rect(badgeX, badgeY, badgeW, badgeH);
+    ctx.fill();
+
+    ctx.strokeStyle = '#19c8b9';
+    ctx.lineWidth = 1.3;
+    ctx.stroke();
+
+    ctx.fillStyle = '#7a583e';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(lvlText, drawX + 24, badgeY + badgeH / 2);
+
+    // 7b. Overhead HP Bar (58px wide)
+    const barW = 58;
+    const barX = drawX + 24 - barW / 2;
+    const hpY = drawY - 13;
+    const curHp = (dragon.hp !== undefined) ? dragon.hp : (dragon.maxHp || 100);
+    const maxHp = dragon.maxHp || 100;
+    const hpRatio = Math.max(0, Math.min(1, curHp / maxHp));
+
+    // HP background
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(barX, hpY, barW, 6, 2.5);
+    else ctx.rect(barX, hpY, barW, 6);
+    ctx.fill();
+
+    // HP fill
+    const hpColor = hpRatio > 0.5 ? '#10b981' : (hpRatio > 0.25 ? '#f59e0b' : '#ef4444');
+    ctx.fillStyle = hpColor;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(barX, hpY, barW * hpRatio, 6, 2.5);
+    else ctx.rect(barX, hpY, barW * hpRatio, 6);
+    ctx.fill();
+
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+
+    // 7c. Overhead Energy Bar (58px wide)
+    const energyY = drawY - 6;
+    const curEnergy = (dragon.energy !== undefined) ? dragon.energy : (dragon.maxEnergy || 100);
+    const maxEnergy = dragon.maxEnergy || 100;
+    const energyRatio = Math.max(0, Math.min(1, curEnergy / maxEnergy));
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(barX, energyY, barW, 4, 1.8);
+    else ctx.rect(barX, energyY, barW, 4);
+    ctx.fill();
+
+    ctx.fillStyle = '#06b6d4';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(barX, energyY, barW * energyRatio, 4, 1.8);
+    else ctx.rect(barX, energyY, barW * energyRatio, 4);
+    ctx.fill();
+    ctx.restore();
+
+    // 8. Proximity Mount [R] Keycap Balloon or Flight Altitude Indicator
     if (this.mode === 'follow') {
       const dist = player ? Math.hypot(player.x - this.x, player.y - this.y) : 999;
       const isNearby = dist < 120;
 
       if (isNearby) {
-        // Balão compacto com apenas a tecla [R] estilo Zelda/Animal Crossing
+        // Balão compacto com tecla [R]
         const badgeSize = 22;
         const badgeX = drawX + 24 - badgeSize / 2;
-        const badgeY = drawY - 26;
+        const badgeY = drawY - 54;
 
-        // Sombra suave do badge
         ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         ctx.beginPath();
-        ctx.roundRect(badgeX - 1, badgeY - 1, badgeSize + 2, badgeSize + 2, 6);
+        if (ctx.roundRect) ctx.roundRect(badgeX - 1, badgeY - 1, badgeSize + 2, badgeSize + 2, 6);
+        else ctx.rect(badgeX - 1, badgeY - 1, badgeSize + 2, badgeSize + 2);
         ctx.fill();
 
-        // Keycap dourado
         ctx.fillStyle = '#f59e0b';
         ctx.beginPath();
-        ctx.roundRect(badgeX, badgeY, badgeSize, badgeSize, 5);
+        if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, badgeSize, badgeSize, 5);
+        else ctx.rect(badgeX, badgeY, badgeSize, badgeSize);
         ctx.fill();
 
-        // Borda dourada suave
         ctx.strokeStyle = '#fef08a';
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // Letra R centralizada
         ctx.fillStyle = '#0f172a';
         ctx.font = 'bold 12px "JetBrains Mono", monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('R', badgeX + badgeSize / 2, badgeY + badgeSize / 2 + 0.5);
 
-        // Pontinha triangular sutil abaixo do badge apontando para a cabeça do dragão
         ctx.fillStyle = '#f59e0b';
         ctx.beginPath();
         ctx.moveTo(drawX + 21, badgeY + badgeSize);
         ctx.lineTo(drawX + 24, badgeY + badgeSize + 3);
         ctx.lineTo(drawX + 27, badgeY + badgeSize);
         ctx.fill();
-      } else {
-        // Badge simples de nível quando longe
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
-        ctx.roundRect(drawX + 4, drawY - 14, 40, 12, 4);
-        ctx.fill();
-
-        ctx.fillStyle = '#fef08a';
-        ctx.font = 'bold 8px Outfit, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`Lv.${dragon.level}`, drawX + 24, drawY - 5);
       }
     } else if (isMounted && this.canActiveDragonFly() && alt > 8) {
       // Altitude Indicator & Controls Prompt (Animal Island UI 3D Pill)
@@ -2061,7 +2364,7 @@ export class DragonManager {
       const bw = tw + 18;
       const bh = 18;
       const bx = drawX + 24 - bw / 2;
-      const by = drawY - 24;
+      const by = drawY - 52;
 
       // 3D Pill shadow
       ctx.fillStyle = '#0f8e83';
@@ -2084,7 +2387,7 @@ export class DragonManager {
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(hudText, drawX + 24, by + bh / 2);
+      ctx.fillText(hudText, drawX + 24, by + bh / 2 + 0.5);
     }
 
     ctx.restore();
