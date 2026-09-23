@@ -86,32 +86,30 @@ export class ModularAvatarRenderer {
   /*  RENDERIZAÇÃO: VISTA FRONTAL (SOUTH)                                      */
   /* ========================================================================= */
   renderSouth(ctx, pose, cfg, state) {
-    const headBobX = pose.head.x * 12;
-    const headBobY = (pose.head.y * 12) + (pose.head.bobY * 12);
-    const torsoBobY = pose.head.bobY * 8;
+    const headRot = pose.head.rot;
     const isCelebrating = state === 'celebrate';
 
     // 1. Cabelo Traseiro / Longo (atrás de tudo)
-    this.drawHairBack(ctx, 1250 + headBobX, 760 + headBobY, cfg, 'south');
+    this.drawHairBack(ctx, 1250, 760, cfg, 'south');
 
     // 2. Pernas e Pés de Base_char_flat.svg (_04_Perna_Esquerda, _06_Perna_Direita, _03_Pe_Esquerdo, _05_Pe_Direito)
     this.drawLegs(ctx, pose, cfg, 'south');
 
     // 3. Pescoço (_07_Pescoco) e Tronco (_08_Tronco_Corpo) + Roupas oficiais (assets/Tops)
-    this.drawTorsoAndNeck(ctx, torsoBobY, pose.root.rot, cfg, 'south');
+    this.drawTorsoAndNeck(ctx, pose.root.rot, cfg, 'south');
 
     // 4. Orelhas de Base_char_flat.svg (_01_Orelha_Esquerda e _02_Orelha_Direita)
-    this.drawEars(ctx, 1250 + headBobX, 760 + headBobY, cfg, 'south');
+    this.drawEars(ctx, 1250, 760, cfg, 'south');
 
     // 5. Braços e Mãos (_09_Braco_Esquerdo, _11_Braco_Direito, _10_Mao_Esquerda, _12_Mao_Direita)
     if (!isCelebrating) {
-      this.drawArms(ctx, torsoBobY, pose, cfg, 'south');
+      this.drawArms(ctx, pose, cfg, 'south');
     }
 
     // 6. Cabeça (_14_Cabeca) e Rosto (Face Components.svg)
     ctx.save();
-    ctx.translate(1250 + headBobX, 760 + headBobY);
-    ctx.rotate(pose.head.rot);
+    ctx.translate(1250, 760);
+    ctx.rotate(headRot);
 
     this.drawHeadBase(ctx, cfg, 'south');
     this.drawFaceFeatures(ctx, cfg, 'south');
@@ -125,7 +123,7 @@ export class ModularAvatarRenderer {
 
     // 7. Se estiver comemorando, braços na frente de tudo
     if (isCelebrating) {
-      this.drawArms(ctx, torsoBobY, pose, cfg, 'south');
+      this.drawArms(ctx, pose, cfg, 'south');
     }
   }
 
@@ -133,26 +131,24 @@ export class ModularAvatarRenderer {
   /*  RENDERIZAÇÃO: VISTA TRASEIRA (NORTH)                                     */
   /* ========================================================================= */
   renderNorth(ctx, pose, cfg, state) {
-    const headBobX = pose.head.x * 12;
-    const headBobY = (pose.head.y * 12) + (pose.head.bobY * 12);
-    const torsoBobY = pose.head.bobY * 8;
+    const headRot = pose.head.rot;
     const isCelebrating = state === 'celebrate';
 
     // 1. Braços (se não comemorando, ficam atrás)
     if (!isCelebrating) {
-      this.drawArms(ctx, torsoBobY, pose, cfg, 'north');
+      this.drawArms(ctx, pose, cfg, 'north');
     }
 
     // 2. Pernas e Pés
     this.drawLegs(ctx, pose, cfg, 'north');
 
     // 3. Tronco e Roupas (costas)
-    this.drawTorsoAndNeck(ctx, torsoBobY, pose.root.rot, cfg, 'north');
+    this.drawTorsoAndNeck(ctx, pose.root.rot, cfg, 'north');
 
     // 4. Cabeça e Cabelo Traseiro
     ctx.save();
-    ctx.translate(1250 + headBobX, 760 + headBobY);
-    ctx.rotate(pose.head.rot);
+    ctx.translate(1250, 760);
+    ctx.rotate(headRot);
 
     this.drawHeadBase(ctx, cfg, 'north');
     this.drawHairBackSolid(ctx, 0, 0, cfg, 'north');
@@ -160,7 +156,7 @@ export class ModularAvatarRenderer {
     ctx.restore();
 
     if (isCelebrating) {
-      this.drawArms(ctx, torsoBobY, pose, cfg, 'north');
+      this.drawArms(ctx, pose, cfg, 'north');
     }
   }
 
@@ -168,29 +164,27 @@ export class ModularAvatarRenderer {
   /*  RENDERIZAÇÃO: VISTA LATERAL (EAST / PERFIL)                              */
   /* ========================================================================= */
   renderEast(ctx, pose, cfg, state) {
-    const headBobX = pose.head.x * 12;
-    const headBobY = (pose.head.y * 12) + (pose.head.bobY * 12);
-    const torsoBobY = pose.head.bobY * 8;
+    const headRot = pose.head.rot;
     const isCelebrating = state === 'celebrate';
 
     // 1. Cabelo Traseiro
-    this.drawHairBack(ctx, 1250 + headBobX, 760 + headBobY, cfg, 'east');
+    this.drawHairBack(ctx, 1250, 760, cfg, 'east');
 
     // 2. Pernas e Pés
     this.drawLegs(ctx, pose, cfg, 'east');
 
     // 3. Tronco e Roupas
-    this.drawTorsoAndNeck(ctx, torsoBobY, pose.root.rot, cfg, 'east');
+    this.drawTorsoAndNeck(ctx, pose.root.rot, cfg, 'east');
 
     // 4. Braços
     if (!isCelebrating) {
-      this.drawArms(ctx, torsoBobY, pose, cfg, 'east');
+      this.drawArms(ctx, pose, cfg, 'east');
     }
 
     // 5. Cabeça e Feições
     ctx.save();
-    ctx.translate(1250 + headBobX, 760 + headBobY);
-    ctx.rotate(pose.head.rot);
+    ctx.translate(1250, 760);
+    ctx.rotate(headRot);
 
     this.drawHeadBase(ctx, cfg, 'east');
     this.drawFaceFeatures(ctx, cfg, 'east');
@@ -203,7 +197,7 @@ export class ModularAvatarRenderer {
     ctx.restore();
 
     if (isCelebrating) {
-      this.drawArms(ctx, torsoBobY, pose, cfg, 'east');
+      this.drawArms(ctx, pose, cfg, 'east');
     }
   }
 
@@ -268,7 +262,7 @@ export class ModularAvatarRenderer {
     ctx.restore();
   }
 
-  drawTorsoAndNeck(ctx, torsoBobY, rot, cfg, dir) {
+  drawTorsoAndNeck(ctx, rot, cfg, dir) {
     const skin = cfg.skinTone || '#f6dab9';
     const primary = cfg.topColorPrimary || '#19c8b9';
     const secondary = cfg.topColorSecondary || '#ffffff';
@@ -277,10 +271,10 @@ export class ModularAvatarRenderer {
     const bottomStyle = cfg.bottomStyle || 'shorts_denim';
 
     ctx.save();
-    ctx.translate(1250, 1450 + torsoBobY);
+    ctx.translate(1250, 1450);
     ctx.rotate(rot);
 
-    // 1. Pescoço (_07_Pescoco: rect x=1130 y=1080 width=240 height=180 -> relativo: x=-120 y=-370 w=240 h=180)
+    // 1. Pescoço (_07_Pescoco de Base_char_flat.svg: x=1130, y=1080, w=240, h=180 -> relativo a (1250, 1450): x=-120, y=-370, w=240, h=180)
     ctx.fillStyle = skin;
     ctx.fillRect(-120, -370, 240, 180);
 
@@ -451,7 +445,7 @@ export class ModularAvatarRenderer {
     ctx.restore();
   }
 
-  drawArms(ctx, torsoBobY, pose, cfg, dir) {
+  drawArms(ctx, pose, cfg, dir) {
     const skin = cfg.skinTone || '#f6dab9';
     const primary = cfg.topColorPrimary || '#19c8b9';
     const secondary = cfg.topColorSecondary || '#ffffff';
@@ -460,9 +454,9 @@ export class ModularAvatarRenderer {
     ctx.save();
 
     // Braço Esquerdo (_09_Braco_Esquerdo e _10_Mao_Esquerda)
-    // Articula no ombro esquerdo (1120, 1195 + torsoBobY)
+    // Articula no ombro esquerdo (1120, 1195)
     ctx.save();
-    ctx.translate(1120, 1195 + torsoBobY);
+    ctx.translate(1120, 1195);
     ctx.rotate(pose.arm_l.rot);
 
     // Braço de pele base
@@ -481,9 +475,9 @@ export class ModularAvatarRenderer {
     ctx.restore();
 
     // Braço Direito (_11_Braco_Direito e _12_Mao_Direita)
-    // Articula no ombro direito (1380, 1195 + torsoBobY)
+    // Articula no ombro direito (1380, 1195)
     ctx.save();
-    ctx.translate(1380, 1195 + torsoBobY);
+    ctx.translate(1380, 1195);
     ctx.rotate(pose.arm_r.rot);
 
     const armRPath = this.getPath2D('M0 0C-35 10 -50 50 -30 85L230 395C250 417 285 407 300 380C315 353 305 320 278 305L28 10C20 3 10 0 0 0Z');
