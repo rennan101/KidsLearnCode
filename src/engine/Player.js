@@ -484,8 +484,8 @@ export class Player {
       }
 
       const avatarScale = 0.22 * s;
-      const targetX = drawX + (32 * s) - (140 * avatarScale);
-      const targetY = drawY + (60 * s) - (260 * avatarScale);
+      const targetX = drawX + (32 * s);
+      const targetY = drawY + (60 * s) - (265 * avatarScale);
 
       this.modularAvatarRenderer.render(
         ctx,

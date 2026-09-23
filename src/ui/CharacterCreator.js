@@ -120,10 +120,10 @@ export class CharacterCreator {
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Enquadra perfeitamente o avatar de corpo inteiro sem qualquer recorte
+    // Enquadra perfeitamente o avatar centralizado no canvas (320x340)
     const scale = 0.96;
-    const targetX = (this.canvas.width / 2) - (140 * scale);
-    const targetY = (this.canvas.height / 2) - (130 * scale);
+    const targetX = this.canvas.width / 2;
+    const targetY = 24;
 
     this.renderer.render(
       this.ctx,

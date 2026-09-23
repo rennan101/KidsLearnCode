@@ -86,31 +86,31 @@ export class ModularAvatarRenderer {
   /*  RENDERIZAÇÃO: VISTA FRONTAL (SOUTH)                                      */
   /* ========================================================================= */
   renderSouth(ctx, pose, cfg, state) {
-    const headX = 1250 + (pose.head.x * 12);
-    const headY = 760 + (pose.head.y * 12) + (pose.head.bobY * 12);
-    const torsoY = 1450 + (pose.head.bobY * 8);
+    const headBobX = pose.head.x * 12;
+    const headBobY = (pose.head.y * 12) + (pose.head.bobY * 12);
+    const torsoBobY = pose.head.bobY * 8;
 
     // 1. Cabelo Traseiro / Longo (atrás de tudo)
-    this.drawHairBack(ctx, headX, headY, cfg, 'south');
+    this.drawHairBack(ctx, 1250 + headBobX, 760 + headBobY, cfg, 'south');
 
     // 2. Orelhas de Base_char_flat.svg (_01_Orelha_Esquerda e _02_Orelha_Direita)
-    this.drawEars(ctx, headX, headY, cfg, 'south');
+    this.drawEars(ctx, 1250 + headBobX, 760 + headBobY, cfg, 'south');
 
     // 3. Pernas e Pés de Base_char_flat.svg (_04_Perna_Esquerda, _06_Perna_Direita, _03_Pe_Esquerdo, _05_Pe_Direito)
     this.drawLegs(ctx, pose, cfg, 'south');
 
     // 4. Pescoço (_07_Pescoco) e Tronco (_08_Tronco_Corpo) + Roupas oficiais (assets/Tops)
-    this.drawTorsoAndNeck(ctx, torsoY, pose.root.rot, cfg, 'south');
+    this.drawTorsoAndNeck(ctx, torsoBobY, pose.root.rot, cfg, 'south');
 
     // 5. Braços e Mãos (_09_Braco_Esquerdo, _11_Braco_Direito, _10_Mao_Esquerda, _12_Mao_Direita)
     const isCelebrating = state === 'celebrate';
     if (!isCelebrating) {
-      this.drawArms(ctx, torsoY, pose, cfg, 'south');
+      this.drawArms(ctx, torsoBobY, pose, cfg, 'south');
     }
 
     // 6. Cabeça (_14_Cabeca) e Rosto (Face Components.svg)
     ctx.save();
-    ctx.translate(headX, headY);
+    ctx.translate(1250 + headBobX, 760 + headBobY);
     ctx.rotate(pose.head.rot);
 
     this.drawHeadBase(ctx, cfg, 'south');
@@ -125,7 +125,7 @@ export class ModularAvatarRenderer {
 
     // 7. Se estiver comemorando, braços na frente de tudo
     if (isCelebrating) {
-      this.drawArms(ctx, torsoY, pose, cfg, 'south');
+      this.drawArms(ctx, torsoBobY, pose, cfg, 'south');
     }
   }
 
@@ -133,25 +133,25 @@ export class ModularAvatarRenderer {
   /*  RENDERIZAÇÃO: VISTA TRASEIRA (NORTH)                                     */
   /* ========================================================================= */
   renderNorth(ctx, pose, cfg, state) {
-    const headX = 1250 + (pose.head.x * 12);
-    const headY = 760 + (pose.head.y * 12) + (pose.head.bobY * 12);
-    const torsoY = 1450 + (pose.head.bobY * 8);
+    const headBobX = pose.head.x * 12;
+    const headBobY = (pose.head.y * 12) + (pose.head.bobY * 12);
+    const torsoBobY = pose.head.bobY * 8;
     const isCelebrating = state === 'celebrate';
 
     // 1. Braços (se não comemorando, ficam atrás)
     if (!isCelebrating) {
-      this.drawArms(ctx, torsoY, pose, cfg, 'north');
+      this.drawArms(ctx, torsoBobY, pose, cfg, 'north');
     }
 
     // 2. Pernas e Pés
     this.drawLegs(ctx, pose, cfg, 'north');
 
     // 3. Tronco e Roupas (costas)
-    this.drawTorsoAndNeck(ctx, torsoY, pose.root.rot, cfg, 'north');
+    this.drawTorsoAndNeck(ctx, torsoBobY, pose.root.rot, cfg, 'north');
 
     // 4. Cabeça e Cabelo Traseiro
     ctx.save();
-    ctx.translate(headX, headY);
+    ctx.translate(1250 + headBobX, 760 + headBobY);
     ctx.rotate(pose.head.rot);
 
     this.drawHeadBase(ctx, cfg, 'north');
@@ -160,7 +160,7 @@ export class ModularAvatarRenderer {
     ctx.restore();
 
     if (isCelebrating) {
-      this.drawArms(ctx, torsoY, pose, cfg, 'north');
+      this.drawArms(ctx, torsoBobY, pose, cfg, 'north');
     }
   }
 
@@ -168,28 +168,28 @@ export class ModularAvatarRenderer {
   /*  RENDERIZAÇÃO: VISTA LATERAL (EAST / PERFIL)                              */
   /* ========================================================================= */
   renderEast(ctx, pose, cfg, state) {
-    const headX = 1250 + (pose.head.x * 12);
-    const headY = 760 + (pose.head.y * 12) + (pose.head.bobY * 12);
-    const torsoY = 1450 + (pose.head.bobY * 8);
+    const headBobX = pose.head.x * 12;
+    const headBobY = (pose.head.y * 12) + (pose.head.bobY * 12);
+    const torsoBobY = pose.head.bobY * 8;
     const isCelebrating = state === 'celebrate';
 
     // 1. Cabelo Traseiro
-    this.drawHairBack(ctx, headX, headY, cfg, 'east');
+    this.drawHairBack(ctx, 1250 + headBobX, 760 + headBobY, cfg, 'east');
 
     // 2. Pernas e Pés
     this.drawLegs(ctx, pose, cfg, 'east');
 
     // 3. Tronco e Roupas
-    this.drawTorsoAndNeck(ctx, torsoY, pose.root.rot, cfg, 'east');
+    this.drawTorsoAndNeck(ctx, torsoBobY, pose.root.rot, cfg, 'east');
 
     // 4. Braços
     if (!isCelebrating) {
-      this.drawArms(ctx, torsoY, pose, cfg, 'east');
+      this.drawArms(ctx, torsoBobY, pose, cfg, 'east');
     }
 
     // 5. Cabeça e Feições
     ctx.save();
-    ctx.translate(headX, headY);
+    ctx.translate(1250 + headBobX, 760 + headBobY);
     ctx.rotate(pose.head.rot);
 
     this.drawHeadBase(ctx, cfg, 'east');
@@ -203,7 +203,7 @@ export class ModularAvatarRenderer {
     ctx.restore();
 
     if (isCelebrating) {
-      this.drawArms(ctx, torsoY, pose, cfg, 'east');
+      this.drawArms(ctx, torsoBobY, pose, cfg, 'east');
     }
   }
 
@@ -245,8 +245,8 @@ export class ModularAvatarRenderer {
     ctx.fillStyle = skin;
 
     if (dir === 'south' || dir === 'north') {
-      // _14_Cabeca: M1250,410C1480,410 1640,560 1640,760C1640,920 1560,1080 1420,1135C1350,1160 1150,1160 1080,1135C940,1080 860,920 860,760C860,560 1020,410 1250,410Z
-      // Renderizado relativo a (1250, 760)
+      // _14_Cabeca de Base_char_flat.svg relativa à origem da cabeça (1250, 760)
+      // Topo y=410 (-350), Base queixo y=1135 (+375)
       const headLocalPath = this.getPath2D('M0 -350C230 -350 390 -200 390 0C390 160 310 320 170 375C100 400 -100 400 -170 375C-310 320 -390 160 -390 0C-390 -200 -230 -350 0 -350Z');
       ctx.fill(headLocalPath);
     } else {
@@ -268,7 +268,7 @@ export class ModularAvatarRenderer {
     ctx.restore();
   }
 
-  drawTorsoAndNeck(ctx, torsoY, rot, cfg, dir) {
+  drawTorsoAndNeck(ctx, torsoBobY, rot, cfg, dir) {
     const skin = cfg.skinTone || '#f6dab9';
     const primary = cfg.topColorPrimary || '#19c8b9';
     const secondary = cfg.topColorSecondary || '#ffffff';
@@ -277,178 +277,19 @@ export class ModularAvatarRenderer {
     const bottomStyle = cfg.bottomStyle || 'shorts_denim';
 
     ctx.save();
-
-    // 1. Pescoço (_07_Pescoco de Base_char_flat.svg: rect x=1130 y=1080 width=240 height=180)
-    ctx.fillStyle = skin;
-    ctx.fillRect(1130, 1080, 240, 180);
-
-    // 2. Tronco Base (_08_Tronco_Corpo de Base_char_flat.svg)
-    ctx.save();
-    ctx.translate(1250, torsoY);
+    ctx.translate(1250, 1450 + torsoBobY);
     ctx.rotate(rot);
 
-    // Path local de _08_Tronco_Corpo
-    const torsoLocalPath = this.getPath2D('M-100 -280C-50 -290 50 -290 100 -280C160 -250 200 -130 205 10C215 130 180 245 90 275C40 290 -40 290 -90 275C-180 245 -215 130 -205 10C-200 -130 -160 -250 -100 -280Z');
+    // 1. Pescoço (_07_Pescoco: rect x=1130 y=1080 width=240 height=180 -> relativo: x=-120 y=-370 w=240 h=180)
     ctx.fillStyle = skin;
+    ctx.fillRect(-120, -370, 240, 180);
+
+    // 2. Tronco Base (_08_Tronco_Corpo de Base_char_flat.svg)
+    const torsoLocalPath = this.getPath2D('M-100 -280C-50 -290 50 -290 100 -280C160 -250 200 -130 205 10C215 130 180 245 90 275C40 290 -40 290 -90 275C-180 245 -215 130 -205 10C-200 -130 -160 -250 -100 -280Z');
     ctx.fill(torsoLocalPath);
 
-    // 3. ROUPAS SUPERIORES OFICIAIS (assets/Tops) - 100% Flat Fill
-    ctx.fillStyle = primary;
-
-    if (topStyle === 'top_crop_top') {
-      // Top Cropped (Crop Top.svg): Corte alto, detalhes e acabamento
-      ctx.beginPath();
-      ctx.moveTo(-205, -280);
-      ctx.lineTo(205, -280);
-      ctx.lineTo(185, 50);
-      ctx.lineTo(-185, 50);
-      ctx.closePath();
-      ctx.fill();
-
-      // Bainha de destaque inferior
-      ctx.fillStyle = secondary;
-      ctx.fillRect(-185, 30, 370, 20);
-
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.beginPath();
-        ctx.ellipse(0, -270, 80, 30, 0, 0, Math.PI);
-        ctx.fill();
-      }
-
-    } else if (topStyle === 'top_cupcake_dress') {
-      // Vestido Cupcake (Cupcake Dress.svg): Tronco ajustado + Saia rodada ampla com babados
-      ctx.beginPath();
-      ctx.moveTo(-205, -280);
-      ctx.lineTo(205, -280);
-      ctx.lineTo(175, 100);
-      ctx.lineTo(-175, 100);
-      ctx.closePath();
-      ctx.fill();
-
-      // Saia rodada ampla
-      ctx.fillStyle = primary;
-      ctx.beginPath();
-      ctx.moveTo(-185, 100);
-      ctx.lineTo(185, 100);
-      ctx.lineTo(320, 380);
-      ctx.lineTo(-320, 380);
-      ctx.closePath();
-      ctx.fill();
-
-      // Babados em ondas da saia
-      ctx.fillStyle = secondary;
-      ctx.beginPath();
-      ctx.roundRect(-330, 350, 660, 35, 18);
-      ctx.fill();
-
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.beginPath();
-        ctx.ellipse(0, -270, 90, 35, 0, 0, Math.PI);
-        ctx.fill();
-
-        ctx.strokeStyle = secondary;
-        ctx.lineWidth = 8;
-        ctx.beginPath();
-        ctx.moveTo(0, -230);
-        ctx.lineTo(0, 80);
-        ctx.stroke();
-      }
-
-    } else if (topStyle === 'top_sweater') {
-      // Suéter de Lã (Sweater.svg): Modelagem aconchegante, barra canelada e gola alta
-      ctx.beginPath();
-      ctx.moveTo(-220, -290);
-      ctx.lineTo(220, -290);
-      ctx.lineTo(200, 240);
-      ctx.lineTo(-200, 240);
-      ctx.closePath();
-      ctx.fill();
-
-      // Barra canelada inferior
-      ctx.fillStyle = secondary;
-      ctx.fillRect(-200, 200, 400, 40);
-
-      // Gola estruturada do suéter
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.beginPath();
-        ctx.roundRect(-120, -330, 240, 65, 20);
-        ctx.fill();
-      }
-
-    } else if (topStyle === 'top_puffy_sleeve') {
-      // Blusa Manga Bufante (Puffy Sleeve.svg): Tronco ajustado com gola canoa
-      ctx.beginPath();
-      ctx.moveTo(-205, -280);
-      ctx.lineTo(205, -280);
-      ctx.lineTo(190, 200);
-      ctx.lineTo(-190, 200);
-      ctx.closePath();
-      ctx.fill();
-
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.beginPath();
-        ctx.ellipse(0, -280, 110, 40, 0, 0, Math.PI);
-        ctx.fill();
-      }
-
-    } else if (topStyle === 'top_sleeveless') {
-      // Regata Sem Mangas (Sleeveless.svg): Alças estruturadas e corte anatômico
-      ctx.beginPath();
-      ctx.moveTo(-180, -280);
-      ctx.lineTo(180, -280);
-      ctx.lineTo(185, 190);
-      ctx.lineTo(-185, 190);
-      ctx.closePath();
-      ctx.fill();
-
-      if (dir !== 'north') {
-        ctx.fillStyle = skin;
-        ctx.beginPath();
-        ctx.ellipse(0, -280, 95, 45, 0, 0, Math.PI);
-        ctx.fill();
-      }
-
-    } else if (topStyle === 'top_long_sleeve') {
-      // Blusa Manga Longa (Long Sleeve.svg): Corpo com barra canelada e gola redonda
-      ctx.beginPath();
-      ctx.moveTo(-210, -280);
-      ctx.lineTo(210, -280);
-      ctx.lineTo(190, 200);
-      ctx.lineTo(-190, 200);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = secondary;
-      ctx.fillRect(-190, 175, 380, 25);
-
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.beginPath();
-        ctx.ellipse(0, -270, 95, 35, 0, 0, Math.PI);
-        ctx.fill();
-      }
-
-    } else {
-      // Camiseta Clássica (Tee.svg): Corte clássico de camiseta com gola reforçada
-      ctx.beginPath();
-      ctx.moveTo(-210, -280);
-      ctx.lineTo(210, -280);
-      ctx.lineTo(195, 190);
-      ctx.lineTo(-195, 190);
-      ctx.closePath();
-      ctx.fill();
-
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.beginPath();
-        ctx.ellipse(0, -280, 95, 45, 0, 0, Math.PI);
-        ctx.fill();
-      }
-    }
+    // 3. ROUPAS SUPERIORES OFICIAIS (assets/Tops) - Renderização vetorial exata
+    this.renderTopOnTorso(ctx, topStyle, primary, secondary, skin, dir);
 
     // 4. Shorts / Calça / Saia (Pelve) - 100% Flat Fill
     if (topStyle !== 'top_cupcake_dress') {
@@ -506,10 +347,111 @@ export class ModularAvatarRenderer {
     }
 
     ctx.restore();
+  }
+
+  renderTopOnTorso(ctx, topStyle, primary, secondary, skin, dir) {
+    ctx.save();
+    // Escala SVG oficial de Tops (largura 213px -> 430px de ombro a ombro)
+    // Coordenadas dos Tops têm centro X=107.5 e gola superior em Y=1477 (Cupcake Dress em Y=825)
+    ctx.save();
+
+    if (topStyle === 'top_cupcake_dress') {
+      ctx.translate(0, -280);
+      ctx.scale(3.4, 3.4);
+      ctx.translate(-107.5, -825);
+
+      // SVG path oficial de Cupcake Dress.svg
+      const dressPath = this.getPath2D('M80.5 825C48.5 815 30.3 854.8 32.5 864.3C31.7 865 30 865.3 31 867.3C31.5 870.8 36.3 876.7 39 878.5C41.5 880.2 48 882 51 883C52.2 883.8 52.8 882 53 881C56.5 881 59.7 882.6 61 877.8V884.5C48.2 897 21 933.5 21 963.5C21 967.5 32 969.5 32 965.5C32 969.5 42.5 971.5 42.5 967.5C42.5 971.5 53 971.5 53 967.5C53 971.5 64 973.5 64 969.5C64 973.5 75 974 75 970C75 974 85.5 974 85.5 970C85.5 974 96.5 974.5 96.5 970.5C96.5 974.5 108 974.5 108 970.5C108 974.5 119 974.5 119 970.5C119 974.5 129 974 129 970C129 974 139.5 973.5 139.5 969.5C139.5 973.5 150.5 973.5 150.5 969.5C150.5 973.5 161.5 971.5 161.5 967.5C161.5 971.5 172 971.5 172 967.5C172 971.5 182.5 969.5 182.5 965.5C182.5 969.5 193.5 967.5 193.5 963.5C193.5 929.9 166.8 896 153.5 885L153 875.5C154.8 882.6 158 881 161.5 881C161.7 882 162.3 883.8 163.5 883C166.5 882 173 880.2 175.5 878.5C178.2 876.7 183 870.8 183.5 867.3C184.5 865.3 182.8 865 182 864.3C184.2 854.8 166 815 134 825C127.8 827.5 121.5 832.5 107 832.5C92.5 832.5 86.7 827.5 80.5 825Z');
+      ctx.fillStyle = primary;
+      ctx.fill(dressPath);
+
+      // Detalhe frontal da saia
+      if (dir !== 'north') {
+        const detailPath = this.getPath2D('M107.97 845.709C95.057 845.709 84.7984 847.717 81.2832 848.722L87.5244 878.207H129.492L134.442 848.722C130.999 847.717 120.883 845.709 107.97 845.709Z');
+        ctx.fillStyle = secondary;
+        ctx.fill(detailPath);
+      }
+
+    } else if (topStyle === 'top_crop_top') {
+      ctx.translate(0, -280);
+      ctx.scale(3.4, 3.4);
+      ctx.translate(-107.5, -1477);
+
+      // SVG path oficial de Crop Top.svg
+      const cropPath = this.getPath2D('M31 1512.5C37.8 1498.5 69 1477 80.5 1477C86.6667 1479.5 93 1484.5 107.5 1484.5C122 1484.5 128 1479.5 134 1477C145.5 1477 176.7 1498.5 183.5 1512.5C181.333 1522 168 1533.5 164 1535.5C161 1533.5 154.6 1529.1 153 1527.5C151 1525.5 158 1545 157.5 1552.5C146.5 1554.5 120.1 1556.5 106.5 1556.5C92.9 1556.5 68 1555 57 1552.5C56.5 1545 63.5 1525.5 61.5 1527.5C59.9 1529.1 53.5 1533.5 50.5 1535.5C46.5 1533.5 33.1667 1522 31 1512.5Z');
+      ctx.fillStyle = primary;
+      ctx.fill(cropPath);
+
+      if (dir !== 'north') {
+        ctx.fillStyle = secondary;
+        const trimBottom = this.getPath2D('M57 1552.5C68 1555 92.9 1556.5 106.5 1556.5C120.1 1556.5 146.5 1554.5 157.5 1552.5L157 1545C146 1547 120 1548.5 106.5 1548.5C93 1548.5 68 1547 57 1545Z');
+        ctx.fill(trimBottom);
+      }
+
+    } else if (topStyle === 'top_sweater') {
+      ctx.translate(0, -280);
+      ctx.scale(3.4, 3.4);
+      ctx.translate(-107.5, -1477);
+
+      // SVG path oficial de Sweater.svg
+      const sweaterPath = this.getPath2D('M79.8 1476.7C79.4 1477.3 79 1478 79 1478.5C69 1475.5 41.6 1498.7 34 1511.5C30 1518.2 25 1522.6 20.6 1526.5C14.5 1531.8 9.6 1536.1 10.5 1544C8.2 1545.8 3.7 1550 4.5 1552C7.8 1555.8 15.5 1563.7 19.5 1564.5C23.5 1564.5 26.8 1559.8 28 1557.5C32.5 1559 47.2 1547.2 50 1542C52.8 1536.8 58.8 1530.2 61.5 1527.5C56.7 1538.2 49.1 1560.5 57.5 1564.5C56.8 1567.8 56.2 1575.7 57 1576.5C71 1578.5 99.6 1578.5 106 1578.5C112.4 1578.5 149.5 1578 158.5 1576.5C159.3 1575.7 158.2 1567.8 157.5 1564.5C165.9 1560.5 158.3 1538.2 153.5 1527.5C156.2 1530.2 162.2 1536.8 165 1542C167.8 1547.2 182.5 1559 187 1557.5C188.2 1559.8 191.5 1564.5 195.5 1564.5C199.5 1563.7 207.2 1555.8 210.5 1552C211.3 1550 206.8 1545.8 204.5 1544C205.4 1536.1 200.5 1531.8 194.4 1526.5C190 1522.6 185 1518.2 181 1511.5C173.4 1498.7 146 1475.5 136 1478.5C136 1478 134.9 1477.2 134 1476.6C127.2 1478.3 117.6 1480 106.7 1480C96 1480 86.6 1478.4 79.8 1476.7Z');
+      ctx.fillStyle = primary;
+      ctx.fill(sweaterPath);
+
+      // Barra e gola do suéter
+      if (dir !== 'north') {
+        ctx.fillStyle = secondary;
+        ctx.beginPath();
+        ctx.roundRect(85, 1474, 43, 10, 5);
+        ctx.fill();
+      }
+
+    } else if (topStyle === 'top_puffy_sleeve') {
+      ctx.translate(0, -280);
+      ctx.scale(3.4, 3.4);
+      ctx.translate(-107.5, -1477);
+
+      // SVG path oficial de Puffy Sleeve.svg
+      const puffyPath = this.getPath2D('M80.5 1477C48.5 1467 30.3 1506.8 32.5 1516.3C31.7 1517 30 1517.3 31 1519.3C31.5 1522.8 36.3 1528.7 39 1530.5C41.5 1532.2 48 1534 51 1535C52.2 1535.8 52.8 1534 53 1533C56.5 1533 59.7 1534.5 61 1529.8C59.5 1538.6 54.6 1568.9 57.5 1575.5L58.5 1580.5C60 1580.5 64 1582 64 1578C64 1582 75 1582 75 1578C75 1582 85.5 1582 85.5 1578C85.5 1582 96 1582 96 1578C96 1582 107 1582 107 1578C107 1582 118.5 1582 118.5 1578C118.5 1582 129.5 1582 129.5 1578C129.5 1582 140.5 1582 140.5 1578C140.5 1582 151 1582 151 1578C151 1582 155 1580.5 156.5 1580.5L157.5 1575.5C160.4 1568.9 155.5 1538.6 154 1529.8C155.3 1534.5 158.5 1533 162 1533C162.2 1534 162.8 1535.8 164 1535C167 1534 173.5 1532.2 176 1530.5C178.7 1528.7 183.5 1522.8 184 1519.3C185 1517.3 183.3 1517 182.5 1516.3C184.7 1506.8 166.5 1467 134.5 1477C128.3 1479.5 122 1484.5 107.5 1484.5C93 1484.5 86.7 1479.5 80.5 1477Z');
+      ctx.fillStyle = primary;
+      ctx.fill(puffyPath);
+
+    } else if (topStyle === 'top_sleeveless') {
+      ctx.translate(0, -280);
+      ctx.scale(3.4, 3.4);
+      ctx.translate(-107.5, -1477);
+
+      // SVG path oficial de Sleeveless.svg
+      const sleeveLessPath = this.getPath2D('M107.5 1581.5C93.9 1581.5 68 1580 57 1577.5C56.5 1570.1 64 1529 65 1524C69.8 1519.2 70.2 1494.5 70.5 1482C72.9 1480.4 79.7 1478.2 82.5 1477.5C85 1478.2 90 1479.3 90 1482.5C90 1479.5 98.5 1480.3 98.5 1483.5C98.5 1481 107.5 1481 107.5 1485C107.5 1481 116.5 1481 116.5 1483.5C116.5 1480.3 125 1479.5 125 1482.5C125 1479.7 130 1478 132.5 1477.5C135.3 1478.2 142.6 1480.4 145 1482C145.2 1493.5 146.5 1518 150.5 1524C153.3 1539 159.2 1571.5 158 1577.5C147 1580 121.1 1581.5 107.5 1581.5Z');
+      ctx.fillStyle = primary;
+      ctx.fill(sleeveLessPath);
+
+    } else if (topStyle === 'top_long_sleeve') {
+      ctx.translate(0, -280);
+      ctx.scale(3.4, 3.4);
+      ctx.translate(-107.5, -1477);
+
+      // SVG path oficial de Long Sleeve.svg (corpo)
+      const longSleevePath = this.getPath2D('M41 1505.4C51.1 1492.5 71 1477.9 82.5 1477.9C88.7 1480.4 93 1484.5 107.5 1484.5C122 1484.5 126.3 1480.4 132.5 1477.9C144 1477.9 164.7 1493.5 174 1505.4C185 1519.4 209.5 1547 211.5 1549C210.5 1551.2 207.6 1556.2 204 1559C200.4 1561.8 189.5 1569.5 187 1569.5C177.2 1556 156.7 1528.7 153.5 1527.5C159 1559 170 1623.7 170 1630.5H45.5C44.7 1622.9 55.8 1558.7 61.5 1527.5C58.3 1528.7 37.8 1556 28 1569.5C25.5 1569.5 14.6 1561.8 11 1559C7.4 1556.2 4.5 1551.2 3.5 1549C5.5 1547 30 1519.4 41 1505.4Z');
+      ctx.fillStyle = primary;
+      ctx.fill(longSleevePath);
+
+    } else {
+      // Camiseta Clássica (Tee.svg)
+      ctx.translate(0, -280);
+      ctx.scale(3.4, 3.4);
+      ctx.translate(-107.5, -1477);
+
+      const teePath = this.getPath2D('M31 1512.5C37.8 1498.5 69 1477 80.5 1477C86.6667 1479.5 93 1484.5 107.5 1484.5C122 1484.5 128 1479.5 134 1477C145.5 1477 176.7 1498.5 183.5 1512.5C181.333 1522 168 1533.5 164 1535.5C161 1533.5 154.6 1529.1 153 1527.5C151 1525.5 158 1570 157.5 1577.5C146.5 1579.5 120.1 1581.5 106.5 1581.5C92.9 1581.5 68 1580 57 1577.5C56.5 1570 63.5 1525.5 61.5 1527.5C59.9 1529.1 53.5 1533.5 50.5 1535.5C46.5 1533.5 33.1667 1522 31 1512.5Z');
+      ctx.fillStyle = primary;
+      ctx.fill(teePath);
+    }
+
+    ctx.restore();
     ctx.restore();
   }
 
-  drawArms(ctx, torsoY, pose, cfg, dir) {
+  drawArms(ctx, torsoBobY, pose, cfg, dir) {
     const skin = cfg.skinTone || '#f6dab9';
     const primary = cfg.topColorPrimary || '#19c8b9';
     const secondary = cfg.topColorSecondary || '#ffffff';
@@ -518,9 +460,9 @@ export class ModularAvatarRenderer {
     ctx.save();
 
     // Braço Esquerdo (_09_Braco_Esquerdo e _10_Mao_Esquerda)
-    // Articula no ombro esquerdo (1120, 1195)
+    // Articula no ombro esquerdo (1120, 1195 + torsoBobY)
     ctx.save();
-    ctx.translate(1120, 1195);
+    ctx.translate(1120, 1195 + torsoBobY);
     ctx.rotate(pose.arm_l.rot);
 
     // Braço de pele base
@@ -539,9 +481,9 @@ export class ModularAvatarRenderer {
     ctx.restore();
 
     // Braço Direito (_11_Braco_Direito e _12_Mao_Direita)
-    // Articula no ombro direito (1380, 1195)
+    // Articula no ombro direito (1380, 1195 + torsoBobY)
     ctx.save();
-    ctx.translate(1380, 1195);
+    ctx.translate(1380, 1195 + torsoBobY);
     ctx.rotate(pose.arm_r.rot);
 
     const armRPath = this.getPath2D('M0 0C-35 10 -50 50 -30 85L230 395C250 417 285 407 300 380C315 353 305 320 278 305L28 10C20 3 10 0 0 0Z');
