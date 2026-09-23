@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 124 59" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;">
+    <g transform="matrix(1,0,0,1,-236.876894,-153.876894)">
+        <g id="Olhos_2">
+            <path d="M260.5,164C271.164,164 280,173.738 280,186C280,198.262 271.164,208 260.5,208C249.836,208 241,198.262 241,186C241,173.738 249.836,164 260.5,164Z" style="fill:white;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;"/>
+            <ellipse cx="266" cy="185" rx="15" ry="17" style="fill:rgb(140,80,29);"/>
+            <path d="M260,163L260,158" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;stroke-linecap:round;"/>
+            <path d="M271.634,166.696L274.134,162.366" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;stroke-linecap:round;"/>
+            <g transform="matrix(-0.5,-0.866025,-0.866025,0.5,249.5,168.062)">
+                <path d="M1,-1L6,-1" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;stroke-linecap:round;"/>
+            </g>
+            <path d="M336.5,164C347.164,164 356,173.738 356,186C356,198.262 347.164,208 336.5,208C325.836,208 317,198.262 317,186C317,173.738 325.836,164 336.5,164Z" style="fill:white;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;"/>
+            <ellipse cx="342" cy="185" rx="15" ry="17" style="fill:rgb(140,80,29);"/>
+            <path d="M336,163L336,158" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;stroke-linecap:round;"/>
+            <path d="M347.634,166.696L350.134,162.366" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;stroke-linecap:round;"/>
+            <g transform="matrix(-0.5,-0.866025,-0.866025,0.5,325.5,168.062)">
+                <path d="M1,-1L6,-1" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;stroke-linecap:round;"/>
+            </g>
+        </g>
+    </g>
+</svg>

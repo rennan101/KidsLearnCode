@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 135 52" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;">
+    <g transform="matrix(1,0,0,1,-550,-88.723888)">
+        <g id="Olhos_13">
+            <defs>
+                <mask id="Mask">
+                
+                    <g transform="matrix(1,-0,-0,1,550,88.723888)"><image id="_Image1" width="135px" height="52px" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIcAAAA0CAAAAACF0nQNAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAHklEQVRYhe3BMQEAAADCoPVPbQsvoAAAAAAAAICXARugAAGZNZV1AAAAAElFTkSuQmCC"/>
+                    </g>
+                </mask>
+            </defs>
+            <g mask="url(#Mask)">
+                <path d="M655,99C666.715,99 676,107.393 676,117.5C676,127.607 666.715,136 655,136C643.285,136 634,127.607 634,117.5C634,107.393 643.285,99 655,99Z" style="fill:white;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;"/>
+                <ellipse cx="660.5" cy="116" rx="17.5" ry="18" style="fill:rgb(140,80,29);"/>
+                <g transform="matrix(0.927335,0.374233,-0.374233,0.927335,79.82604,-233.662017)">
+                    <rect x="641.604" y="88.725" width="45.76" height="19.073" style="fill:rgb(255,175,164);"/>
+                </g>
+            </g>
+            <defs>
+                <mask id="Mask1">
+                
+                    <g transform="matrix(1,-0,-0,1,550,88.723888)"><image id="_Image2" width="135px" height="52px" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIcAAAA0CAAAAACF0nQNAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAHklEQVRYhe3BMQEAAADCoPVPbQsvoAAAAAAAAICXARugAAGZNZV1AAAAAElFTkSuQmCC"/>
+                    </g>
+                </mask>
+            </defs>
+            <g mask="url(#Mask1)">
+                <path d="M579,99C590.715,99 600,107.393 600,117.5C600,127.607 590.715,136 579,136C567.285,136 558,127.607 558,117.5C558,107.393 567.285,99 579,99Z" style="fill:white;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;"/>
+                <ellipse cx="584.5" cy="116" rx="17.5" ry="18" style="fill:rgb(140,80,29);"/>
+                <g transform="matrix(0.927315,-0.374283,0.374283,0.927315,0.35877,213.549434)">
+                    <rect x="550" y="105.851" width="45.76" height="19.073" style="fill:rgb(255,175,164);"/>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

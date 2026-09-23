@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 970 802" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,-117,-230)">
+        <g transform="matrix(1,0,0,1,-648,-122)">
+            <path d="M1250,410C1480,410 1640,560 1640,760C1640,920 1560,1080 1420,1135C1350,1160 1150,1160 1080,1135C940,1080 860,920 860,760C860,560 1020,410 1250,410Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-648,-122)">
+            <g id="Front_17_Maria_Chiquinha_Presilhas" transform="matrix(1.094075,0,0,1.126111,-115.695568,-109.705341)">
+                <g transform="matrix(4.341317,0,0,4.341317,-1947.379971,-2081.915958)">
+                    <path d="M736.5,636.5C681.5,636.5 682.5,635.5 682.5,606C681.333,617.833 682.5,649 666,644L653.5,663.5C653.5,628.5 664.5,574 736.5,574C808.5,574 820,628.5 820,663.5L807.5,644C791,648 792.167,617.833 791,606C791,635.5 791.5,636.5 736.5,636.5Z" style="fill:rgb(74,46,24);fill-rule:nonzero;"/>
+                </g>
+            </g>
+        </g>
+        <g transform="matrix(1,0,0,1,-648,-122)">
+            <g id="Front_01_Chanel_Classico">
+                <g transform="matrix(4.341317,0,0,4.341317,-4508.757,232.006003)">
+                    <path d="M1251.5,97C1246.33,94 1239.1,83.8 1251.5,67C1266.63,46.507 1312.23,41.251 1326.5,41.009C1326.15,41.003 1325.81,41 1325.5,41L1327.5,41C1327.19,41 1326.85,41.003 1326.5,41.009C1340.77,41.251 1386.37,46.507 1401.5,67C1413.9,83.8 1406.67,94 1401.5,97C1398.5,103.667 1390.9,116.9 1384.5,116.5C1380,113.833 1370.3,107.1 1367.5,101.5C1364.67,104.833 1357.4,112 1351,114C1347.33,111.333 1339.6,105.1 1338,101.5C1335.83,105.833 1330.7,114.5 1327.5,114.5C1324.3,114.5 1317.83,105.833 1315,101.5C1313.4,105.1 1305.67,111.333 1302,114C1295.6,112 1288.33,104.833 1285.5,101.5C1282.7,107.1 1273,113.833 1268.5,116.5C1262.1,116.9 1254.5,103.667 1251.5,97Z" style="fill:rgb(74,46,24);fill-rule:nonzero;"/>
+                </g>
+            </g>
+        </g>
+        <g transform="matrix(1,0,0,1,-648,-137)">
+            <g id="_01_Orelha_Esquerda" affinity:id="01_Orelha_Esquerda" transform="matrix(1,0,0,1,0,-15)">
+                <path d="M900,810C800,805 765,850 765,890C765,940 815,975 900,970L900,810Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+            </g>
+        </g>
+        <g transform="matrix(1,0,0,1,-648,-137)">
+            <g id="_02_Orelha_Direita" affinity:id="02_Orelha_Direita" transform="matrix(1,0,0,1,0,-15)">
+                <path d="M1600,810C1700,805 1735,850 1735,890C1735,940 1685,975 1600,970L1600,810Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+            </g>
+        </g>
+    </g>
+</svg>

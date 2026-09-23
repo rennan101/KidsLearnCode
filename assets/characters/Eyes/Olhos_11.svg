@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 114 43" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;">
+    <g transform="matrix(1,0,0,1,-400.876894,-95.876894)">
+        <g id="Olhos_10">
+            <circle cx="422" cy="117" r="17" style="fill:white;stroke:rgb(140,80,29);stroke-width:2px;"/>
+            <circle cx="493" cy="117" r="17" style="fill:white;stroke:rgb(140,80,29);stroke-width:2px;"/>
+            <circle cx="424" cy="116" r="11" style="fill:rgb(140,80,29);"/>
+            <circle cx="491" cy="116" r="11" style="fill:rgb(140,80,29);"/>
+        </g>
+    </g>
+</svg>

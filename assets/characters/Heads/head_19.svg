@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 970 1073" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,-117,-4.979472)">
+        <g transform="matrix(0.833793,0,0,0.992414,-400.22069,-110.157931)">
+            <g id="_03_Cabeca_Base" affinity:id="03_Cabeca_Base" transform="matrix(1.199338,0,0,1.007644,-297.171216,-11.932592)">
+                <path d="M1250,410C1480,410 1640,560 1640,760C1640,920 1560,1080 1420,1135C1350,1160 1150,1160 1080,1135C940,1080 860,920 860,760C860,560 1020,410 1250,410Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+            </g>
+        </g>
+        <g transform="matrix(0.833793,0,0,0.992414,-400.22069,-110.157931)">
+            <g id="_04_Cabelos_Frontais_Frente" affinity:id="04_Cabelos_Frontais_Frente" transform="matrix(1.199338,0,0,1.007644,-297.171216,-11.932592)">
+                <g id="Front_19_Trancas_Coroa" transform="matrix(1.192686,0,0,1.215234,-234.648171,-371.266317)">
+                    <g transform="matrix(4.341317,0,0,4.341317,-3230.239144,-2081.915958)">
+                        <path d="M1032,574C1046.91,574 1059,583.626 1059,595.5C1059,598.392 1058.28,601.149 1056.98,603.667C1097.04,614.391 1115,650.815 1115,689C1116,689.333 1119,693.8 1123,709C1128,728 1108,743.5 1105.5,754.5C1103.5,763.3 1107.67,772.833 1110,776.5C1111.33,777.167 1112.8,778.1 1108,776.5C1102,774.5 1091,768.5 1092,751C1093,733.5 1104,728 1105.5,714C1106.7,702.8 1099,682.333 1095,673.5C1065.5,670 1006.5,656.5 1006.5,630.5C1003,644.833 990.5,673.5 968.5,673.5C964.5,682.333 956.8,702.8 958,714C959.5,728 970.5,733.5 971.5,751C972.5,768.5 961.5,774.5 955.5,776.5C950.7,778.1 952.167,777.167 953.5,776.5C955.833,772.833 960,763.3 958,754.5C955.5,743.5 935.5,728 940.5,709C944.5,693.801 947.5,689.334 948.5,689C948.5,650.545 966.358,613.877 1006.9,603.443C1005.68,600.986 1005,598.306 1005,595.5C1005,583.626 1017.09,574 1032,574Z" style="fill:rgb(74,46,24);fill-rule:nonzero;"/>
+                    </g>
+                </g>
+            </g>
+        </g>
+        <g transform="matrix(0.833793,0,0,0.992414,-400.22069,-110.157931)">
+            <g id="_02_Orelhas_Base" affinity:id="02_Orelhas_Base" transform="matrix(1.199338,0,0,1.007644,-297.171216,-27.047255)">
+                <g id="_01_Orelha_Esquerda" affinity:id="01_Orelha_Esquerda" transform="matrix(1,0,0,1,0,-15)">
+                    <path d="M900,810C800,805 765,850 765,890C765,940 815,975 900,970L900,810Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+                </g>
+                <g id="_02_Orelha_Direita" affinity:id="02_Orelha_Direita" transform="matrix(1,0,0,1,0,-15)">
+                    <path d="M1600,810C1700,805 1735,850 1735,890C1735,940 1685,975 1600,970L1600,810Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

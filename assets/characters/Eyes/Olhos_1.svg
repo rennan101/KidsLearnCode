@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 124 53" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;">
+    <g transform="matrix(1,0,0,1,-236.876894,-85.876894)">
+        <g id="Olhos_1">
+            <path d="M336.5,90C347.164,90 356,99.738 356,112C356,124.262 347.164,134 336.5,134C325.836,134 317,124.262 317,112C317,99.738 325.836,90 336.5,90Z" style="fill:white;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;"/>
+            <ellipse cx="342" cy="111" rx="15" ry="17" style="fill:rgb(140,80,29);"/>
+            <path d="M260.5,90C271.164,90 280,99.738 280,112C280,124.262 271.164,134 260.5,134C249.836,134 241,124.262 241,112C241,99.738 249.836,90 260.5,90Z" style="fill:white;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;"/>
+            <ellipse cx="266" cy="111" rx="15" ry="17" style="fill:rgb(140,80,29);"/>
+        </g>
+    </g>
+</svg>

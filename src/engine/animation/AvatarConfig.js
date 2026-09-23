@@ -58,20 +58,20 @@ export const CLOTH_PALETTES = [
 ];
 
 export const DEFAULT_AVATAR_CONFIG = {
-  version: 1,
+  version: 2,
   name: 'Aventureiro',
   gender: 'neutral',
   skinTone: '#ffd0a8',
   skinShadow: '#e0ae82',
-  hairStyle: 'hair_wavy_medium',
+  headStyle: 'head_01',
   hairColor: '#3d2314',
   hairShadow: '#241208',
-  eyeShape: 'eye_pair_01',
+  eyeShape: 'olhos_1',
   eyeColor: '#8C501D',
-  noseShape: 'nose_triangle',
-  mouthShape: 'mouth_smile_arc',
-  cheeksShape: 'cheeks_peach_oval',
-  cheeksColor: 'rgba(255, 186, 165, 0.75)',
+  noseShape: 'nariz_1',
+  mouthShape: 'boca_1',
+  cheeksShape: 'blush_1',
+  cheeksColor: 'rgba(255, 126, 54, 0.7)',
   topStyle: 'top_tee',
   topColorPrimary: '#19c8b9',
   topColorSecondary: '#ffffff',
@@ -97,25 +97,26 @@ export function randomizeAvatarConfig(currentName) {
   const eyeC = EYE_COLORS[Math.floor(Math.random() * EYE_COLORS.length)];
   const clothP = CLOTH_PALETTES[Math.floor(Math.random() * CLOTH_PALETTES.length)];
 
-  const hairStyles = [
-    'hair_short_spikes', 'hair_wavy_bob', 'hair_curtains_bob',
-    'hair_fluffy_afro', 'hair_long_straight', 'hair_classic_bowl',
-    'hair_side_swoosh', 'hair_twin_buns', 'hair_twin_braids',
-    'hair_hero_spikes', 'hair_high_ponytail'
+  const headStyles = [
+    'head_01', 'head_02', 'head_03', 'head_04', 'head_05',
+    'head_06', 'head_07', 'head_08', 'head_09', 'head_10',
+    'head_11', 'head_12', 'head_13', 'head_14', 'head_15',
+    'head_16', 'head_17', 'head_18', 'head_19', 'head_20', 'head_21'
   ];
 
   const eyeShapes = [
-    'eye_pair_01', 'eye_pair_02', 'eye_pair_03', 'eye_pair_04',
-    'eye_pair_05', 'eye_pair_06', 'eye_pair_07', 'eye_pair_08',
-    'eye_pair_09', 'eye_pair_10', 'eye_pair_11', 'eye_pair_12'
+    'olhos_1', 'olhos_2', 'olhos_3', 'olhos_4', 'olhos_5',
+    'olhos_6', 'olhos_7', 'olhos_8', 'olhos_9', 'olhos_10',
+    'olhos_11', 'olhos_12', 'olhos_13', 'olhos_14', 'olhos_15',
+    'olhos_16', 'olhos_17', 'olhos_18', 'olhos_19', 'olhos_20'
   ];
 
-  const noseShapes = ['nose_triangle', 'nose_oval', 'nose_rect', 'nose_circle'];
+  const noseShapes = ['nariz_1', 'nariz_2', 'nariz_3', 'nariz_4'];
   const mouthShapes = [
-    'mouth_smile_arc', 'mouth_open_dot', 'mouth_smirk_curl',
-    'mouth_wide_smile', 'mouth_joyful_teeth', 'mouth_cat_w', 'mouth_buck_tooth'
+    'boca_1', 'boca_2', 'boca_3', 'boca_4',
+    'boca_5', 'boca_6', 'boca_7', 'boca_8'
   ];
-  const cheekShapes = ['cheeks_peach_oval', 'cheeks_coral_vibrant', 'cheeks_freckles', 'cheeks_whiskers', 'none'];
+  const cheekShapes = ['blush_1', 'blush_2', 'blush_3', 'blush_4', 'none'];
 
   const topStyles = [
     'top_tee', 'top_cupcake_dress', 'top_sweater',
@@ -127,12 +128,12 @@ export function randomizeAvatarConfig(currentName) {
   const glassesStyles = ['none', 'none', 'none', 'round_wire', 'sunglasses_cool'];
 
   return {
-    version: 1,
+    version: 2,
     name: currentName || 'Aventureiro',
     gender: 'neutral',
     skinTone: skin.color,
     skinShadow: skin.shadow,
-    hairStyle: hairStyles[Math.floor(Math.random() * hairStyles.length)],
+    headStyle: headStyles[Math.floor(Math.random() * headStyles.length)],
     hairColor: hairC.color,
     hairShadow: hairC.shadow,
     eyeShape: eyeShapes[Math.floor(Math.random() * eyeShapes.length)],
@@ -140,7 +141,7 @@ export function randomizeAvatarConfig(currentName) {
     noseShape: noseShapes[Math.floor(Math.random() * noseShapes.length)],
     mouthShape: mouthShapes[Math.floor(Math.random() * mouthShapes.length)],
     cheeksShape: cheekShapes[Math.floor(Math.random() * cheekShapes.length)],
-    cheeksColor: 'rgba(255, 186, 165, 0.75)',
+    cheeksColor: 'rgba(255, 126, 54, 0.7)',
     topStyle: topStyles[Math.floor(Math.random() * topStyles.length)],
     topColorPrimary: clothP.primary,
     topColorSecondary: clothP.secondary,

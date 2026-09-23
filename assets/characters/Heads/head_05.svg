@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 1209 1439" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g id="Prancheta1" transform="matrix(0.833793,0,0,0.992414,-400.22069,-110.157931)">
+        <rect x="480" y="111" width="1450" height="1450" style="fill:none;"/>
+        <g id="_03_Cabeca_Base" affinity:id="03_Cabeca_Base" transform="matrix(1.199338,0,0,1.007644,-297.171216,-11.932592)">
+            <path d="M1250,410C1480,410 1640,560 1640,760C1640,920 1560,1080 1420,1135C1350,1160 1150,1160 1080,1135C940,1080 860,920 860,760C860,560 1020,410 1250,410Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+        </g>
+        <g id="_04_Cabelos_Frontais_Frente" affinity:id="04_Cabelos_Frontais_Frente" transform="matrix(1.199338,0,0,1.007644,-297.171216,-11.932592)">
+            <g id="Front_11_Espetado_Curto" transform="matrix(1.073544,0,0,1.073544,-88.429796,-86.802069)">
+                <g transform="matrix(4.341317,0,0,4.341317,613.997059,253.712588)">
+                    <path d="M63.5,118C63.5,47.2 115,36 146,36C177,36 229.5,47.2 229.5,118L226,121.5C225.667,117.833 222.2,101.6 217,92C211.8,82.4 208.5,80.333 207.5,80.5L198.5,86.5L187,74L172.5,82.5L158.5,71.5L146.5,86.5L134.5,71.5L120.5,82.5L106,74L94.5,86.5L85.5,80.5C84.5,80.333 81.2,82.4 76,92C70.8,101.6 66.833,117.333 66.5,121L63.5,118Z" style="fill:rgb(74,46,24);fill-rule:nonzero;"/>
+                </g>
+            </g>
+        </g>
+        <g id="_02_Orelhas_Base" affinity:id="02_Orelhas_Base" transform="matrix(1.199338,0,0,1.007644,-297.171216,-27.047255)">
+            <g id="_01_Orelha_Esquerda" affinity:id="01_Orelha_Esquerda" transform="matrix(1,0,0,1,0,-15)">
+                <path d="M900,810C800,805 765,850 765,890C765,940 815,975 900,970L900,810Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+            </g>
+            <g id="_02_Orelha_Direita" affinity:id="02_Orelha_Direita" transform="matrix(1,0,0,1,0,-15)">
+                <path d="M1600,810C1700,805 1735,850 1735,890C1735,940 1685,975 1600,970L1600,810Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -18,20 +18,20 @@ import {
 } from '../engine/animation/AvatarConfig.js';
 import {
   CREATOR_CATEGORIES,
-  HAIR_STYLE_OPTIONS,
+  HEAD_STYLE_OPTIONS,
   EYE_SHAPE_OPTIONS,
   NOSE_OPTIONS,
   MOUTH_OPTIONS,
-  CHEEKS_OPTIONS,
+  BLUSH_OPTIONS,
   TOP_OPTIONS,
   BOTTOM_OPTIONS,
   SHOES_OPTIONS,
   GLASSES_OPTIONS,
-  getHairSvg,
+  getHeadSvg,
   getEyeSvg,
   getNoseSvg,
   getMouthSvg,
-  getCheeksSvg,
+  getBlushSvg,
   getTopSvg,
   getBottomSvg,
   getShoesSvg,
@@ -325,8 +325,9 @@ export class CharacterCreator {
       case 'skin':
         this.renderSkinTab(container);
         break;
+      case 'head':
       case 'hair':
-        this.renderHairTab(container);
+        this.renderHeadTab(container);
         break;
       case 'face':
         this.renderFaceTab(container);
@@ -378,7 +379,7 @@ export class CharacterCreator {
     container.appendChild(section);
   }
 
-  renderHairTab(container) {
+  renderHeadTab(container) {
     const sectionColors = document.createElement('div');
     sectionColors.innerHTML = `
       <div class="cc-section-title">Cor do Cabelo</div>
@@ -405,21 +406,21 @@ export class CharacterCreator {
 
     const sectionStyles = document.createElement('div');
     sectionStyles.innerHTML = `
-      <div class="cc-section-title" style="margin-top: 18px;">Penteados</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Cabeça & Penteado (21 Modelos)</div>
       <div class="cc-items-grid">
-        ${HAIR_STYLE_OPTIONS.map(opt => `
-          <button class="cc-item-card ${this.currentConfig.hairStyle === opt.id ? 'active' : ''}" data-style="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
-            ${getHairSvg(opt.id, this.currentConfig.hairColor)}
+        ${HEAD_STYLE_OPTIONS.map(opt => `
+          <button class="cc-item-card ${this.currentConfig.headStyle === opt.id ? 'active' : ''}" data-head="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
+            ${getHeadSvg(opt.id, this.currentConfig.skinTone, this.currentConfig.hairColor)}
           </button>
         `).join('')}
       </div>
     `;
 
-    sectionStyles.querySelectorAll('.cc-item-card').forEach(card => {
+    sectionStyles.querySelectorAll('[data-head]').forEach(card => {
       card.addEventListener('click', () => {
-        sectionStyles.querySelectorAll('.cc-item-card').forEach(c => c.classList.remove('active'));
+        sectionStyles.querySelectorAll('[data-head]').forEach(c => c.classList.remove('active'));
         card.classList.add('active');
-        this.currentConfig.hairStyle = card.dataset.style;
+        this.currentConfig.headStyle = card.dataset.head;
       });
     });
 
@@ -441,7 +442,7 @@ export class CharacterCreator {
         `).join('')}
       </div>
 
-      <div class="cc-section-title" style="margin-top: 18px;">Formato dos Olhos</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Formato dos Olhos (20 Pares)</div>
       <div class="cc-items-grid">
         ${EYE_SHAPE_OPTIONS.map(opt => `
           <button class="cc-item-card ${this.currentConfig.eyeShape === opt.id ? 'active' : ''}" data-eye="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
@@ -468,7 +469,7 @@ export class CharacterCreator {
       });
     });
 
-    // 2. Nariz, Boca e Bochechas
+    // 2. Nariz, Boca e Blush
     const sectionMouth = document.createElement('div');
     sectionMouth.innerHTML = `
       <div class="cc-section-title" style="margin-top: 18px;">Formato do Nariz</div>
@@ -489,11 +490,11 @@ export class CharacterCreator {
         `).join('')}
       </div>
 
-      <div class="cc-section-title" style="margin-top: 18px;">Bochechas & Detalhes</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Blush & Bochechas</div>
       <div class="cc-items-grid">
-        ${CHEEKS_OPTIONS.map(opt => `
+        ${BLUSH_OPTIONS.map(opt => `
           <button class="cc-item-card ${this.currentConfig.cheeksShape === opt.id ? 'active' : ''}" data-cheeks="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
-            ${getCheeksSvg(opt.id)}
+            ${getBlushSvg(opt.id)}
           </button>
         `).join('')}
       </div>

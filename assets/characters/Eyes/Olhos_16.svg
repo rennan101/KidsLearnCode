@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 111 41" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;">
+    <g transform="matrix(1,0,0,1,-559.876894,-244.876894)">
+        <g id="Olhos_15">
+            <ellipse cx="579.5" cy="265.5" rx="14.5" ry="19.5" style="fill:rgb(140,80,29);"/>
+            <ellipse cx="655.5" cy="265.5" rx="14.5" ry="19.5" style="fill:rgb(140,80,29);"/>
+            <circle cx="575.5" cy="257.5" r="5.5" style="fill:white;"/>
+            <circle cx="651.5" cy="257.5" r="5.5" style="fill:white;"/>
+            <ellipse cx="585.5" cy="273" rx="2.5" ry="3" style="fill:white;"/>
+            <ellipse cx="661.5" cy="273" rx="2.5" ry="3" style="fill:white;"/>
+            <path d="M564,249C564,249.667 564.7,252.2 565.5,253C566.5,254 568,254.5 569.5,254" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;"/>
+            <path d="M640,249C640,249.667 640.7,252.2 641.5,253C642.5,254 644,254.5 645.5,254" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;"/>
+        </g>
+    </g>
+</svg>

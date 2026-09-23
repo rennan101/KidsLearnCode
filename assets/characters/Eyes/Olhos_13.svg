@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 114 49" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;">
+    <g transform="matrix(1,0,0,1,-400.876894,-243.876894)">
+        <g id="Olhos_12">
+            <g transform="matrix(1,0,0,-1,404,283)">
+                <circle cx="18" cy="18" r="17" style="fill:white;stroke:rgb(140,80,29);stroke-width:2px;"/>
+            </g>
+            <g transform="matrix(0,1,1,0,423,282)">
+                <path d="M1,-1L6,-1" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;stroke-linecap:round;"/>
+            </g>
+            <g transform="matrix(0.5,0.866025,0.866025,-0.5,433,276.938)">
+                <path d="M1,-1L6,-1" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;stroke-linecap:round;"/>
+            </g>
+            <path d="M410.866,278.304L408.366,282.634" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;stroke-linecap:round;"/>
+            <g transform="matrix(0,1,1,0,494,282)">
+                <path d="M1,-1L6,-1" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;stroke-linecap:round;"/>
+            </g>
+            <g transform="matrix(0.5,0.866025,0.866025,-0.5,504,276.938)">
+                <path d="M1,-1L6,-1" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;stroke-linecap:round;"/>
+            </g>
+            <path d="M481.866,278.304L479.366,282.634" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:2px;stroke-linecap:round;"/>
+            <g transform="matrix(1,0,0,-1,475,283)">
+                <circle cx="18" cy="18" r="17" style="fill:white;stroke:rgb(140,80,29);stroke-width:2px;"/>
+            </g>
+            <circle cx="424" cy="264" r="11" style="fill:rgb(140,80,29);"/>
+            <circle cx="491" cy="264" r="11" style="fill:rgb(140,80,29);"/>
+        </g>
+    </g>
+</svg>

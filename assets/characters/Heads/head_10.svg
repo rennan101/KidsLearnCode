@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 970 759" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,-117,-273)">
+        <g transform="matrix(1,0,0,1,-648,-122)">
+            <path d="M1250,410C1480,410 1640,560 1640,760C1640,920 1560,1080 1420,1135C1350,1160 1150,1160 1080,1135C940,1080 860,920 860,760C860,560 1020,410 1250,410Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-648,-122)">
+            <g id="Front_05_Na_Regua" transform="matrix(1.086032,0,0,1.109554,-106.540516,-59.917245)">
+                <g transform="matrix(4.341317,0,0,4.341317,-1947.379971,-506.017887)">
+                    <path d="M653.5,293C653.5,222.2 705,211 736,211L737,211C768,211 819.5,222.2 819.5,293C809,293 809.5,293 804.5,270C794,270 794,270 788.5,251.5C776.667,250.167 749.8,247.5 737,247.5L736,247.5C723.2,247.5 696.333,250.167 684.5,251.5C679,270 679,270 668.5,270C663.5,293 664,293 653.5,293Z" style="fill:rgb(74,46,24);fill-rule:nonzero;"/>
+                </g>
+            </g>
+        </g>
+        <g transform="matrix(1,0,0,1,-648,-137)">
+            <g id="_01_Orelha_Esquerda" affinity:id="01_Orelha_Esquerda" transform="matrix(1,0,0,1,0,-15)">
+                <path d="M900,810C800,805 765,850 765,890C765,940 815,975 900,970L900,810Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+            </g>
+        </g>
+        <g transform="matrix(1,0,0,1,-648,-137)">
+            <g id="_02_Orelha_Direita" affinity:id="02_Orelha_Direita" transform="matrix(1,0,0,1,0,-15)">
+                <path d="M1600,810C1700,805 1735,850 1735,890C1735,940 1685,975 1600,970L1600,810Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+            </g>
+        </g>
+    </g>
+</svg>

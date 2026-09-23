@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 119 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;">
+    <g transform="matrix(1,0,0,1,-557.463789,-322.315342)">
+        <g id="Olhos_6">
+            <path d="M565.71,342.634C567.476,340.111 573.241,335.262 582.177,336.044C591.113,336.826 595.511,342.564 596.592,345.336" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:4px;"/>
+            <path d="M636.408,345.336C637.708,342.545 642.544,336.768 651.48,335.986C660.416,335.205 665.743,340.092 667.29,342.634" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:4px;"/>
+            <g transform="matrix(0,1,1,0,583,327)">
+                <path d="M1.5,-1.5L8.5,-1.5" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:3px;"/>
+            </g>
+            <g transform="matrix(-0.5,0.866025,0.866025,0.5,595.5,330.67)">
+                <path d="M1.5,-1.5L8.5,-1.5" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:3px;"/>
+            </g>
+            <g transform="matrix(0.5,0.866025,0.866025,-0.5,569.5,327.67)">
+                <path d="M1.5,-1.5L8.5,-1.5" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:3px;"/>
+            </g>
+            <path d="M652,328.5L652,335.5" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:3px;"/>
+            <path d="M640.049,331.219L643.549,337.281" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:3px;"/>
+            <path d="M664.549,329.719L661.049,335.781" style="fill:none;fill-rule:nonzero;stroke:rgb(140,80,29);stroke-width:3px;"/>
+        </g>
+    </g>
+</svg>

@@ -12,11 +12,18 @@
 import { SkeletonRig } from './SkeletonRig.js';
 import { DEFAULT_AVATAR_CONFIG } from './AvatarConfig.js';
 import {
+  SVG_HEADS,
+  SVG_EYES,
   SVG_NOSES,
   SVG_MOUTHS,
-  SVG_EYES,
-  SVG_CHEEKS,
-  SVG_HAIRS,
+  SVG_BLUSHES,
+  getHeadSvgContent,
+  getEyeSvgContent,
+  getNoseSvgContent,
+  getMouthSvgContent,
+  getBlushSvgContent
+} from './CharacterSvgAssets.js';
+import {
   SVG_BASE_CHARACTER,
   SVG_TOPS
 } from './SvgAssetCatalog.js';
@@ -25,6 +32,18 @@ export class ModularAvatarRenderer {
   constructor() {
     this.rig = new SkeletonRig();
     this.pathCache = new Map();
+    this.svgImageCache = new Map();
+  }
+
+  getSvgImage(key, svgString) {
+    if (!this.svgImageCache.has(key)) {
+      const img = new Image();
+      const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      img.src = url;
+      this.svgImageCache.set(key, img);
+    }
+    return this.svgImageCache.get(key);
   }
 
   getPath2D(d) {
@@ -89,31 +108,24 @@ export class ModularAvatarRenderer {
     const headRot = pose.head.rot;
     const isCelebrating = state === 'celebrate';
 
-    // 1. Cabelo Traseiro / Longo (atrás de tudo)
-    this.drawHairBack(ctx, 1250, 760, cfg, 'south');
-
-    // 2. Pernas e Pés de Base_char_flat.svg (_04_Perna_Esquerda, _06_Perna_Direita, _03_Pe_Esquerdo, _05_Pe_Direito)
+    // 1. Pernas e Pés de Base_char_flat.svg (_04_Perna_Esquerda, _06_Perna_Direita, _03_Pe_Esquerdo, _05_Pe_Direito)
     this.drawLegs(ctx, pose, cfg, 'south');
 
-    // 3. Pescoço (_07_Pescoco) e Tronco (_08_Tronco_Corpo) + Roupas oficiais (assets/Tops)
+    // 2. Pescoço (_07_Pescoco) e Tronco (_08_Tronco_Corpo) + Roupas oficiais (assets/Tops)
     this.drawTorsoAndNeck(ctx, pose.root.rot, cfg, 'south');
 
-    // 4. Orelhas de Base_char_flat.svg (_01_Orelha_Esquerda e _02_Orelha_Direita)
-    this.drawEars(ctx, 1250, 760, cfg, 'south');
-
-    // 5. Braços e Mãos (_09_Braco_Esquerdo, _11_Braco_Direito, _10_Mao_Esquerda, _12_Mao_Direita)
+    // 3. Braços e Mãos (_09_Braco_Esquerdo, _11_Braco_Direito, _10_Mao_Esquerda, _12_Mao_Direita)
     if (!isCelebrating) {
       this.drawArms(ctx, pose, cfg, 'south');
     }
 
-    // 6. Cabeça (_14_Cabeca) e Rosto (Face Components.svg)
+    // 4. Cabeça e Feições Faciais (assets/characters/Heads, Eyes, Mouth, Nose, Blush)
     ctx.save();
     ctx.translate(1250, 760);
     ctx.rotate(headRot);
 
     this.drawHeadBase(ctx, cfg, 'south');
     this.drawFaceFeatures(ctx, cfg, 'south');
-    this.drawHairFront(ctx, cfg, 'south');
 
     if (cfg.glassesStyle && cfg.glassesStyle !== 'none') {
       this.drawGlasses(ctx, cfg, 'south');
@@ -121,7 +133,7 @@ export class ModularAvatarRenderer {
 
     ctx.restore();
 
-    // 7. Se estiver comemorando, braços na frente de tudo
+    // 5. Se estiver comemorando, braços na frente de tudo
     if (isCelebrating) {
       this.drawArms(ctx, pose, cfg, 'south');
     }
@@ -145,13 +157,12 @@ export class ModularAvatarRenderer {
     // 3. Tronco e Roupas (costas)
     this.drawTorsoAndNeck(ctx, pose.root.rot, cfg, 'north');
 
-    // 4. Cabeça e Cabelo Traseiro
+    // 4. Cabeça Oficial de Costas
     ctx.save();
     ctx.translate(1250, 760);
     ctx.rotate(headRot);
 
     this.drawHeadBase(ctx, cfg, 'north');
-    this.drawHairBackSolid(ctx, 0, 0, cfg, 'north');
 
     ctx.restore();
 
@@ -167,31 +178,24 @@ export class ModularAvatarRenderer {
     const headRot = pose.head.rot;
     const isCelebrating = state === 'celebrate';
 
-    // 1. Cabelo Traseiro (mesma base frontal para manter proporção e posição)
-    this.drawHairBack(ctx, 1250, 760, cfg, 'south');
-
-    // 2. Pernas e Pés
+    // 1. Pernas e Pés
     this.drawLegs(ctx, pose, cfg, 'east');
 
-    // 3. Tronco e Roupas
+    // 2. Tronco e Roupas
     this.drawTorsoAndNeck(ctx, pose.root.rot, cfg, 'east');
 
-    // 4. Orelhas oficiais
-    this.drawEars(ctx, 1250, 760, cfg, 'south');
-
-    // 5. Braços
+    // 3. Braços
     if (!isCelebrating) {
       this.drawArms(ctx, pose, cfg, 'east');
     }
 
-    // 6. Cabeça, Feições e Cabelo (mantêm a mesma anatomia, alinhamento e posição da frente)
+    // 4. Cabeça Oficial e Feições
     ctx.save();
     ctx.translate(1250, 760);
     ctx.rotate(headRot);
 
     this.drawHeadBase(ctx, cfg, 'south');
     this.drawFaceFeatures(ctx, cfg, 'south');
-    this.drawHairFront(ctx, cfg, 'south');
 
     if (cfg.glassesStyle && cfg.glassesStyle !== 'none') {
       this.drawGlasses(ctx, cfg, 'south');
@@ -236,30 +240,27 @@ export class ModularAvatarRenderer {
   }
 
   drawHeadBase(ctx, cfg, dir) {
-    const skin = cfg.skinTone || '#f6dab9';
+    const skin = cfg.skinTone || '#ffd0a8';
+    const hair = cfg.hairColor || '#3d2314';
+    const headId = cfg.headStyle || 'head_01';
 
     ctx.save();
-    ctx.fillStyle = skin;
 
-    if (dir === 'south' || dir === 'north') {
-      // _14_Cabeca de Base_char_flat.svg relativa à origem da cabeça (1250, 760)
-      // Topo y=410 (-350), Base queixo y=1135 (+375)
+    // 1. Renderiza o Head SVG Oficial (Cabeça + Penteado + Orelhas integradas dos arquivos assets/characters/Heads)
+    const headSvg = getHeadSvgContent(headId, skin, hair);
+    const headDef = SVG_HEADS.find(h => h.id === headId) || SVG_HEADS[0];
+    const img = this.getSvgImage(`head_${headId}_${skin}_${hair}`, headSvg);
+
+    if (img && img.complete && img.naturalWidth > 0) {
+      // O viewBox de headDef (ex: 0 0 970 823) está alinhado com o centro (1250, 760)
+      // Mapeamento exato do canvas: o topo da cabeça está em y: -350, centro x: 0
+      const [,, vw, vh] = headDef.viewBox.split(' ').map(Number);
+      ctx.drawImage(img, -vw / 2, -350, vw, vh);
+    } else {
+      // Fallback vetorial instantâneo enquanto a imagem carrega no primeiro tick
+      ctx.fillStyle = skin;
       const headLocalPath = this.getPath2D('M0 -350C230 -350 390 -200 390 0C390 160 310 320 170 375C100 400 -100 400 -170 375C-310 320 -390 160 -390 0C-390 -200 -230 -350 0 -350Z');
       ctx.fill(headLocalPath);
-    } else {
-      // Perfil da cabeça
-      ctx.beginPath();
-      ctx.moveTo(-280, -330);
-      ctx.bezierCurveTo(180, -360, 390, -130, 390, 60);
-      ctx.bezierCurveTo(390, 240, 90, 380, -90, 380);
-      ctx.bezierCurveTo(-310, 380, -390, 180, -390, -50);
-      ctx.bezierCurveTo(-390, -220, -320, -310, -280, -330);
-      ctx.closePath();
-      ctx.fill();
-
-      // Orelha lateral de perfil
-      const earProfilePath = this.getPath2D('M -100 20 C -200 15 -235 60 -235 100 C -235 150 -185 185 -100 180 Z');
-      ctx.fill(earProfilePath);
     }
 
     ctx.restore();
@@ -681,27 +682,55 @@ export class ModularAvatarRenderer {
 
     ctx.save();
 
-    if (dir === 'south') {
-      // 1. Bochechas / Blush
-      this.drawCheekItem(ctx, -260, 100, cfg.cheeksShape, 'left');
-      this.drawCheekItem(ctx, 260, 100, cfg.cheeksShape, 'right');
+    // 1. Bochechas / Blush (assets/characters/Blush)
+    if (cfg.cheeksShape && cfg.cheeksShape !== 'none') {
+      const blushId = cfg.cheeksShape;
+      const blushSvg = getBlushSvgContent(blushId);
+      const blushDef = SVG_BLUSHES.find(b => b.id === blushId) || SVG_BLUSHES[0];
+      const blushImg = this.getSvgImage(`blush_${blushId}`, blushSvg);
 
-      // 2. Olhos
-      this.drawEyeItem(ctx, -165, -30, cfg.eyeShape, cfg.eyeColor, 'left');
-      this.drawEyeItem(ctx, 165, -30, cfg.eyeShape, cfg.eyeColor, 'right');
+      if (blushImg && blushImg.complete && blushImg.naturalWidth > 0) {
+        const [,, vw, vh] = blushDef.viewBox.split(' ').map(Number);
+        // Centralizado no rosto (y: 60)
+        ctx.drawImage(blushImg, -vw * 2.2, 50, vw * 4.4, vh * 4.4);
+      }
+    }
 
-      // 3. Nariz
-      this.drawNoseItem(ctx, 0, 65, cfg.noseShape);
+    // 2. Olhos (assets/characters/Eyes: 20 pares)
+    const eyeId = cfg.eyeShape || 'olhos_1';
+    const eyeColor = cfg.eyeColor || '#8C501D';
+    const eyeSvg = getEyeSvgContent(eyeId, eyeColor);
+    const eyeDef = SVG_EYES.find(e => e.id === eyeId) || SVG_EYES[0];
+    const eyeImg = this.getSvgImage(`eye_${eyeId}_${eyeColor}`, eyeSvg);
 
-      // 4. Boca
-      this.drawMouthItem(ctx, 0, 165, cfg.mouthShape);
+    if (eyeImg && eyeImg.complete && eyeImg.naturalWidth > 0) {
+      const [,, vw, vh] = eyeDef.viewBox.split(' ').map(Number);
+      // Centralizado horizontalmente no rosto (y: -60)
+      ctx.drawImage(eyeImg, -vw * 2.4, -60 - (vh * 2.4) / 2, vw * 4.8, vh * 4.8);
+    }
 
-    } else {
-      // Perfil lateral (east)
-      this.drawCheekItem(ctx, 150, 100, cfg.cheeksShape, 'right');
-      this.drawEyeItem(ctx, 140, -30, cfg.eyeShape, cfg.eyeColor, 'right');
-      this.drawNoseItem(ctx, 290, 65, cfg.noseShape, 'east');
-      this.drawMouthItem(ctx, 210, 165, cfg.mouthShape, 'east');
+    // 3. Nariz (assets/characters/Nose: 4 narizes)
+    const noseId = cfg.noseShape || 'nariz_1';
+    const noseSvg = getNoseSvgContent(noseId);
+    const noseDef = SVG_NOSES.find(n => n.id === noseId) || SVG_NOSES[0];
+    const noseImg = this.getSvgImage(`nose_${noseId}`, noseSvg);
+
+    if (noseImg && noseImg.complete && noseImg.naturalWidth > 0) {
+      const [,, vw, vh] = noseDef.viewBox.split(' ').map(Number);
+      // Centralizado horizontalmente na altura do nariz (y: 40)
+      ctx.drawImage(noseImg, -vw * 2.4, 40 - (vh * 2.4) / 2, vw * 4.8, vh * 4.8);
+    }
+
+    // 4. Boca (assets/characters/Mouth: 8 bocas)
+    const mouthId = cfg.mouthShape || 'boca_1';
+    const mouthSvg = getMouthSvgContent(mouthId);
+    const mouthDef = SVG_MOUTHS.find(m => m.id === mouthId) || SVG_MOUTHS[0];
+    const mouthImg = this.getSvgImage(`mouth_${mouthId}`, mouthSvg);
+
+    if (mouthImg && mouthImg.complete && mouthImg.naturalWidth > 0) {
+      const [,, vw, vh] = mouthDef.viewBox.split(' ').map(Number);
+      // Centralizado horizontalmente na altura da boca (y: 155)
+      ctx.drawImage(mouthImg, -vw * 2.4, 155 - (vh * 2.4) / 2, vw * 4.8, vh * 4.8);
     }
 
     ctx.restore();
