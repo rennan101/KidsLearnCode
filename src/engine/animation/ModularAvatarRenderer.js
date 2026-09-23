@@ -1,9 +1,12 @@
 /**
  * ModularAvatarRenderer.js - KidsLearnCode
- * Renderizador Vetorial 2D por Cutout / Paper-Doll para Personagens Customizáveis.
+ * Renderizador Vetorial 2D por Cutout para Personagens Customizáveis.
  * 
- * Implementação fiel às proporções e alinhamento visual de samples.svg,
- * Face Components.svg e Hairs.svg para o corpo inteiro.
+ * Fidelidade Absoluta aos arquivos SVG oficiais:
+ * - Base do Personagem: Base_char_flat.svg (canvas 2500x2500, flat fill, SEM STROKES artificiais)
+ * - Roupas: assets/Tops (Tee.svg, Crop Top.svg, Cupcake Dress.svg, Long Sleeve.svg, Puffy Sleeve.svg, Sleeveless.svg, Sweater.svg)
+ * - Feições Faciais: assets/Face Components.svg (Olhos, Nariz, Boca, Bochechas)
+ * - Cabelos: assets/Hairs.svg (Penteados frontais e traseiros flat)
  */
 
 import { SkeletonRig } from './SkeletonRig.js';
@@ -34,15 +37,15 @@ export class ModularAvatarRenderer {
   /**
    * Renderiza o avatar completo no contexto 2D alvo.
    * @param {CanvasRenderingContext2D} ctx - Contexto Canvas onde desenhar
-   * @param {number} x - Posição X no mundo
-   * @param {number} y - Posição Y no mundo
+   * @param {number} x - Posição X no mundo/preview
+   * @param {number} y - Posição Y no mundo/preview
    * @param {string} direction - 'south' | 'north' | 'east' | 'west'
-   * @param {string} state - 'idle' | 'walk' | 'riding' | 'craft' | 'celebrate'
+   * @param {string} state - 'idle' | 'walk' | 'run' | 'riding' | 'craft' | 'celebrate'
    * @param {number} time - Tempo decorrido em segundos
    * @param {Object} config - Configuração do avatar
-   * @param {number} scale - Escala global do avatar (padrão 0.22 para in-game, ~0.72 para preview)
+   * @param {number} scale - Escala global do avatar
    */
-  render(ctx, x, y, direction = 'south', state = 'idle', time = 0, config = DEFAULT_AVATAR_CONFIG, scale = 0.22) {
+  render(ctx, x, y, direction = 'south', state = 'idle', time = 0, config = DEFAULT_AVATAR_CONFIG, scale = 1.0) {
     const isWest = direction === 'west';
     const effectiveDir = isWest ? 'east' : direction;
     const pose = this.rig.evaluate(state, direction, time);
@@ -50,34 +53,31 @@ export class ModularAvatarRenderer {
     ctx.save();
     ctx.translate(Math.round(x), Math.round(y));
 
-    // Se for 'west', espelha horizontalmente em torno do centro do sprite (32 * scale / 0.22)
+    // Escala base normalizada para converter o canvas 2500x2500 de Base_char_flat.svg
+    // Para scale=1.0 em preview (320x340), o personagem de altura 1738px ocupa ~265px
+    const s = scale * (265 / 1738);
+
     if (isWest) {
-      ctx.translate(32 * (scale / 0.22), 0);
       ctx.scale(-1, 1);
-      ctx.translate(-32 * (scale / 0.22), 0);
     }
 
-    if (scale !== 1.0) {
-      ctx.scale(scale, scale);
-    }
+    ctx.scale(s, s);
 
-    // Ponto de ancoragem central da cabeça e corpo no espaço SVG (~140x260px)
-    const centerX = 140;
-    const headCenterY = 95;
+    // Centraliza o ponto (1250, 410) no topo-centro do desenho
+    ctx.translate(-1250, -410);
 
-    // Sombra elíptica no chão (exceto se montado)
+    // Sombra suave no chão
     if (state !== 'riding') {
-      this.drawShadow(ctx, centerX, 260, pose.shadow.scale);
+      this.drawShadow(ctx, 1250, 2140, pose.shadow.scale);
     }
 
     if (effectiveDir === 'north') {
-      this.renderNorth(ctx, pose, config, centerX, headCenterY, state);
+      this.renderNorth(ctx, pose, config, state);
     } else if (effectiveDir === 'east') {
-      this.renderEast(ctx, pose, config, centerX, headCenterY, state);
+      this.renderEast(ctx, pose, config, state);
     } else {
-      this.renderSouth(ctx, pose, config, centerX, headCenterY, state);
+      this.renderSouth(ctx, pose, config, state);
     }
-
 
     ctx.restore();
   }
@@ -85,35 +85,35 @@ export class ModularAvatarRenderer {
   /* ========================================================================= */
   /*  RENDERIZAÇÃO: VISTA FRONTAL (SOUTH)                                      */
   /* ========================================================================= */
-  renderSouth(ctx, pose, cfg, cx, cy, state) {
-    const skin = cfg.skinTone || '#ffd0a8';
-    const skinShadow = cfg.skinShadow || '#e0ae82';
-
-    const headX = cx + (pose.head.x * 2.5);
-    const headY = cy + (pose.head.y * 2.5) + (pose.head.bobY * 2.5);
-    const torsoY = headY + 82;
+  renderSouth(ctx, pose, cfg, state) {
+    const headX = 1250 + (pose.head.x * 12);
+    const headY = 760 + (pose.head.y * 12) + (pose.head.bobY * 12);
+    const torsoY = 1450 + (pose.head.bobY * 8);
 
     // 1. Cabelo Traseiro / Longo (atrás de tudo)
     this.drawHairBack(ctx, headX, headY, cfg, 'south');
 
-    // 2. Pernas e Pés
-    this.drawLegs(ctx, cx, torsoY + 75, pose, cfg, 'south');
+    // 2. Orelhas de Base_char_flat.svg (_01_Orelha_Esquerda e _02_Orelha_Direita)
+    this.drawEars(ctx, headX, headY, cfg, 'south');
 
-    // 3. Tronco e Roupas
-    this.drawTorso(ctx, cx, torsoY, pose.root.rot, cfg, 'south');
+    // 3. Pernas e Pés de Base_char_flat.svg (_04_Perna_Esquerda, _06_Perna_Direita, _03_Pe_Esquerdo, _05_Pe_Direito)
+    this.drawLegs(ctx, pose, cfg, 'south');
 
-    // 4. Se NÃO estiver comemorando (celebrate), desenha os braços na frente do tronco e atrás da cabeça
+    // 4. Pescoço (_07_Pescoco) e Tronco (_08_Tronco_Corpo) + Roupas oficiais (assets/Tops)
+    this.drawTorsoAndNeck(ctx, torsoY, pose.root.rot, cfg, 'south');
+
+    // 5. Braços e Mãos (_09_Braco_Esquerdo, _11_Braco_Direito, _10_Mao_Esquerda, _12_Mao_Direita)
     const isCelebrating = state === 'celebrate';
     if (!isCelebrating) {
-      this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'south');
+      this.drawArms(ctx, torsoY, pose, cfg, 'south');
     }
 
-    // 5. Cabeça e Rosto
+    // 6. Cabeça (_14_Cabeca) e Rosto (Face Components.svg)
     ctx.save();
     ctx.translate(headX, headY);
     ctx.rotate(pose.head.rot);
 
-    this.drawHeadBase(ctx, skin, skinShadow, 'south');
+    this.drawHeadBase(ctx, cfg, 'south');
     this.drawFaceFeatures(ctx, cfg, 'south');
     this.drawHairFront(ctx, cfg, 'south');
 
@@ -123,75 +123,68 @@ export class ModularAvatarRenderer {
 
     ctx.restore();
 
-    // 6. Se estiver comemorando, desenha os braços e mãos na frente de TUDO (acima da cabeça e do cabelo)
+    // 7. Se estiver comemorando, braços na frente de tudo
     if (isCelebrating) {
-      this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'south');
+      this.drawArms(ctx, torsoY, pose, cfg, 'south');
     }
   }
 
   /* ========================================================================= */
   /*  RENDERIZAÇÃO: VISTA TRASEIRA (NORTH)                                     */
   /* ========================================================================= */
-  renderNorth(ctx, pose, cfg, cx, cy, state) {
-    const skin = cfg.skinTone || '#ffd0a8';
-    const skinShadow = cfg.skinShadow || '#e0ae82';
-
-    const headX = cx + (pose.head.x * 2.5);
-    const headY = cy + (pose.head.y * 2.5) + (pose.head.bobY * 2.5);
-    const torsoY = headY + 82;
-
-    // 1. Braços de Costas: ficam ATRÁS do tronco quando em idle/walk, ou erguidos se celebrate
+  renderNorth(ctx, pose, cfg, state) {
+    const headX = 1250 + (pose.head.x * 12);
+    const headY = 760 + (pose.head.y * 12) + (pose.head.bobY * 12);
+    const torsoY = 1450 + (pose.head.bobY * 8);
     const isCelebrating = state === 'celebrate';
+
+    // 1. Braços (se não comemorando, ficam atrás)
     if (!isCelebrating) {
-      this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'north');
+      this.drawArms(ctx, torsoY, pose, cfg, 'north');
     }
 
     // 2. Pernas e Pés
-    this.drawLegs(ctx, cx, torsoY + 75, pose, cfg, 'north');
+    this.drawLegs(ctx, pose, cfg, 'north');
 
-    // 3. Tronco e Roupas (de costas cobre a base dos braços)
-    this.drawTorso(ctx, cx, torsoY, pose.root.rot, cfg, 'north');
+    // 3. Tronco e Roupas (costas)
+    this.drawTorsoAndNeck(ctx, torsoY, pose.root.rot, cfg, 'north');
 
     // 4. Cabeça e Cabelo Traseiro
     ctx.save();
     ctx.translate(headX, headY);
     ctx.rotate(pose.head.rot);
 
-    this.drawHeadBase(ctx, skin, skinShadow, 'north');
+    this.drawHeadBase(ctx, cfg, 'north');
     this.drawHairBackSolid(ctx, 0, 0, cfg, 'north');
 
     ctx.restore();
 
-    // 5. Se estiver comemorando de costas, os braços erguidos sobem
     if (isCelebrating) {
-      this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'north');
+      this.drawArms(ctx, torsoY, pose, cfg, 'north');
     }
   }
 
   /* ========================================================================= */
   /*  RENDERIZAÇÃO: VISTA LATERAL (EAST / PERFIL)                              */
   /* ========================================================================= */
-  renderEast(ctx, pose, cfg, cx, cy, state) {
-    const skin = cfg.skinTone || '#ffd0a8';
-    const skinShadow = cfg.skinShadow || '#e0ae82';
-
-    const headX = cx + (pose.head.x * 2.5);
-    const headY = cy + (pose.head.y * 2.5) + (pose.head.bobY * 2.5);
-    const torsoY = headY + 82;
+  renderEast(ctx, pose, cfg, state) {
+    const headX = 1250 + (pose.head.x * 12);
+    const headY = 760 + (pose.head.y * 12) + (pose.head.bobY * 12);
+    const torsoY = 1450 + (pose.head.bobY * 8);
     const isCelebrating = state === 'celebrate';
 
     // 1. Cabelo Traseiro
-    this.drawHairBack(ctx, headX, headY, cfg, 'south');
+    this.drawHairBack(ctx, headX, headY, cfg, 'east');
 
     // 2. Pernas e Pés
-    this.drawLegs(ctx, cx, torsoY + 75, pose, cfg, 'east');
+    this.drawLegs(ctx, pose, cfg, 'east');
 
     // 3. Tronco e Roupas
-    this.drawTorso(ctx, cx, torsoY, pose.root.rot, cfg, 'south');
+    this.drawTorsoAndNeck(ctx, torsoY, pose.root.rot, cfg, 'east');
 
-    // 4. Se NÃO estiver comemorando, desenha os braços na frente do tronco
+    // 4. Braços
     if (!isCelebrating) {
-      this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'south');
+      this.drawArms(ctx, torsoY, pose, cfg, 'east');
     }
 
     // 5. Cabeça e Feições
@@ -199,95 +192,550 @@ export class ModularAvatarRenderer {
     ctx.translate(headX, headY);
     ctx.rotate(pose.head.rot);
 
-    this.drawHeadBase(ctx, skin, skinShadow, 'south');
-    this.drawFaceFeatures(ctx, cfg, 'south');
-    this.drawHairFront(ctx, cfg, 'south');
+    this.drawHeadBase(ctx, cfg, 'east');
+    this.drawFaceFeatures(ctx, cfg, 'east');
+    this.drawHairFront(ctx, cfg, 'east');
 
     if (cfg.glassesStyle && cfg.glassesStyle !== 'none') {
-      this.drawGlasses(ctx, cfg, 'south');
+      this.drawGlasses(ctx, cfg, 'east');
     }
 
     ctx.restore();
 
-    // 6. Se estiver comemorando, braços na frente de tudo
     if (isCelebrating) {
-      this.drawArms(ctx, cx, torsoY + 22, pose, cfg, 'south');
+      this.drawArms(ctx, torsoY, pose, cfg, 'east');
     }
   }
 
-
   /* ========================================================================= */
-  /*  COMPONENTES ANATÔMICOS OFICIAIS (samples.svg)                           */
+  /*  COMPONENTES ANATÔMICOS OFICIAIS (Base_char_flat.svg) - 100% FLAT         */
   /* ========================================================================= */
 
   drawShadow(ctx, x, y, scale = 1.0) {
     ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
     ctx.beginPath();
-    ctx.ellipse(x, y, 65 * scale, 22 * scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y, 420 * scale, 130 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
 
-  drawHeadBase(ctx, skin, skinShadow, dir) {
-    ctx.save();
+  drawEars(ctx, hx, hy, cfg, dir) {
+    if (dir === 'east') return;
+    const skin = cfg.skinTone || '#f6dab9';
 
+    ctx.save();
     ctx.fillStyle = skin;
-    ctx.strokeStyle = skinShadow;
-    ctx.lineWidth = 2.5;
-    ctx.lineJoin = 'round';
+
+    // _01_Orelha_Esquerda: M900,810C800,805 765,850 765,890C765,940 815,975 900,970L900,810Z (transform Y-37)
+    const earLeftPath = this.getPath2D('M900 773C800 768 765 813 765 853C765 903 815 938 900 933L900 773Z');
+    ctx.fill(earLeftPath);
+
+    // _02_Orelha_Direita: M1600,810C1700,805 1735,850 1735,890C1735,940 1685,975 1600,970L1600,810Z (transform Y-37)
+    const earRightPath = this.getPath2D('M1600 773C1700 768 1735 813 1735 853C1735 903 1685 938 1600 933L1600 773Z');
+    ctx.fill(earRightPath);
+
+    ctx.restore();
+  }
+
+  drawHeadBase(ctx, cfg, dir) {
+    const skin = cfg.skinTone || '#f6dab9';
+
+    ctx.save();
+    ctx.fillStyle = skin;
 
     if (dir === 'south' || dir === 'north') {
-      // 1. Pescoço (_07_Pescoco de Base_char_flat.svg)
-      ctx.beginPath();
-      ctx.roundRect(-24, 70, 48, 36, [0, 0, 8, 8]);
-      ctx.fill();
-      ctx.stroke();
-
-      // 2. Orelha Esquerda (_01_Orelha_Esquerda de Base_char_flat.svg)
-      const earLeftD = 'M -80.5 3 C -103.5 1.84 -111.55 12.19 -111.55 21.39 C -111.55 32.89 -100.05 40.94 -80.5 39.79 Z';
-      const earLeftPath = this.getPath2D(earLeftD);
-      ctx.fill(earLeftPath);
-      ctx.stroke(earLeftPath);
-
-      // 3. Orelha Direita (_02_Orelha_Direita de Base_char_flat.svg)
-      const earRightD = 'M 80.5 3 C 103.5 1.84 111.55 12.19 111.55 21.39 C 111.55 32.89 100.05 40.94 80.5 39.79 Z';
-      const earRightPath = this.getPath2D(earRightD);
-      ctx.fill(earRightPath);
-      ctx.stroke(earRightPath);
-
-      // 4. Cabeça Base (_14_Cabeca de Base_char_flat.svg)
-      const headD = 'M 0 -80.5 C 52.9 -80.5 89.7 -46 89.7 0 C 89.7 36.8 71.3 73.6 39.1 86.25 C 23 92 -23 92 -39.1 86.25 C -71.3 73.6 -89.7 36.8 -89.7 0 C -89.7 -46 -52.9 -80.5 0 -80.5 Z';
-      const headPath = this.getPath2D(headD);
-      ctx.fill(headPath);
-      ctx.stroke(headPath);
-
+      // _14_Cabeca: M1250,410C1480,410 1640,560 1640,760C1640,920 1560,1080 1420,1135C1350,1160 1150,1160 1080,1135C940,1080 860,920 860,760C860,560 1020,410 1250,410Z
+      // Renderizado relativo a (1250, 760)
+      const headLocalPath = this.getPath2D('M0 -350C230 -350 390 -200 390 0C390 160 310 320 170 375C100 400 -100 400 -170 375C-310 320 -390 160 -390 0C-390 -200 -230 -350 0 -350Z');
+      ctx.fill(headLocalPath);
     } else {
-      // Perfil da cabeça (east / west)
+      // Perfil da cabeça
       ctx.beginPath();
-      ctx.roundRect(-16, 70, 36, 36, [0, 0, 8, 8]);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(-60, -75);
-      ctx.bezierCurveTo(40, -85, 85, -30, 85, 15);
-      ctx.bezierCurveTo(85, 55, 20, 85, -20, 85);
-      ctx.bezierCurveTo(-70, 85, -85, 40, -85, -10);
-      ctx.bezierCurveTo(-85, -50, -70, -70, -60, -75);
+      ctx.moveTo(-280, -330);
+      ctx.bezierCurveTo(180, -360, 390, -130, 390, 60);
+      ctx.bezierCurveTo(390, 240, 90, 380, -90, 380);
+      ctx.bezierCurveTo(-310, 380, -390, 180, -390, -50);
+      ctx.bezierCurveTo(-390, -220, -320, -310, -280, -330);
       ctx.closePath();
       ctx.fill();
-      ctx.stroke();
 
       // Orelha lateral de perfil
-      const earProfileD = 'M -20 5 C -43 3.84 -51 14.19 -51 23.39 C -51 34.89 -39.5 42.94 -20 41.79 Z';
-      const earProfilePath = this.getPath2D(earProfileD);
+      const earProfilePath = this.getPath2D('M -100 20 C -200 15 -235 60 -235 100 C -235 150 -185 185 -100 180 Z');
       ctx.fill(earProfilePath);
-      ctx.stroke(earProfilePath);
     }
 
     ctx.restore();
   }
+
+  drawTorsoAndNeck(ctx, torsoY, rot, cfg, dir) {
+    const skin = cfg.skinTone || '#f6dab9';
+    const primary = cfg.topColorPrimary || '#19c8b9';
+    const secondary = cfg.topColorSecondary || '#ffffff';
+    const bottomColor = cfg.bottomColor || '#2563eb';
+    const topStyle = cfg.topStyle || 'top_tee';
+    const bottomStyle = cfg.bottomStyle || 'shorts_denim';
+
+    ctx.save();
+
+    // 1. Pescoço (_07_Pescoco de Base_char_flat.svg: rect x=1130 y=1080 width=240 height=180)
+    ctx.fillStyle = skin;
+    ctx.fillRect(1130, 1080, 240, 180);
+
+    // 2. Tronco Base (_08_Tronco_Corpo de Base_char_flat.svg)
+    ctx.save();
+    ctx.translate(1250, torsoY);
+    ctx.rotate(rot);
+
+    // Path local de _08_Tronco_Corpo
+    const torsoLocalPath = this.getPath2D('M-100 -280C-50 -290 50 -290 100 -280C160 -250 200 -130 205 10C215 130 180 245 90 275C40 290 -40 290 -90 275C-180 245 -215 130 -205 10C-200 -130 -160 -250 -100 -280Z');
+    ctx.fillStyle = skin;
+    ctx.fill(torsoLocalPath);
+
+    // 3. ROUPAS SUPERIORES OFICIAIS (assets/Tops) - 100% Flat Fill
+    ctx.fillStyle = primary;
+
+    if (topStyle === 'top_crop_top') {
+      // Top Cropped (Crop Top.svg): Corte alto, detalhes e acabamento
+      ctx.beginPath();
+      ctx.moveTo(-205, -280);
+      ctx.lineTo(205, -280);
+      ctx.lineTo(185, 50);
+      ctx.lineTo(-185, 50);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bainha de destaque inferior
+      ctx.fillStyle = secondary;
+      ctx.fillRect(-185, 30, 370, 20);
+
+      if (dir !== 'north') {
+        ctx.fillStyle = secondary;
+        ctx.beginPath();
+        ctx.ellipse(0, -270, 80, 30, 0, 0, Math.PI);
+        ctx.fill();
+      }
+
+    } else if (topStyle === 'top_cupcake_dress') {
+      // Vestido Cupcake (Cupcake Dress.svg): Tronco ajustado + Saia rodada ampla com babados
+      ctx.beginPath();
+      ctx.moveTo(-205, -280);
+      ctx.lineTo(205, -280);
+      ctx.lineTo(175, 100);
+      ctx.lineTo(-175, 100);
+      ctx.closePath();
+      ctx.fill();
+
+      // Saia rodada ampla
+      ctx.fillStyle = primary;
+      ctx.beginPath();
+      ctx.moveTo(-185, 100);
+      ctx.lineTo(185, 100);
+      ctx.lineTo(320, 380);
+      ctx.lineTo(-320, 380);
+      ctx.closePath();
+      ctx.fill();
+
+      // Babados em ondas da saia
+      ctx.fillStyle = secondary;
+      ctx.beginPath();
+      ctx.roundRect(-330, 350, 660, 35, 18);
+      ctx.fill();
+
+      if (dir !== 'north') {
+        ctx.fillStyle = secondary;
+        ctx.beginPath();
+        ctx.ellipse(0, -270, 90, 35, 0, 0, Math.PI);
+        ctx.fill();
+
+        ctx.strokeStyle = secondary;
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(0, -230);
+        ctx.lineTo(0, 80);
+        ctx.stroke();
+      }
+
+    } else if (topStyle === 'top_sweater') {
+      // Suéter de Lã (Sweater.svg): Modelagem aconchegante, barra canelada e gola alta
+      ctx.beginPath();
+      ctx.moveTo(-220, -290);
+      ctx.lineTo(220, -290);
+      ctx.lineTo(200, 240);
+      ctx.lineTo(-200, 240);
+      ctx.closePath();
+      ctx.fill();
+
+      // Barra canelada inferior
+      ctx.fillStyle = secondary;
+      ctx.fillRect(-200, 200, 400, 40);
+
+      // Gola estruturada do suéter
+      if (dir !== 'north') {
+        ctx.fillStyle = secondary;
+        ctx.beginPath();
+        ctx.roundRect(-120, -330, 240, 65, 20);
+        ctx.fill();
+      }
+
+    } else if (topStyle === 'top_puffy_sleeve') {
+      // Blusa Manga Bufante (Puffy Sleeve.svg): Tronco ajustado com gola canoa
+      ctx.beginPath();
+      ctx.moveTo(-205, -280);
+      ctx.lineTo(205, -280);
+      ctx.lineTo(190, 200);
+      ctx.lineTo(-190, 200);
+      ctx.closePath();
+      ctx.fill();
+
+      if (dir !== 'north') {
+        ctx.fillStyle = secondary;
+        ctx.beginPath();
+        ctx.ellipse(0, -280, 110, 40, 0, 0, Math.PI);
+        ctx.fill();
+      }
+
+    } else if (topStyle === 'top_sleeveless') {
+      // Regata Sem Mangas (Sleeveless.svg): Alças estruturadas e corte anatômico
+      ctx.beginPath();
+      ctx.moveTo(-180, -280);
+      ctx.lineTo(180, -280);
+      ctx.lineTo(185, 190);
+      ctx.lineTo(-185, 190);
+      ctx.closePath();
+      ctx.fill();
+
+      if (dir !== 'north') {
+        ctx.fillStyle = skin;
+        ctx.beginPath();
+        ctx.ellipse(0, -280, 95, 45, 0, 0, Math.PI);
+        ctx.fill();
+      }
+
+    } else if (topStyle === 'top_long_sleeve') {
+      // Blusa Manga Longa (Long Sleeve.svg): Corpo com barra canelada e gola redonda
+      ctx.beginPath();
+      ctx.moveTo(-210, -280);
+      ctx.lineTo(210, -280);
+      ctx.lineTo(190, 200);
+      ctx.lineTo(-190, 200);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = secondary;
+      ctx.fillRect(-190, 175, 380, 25);
+
+      if (dir !== 'north') {
+        ctx.fillStyle = secondary;
+        ctx.beginPath();
+        ctx.ellipse(0, -270, 95, 35, 0, 0, Math.PI);
+        ctx.fill();
+      }
+
+    } else {
+      // Camiseta Clássica (Tee.svg): Corte clássico de camiseta com gola reforçada
+      ctx.beginPath();
+      ctx.moveTo(-210, -280);
+      ctx.lineTo(210, -280);
+      ctx.lineTo(195, 190);
+      ctx.lineTo(-195, 190);
+      ctx.closePath();
+      ctx.fill();
+
+      if (dir !== 'north') {
+        ctx.fillStyle = secondary;
+        ctx.beginPath();
+        ctx.ellipse(0, -280, 95, 45, 0, 0, Math.PI);
+        ctx.fill();
+      }
+    }
+
+    // 4. Shorts / Calça / Saia (Pelve) - 100% Flat Fill
+    if (topStyle !== 'top_cupcake_dress') {
+      ctx.fillStyle = bottomColor;
+
+      if (bottomStyle === 'skirt_pleated') {
+        // Saia Plissada
+        ctx.beginPath();
+        ctx.moveTo(-195, 190);
+        ctx.lineTo(195, 190);
+        ctx.lineTo(260, 360);
+        ctx.lineTo(-260, 360);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.lineWidth = 6;
+        [-130, -65, 0, 65, 130].forEach(px => {
+          ctx.beginPath();
+          ctx.moveTo(px * 0.8, 200);
+          ctx.lineTo(px * 1.25, 360);
+          ctx.stroke();
+        });
+
+      } else if (bottomStyle === 'pants_cargo') {
+        // Calça Cargo: Pelve e bolsos
+        ctx.beginPath();
+        ctx.moveTo(-195, 190);
+        ctx.lineTo(195, 190);
+        ctx.lineTo(185, 320);
+        ctx.lineTo(-185, 320);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(-150, 205, 300, 22);
+
+      } else {
+        // Shorts Jeans
+        ctx.beginPath();
+        ctx.moveTo(-195, 190);
+        ctx.lineTo(195, 190);
+        ctx.lineTo(180, 310);
+        ctx.lineTo(-180, 310);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(-175, 300);
+        ctx.lineTo(175, 300);
+        ctx.stroke();
+      }
+    }
+
+    ctx.restore();
+    ctx.restore();
+  }
+
+  drawArms(ctx, torsoY, pose, cfg, dir) {
+    const skin = cfg.skinTone || '#f6dab9';
+    const primary = cfg.topColorPrimary || '#19c8b9';
+    const secondary = cfg.topColorSecondary || '#ffffff';
+    const topStyle = cfg.topStyle || 'top_tee';
+
+    ctx.save();
+
+    // Braço Esquerdo (_09_Braco_Esquerdo e _10_Mao_Esquerda)
+    // Articula no ombro esquerdo (1120, 1195)
+    ctx.save();
+    ctx.translate(1120, 1195);
+    ctx.rotate(pose.arm_l.rot);
+
+    // Braço de pele base
+    const armLPath = this.getPath2D('M0 0C35 10 50 50 30 85L-230 395C-250 417 -285 407 -300 380C-315 353 -305 320 -278 305L-28 10C-20 3 -10 0 0 0Z');
+    ctx.fillStyle = skin;
+    ctx.fill(armLPath);
+
+    // Mão esquerda (_10_Mao_Esquerda: cx=820, cy=1600, r=62 -> local: cx=-300, cy=405, r=62)
+    ctx.beginPath();
+    ctx.arc(-300, 405, 62, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Manga da roupa esquerda
+    this.renderArmSleeve(ctx, primary, secondary, topStyle, 'left');
+
+    ctx.restore();
+
+    // Braço Direito (_11_Braco_Direito e _12_Mao_Direita)
+    // Articula no ombro direito (1380, 1195)
+    ctx.save();
+    ctx.translate(1380, 1195);
+    ctx.rotate(pose.arm_r.rot);
+
+    const armRPath = this.getPath2D('M0 0C-35 10 -50 50 -30 85L230 395C250 417 285 407 300 380C315 353 305 320 278 305L28 10C20 3 10 0 0 0Z');
+    ctx.fillStyle = skin;
+    ctx.fill(armRPath);
+
+    // Mão direita (_12_Mao_Direita: cx=1680, cy=1600, r=62 -> local: cx=300, cy=405, r=62)
+    ctx.beginPath();
+    ctx.arc(300, 405, 62, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Manga da roupa direita
+    this.renderArmSleeve(ctx, primary, secondary, topStyle, 'right');
+
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  renderArmSleeve(ctx, primary, secondary, topStyle, side) {
+    const s = side === 'left' ? -1 : 1;
+    ctx.fillStyle = primary;
+
+    if (topStyle === 'top_long_sleeve' || topStyle === 'top_sweater') {
+      // Manga Longa (Long Sleeve.svg / Sweater.svg): cobre todo o braço até o punho
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(s * 35, 10, s * 50, 50, s * 30, 85);
+      ctx.lineTo(s * 210, 365);
+      ctx.bezierCurveTo(s * 230, 385, s * 270, 375, s * 280, 350);
+      ctx.lineTo(s * 28, 10);
+      ctx.closePath();
+      ctx.fill();
+
+      // Punho branco
+      ctx.fillStyle = secondary;
+      ctx.beginPath();
+      ctx.moveTo(s * 190, 335);
+      ctx.lineTo(s * 230, 395);
+      ctx.lineTo(s * 270, 365);
+      ctx.lineTo(s * 240, 315);
+      ctx.closePath();
+      ctx.fill();
+
+    } else if (topStyle === 'top_puffy_sleeve') {
+      // Manga Bufante (Puffy Sleeve.svg): Manga esférica volumosa no ombro
+      ctx.beginPath();
+      ctx.arc(s * 40, 45, 105, 0, Math.PI * 2);
+      ctx.fill();
+
+    } else if (topStyle === 'top_sleeveless' || topStyle === 'top_crop_top') {
+      // Sem mangas: braço inteiro de pele exposto (nada a sobrepor)
+    } else {
+      // Manga Curta padrão (Tee.svg / Cupcake Dress.svg)
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(s * 35, 10, s * 50, 50, s * 30, 85);
+      ctx.lineTo(s * 95, 185);
+      ctx.bezierCurveTo(s * 130, 175, s * 150, 145, s * 140, 115);
+      ctx.lineTo(s * 28, 10);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  drawLegs(ctx, pose, cfg, dir) {
+    const skin = cfg.skinTone || '#f6dab9';
+    const bottomColor = cfg.bottomColor || '#2563eb';
+    const shoeColor = cfg.shoesColor || '#ea580c';
+    const shoeTrim = cfg.shoesTrim || '#ffffff';
+    const bottomStyle = cfg.bottomStyle || 'shorts_denim';
+    const shoesStyle = cfg.shoesStyle || 'sneakers_classic';
+
+    const liftL = (pose.hip_l && pose.hip_l.y !== undefined) ? ((pose.hip_l.y - 6) * 15) : 0;
+    const liftR = (pose.hip_r && pose.hip_r.y !== undefined) ? ((pose.hip_r.y - 6) * 15) : 0;
+
+    ctx.save();
+
+    // Perna Esquerda (_04_Perna_Esquerda e _03_Pe_Esquerdo)
+    // Articula no quadril esquerdo (1145, 1600)
+    ctx.save();
+    ctx.translate(1145, 1600 + liftL);
+    ctx.rotate(pose.hip_l.rot + pose.leg_l.rot);
+
+    // Perna de pele (_04_Perna_Esquerda)
+    const legLPath = this.getPath2D('M-80 70C-80 0 80 0 80 70L60 440C60 465 -70 465 -70 440L-80 70Z');
+    ctx.fillStyle = skin;
+    ctx.fill(legLPath);
+
+    // Pé esquerdo (_03_Pe_Esquerdo)
+    const footLPath = this.getPath2D('M-75 430C-75 390 65 390 65 430C75 475 70 535 20 548C-20 550 -80 530 -75 430Z');
+    ctx.fill(footLPath);
+
+    // Calça e Sapato Esquerdo
+    this.renderLegClothingAndShoe(ctx, bottomColor, shoeColor, shoeTrim, bottomStyle, shoesStyle, 'left');
+
+    ctx.restore();
+
+    // Perna Direita (_06_Perna_Direita e _05_Pe_Direito)
+    // Articula no quadril direito (1355, 1600)
+    ctx.save();
+    ctx.translate(1355, 1600 + liftR);
+    ctx.rotate(pose.hip_r.rot + pose.leg_r.rot);
+
+    // Perna de pele (_06_Perna_Direita)
+    const legRPath = this.getPath2D('M-80 70C-80 0 80 0 80 70L70 440C70 465 -60 465 -60 440L-80 70Z');
+    ctx.fillStyle = skin;
+    ctx.fill(legRPath);
+
+    // Pé direito (_05_Pe_Direito)
+    const footRPath = this.getPath2D('M-65 430C-65 390 75 390 75 430C80 475 75 535 30 548C-10 550 -70 530 -65 430Z');
+    ctx.fill(footRPath);
+
+    // Calça e Sapato Direito
+    this.renderLegClothingAndShoe(ctx, bottomColor, shoeColor, shoeTrim, bottomStyle, shoesStyle, 'right');
+
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  renderLegClothingAndShoe(ctx, bottomColor, shoeColor, shoeTrim, bottomStyle, shoesStyle, side) {
+    // 1. Calça / Shorts
+    if (bottomStyle === 'pants_cargo') {
+      // Calça comprida cobrindo até quase o pé
+      ctx.fillStyle = bottomColor;
+      ctx.beginPath();
+      ctx.roundRect(-85, 0, 170, 440, 12);
+      ctx.fill();
+
+      // Bolso cargo lateral
+      ctx.fillStyle = '#1d4ed8';
+      const bx = side === 'left' ? -95 : 55;
+      ctx.fillRect(bx, 150, 40, 100);
+
+    } else if (bottomStyle === 'shorts_denim') {
+      // Shorts cobrindo parte superior da coxa
+      ctx.fillStyle = bottomColor;
+      ctx.beginPath();
+      ctx.roundRect(-85, 0, 170, 150, 8);
+      ctx.fill();
+    }
+
+    // 2. Calçado / Sapato
+    if (shoesStyle === 'boots_hunter') {
+      // Bota de trilha
+      ctx.fillStyle = shoeColor;
+      ctx.beginPath();
+      ctx.roundRect(-85, 370, 170, 180, 20);
+      ctx.fill();
+
+      // Fivela da bota
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(-45, 410, 90, 20);
+
+      // Sola escura
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(-90, 525, 180, 25);
+
+    } else if (shoesStyle === 'sandals_beach') {
+      // Sandália aberta
+      ctx.fillStyle = shoeColor;
+      ctx.beginPath();
+      ctx.roundRect(-85, 510, 170, 40, 15);
+      ctx.fill();
+
+      // Tiras brancas
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 14;
+      ctx.beginPath();
+      ctx.moveTo(-65, 510);
+      ctx.lineTo(0, 430);
+      ctx.lineTo(65, 510);
+      ctx.stroke();
+
+    } else {
+      // Tênis clássico
+      ctx.fillStyle = shoeColor;
+      ctx.beginPath();
+      ctx.roundRect(-80, 420, 160, 130, 25);
+      ctx.fill();
+
+      // Biqueira e sola branca
+      ctx.fillStyle = shoeTrim;
+      ctx.fillRect(-85, 515, 170, 35);
+      ctx.beginPath();
+      ctx.arc(0, 450, 20, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  /* ========================================================================= */
+  /*  FEIÇÕES FACIAIS (assets/Face Components.svg)                             */
+  /* ========================================================================= */
 
   drawFaceFeatures(ctx, cfg, dir) {
     if (dir === 'north') return;
@@ -295,31 +743,30 @@ export class ModularAvatarRenderer {
     ctx.save();
 
     if (dir === 'south') {
-      // 1. Bochechas / Blush (samples.svg: cx=1349.5 & 1469.5 cy=160.5)
-      this.drawCheekItem(ctx, -58.5, 34, cfg.cheeksShape, 'left');
-      this.drawCheekItem(ctx, 61.5, 34, cfg.cheeksShape, 'right');
+      // 1. Bochechas / Blush
+      this.drawCheekItem(ctx, -260, 100, cfg.cheeksShape, 'left');
+      this.drawCheekItem(ctx, 260, 100, cfg.cheeksShape, 'right');
 
-      // 2. Olhos (samples.svg: cx=1372.5 & 1448.5 cy=130.5)
-      this.drawEyeItem(ctx, -38, 4, cfg.eyeShape, cfg.eyeColor, 'left');
-      this.drawEyeItem(ctx, 40, 4, cfg.eyeShape, cfg.eyeColor, 'right');
+      // 2. Olhos
+      this.drawEyeItem(ctx, -165, -30, cfg.eyeShape, cfg.eyeColor, 'left');
+      this.drawEyeItem(ctx, 165, -30, cfg.eyeShape, cfg.eyeColor, 'right');
 
-      // 3. Nariz (samples.svg: cx=1411 cy=143)
-      this.drawNoseItem(ctx, 2.5, 16.5, cfg.noseShape);
+      // 3. Nariz
+      this.drawNoseItem(ctx, 0, 65, cfg.noseShape);
 
-      // 4. Boca (samples.svg: y=164 - 175)
-      this.drawMouthItem(ctx, 0.5, 42, cfg.mouthShape);
+      // 4. Boca
+      this.drawMouthItem(ctx, 0, 165, cfg.mouthShape);
 
     } else {
-      // Perfil lateral
-      this.drawCheekItem(ctx, 35, 34, cfg.cheeksShape, 'right');
-      this.drawEyeItem(ctx, 32, 4, cfg.eyeShape, cfg.eyeColor, 'right');
-      this.drawNoseItem(ctx, 70, 16.5, cfg.noseShape, 'east');
-      this.drawMouthItem(ctx, 50, 42, cfg.mouthShape, 'east');
+      // Perfil lateral (east)
+      this.drawCheekItem(ctx, 150, 100, cfg.cheeksShape, 'right');
+      this.drawEyeItem(ctx, 140, -30, cfg.eyeShape, cfg.eyeColor, 'right');
+      this.drawNoseItem(ctx, 290, 65, cfg.noseShape, 'east');
+      this.drawMouthItem(ctx, 210, 165, cfg.mouthShape, 'east');
     }
 
     ctx.restore();
   }
-
 
   drawNoseItem(ctx, x, y, noseShape, dir = 'south') {
     ctx.save();
@@ -327,28 +774,25 @@ export class ModularAvatarRenderer {
 
     const noseDef = SVG_NOSES.find(n => n.id === noseShape) || SVG_NOSES[0];
     ctx.fillStyle = noseDef.color || '#FF7E36';
-    ctx.strokeStyle = '#D96522';
-    ctx.lineWidth = 1.2;
 
     if (noseDef.type === 'circle') {
       ctx.beginPath();
-      ctx.arc(0, 0, noseDef.r || 7, 0, Math.PI * 2);
+      ctx.arc(0, 0, 32, 0, Math.PI * 2);
       ctx.fill();
     } else if (noseDef.type === 'ellipse') {
       ctx.beginPath();
-      ctx.ellipse(0, 0, noseDef.rx || 9, noseDef.ry || 5.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 41, 25, 0, 0, Math.PI * 2);
       ctx.fill();
     } else if (noseDef.type === 'rect') {
       ctx.beginPath();
-      ctx.roundRect(-8.5, -4, 17, 8, 2);
+      ctx.roundRect(-39, -18, 78, 36, 8);
       ctx.fill();
     } else {
-      // Triângulo clássico ACNH de Face Components.svg
-      const path = this.getPath2D(noseDef.d);
-      ctx.save();
+      // Triângulo clássico ACNH (Face Components.svg)
+      ctx.scale(4.588, 4.588);
       ctx.translate(-noseDef.cx, -noseDef.cy);
+      const path = this.getPath2D(noseDef.d);
       ctx.fill(path);
-      ctx.restore();
     }
 
     ctx.restore();
@@ -362,11 +806,11 @@ export class ModularAvatarRenderer {
 
     if (dir === 'east') {
       ctx.strokeStyle = '#8C501D';
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 12;
       ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.moveTo(-5, 0);
-      ctx.lineTo(8, 0);
+      ctx.moveTo(-25, 0);
+      ctx.lineTo(35, 0);
       ctx.stroke();
       ctx.restore();
       return;
@@ -375,10 +819,10 @@ export class ModularAvatarRenderer {
     if (mouthDef.type === 'fill') {
       ctx.fillStyle = mouthDef.color || '#8C501D';
       ctx.beginPath();
-      ctx.ellipse(0, 0, mouthDef.rx || 6.5, mouthDef.ry || 7.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 30, 35, 0, 0, Math.PI * 2);
       ctx.fill();
     } else {
-      ctx.save();
+      ctx.scale(4.588, 4.588);
       ctx.translate(-mouthDef.cx, -mouthDef.cy);
 
       if (mouthDef.type === 'fill_stroke') {
@@ -409,7 +853,6 @@ export class ModularAvatarRenderer {
         ctx.lineJoin = 'round';
         ctx.stroke(path);
       }
-      ctx.restore();
     }
 
     ctx.restore();
@@ -427,173 +870,182 @@ export class ModularAvatarRenderer {
     const eyeDef = SVG_EYES.find(e => e.id === eyeShape) || SVG_EYES[0];
 
     if (eyeDef.type === 'cheerful_crescent') {
-      // 1. Arco Sorridente (Face Components.svg: d="M406.71 342.634... stroke-width=4")
       ctx.strokeStyle = '#8C501D';
-      ctx.lineWidth = 4.0;
+      ctx.lineWidth = 18;
       ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.arc(0, 0, 16, Math.PI * 1.12, Math.PI * 1.88);
+      ctx.arc(0, 0, 72, Math.PI * 1.12, Math.PI * 1.88);
       ctx.stroke();
 
     } else if (eyeDef.type === 'round_button') {
-      // 2. Botão Redondo ACNH (Face Components.svg: circle r=19.5, circle r=15)
       ctx.fillStyle = '#FFFFFF';
-      ctx.strokeStyle = '#8C501D';
-      ctx.lineWidth = 2.2;
       ctx.beginPath();
-      ctx.arc(0, 0, 18, 0, Math.PI * 2);
+      ctx.arc(0, 0, 80, 0, Math.PI * 2);
       ctx.fill();
-      ctx.stroke();
 
       ctx.fillStyle = irisColor || '#8C501D';
       ctx.beginPath();
-      ctx.arc(2, 0, 14, 0, Math.PI * 2);
+      ctx.arc(8, 0, 62, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#0F172A';
       ctx.beginPath();
-      ctx.arc(2, 0, 8, 0, Math.PI * 2);
+      ctx.arc(8, 0, 36, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.arc(-3, -5, 4.5, 0, Math.PI * 2);
+      ctx.arc(-14, -22, 20, 0, Math.PI * 2);
       ctx.fill();
 
     } else if (eyeDef.type === 'sharp_determined') {
-      // 3. Determinado / Focado (Face Components.svg: arco superior reto e forte com pupila inferior)
       ctx.fillStyle = '#FFFFFF';
-      ctx.strokeStyle = '#8C501D';
-      ctx.lineWidth = 2.0;
       ctx.beginPath();
-      ctx.moveTo(-16, -8);
-      ctx.lineTo(16, -2);
-      ctx.bezierCurveTo(14, 16, -10, 18, -16, -8);
-      ctx.closePath();
+      ctx.roundRect(-75, -55, 150, 110, 18);
       ctx.fill();
-      ctx.stroke();
 
       ctx.fillStyle = irisColor || '#8C501D';
       ctx.beginPath();
-      ctx.ellipse(1, 2, 10, 13, 0, 0, Math.PI * 2);
+      ctx.arc(5, 5, 55, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#0F172A';
       ctx.beginPath();
-      ctx.ellipse(1.5, 3, 6, 8, 0, 0, Math.PI * 2);
+      ctx.arc(5, 5, 32, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.arc(-3, -2, 4.0, 0, Math.PI * 2);
+      ctx.arc(-15, -15, 16, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.strokeStyle = '#8C501D';
-      ctx.lineWidth = 4.0;
+      ctx.lineWidth = 16;
       ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.moveTo(-18, -10);
-      ctx.lineTo(18, -4);
+      ctx.moveTo(-80, -60);
+      ctx.lineTo(80, -40);
       ctx.stroke();
 
     } else if (eyeDef.type === 'sleepy_calm') {
-      // 4. Calmo / Sonhador (Face Components.svg: pálpebra superior semi-fechada)
       ctx.fillStyle = irisColor || '#8C501D';
       ctx.beginPath();
-      ctx.ellipse(0, 4, 14, 12, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.ellipse(0, 5, 8, 8, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 10, 65, 42, 0, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.arc(-4, 0, 3.5, 0, Math.PI * 2);
+      ctx.arc(-18, 0, 14, 0, Math.PI * 2);
       ctx.fill();
 
-      // Pálpebra calma em arco suave
       ctx.strokeStyle = '#8C501D';
-      ctx.lineWidth = 4.0;
+      ctx.lineWidth = 14;
       ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.moveTo(-16, -2);
-      ctx.quadraticCurveTo(0, -8, 16, 2);
+      ctx.moveTo(-70, -10);
+      ctx.quadraticCurveTo(0, -30, 70, -10);
+      ctx.stroke();
+
+    } else if (eyeDef.type === 'almond_lash') {
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 70, 85, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = irisColor || '#8C501D';
+      ctx.beginPath();
+      ctx.ellipse(10, 0, 58, 78, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#0F172A';
+      ctx.beginPath();
+      ctx.ellipse(10, 0, 36, 48, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(-15, -20, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#8C501D';
+      ctx.lineWidth = 14;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-70, -35);
+      ctx.quadraticCurveTo(0, -65, 70, -30);
+      ctx.stroke();
+
+    } else if (eyeDef.type === 'cat_lashes') {
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 65, 85, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = irisColor || '#8C501D';
+      ctx.beginPath();
+      ctx.ellipse(8, 0, 55, 75, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#0F172A';
+      ctx.beginPath();
+      ctx.ellipse(8, 0, 34, 46, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(-14, -20, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#8C501D';
+      ctx.lineWidth = 14;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-65, -30);
+      ctx.quadraticCurveTo(0, -55, 65, -45);
+      ctx.lineTo(85, -65);
       ctx.stroke();
 
     } else if (eyeDef.type === 'gentle_oval') {
-      // 5. Oval Acolhedor (Face Components.svg: ellipse cx=260.5 rx=15 ry=17)
       ctx.fillStyle = '#FFFFFF';
-      ctx.strokeStyle = '#8C501D';
-      ctx.lineWidth = 2.0;
       ctx.beginPath();
-      ctx.ellipse(0, 0, 15, 18, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 60, 80, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.stroke();
 
       ctx.fillStyle = irisColor || '#8C501D';
       ctx.beginPath();
-      ctx.ellipse(2, 0, 11, 14, 0, 0, Math.PI * 2);
+      ctx.ellipse(8, 0, 48, 70, 0, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#0F172A';
       ctx.beginPath();
-      ctx.ellipse(2, 0, 7, 9, 0, 0, Math.PI * 2);
+      ctx.ellipse(8, 0, 28, 42, 0, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.arc(-2, -5, 4.0, 0, Math.PI * 2);
+      ctx.arc(-12, -18, 16, 0, Math.PI * 2);
       ctx.fill();
 
     } else {
-      // 6. Anime Sparkle / Almond Lash / Cat Lashes (Face Components.svg: ellipse rx=14.5 ry=19.5 com sparkles)
+      // anime_sparkle
       ctx.fillStyle = irisColor || '#8C501D';
       ctx.beginPath();
-      ctx.ellipse(0, 0, 14.5, 19.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 65, 88, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Pupila escura
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.ellipse(1.5, 1.0, 9.0, 13.0, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Brilho Grande Superior (samples.svg: circle r=5.5)
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.arc(-4, -8, 5.5, 0, Math.PI * 2);
+      ctx.arc(-18, -25, 24, 0, Math.PI * 2);
       ctx.fill();
-
-      // Brilho Pequeno Inferior (samples.svg: ellipse rx=2.5 ry=3)
       ctx.beginPath();
-      ctx.ellipse(6, 7.5, 2.5, 3.0, 0, 0, Math.PI * 2);
+      ctx.arc(15, 20, 14, 0, Math.PI * 2);
       ctx.fill();
-
-      // Cílios superiores delicados (samples.svg)
-      ctx.strokeStyle = '#8C501D';
-      ctx.lineWidth = 2.4;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(-15.5, -16.5);
-      ctx.quadraticCurveTo(-7, -21.5, 5.5, -21.5);
-      ctx.stroke();
-
-      if (eyeDef.type === 'cat_lashes' || eyeDef.type === 'almond_lash') {
-        ctx.beginPath();
-        ctx.moveTo(8, -18);
-        ctx.lineTo(15, -24);
-        ctx.moveTo(5, -20);
-        ctx.lineTo(10, -27);
-        ctx.stroke();
-      }
     }
 
     ctx.restore();
   }
 
-  drawCheekItem(ctx, x, y, cheekShape, side = 'right') {
+  drawCheekItem(ctx, x, y, cheekShape, side = 'left') {
     if (cheekShape === 'none') return;
 
     ctx.save();
@@ -602,88 +1054,84 @@ export class ModularAvatarRenderer {
     const cheekDef = SVG_CHEEKS.find(c => c.id === cheekShape) || SVG_CHEEKS[0];
 
     if (cheekDef.type === 'freckles') {
-      ctx.fillStyle = cheekDef.color || '#8C501D';
-      [-8, 0, 8].forEach((fx, i) => {
+      ctx.fillStyle = '#8C501D';
+      [-25, 0, 25].forEach((fx, idx) => {
         ctx.beginPath();
-        ctx.arc(fx, (i % 2) * 5, 2.2, 0, Math.PI * 2);
+        ctx.arc(fx, (idx % 2) * 15, 8, 0, Math.PI * 2);
         ctx.fill();
       });
     } else if (cheekDef.type === 'whiskers') {
-      ctx.strokeStyle = cheekDef.color || '#8C501D';
-      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#8C501D';
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
       const s = side === 'left' ? -1 : 1;
       ctx.beginPath();
-      ctx.moveTo(0, -4);
-      ctx.lineTo(s * 20, -8);
-      ctx.moveTo(0, 6);
-      ctx.lineTo(s * 20, 10);
+      ctx.moveTo(0, -18);
+      ctx.lineTo(s * 90, -36);
+      ctx.moveTo(0, 27);
+      ctx.lineTo(s * 90, 45);
       ctx.stroke();
     } else {
-      // Blush Oficial de samples.svg (rx=12.5 ry=10.5)
+      // Blush Oficial de Face Components.svg (Flat Fill)
       ctx.fillStyle = cheekDef.color || 'rgba(255, 186, 165, 0.75)';
       ctx.beginPath();
-      ctx.ellipse(0, 0, cheekDef.rx || 12.5, cheekDef.ry || 10.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 57, 48, 0, 0, Math.PI * 2);
       ctx.fill();
     }
 
     ctx.restore();
   }
 
+  /* ========================================================================= */
+  /*  CABELOS (assets/Hairs.svg) - 100% FLAT (SEM STROKES)                     */
+  /* ========================================================================= */
+
   drawHairFront(ctx, cfg, dir = 'south') {
     if (dir === 'north') return;
 
     const hairDef = SVG_HAIRS.find(h => h.id === cfg.hairStyle) || SVG_HAIRS[0];
     const color = cfg.hairColor || '#3d2314';
-    const shadow = cfg.hairShadow || '#241208';
 
     ctx.save();
-
     ctx.fillStyle = color;
-    ctx.strokeStyle = shadow;
-    ctx.lineWidth = 2.2;
-    ctx.lineJoin = 'round';
 
     if (dir === 'east') {
-      // PERFIL LATERAL: Preenche o topo e a nuca do crânio com a cor do cabelo (evitando que fique careca)
+      // Perfil lateral: preenchimento de topo sem stroke
       ctx.beginPath();
-      ctx.moveTo(-75, -5);
-      ctx.bezierCurveTo(-75, -50, -45, -88, 0, -88);
-      ctx.bezierCurveTo(45, -88, 70, -60, 75, -5);
-      ctx.lineTo(60, -5);
-      ctx.bezierCurveTo(55, -50, 30, -75, 0, -75);
-      ctx.bezierCurveTo(-30, -75, -55, -45, -60, -5);
+      ctx.moveTo(-350, -20);
+      ctx.bezierCurveTo(-350, -230, -210, -400, 0, -400);
+      ctx.bezierCurveTo(210, -400, 325, -280, 350, -20);
+      ctx.lineTo(280, -20);
+      ctx.bezierCurveTo(255, -230, 140, -350, 0, -350);
+      ctx.bezierCurveTo(-140, -350, -255, -210, -280, -20);
       ctx.closePath();
       ctx.fill();
-      ctx.stroke();
 
-      // Franja recortada projetada para a frente de perfil
-      ctx.translate(-hairDef.cx + 25, -hairDef.topY - 83.5);
+      // Franja projetada de perfil
+      ctx.save();
+      ctx.scale(4.588, 4.588);
+      ctx.translate(-hairDef.cx + 25, -hairDef.topY - 80);
       if (Array.isArray(hairDef.frontPaths)) {
         for (const d of hairDef.frontPaths) {
           const path = this.getPath2D(d);
           ctx.fill(path);
-          ctx.stroke(path);
         }
       }
-    } else {
-      // VISTA FRONTAL (SOUTH)
-      // Máscara no canvas para que a franja frontal não sobreponha indevidamente o corpo/roupa abaixo do queixo
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(-140, -140, 280, 218); // Limite vertical no queixo (y <= 78)
-      ctx.clip();
+      ctx.restore();
 
-      // Preenchimento de base do crânio superior
+    } else {
+      // Vista frontal (south): Flat fill da base do crânio + franja
       ctx.beginPath();
-      ctx.arc(0, -25, 68, Math.PI * 1.0, Math.PI * 2.0);
+      ctx.arc(0, -115, 310, Math.PI * 1.0, Math.PI * 2.0);
       ctx.fill();
 
-      ctx.translate(-hairDef.cx, -hairDef.topY - 83.5);
+      ctx.save();
+      ctx.scale(4.588, 4.588);
+      ctx.translate(-hairDef.cx, -hairDef.topY - 80);
       if (Array.isArray(hairDef.frontPaths)) {
         for (const d of hairDef.frontPaths) {
           const path = this.getPath2D(d);
           ctx.fill(path);
-          ctx.stroke(path);
         }
       }
       ctx.restore();
@@ -695,70 +1143,58 @@ export class ModularAvatarRenderer {
   drawHairBack(ctx, x, y, cfg, dir) {
     const hairDef = SVG_HAIRS.find(h => h.id === cfg.hairStyle) || SVG_HAIRS[0];
     const color = cfg.hairColor || '#3d2314';
-    const shadow = cfg.hairShadow || '#241208';
 
     ctx.save();
     ctx.translate(x, y);
     ctx.fillStyle = color;
-    ctx.strokeStyle = shadow;
-    ctx.lineWidth = 2.2;
-    ctx.lineJoin = 'round';
 
     if (dir === 'east') {
-      // Cabelo de Trás visto de perfil
       if (cfg.hairStyle === 'hair_long_straight') {
         ctx.beginPath();
-        ctx.roundRect(-75, -20, 85, 180, 16);
+        ctx.roundRect(-350, -90, 400, 820, 70);
         ctx.fill();
-        ctx.stroke();
       } else if (cfg.hairStyle === 'hair_twin_buns') {
         ctx.beginPath();
-        ctx.arc(-45, -55, 28, 0, Math.PI * 2);
+        ctx.arc(-210, -250, 130, 0, Math.PI * 2);
         ctx.fill();
-        ctx.stroke();
       } else if (cfg.hairStyle === 'hair_high_ponytail') {
         ctx.beginPath();
-        ctx.moveTo(-40, -60);
-        ctx.quadraticCurveTo(-95, -40, -90, 35);
-        ctx.quadraticCurveTo(-70, 50, -55, 15);
+        ctx.moveTo(-180, -270);
+        ctx.quadraticCurveTo(-440, -180, -410, 160);
+        ctx.quadraticCurveTo(-320, 230, -250, 70);
         ctx.closePath();
         ctx.fill();
-        ctx.stroke();
       } else if (cfg.hairStyle === 'hair_twin_braids') {
         ctx.beginPath();
-        ctx.roundRect(-60, 0, 30, 120, 12);
+        ctx.roundRect(-280, 0, 140, 550, 55);
         ctx.fill();
-        ctx.stroke();
       }
     } else {
       if (Array.isArray(hairDef.backPaths)) {
         for (const bp of hairDef.backPaths) {
           ctx.save();
-          ctx.translate(-bp.cx, -bp.topY - 83.5);
+          ctx.scale(4.588, 4.588);
+          ctx.translate(-bp.cx, -bp.topY - 80);
           const path = this.getPath2D(bp.d);
           ctx.fill(path);
-          ctx.stroke(path);
           ctx.restore();
         }
       } else {
         if (cfg.hairStyle === 'hair_long_straight') {
           ctx.beginPath();
-          ctx.roundRect(-80, -20, 160, 180, 18);
+          ctx.roundRect(-370, -90, 740, 820, 80);
           ctx.fill();
-          ctx.stroke();
         } else if (cfg.hairStyle === 'hair_twin_buns') {
-          [-78, 78].forEach(bx => {
+          [-360, 360].forEach(bx => {
             ctx.beginPath();
-            ctx.arc(bx, -55, 26, 0, Math.PI * 2);
+            ctx.arc(bx, -250, 120, 0, Math.PI * 2);
             ctx.fill();
-            ctx.stroke();
           });
         } else if (cfg.hairStyle === 'hair_twin_braids') {
-          [-65, 65].forEach(bx => {
+          [-300, 300].forEach(bx => {
             ctx.beginPath();
-            ctx.roundRect(bx - 15, 10, 30, 130, 12);
+            ctx.roundRect(bx - 70, 50, 140, 600, 55);
             ctx.fill();
-            ctx.stroke();
           });
         }
       }
@@ -770,570 +1206,91 @@ export class ModularAvatarRenderer {
   drawHairBackSolid(ctx, x, y, cfg, dir = 'north') {
     const hairDef = SVG_HAIRS.find(h => h.id === cfg.hairStyle) || SVG_HAIRS[0];
     const color = cfg.hairColor || '#3d2314';
-    const shadow = cfg.hairShadow || '#241208';
 
     ctx.save();
     ctx.translate(x, y);
     ctx.fillStyle = color;
-    ctx.strokeStyle = shadow;
-    ctx.lineWidth = 2.2;
-    ctx.lineJoin = 'round';
 
-    // Base preenchida do crânio
+    // Base sólida do crânio de costas
     ctx.beginPath();
-    ctx.arc(0, -25, 68, Math.PI * 1.0, Math.PI * 2.0);
+    ctx.arc(0, 0, 350, 0, Math.PI * 2);
     ctx.fill();
 
     if (Array.isArray(hairDef.backPaths)) {
       for (const bp of hairDef.backPaths) {
         ctx.save();
-        ctx.translate(-bp.cx, -bp.topY - 83.5);
+        ctx.scale(4.588, 4.588);
+        ctx.translate(-bp.cx, -bp.topY - 80);
         const path = this.getPath2D(bp.d);
         ctx.fill(path);
-        ctx.stroke(path);
         ctx.restore();
       }
-    } else {
-      ctx.beginPath();
-      ctx.arc(0, 0, 72, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
     }
 
     ctx.restore();
   }
 
   /* ========================================================================= */
-  /*  CORPO INTEIRO & TOPS OFICIAIS (/assets/Tops)                             */
+  /*  ACESSÓRIOS (Óculos)                                                      */
   /* ========================================================================= */
-
-  drawTorso(ctx, x, y, rot, cfg, dir) {
-    const skin = cfg.skinTone || '#ffd0a8';
-    const skinShadow = cfg.skinShadow || '#e0ae82';
-    const primary = cfg.topColorPrimary || '#19c8b9';
-    const secondary = cfg.topColorSecondary || '#ffffff';
-    const bottomColor = cfg.bottomColor || '#2563eb';
-    const topStyle = cfg.topStyle || 'top_tee';
-    const bottomStyle = cfg.bottomStyle || 'shorts_denim';
-
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(rot);
-
-    // 1. BASE DO TRONCO DE PELE (_08_Tronco_Corpo de Base_char_flat.svg)
-    ctx.fillStyle = skin;
-    ctx.strokeStyle = skinShadow;
-    ctx.lineWidth = 2.5;
-    ctx.lineJoin = 'round';
-
-    const torsoBaseD = 'M -23 -64.4 C -11.5 -66.7 11.5 -66.7 23 -64.4 C 36.8 -57.5 46 -29.9 47.15 2.3 C 49.45 29.9 41.4 56.35 20.7 63.25 C 9.2 66.7 -9.2 66.7 -20.7 63.25 C -41.4 56.35 -49.45 29.9 -47.15 2.3 C -46 -29.9 -36.8 -57.5 -23 -64.4 Z';
-    const torsoBasePath = this.getPath2D(torsoBaseD);
-    ctx.fill(torsoBasePath);
-    ctx.stroke(torsoBasePath);
-
-    // 2. ROUPA SUPERIOR / TOPS OFICIAIS (assets/Tops)
-    ctx.fillStyle = primary;
-    ctx.strokeStyle = '#0f8e83';
-    ctx.lineWidth = 2.5;
-
-    if (topStyle === 'top_crop_top') {
-      // Top Cropped (Crop Top.svg): Corte alto, detalhes e acabamento
-      ctx.beginPath();
-      ctx.moveTo(-48, -25);
-      ctx.lineTo(48, -25);
-      ctx.lineTo(44, 22);
-      ctx.lineTo(-44, 22);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      // Bainha de destaque inferior
-      ctx.fillStyle = secondary;
-      ctx.fillRect(-44, 18, 88, 5);
-
-      // Decote sutil
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.beginPath();
-        ctx.ellipse(0, -24, 18, 7, 0, 0, Math.PI);
-        ctx.fill();
-      }
-
-    } else if (topStyle === 'top_cupcake_dress') {
-      // Vestido Cupcake (Cupcake Dress.svg): Tronco ajustado + Saia rodada ampla com babados
-      ctx.beginPath();
-      ctx.moveTo(-48, -25);
-      ctx.lineTo(48, -25);
-      ctx.lineTo(42, 28);
-      ctx.lineTo(-42, 28);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      // Saia rodada ampla
-      ctx.fillStyle = primary;
-      ctx.beginPath();
-      ctx.moveTo(-44, 28);
-      ctx.lineTo(44, 28);
-      ctx.lineTo(68, 82);
-      ctx.lineTo(-68, 82);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      // Babados em ondas da saia
-      ctx.fillStyle = secondary;
-      ctx.beginPath();
-      ctx.roundRect(-70, 76, 140, 8, 4);
-      ctx.fill();
-
-      // Detalhes frontais do vestido
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.beginPath();
-        ctx.ellipse(0, -24, 20, 8, 0, 0, Math.PI);
-        ctx.fill();
-
-        ctx.strokeStyle = secondary;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, -16);
-        ctx.lineTo(0, 24);
-        ctx.stroke();
-      }
-
-    } else if (topStyle === 'top_sweater') {
-      // Suéter de Lã (Sweater.svg): Modelagem aconchegante, barra canelada e gola alta
-      ctx.beginPath();
-      ctx.moveTo(-52, -26);
-      ctx.lineTo(52, -26);
-      ctx.lineTo(46, 52);
-      ctx.lineTo(-46, 52);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      // Barra canelada inferior
-      ctx.fillStyle = secondary;
-      ctx.fillRect(-46, 44, 92, 8);
-
-      // Gola estruturada do suéter
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.beginPath();
-        ctx.roundRect(-28, -32, 56, 14, 5);
-        ctx.fill();
-        ctx.stroke();
-      }
-
-    } else if (topStyle === 'top_puffy_sleeve') {
-      // Blusa Manga Bufante (Puffy Sleeve.svg): Tronco ajustado com gola canoa e barra scalloped
-      ctx.beginPath();
-      ctx.moveTo(-50, -25);
-      ctx.lineTo(50, -25);
-      ctx.lineTo(44, 48);
-      ctx.lineTo(-44, 48);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.beginPath();
-        ctx.ellipse(0, -24, 24, 8, 0, 0, Math.PI);
-        ctx.fill();
-        ctx.stroke();
-      }
-
-    } else if (topStyle === 'top_sleeveless') {
-      // Regata Sem Mangas (Sleeveless.svg): Alças estruturadas e corte anatômico
-      ctx.beginPath();
-      ctx.moveTo(-45, -25);
-      ctx.lineTo(45, -25);
-      ctx.lineTo(43, 48);
-      ctx.lineTo(-43, 48);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      if (dir !== 'north') {
-        ctx.fillStyle = skin;
-        ctx.beginPath();
-        ctx.ellipse(0, -25, 20, 10, 0, 0, Math.PI);
-        ctx.fill();
-      }
-
-    } else if (topStyle === 'top_long_sleeve') {
-      // Blusa Manga Longa (Long Sleeve.svg): Corpo com barra canelada e gola redonda
-      ctx.beginPath();
-      ctx.moveTo(-50, -25);
-      ctx.lineTo(50, -25);
-      ctx.lineTo(44, 50);
-      ctx.lineTo(-44, 50);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = secondary;
-      ctx.fillRect(-44, 44, 88, 6);
-
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.beginPath();
-        ctx.ellipse(0, -24, 22, 8, 0, 0, Math.PI);
-        ctx.fill();
-      }
-
-    } else {
-      // Camiseta Clássica (Tee.svg): Corte clássico de camiseta com gola reforçada
-      ctx.beginPath();
-      ctx.moveTo(-50, -25);
-      ctx.lineTo(50, -25);
-      ctx.lineTo(44, 48);
-      ctx.lineTo(-44, 48);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.beginPath();
-        ctx.ellipse(0, -24, 20, 8, 0, 0, Math.PI);
-        ctx.fill();
-      }
-    }
-
-    // 3. Shorts / Calça / Saia (Pelve)
-    if (topStyle !== 'top_cupcake_dress') {
-      ctx.fillStyle = bottomColor;
-      ctx.strokeStyle = '#1e3a8a';
-      ctx.lineWidth = 2.2;
-
-      if (bottomStyle === 'skirt_pleated') {
-        // Saia Plissada
-        ctx.beginPath();
-        ctx.moveTo(-45, 48);
-        ctx.lineTo(45, 48);
-        ctx.lineTo(58, 80);
-        ctx.lineTo(-58, 80);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.lineWidth = 2.0;
-        [-30, -15, 0, 15, 30].forEach(px => {
-          ctx.beginPath();
-          ctx.moveTo(px * 0.8, 50);
-          ctx.lineTo(px * 1.15, 80);
-          ctx.stroke();
-        });
-
-      } else if (bottomStyle === 'pants_cargo') {
-        // Calça Cargo
-        ctx.beginPath();
-        ctx.moveTo(-44, 48);
-        ctx.lineTo(44, 48);
-        ctx.lineTo(42, 75);
-        ctx.lineTo(-42, 75);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(-35, 50, 70, 5);
-
-      } else {
-        // Shorts Jeans
-        ctx.beginPath();
-        ctx.moveTo(-44, 48);
-        ctx.lineTo(44, 48);
-        ctx.lineTo(40, 70);
-        ctx.lineTo(-40, 70);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.lineWidth = 2.0;
-        ctx.beginPath();
-        ctx.moveTo(-40, 68);
-        ctx.lineTo(40, 68);
-        ctx.stroke();
-      }
-    }
-
-    ctx.restore();
-  }
-
-  drawArms(ctx, x, y, pose, cfg, dir) {
-    const skin = cfg.skinTone || '#ffd0a8';
-    const skinShadow = cfg.skinShadow || '#e0ae82';
-    const primary = cfg.topColorPrimary || '#19c8b9';
-    const topStyle = cfg.topStyle || 'top_tee';
-
-    ctx.save();
-    ctx.translate(x, y);
-
-    // Braço Esquerdo (Ombro x=-52)
-    ctx.save();
-    ctx.translate(-52, 0);
-    ctx.rotate(pose.arm_l.rot);
-    this.renderArmGraphic(ctx, skin, skinShadow, primary, topStyle);
-    ctx.restore();
-
-    // Braço Direito (Ombro x=+52)
-    ctx.save();
-    ctx.translate(52, 0);
-    ctx.rotate(pose.arm_r.rot);
-    this.renderArmGraphic(ctx, skin, skinShadow, primary, topStyle);
-    ctx.restore();
-
-    ctx.restore();
-  }
-
-  renderArmGraphic(ctx, skin, skinShadow, clothColor, topStyle) {
-    ctx.fillStyle = clothColor;
-    ctx.strokeStyle = '#0f8e83';
-    ctx.lineWidth = 2.0;
-
-    if (topStyle === 'top_long_sleeve' || topStyle === 'top_sweater') {
-      // Manga Longa (Long Sleeve.svg / Sweater.svg): cobre todo o braço até o punho
-      ctx.beginPath();
-      ctx.roundRect(-12, -4, 24, 42, 8);
-      ctx.fill();
-      ctx.stroke();
-
-      // Punho decorativo
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(-12, 34, 24, 4);
-
-      // Mãozinha de Base_char_flat.svg (_10_Mao_Esquerda / _12_Mao_Direita: r=62*0.23 ≈ 14.3)
-      ctx.fillStyle = skin;
-      ctx.strokeStyle = skinShadow;
-      ctx.beginPath();
-      ctx.arc(0, 46, 14.3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-    } else if (topStyle === 'top_puffy_sleeve') {
-      // Manga Bufante (Puffy Sleeve.svg): Manga esférica volumosa + braço e mão expostos
-      ctx.beginPath();
-      ctx.arc(0, 8, 22, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      // Antebraço e mão de Base_char_flat.svg
-      ctx.fillStyle = skin;
-      ctx.strokeStyle = skinShadow;
-      ctx.beginPath();
-      ctx.rect(-9, 16, 18, 26);
-      ctx.arc(0, 46, 14.3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-    } else if (topStyle === 'top_sleeveless' || topStyle === 'top_crop_top') {
-      // Sem mangas (Sleeveless.svg / Crop Top.svg): braço inteiro e mão de Base_char_flat.svg
-      ctx.fillStyle = skin;
-      ctx.strokeStyle = skinShadow;
-      ctx.beginPath();
-      ctx.rect(-10, -2, 20, 44);
-      ctx.arc(0, 46, 14.3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-    } else {
-      // Manga Curta padrão (Tee.svg / Cupcake Dress.svg)
-      ctx.beginPath();
-      ctx.arc(0, 6, 17, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = skin;
-      ctx.strokeStyle = skinShadow;
-      ctx.beginPath();
-      ctx.rect(-10, 10, 20, 32);
-      ctx.arc(0, 46, 14.3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-    }
-  }
-
-  drawLegs(ctx, x, y, pose, cfg, dir) {
-    const skin = cfg.skinTone || '#ffd0a8';
-    const bottomColor = cfg.bottomColor || '#2563eb';
-    const shoeColor = cfg.shoesColor || '#ea580c';
-    const shoeTrim = cfg.shoesTrim || '#ffffff';
-    const bottomStyle = cfg.bottomStyle || 'shorts_denim';
-    const shoesStyle = cfg.shoesStyle || 'sneakers_classic';
-
-    ctx.save();
-    ctx.translate(x, y);
-
-    const liftL = (pose.hip_l && pose.hip_l.y !== undefined) ? (pose.hip_l.y - 6) : 0;
-    const liftR = (pose.hip_r && pose.hip_r.y !== undefined) ? (pose.hip_r.y - 6) : 0;
-
-    // Perna Esquerda
-    ctx.save();
-    ctx.translate(-22, liftL);
-    ctx.rotate(pose.hip_l.rot + pose.leg_l.rot);
-    this.renderSingleLeg(ctx, skin, bottomColor, shoeColor, shoeTrim, bottomStyle, shoesStyle);
-    ctx.restore();
-
-    // Perna Direita
-    ctx.save();
-    ctx.translate(22, liftR);
-    ctx.rotate(pose.hip_r.rot + pose.leg_r.rot);
-    this.renderSingleLeg(ctx, skin, bottomColor, shoeColor, shoeTrim, bottomStyle, shoesStyle);
-    ctx.restore();
-
-    ctx.restore();
-  }
-
-  renderSingleLeg(ctx, skin, bottomColor, shoeColor, shoeTrim, bottomStyle, shoesStyle) {
-    // 1. Perna de Base_char_flat.svg (_04_Perna_Esquerda / _06_Perna_Direita)
-    if (bottomStyle === 'pants_cargo') {
-      // Calça comprida cobrindo a perna
-      ctx.fillStyle = bottomColor;
-      ctx.strokeStyle = '#1e3a8a';
-      ctx.lineWidth = 2.0;
-      ctx.fillRect(-12, 0, 24, 38);
-      ctx.strokeRect(-12, 0, 24, 38);
-
-      // Bolso cargo lateral
-      ctx.fillStyle = '#1d4ed8';
-      ctx.fillRect(-13, 14, 6, 14);
-
-    } else if (bottomStyle === 'skirt_pleated') {
-      // Saia: perna exposta
-      ctx.fillStyle = skin;
-      ctx.fillRect(-11, 0, 22, 38);
-
-    } else {
-      // Shorts: parte superior coberta por tecido e perna exposta
-      ctx.fillStyle = bottomColor;
-      ctx.fillRect(-12, 0, 24, 14);
-      ctx.fillStyle = skin;
-      ctx.fillRect(-11, 14, 22, 24);
-    }
-
-    // 2. Calçados e Pés de Base_char_flat.svg (_03_Pe_Esquerdo / _05_Pe_Direito)
-    if (shoesStyle === 'boots_hunter') {
-      // Bota de trilha resistente
-      ctx.fillStyle = shoeColor;
-      ctx.strokeStyle = '#9a3412';
-      ctx.lineWidth = 2.2;
-      ctx.beginPath();
-      ctx.roundRect(-16, 24, 32, 34, 6);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = '#f59e0b';
-      ctx.fillRect(-8, 28, 16, 4);
-
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(-17, 52, 34, 6);
-
-    } else if (shoesStyle === 'sandals_beach') {
-      // Sandália aberta de praia
-      ctx.fillStyle = skin;
-      ctx.fillRect(-11, 28, 22, 20);
-
-      ctx.fillStyle = shoeColor;
-      ctx.strokeStyle = '#9a3412';
-      ctx.lineWidth = 2.0;
-      ctx.beginPath();
-      ctx.roundRect(-16, 48, 32, 8, 4);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 3.0;
-      ctx.beginPath();
-      ctx.moveTo(-13, 48);
-      ctx.lineTo(0, 36);
-      ctx.lineTo(13, 48);
-      ctx.stroke();
-
-    } else {
-      // Tênis clássico com formato anatômico arredondado
-      ctx.fillStyle = shoeColor;
-      ctx.strokeStyle = '#9a3412';
-      ctx.lineWidth = 2.0;
-      ctx.beginPath();
-      ctx.roundRect(-15, 32, 30, 24, 8);
-      ctx.fill();
-      ctx.stroke();
-
-      // Sola e biqueira
-      ctx.fillStyle = shoeTrim;
-      ctx.fillRect(-15, 50, 30, 6);
-      ctx.beginPath();
-      ctx.arc(0, 35, 4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
 
   drawGlasses(ctx, cfg, dir) {
     if (dir === 'north') return;
 
     ctx.save();
     ctx.strokeStyle = cfg.glassesColor || '#5c3c26';
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = 16;
 
     if (dir === 'east') {
-      // PERFIL LATERAL: uma única lente de perfil com haste até a orelha
       if (cfg.glassesStyle === 'sunglasses_cool') {
         ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
         ctx.beginPath();
-        ctx.roundRect(18, -12, 38, 32, 6);
+        ctx.roundRect(80, -55, 175, 145, 28);
         ctx.fill();
         ctx.stroke();
 
-        // Haste lateral até a orelha
         ctx.beginPath();
-        ctx.moveTo(18, 0);
-        ctx.lineTo(-20, 4);
+        ctx.moveTo(80, 0);
+        ctx.lineTo(-90, 20);
         ctx.stroke();
       } else {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
         ctx.beginPath();
-        ctx.ellipse(34, 4, 18, 20, 0, 0, Math.PI * 2);
+        ctx.ellipse(155, 20, 80, 90, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
 
-        // Haste lateral até a orelha
         ctx.beginPath();
-        ctx.moveTo(20, 4);
-        ctx.lineTo(-20, 4);
+        ctx.moveTo(90, 20);
+        ctx.lineTo(-90, 20);
         ctx.stroke();
       }
 
     } else {
-      // VISTA FRONTAL (SOUTH)
+      // Vista frontal (south)
       if (cfg.glassesStyle === 'sunglasses_cool') {
         ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-        [-38, 40].forEach(gx => {
+        [-175, 185].forEach(gx => {
           ctx.beginPath();
-          ctx.roundRect(gx - 20, -14, 40, 34, 8);
+          ctx.roundRect(gx - 90, -65, 180, 150, 36);
           ctx.fill();
           ctx.stroke();
         });
         ctx.beginPath();
-        ctx.moveTo(-18, 0);
-        ctx.lineTo(20, 0);
+        ctx.moveTo(-80, 0);
+        ctx.lineTo(90, 0);
         ctx.stroke();
       } else {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-        [-38, 40].forEach(gx => {
+        [-175, 185].forEach(gx => {
           ctx.beginPath();
-          ctx.arc(gx, 4, 22, 0, Math.PI * 2);
+          ctx.arc(gx, 20, 100, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
         });
         ctx.beginPath();
-        ctx.moveTo(-16, 4);
-        ctx.lineTo(18, 4);
+        ctx.moveTo(-75, 20);
+        ctx.lineTo(85, 20);
         ctx.stroke();
       }
     }
@@ -1341,14 +1298,13 @@ export class ModularAvatarRenderer {
     ctx.restore();
   }
 
-
   getAvatarThumbnail(config, size = 64) {
     const offCanvas = document.createElement('canvas');
     offCanvas.width = size;
     offCanvas.height = size;
     const offCtx = offCanvas.getContext('2d');
-    const scale = size / 280;
-    this.render(offCtx, 0, 0, 'south', 'idle', 0, config || DEFAULT_AVATAR_CONFIG, scale);
+    const scale = size / 265;
+    this.render(offCtx, size / 2, 4, 'south', 'idle', 0, config || DEFAULT_AVATAR_CONFIG, scale);
     return offCanvas.toDataURL('image/png');
   }
 }
