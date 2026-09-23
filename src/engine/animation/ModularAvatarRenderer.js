@@ -167,8 +167,8 @@ export class ModularAvatarRenderer {
     const headRot = pose.head.rot;
     const isCelebrating = state === 'celebrate';
 
-    // 1. Cabelo Traseiro
-    this.drawHairBack(ctx, 1250, 760, cfg, 'east');
+    // 1. Cabelo Traseiro (mesma base frontal para manter proporção e posição)
+    this.drawHairBack(ctx, 1250, 760, cfg, 'south');
 
     // 2. Pernas e Pés
     this.drawLegs(ctx, pose, cfg, 'east');
@@ -176,22 +176,25 @@ export class ModularAvatarRenderer {
     // 3. Tronco e Roupas
     this.drawTorsoAndNeck(ctx, pose.root.rot, cfg, 'east');
 
-    // 4. Braços
+    // 4. Orelhas oficiais
+    this.drawEars(ctx, 1250, 760, cfg, 'south');
+
+    // 5. Braços
     if (!isCelebrating) {
       this.drawArms(ctx, pose, cfg, 'east');
     }
 
-    // 5. Cabeça e Feições
+    // 6. Cabeça, Feições e Cabelo (mantêm a mesma anatomia, alinhamento e posição da frente)
     ctx.save();
     ctx.translate(1250, 760);
     ctx.rotate(headRot);
 
-    this.drawHeadBase(ctx, cfg, 'east');
-    this.drawFaceFeatures(ctx, cfg, 'east');
-    this.drawHairFront(ctx, cfg, 'east');
+    this.drawHeadBase(ctx, cfg, 'south');
+    this.drawFaceFeatures(ctx, cfg, 'south');
+    this.drawHairFront(ctx, cfg, 'south');
 
     if (cfg.glassesStyle && cfg.glassesStyle !== 'none') {
-      this.drawGlasses(ctx, cfg, 'east');
+      this.drawGlasses(ctx, cfg, 'south');
     }
 
     ctx.restore();
