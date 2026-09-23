@@ -803,179 +803,266 @@ export class ModularAvatarRenderer {
       ctx.scale(-1, 1);
     }
 
-    const eyeDef = SVG_EYES.find(e => e.id === eyeShape) || SVG_EYES[0];
+    const eyeColor = irisColor || '#8C501D';
 
-    if (eyeDef.type === 'cheerful_crescent') {
-      ctx.strokeStyle = '#8C501D';
-      ctx.lineWidth = 18;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.arc(0, 0, 72, Math.PI * 1.12, Math.PI * 1.88);
-      ctx.stroke();
+    switch (eyeShape) {
+      case 'eye_pair_01': {
+        // Pair 1: Olhar curvo com contorno e íris oval (linhas 18-21 de Face Components.svg)
+        // Scaled to fit avatar coordinate space
+        ctx.scale(2.4, 2.4);
+        ctx.translate(-816, -187);
+        const eyeSclera = this.getPath2D('M826.849 170.249C833.041 171.867 835.361 174.249 835.849 176.249C836.338 178.249 836.599 181.249 834.849 188.249C833.349 194.249 831.349 202.249 821.349 205.249C811.349 208.249 805.163 206.249 801.663 204.691C797.76 202.954 795.764 200.989 795.252 195.794C794.74 190.599 797.439 179.409 805.163 173.788C812.886 168.166 819.094 168.222 826.849 170.249Z');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = '#8C501D';
+        ctx.lineWidth = 2;
+        ctx.fill(eyeSclera);
+        ctx.stroke(eyeSclera);
 
-    } else if (eyeDef.type === 'round_button') {
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(0, 0, 80, 0, Math.PI * 2);
-      ctx.fill();
+        const eyePupil = this.getPath2D('M829.259 170.981C828.53 170.724 827.729 170.478 826.849 170.249C826.365 170.122 825.888 170.003 825.415 169.893C824.739 169.798 824.049 169.749 823.349 169.749C814.513 169.749 807.349 177.584 807.349 187.249C807.349 196.73 814.243 204.45 822.848 204.74C831.556 201.421 833.427 193.936 834.849 188.249C836.567 181.378 836.346 178.361 835.876 176.36C834.151 173.989 831.875 172.119 829.259 170.981Z');
+        ctx.fillStyle = eyeColor;
+        ctx.fill(eyePupil);
+        break;
+      }
 
-      ctx.fillStyle = irisColor || '#8C501D';
-      ctx.beginPath();
-      ctx.arc(8, 0, 62, 0, Math.PI * 2);
-      ctx.fill();
+      case 'eye_pair_02': {
+        // Pair 2: Olhar com cílios duplos laterais (linhas 22-29 de Face Components.svg)
+        ctx.scale(2.4, 2.4);
+        ctx.translate(-816, -266);
+        const eyeSclera = this.getPath2D('M822.314 249.951C832.059 253.101 837.431 263.332 834.381 272.768L834.372 272.794L834.366 272.82C833.628 275.609 831.849 278.785 828.524 281.108C825.207 283.425 820.263 284.955 813.081 284.3C809.759 283.998 805.592 283.169 802.107 282.107C800.364 281.575 798.821 280.995 797.652 280.408C797.067 280.114 796.599 279.83 796.251 279.563C795.892 279.288 795.723 279.077 795.658 278.95C795.587 278.813 795.508 278.527 795.475 278.036C795.443 277.562 795.46 276.973 795.523 276.282C795.649 274.903 795.952 273.213 796.355 271.415C797.159 267.823 798.334 263.905 799.171 261.397L799.174 261.388C802.225 251.952 812.569 246.8 822.314 249.951Z');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = '#8C501D';
+        ctx.lineWidth = 2;
+        ctx.fill(eyeSclera);
+        ctx.stroke(eyeSclera);
 
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.arc(8, 0, 36, 0, Math.PI * 2);
-      ctx.fill();
+        const eyePupil = this.getPath2D('M820.512 248.44C812.796 250.143 807 257.385 807 266.061C807 275.911 814.473 283.914 823.744 284.059C833.312 280.524 836.104 273.44 836.14 268.248C836.725 258.664 829.911 250.294 820.512 248.44Z');
+        ctx.fillStyle = eyeColor;
+        ctx.fill(eyePupil);
 
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(-14, -22, 20, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.strokeStyle = '#8C501D';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(837, 251);
+        ctx.lineTo(843, 247);
+        ctx.moveTo(841, 259);
+        ctx.lineTo(847, 257);
+        ctx.stroke();
+        break;
+      }
 
-    } else if (eyeDef.type === 'sharp_determined') {
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.roundRect(-75, -55, 150, 110, 18);
-      ctx.fill();
+      case 'eye_pair_03': {
+        // Pair 3: Olhar com pálpebra superior curva e cílios meigos (linhas 30-35 de Face Components.svg)
+        ctx.scale(2.4, 2.4);
+        ctx.translate(-821, -120);
+        const pupilPath = this.getPath2D('M821 132C828.18 132 834 126.18 834 119C834 117.99 833.885 117.008 833.667 116.064C830.331 113.066 823.841 109 815.797 109C814.642 109 813.513 109.084 812.417 109.236C809.709 111.619 808 115.11 808 119C808 126.18 813.82 132 821 132Z');
+        ctx.fillStyle = eyeColor;
+        ctx.fill(pupilPath);
 
-      ctx.fillStyle = irisColor || '#8C501D';
-      ctx.beginPath();
-      ctx.arc(5, 5, 55, 0, Math.PI * 2);
-      ctx.fill();
+        const lashArch = this.getPath2D('M795 117C797.773 114 805.814 108 815.797 108C825.78 108 833.425 114 836 117');
+        ctx.strokeStyle = '#8C501D';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.stroke(lashArch);
 
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.arc(5, 5, 32, 0, Math.PI * 2);
-      ctx.fill();
+        const lashSide = this.getPath2D('M836 117C837 116.833 839.1 115.8 839.5 113');
+        ctx.stroke(lashSide);
+        break;
+      }
 
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(-15, -15, 16, 0, Math.PI * 2);
-      ctx.fill();
+      case 'eye_pair_04': {
+        // Pair 4: Olhar curvo doce clássico (linhas 36-39 de Face Components.svg)
+        ctx.scale(2.4, 2.4);
+        ctx.translate(-816, -340);
+        const eyeSclera = this.getPath2D('M822.314 323.951C832.059 327.101 837.431 337.332 834.381 346.768L834.372 346.794L834.366 346.82C833.628 349.609 831.849 352.785 828.524 355.108C825.207 357.425 820.263 358.955 813.081 358.3C809.759 357.998 805.592 357.169 802.107 356.107C800.364 355.575 798.821 354.995 797.652 354.408C797.067 354.114 796.599 353.83 796.251 353.563C795.892 353.288 795.723 353.077 795.658 352.95C795.587 352.813 795.508 352.527 795.475 352.036C795.443 351.562 795.46 350.973 795.523 350.282C795.649 348.903 795.952 347.213 796.355 345.415C797.159 341.823 798.334 337.905 799.171 335.397L799.174 335.388C802.225 325.952 812.569 320.8 822.314 323.951Z');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = '#8C501D';
+        ctx.lineWidth = 2;
+        ctx.fill(eyeSclera);
+        ctx.stroke(eyeSclera);
 
-      ctx.strokeStyle = '#8C501D';
-      ctx.lineWidth = 16;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(-80, -60);
-      ctx.lineTo(80, -40);
-      ctx.stroke();
+        const eyePupil = this.getPath2D('M820.512 322.44C812.796 324.144 807 331.386 807 340.061C807 349.911 814.473 357.914 823.744 358.059C833.312 354.525 836.104 347.44 836.14 342.248C836.725 332.664 829.911 324.295 820.512 322.44Z');
+        ctx.fillStyle = eyeColor;
+        ctx.fill(eyePupil);
+        break;
+      }
 
-    } else if (eyeDef.type === 'sleepy_calm') {
-      ctx.fillStyle = irisColor || '#8C501D';
-      ctx.beginPath();
-      ctx.ellipse(0, 10, 65, 42, 0, 0, Math.PI * 2);
-      ctx.fill();
+      case 'eye_pair_05': {
+        // Pair 5: Olhar anime com brilho duplo e cílio lateral (linhas 40-47 de Face Components.svg)
+        ctx.scale(2.4, 2.4);
+        ctx.translate(-655.5, -265.5);
+        ctx.fillStyle = eyeColor;
+        ctx.beginPath();
+        ctx.ellipse(655.5, 265.5, 14.5, 19.5, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(-18, 0, 14, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(651.5, 257.5, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(661.5, 273, 2.5, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-      ctx.strokeStyle = '#8C501D';
-      ctx.lineWidth = 14;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(-70, -10);
-      ctx.quadraticCurveTo(0, -30, 70, -10);
-      ctx.stroke();
+        const lash = this.getPath2D('M640 249C640 249.667 640.7 252.2 641.5 253C642.5 254 644 254.5 645.5 254');
+        ctx.strokeStyle = '#8C501D';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.stroke(lash);
+        break;
+      }
 
-    } else if (eyeDef.type === 'almond_lash') {
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 70, 85, 0, 0, Math.PI * 2);
-      ctx.fill();
+      case 'eye_pair_06': {
+        // Pair 6: Olhar detalhado com pálpebra rosa e pupila (linhas 52-55 de Face Components.svg)
+        ctx.scale(2.4, 2.4);
+        ctx.translate(-656.678, -191.5);
+        const rim = this.getPath2D('M642.139 178.213C641.994 178.742 642.267 179.299 642.749 179.458L670.096 188.462L670.11 188.466C671.34 188.826 673.255 189.082 675.009 188.623C675.896 188.391 676.782 187.965 677.508 187.234C678.244 186.492 678.77 185.482 678.985 184.179C679.075 183.636 678.747 183.115 678.252 183.016C677.757 182.917 677.283 183.278 677.193 183.821C677.044 184.718 676.704 185.329 676.276 185.76C675.837 186.202 675.259 186.501 674.586 186.677C673.225 187.033 671.64 186.842 670.592 186.538L643.273 177.542C642.791 177.383 642.283 177.684 642.139 178.213Z');
+        ctx.fillStyle = '#8C501D';
+        ctx.fill(rim);
 
-      ctx.fillStyle = irisColor || '#8C501D';
-      ctx.beginPath();
-      ctx.ellipse(10, 0, 58, 78, 0, 0, Math.PI * 2);
-      ctx.fill();
+        const base = this.getPath2D('M656.678 212C646.362 212 638 202.822 638 191.5C638 186.642 639.54 182.179 642.113 178.666C642.168 179.029 642.406 179.345 642.749 179.458L670.096 188.462L670.11 188.466C671.34 188.826 673.255 189.082 675.009 188.623C675.062 188.609 675.115 188.594 675.168 188.579C675.292 189.533 675.356 190.508 675.356 191.5C675.356 202.822 666.993 212 656.678 212Z');
+        ctx.fillStyle = eyeColor;
+        ctx.fill(base);
 
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.ellipse(10, 0, 36, 48, 0, 0, Math.PI * 2);
-      ctx.fill();
+        const pinkLid = this.getPath2D('M674.821 186.61C672.823 177.649 665.458 171 656.678 171C651.294 171 646.443 173.5 643.034 177.5C643.113 177.502 643.194 177.516 643.273 177.542L670.593 186.538C671.64 186.842 673.225 187.033 674.586 186.677C674.666 186.656 674.744 186.634 674.821 186.61Z');
+        ctx.fillStyle = '#FFAFA4';
+        ctx.fill(pinkLid);
 
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(-15, -20, 16, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(648, 191, 5, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
 
-      ctx.strokeStyle = '#8C501D';
-      ctx.lineWidth = 14;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(-70, -35);
-      ctx.quadraticCurveTo(0, -65, 70, -30);
-      ctx.stroke();
+      case 'eye_pair_07': {
+        // Pair 7: Botão redondo com brilho angular (linhas 56-63 de Face Components.svg)
+        ctx.scale(2.4, 2.4);
+        ctx.translate(-655, -117.5);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = '#8C501D';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(655, 117.5, 22, 19.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
 
-    } else if (eyeDef.type === 'cat_lashes') {
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 65, 85, 0, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.fillStyle = eyeColor;
+        ctx.beginPath();
+        ctx.ellipse(660.5, 116, 17.5, 18, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-      ctx.fillStyle = irisColor || '#8C501D';
-      ctx.beginPath();
-      ctx.ellipse(8, 0, 55, 75, 0, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.fillStyle = '#FFAFA4';
+        ctx.beginPath();
+        ctx.rect(641.6, 88.7, 45.7, 19);
+        ctx.fill();
+        break;
+      }
 
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.ellipse(8, 0, 34, 46, 0, 0, Math.PI * 2);
-      ctx.fill();
+      case 'eye_pair_08': {
+        // Pair 8: Círculo com 3 cílios inferiores (linhas 72-81 de Face Components.svg)
+        ctx.scale(2.4, 2.4);
+        ctx.translate(-493, -265);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = '#8C501D';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(493, 265, 17, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
 
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(-14, -20, 16, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.fillStyle = eyeColor;
+        ctx.beginPath();
+        ctx.arc(491, 264, 11, 0, Math.PI * 2);
+        ctx.fill();
 
-      ctx.strokeStyle = '#8C501D';
-      ctx.lineWidth = 14;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(-65, -30);
-      ctx.quadraticCurveTo(0, -55, 65, -45);
-      ctx.lineTo(85, -65);
-      ctx.stroke();
+        ctx.strokeStyle = '#8C501D';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(494, 282);
+        ctx.lineTo(494, 287);
+        ctx.moveTo(504, 277);
+        ctx.lineTo(507, 281);
+        ctx.moveTo(482, 278);
+        ctx.lineTo(479, 282);
+        ctx.stroke();
+        break;
+      }
 
-    } else if (eyeDef.type === 'gentle_oval') {
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 60, 80, 0, 0, Math.PI * 2);
-      ctx.fill();
+      case 'eye_pair_09': {
+        // Pair 9: Círculo com 3 cílios superiores (linhas 82-91 de Face Components.svg)
+        ctx.scale(2.4, 2.4);
+        ctx.translate(-493, -191);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = '#8C501D';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(493, 191, 17, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
 
-      ctx.fillStyle = irisColor || '#8C501D';
-      ctx.beginPath();
-      ctx.ellipse(8, 0, 48, 70, 0, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.fillStyle = eyeColor;
+        ctx.beginPath();
+        ctx.arc(491, 190, 11, 0, Math.PI * 2);
+        ctx.fill();
 
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.ellipse(8, 0, 28, 42, 0, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.strokeStyle = '#8C501D';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(493, 173);
+        ctx.lineTo(493, 168);
+        ctx.moveTo(503.6, 177.7);
+        ctx.lineTo(506.1, 173.4);
+        ctx.moveTo(481.5, 179);
+        ctx.lineTo(478.5, 175);
+        ctx.stroke();
+        break;
+      }
 
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(-12, -18, 16, 0, Math.PI * 2);
-      ctx.fill();
+      case 'eye_pair_10': {
+        // Pair 10: Círculo médio simples com esclera (linhas 92-95 de Face Components.svg)
+        ctx.scale(2.4, 2.4);
+        ctx.translate(-493, -117);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = '#8C501D';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(493, 117, 17, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
 
-    } else {
-      // anime_sparkle
-      ctx.fillStyle = irisColor || '#8C501D';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 65, 88, 0, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.fillStyle = eyeColor;
+        ctx.beginPath();
+        ctx.arc(491, 116, 11, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
 
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(-18, -25, 24, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(15, 20, 14, 0, Math.PI * 2);
-      ctx.fill();
+      case 'eye_pair_11': {
+        // Pair 11: Arco sorridente clássico (linhas 96-97 de Face Components.svg)
+        ctx.scale(2.4, 2.4);
+        ctx.translate(-174, -338);
+        const arcPath = this.getPath2D('M159.408 333.664C160.708 336.455 165.544 342.232 174.48 343.014C183.416 343.795 188.743 338.908 190.29 336.366');
+        ctx.strokeStyle = '#8C501D';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.stroke(arcPath);
+        break;
+      }
+
+      case 'eye_pair_12':
+      default: {
+        // Pair 12: Arco suave para cima (linhas 98-99 de Face Components.svg)
+        ctx.scale(2.4, 2.4);
+        ctx.translate(-492, -340);
+        const arcPath = this.getPath2D('M477.408 345.336C478.708 342.545 483.544 336.768 492.48 335.986C501.416 335.205 506.743 340.092 508.29 342.634');
+        ctx.strokeStyle = '#8C501D';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.stroke(arcPath);
+        break;
+      }
     }
 
     ctx.restore();
@@ -1056,14 +1143,14 @@ export class ModularAvatarRenderer {
       ctx.restore();
 
     } else {
-      // Vista frontal (south): Flat fill da base do crânio + franja
+      // Vista frontal (south): Flat fill da base do crânio + franja (alinhado ao crânio y = -350)
       ctx.beginPath();
-      ctx.arc(0, -115, 310, Math.PI * 1.0, Math.PI * 2.0);
+      ctx.arc(0, -160, 350, Math.PI * 1.0, Math.PI * 2.0);
       ctx.fill();
 
       ctx.save();
       ctx.scale(4.588, 4.588);
-      ctx.translate(-hairDef.cx, -hairDef.topY - 80);
+      ctx.translate(-hairDef.cx, -hairDef.topY - 100);
       if (Array.isArray(hairDef.frontPaths)) {
         for (const d of hairDef.frontPaths) {
           const path = this.getPath2D(d);
@@ -1110,7 +1197,7 @@ export class ModularAvatarRenderer {
         for (const bp of hairDef.backPaths) {
           ctx.save();
           ctx.scale(4.588, 4.588);
-          ctx.translate(-bp.cx, -bp.topY - 80);
+          ctx.translate(-bp.cx, -bp.topY - 100);
           const path = this.getPath2D(bp.d);
           ctx.fill(path);
           ctx.restore();
@@ -1156,7 +1243,7 @@ export class ModularAvatarRenderer {
       for (const bp of hairDef.backPaths) {
         ctx.save();
         ctx.scale(4.588, 4.588);
-        ctx.translate(-bp.cx, -bp.topY - 80);
+        ctx.translate(-bp.cx, -bp.topY - 100);
         const path = this.getPath2D(bp.d);
         ctx.fill(path);
         ctx.restore();

@@ -119,44 +119,64 @@ export const SVG_MOUTHS = [
 
 export const SVG_EYES = [
   {
-    id: 'eye_anime_sparkle',
-    name: 'Brilho Anime Oficial',
-    type: 'anime_sparkle'
+    id: 'eye_pair_01',
+    name: 'Olhar Curvo com Brilho Superior',
+    type: 'pair_01'
   },
   {
-    id: 'eye_almond_lash',
-    name: 'Amendoado com Cílios',
-    type: 'almond_lash'
+    id: 'eye_pair_02',
+    name: 'Olhar com Cílios Laterais',
+    type: 'pair_02'
   },
   {
-    id: 'eye_sharp_determined',
-    name: 'Determinado / Focado',
-    type: 'sharp_determined'
+    id: 'eye_pair_03',
+    name: 'Olhar Arqueado Triste/Meigo',
+    type: 'pair_03'
   },
   {
-    id: 'eye_sleepy_calm',
-    name: 'Calmo / Sonhador',
-    type: 'sleepy_calm'
+    id: 'eye_pair_04',
+    name: 'Olhar Curvo Doce',
+    type: 'pair_04'
   },
   {
-    id: 'eye_cheerful_crescent',
-    name: 'Arco Sorridente',
-    type: 'cheerful_crescent'
+    id: 'eye_pair_05',
+    name: 'Olhar Anime com Brilho Duplo',
+    type: 'pair_05'
   },
   {
-    id: 'eye_cat_lashes',
-    name: 'Olhar de Gatinho',
-    type: 'cat_lashes'
+    id: 'eye_pair_06',
+    name: 'Olhar com Pálpebra Rosa',
+    type: 'pair_06'
   },
   {
-    id: 'eye_round_button',
-    name: 'Botão Redondo ACNH',
-    type: 'round_button'
+    id: 'eye_pair_07',
+    name: 'Botão Redondo com Brilho Cônico',
+    type: 'pair_07'
   },
   {
-    id: 'eye_gentle_oval',
-    name: 'Oval Acolhedor',
-    type: 'gentle_oval'
+    id: 'eye_pair_08',
+    name: 'Círculo Pequeno com Três Cílios Inferiores',
+    type: 'pair_08'
+  },
+  {
+    id: 'eye_pair_09',
+    name: 'Círculo Médio com Três Cílios Superiores',
+    type: 'pair_09'
+  },
+  {
+    id: 'eye_pair_10',
+    name: 'Círculo Médio Simples',
+    type: 'pair_10'
+  },
+  {
+    id: 'eye_pair_11',
+    name: 'Arco Feliz Clássico',
+    type: 'pair_11'
+  },
+  {
+    id: 'eye_pair_12',
+    name: 'Arco Suave',
+    type: 'pair_12'
   }
 ];
 

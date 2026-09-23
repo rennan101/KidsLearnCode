@@ -66,7 +66,7 @@ export const DEFAULT_AVATAR_CONFIG = {
   hairStyle: 'hair_wavy_medium',
   hairColor: '#3d2314',
   hairShadow: '#241208',
-  eyeShape: 'eye_anime_sparkle',
+  eyeShape: 'eye_pair_01',
   eyeColor: '#8C501D',
   noseShape: 'nose_triangle',
   mouthShape: 'mouth_smile_arc',
@@ -105,9 +105,9 @@ export function randomizeAvatarConfig(currentName) {
   ];
 
   const eyeShapes = [
-    'eye_anime_sparkle', 'eye_almond_lash', 'eye_sharp_determined',
-    'eye_sleepy_calm', 'eye_cheerful_crescent', 'eye_cat_lashes',
-    'eye_round_button', 'eye_gentle_oval'
+    'eye_pair_01', 'eye_pair_02', 'eye_pair_03', 'eye_pair_04',
+    'eye_pair_05', 'eye_pair_06', 'eye_pair_07', 'eye_pair_08',
+    'eye_pair_09', 'eye_pair_10', 'eye_pair_11', 'eye_pair_12'
   ];
 
   const noseShapes = ['nose_triangle', 'nose_oval', 'nose_rect', 'nose_circle'];

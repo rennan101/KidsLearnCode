@@ -125,22 +125,90 @@ export function getHairSvg(hairId, color = '#3d2314') {
 
 export function getEyeSvg(eyeId, color = '#8C501D') {
   switch (eyeId) {
-    case 'eye_cheerful_crescent':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M8 22 C14 12 26 12 32 22" fill="none" stroke="#8C501D" stroke-width="4" stroke-linecap="round"/></svg>`;
-    case 'eye_round_button':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><circle cx="20" cy="20" r="14" fill="#FFFFFF" stroke="#8C501D" stroke-width="2"/><circle cx="21" cy="20" r="10" fill="${color}"/><circle cx="21" cy="20" r="6" fill="#0F172A"/><circle cx="17" cy="16" r="3.5" fill="#FFFFFF"/></svg>`;
-    case 'eye_sharp_determined':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><polygon points="8,14 32,18 28,26 12,24" fill="${color}" stroke="#8C501D" stroke-width="2"/><circle cx="16" cy="18" r="3" fill="#FFFFFF"/></svg>`;
-    case 'eye_sleepy_calm':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><ellipse cx="20" cy="22" rx="14" ry="9" fill="${color}"/><path d="M6 18 Q20 14 34 18" fill="none" stroke="#8C501D" stroke-width="3" stroke-linecap="round"/><circle cx="16" cy="20" r="2.5" fill="#FFFFFF"/></svg>`;
-    case 'eye_almond_lash':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><ellipse cx="20" cy="20" rx="13" ry="16" fill="${color}"/><path d="M6 12 Q20 6 34 14" fill="none" stroke="#8C501D" stroke-width="3" stroke-linecap="round"/><circle cx="16" cy="16" r="3" fill="#FFFFFF"/></svg>`;
-    case 'eye_cat_lashes':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><ellipse cx="20" cy="20" rx="12" ry="16" fill="${color}"/><path d="M7 16 Q20 10 33 12 L36 8" fill="none" stroke="#8C501D" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="16" r="3" fill="#FFFFFF"/></svg>`;
-    case 'eye_gentle_oval':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><ellipse cx="20" cy="20" rx="11" ry="15" fill="${color}" stroke="#8C501D" stroke-width="2"/><circle cx="17" cy="16" r="3.5" fill="#FFFFFF"/></svg>`;
+    case 'eye_pair_01':
+      return `<svg viewBox="790 165 55 45" class="cc-preview-icon">
+        <path d="M826.849 170.249C833.041 171.867 835.361 174.249 835.849 176.249C836.338 178.249 836.599 181.249 834.849 188.249C833.349 194.249 831.349 202.249 821.349 205.249C811.349 208.249 805.163 206.249 801.663 204.691C797.76 202.954 795.764 200.989 795.252 195.794C794.74 190.599 797.439 179.409 805.163 173.788C812.886 168.166 819.094 168.222 826.849 170.249Z" fill="white" stroke="#8C501D" stroke-width="2"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M829.259 170.981C828.53 170.724 827.729 170.478 826.849 170.249C826.365 170.122 825.888 170.003 825.415 169.893C824.739 169.798 824.049 169.749 823.349 169.749C814.513 169.749 807.349 177.584 807.349 187.249C807.349 196.73 814.243 204.45 822.848 204.74C831.556 201.421 833.427 193.936 834.849 188.249C836.567 181.378 836.346 178.361 835.876 176.36C834.151 173.989 831.875 172.119 829.259 170.981Z" fill="${color}"/>
+      </svg>`;
+
+    case 'eye_pair_02':
+      return `<svg viewBox="790 245 60 45" class="cc-preview-icon">
+        <path d="M822.314 249.951C832.059 253.101 837.431 263.332 834.381 272.768L834.372 272.794L834.366 272.82C833.628 275.609 831.849 278.785 828.524 281.108C825.207 283.425 820.263 284.955 813.081 284.3C809.759 283.998 805.592 283.169 802.107 282.107C800.364 281.575 798.821 280.995 797.652 280.408C797.067 280.114 796.599 279.83 796.251 279.563C795.892 279.288 795.723 279.077 795.658 278.95C795.587 278.813 795.508 278.527 795.475 278.036C795.443 277.562 795.46 276.973 795.523 276.282C795.649 274.903 795.952 273.213 796.355 271.415C797.159 267.823 798.334 263.905 799.171 261.397L799.174 261.388C802.225 251.952 812.569 246.8 822.314 249.951Z" fill="white" stroke="#8C501D" stroke-width="2"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M820.512 248.44C812.796 250.143 807 257.385 807 266.061C807 275.911 814.473 283.914 823.744 284.059C833.312 280.524 836.104 273.44 836.14 268.248C836.725 258.664 829.911 250.294 820.512 248.44Z" fill="${color}"/>
+        <line x1="837" y1="251" x2="843" y2="247" stroke="#8C501D" stroke-width="2" stroke-linecap="round"/>
+        <line x1="841" y1="259" x2="847" y2="257" stroke="#8C501D" stroke-width="2" stroke-linecap="round"/>
+      </svg>`;
+
+    case 'eye_pair_03':
+      return `<svg viewBox="795 105 50 35" class="cc-preview-icon">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M821 132C828.18 132 834 126.18 834 119C834 117.99 833.885 117.008 833.667 116.064C830.331 113.066 823.841 109 815.797 109C814.642 109 813.513 109.084 812.417 109.236C809.709 111.619 808 115.11 808 119C808 126.18 813.82 132 821 132Z" fill="${color}"/>
+        <path d="M795 117C797.773 114 805.814 108 815.797 108C825.78 108 833.425 114 836 117" stroke="#8C501D" stroke-width="4" stroke-linecap="round"/>
+        <path d="M836 117C837 116.833 839.1 115.8 839.5 113" stroke="#8C501D" stroke-width="4" stroke-linecap="round"/>
+      </svg>`;
+
+    case 'eye_pair_04':
+      return `<svg viewBox="790 320 55 45" class="cc-preview-icon">
+        <path d="M822.314 323.951C832.059 327.101 837.431 337.332 834.381 346.768L834.372 346.794L834.366 346.82C833.628 349.609 831.849 352.785 828.524 355.108C825.207 357.425 820.263 358.955 813.081 358.3C809.759 357.998 805.592 357.169 802.107 356.107C800.364 355.575 798.821 354.995 797.652 354.408C797.067 354.114 796.599 353.83 796.251 353.563C795.892 353.288 795.723 353.077 795.658 352.95C795.587 352.813 795.508 352.527 795.475 352.036C795.443 351.562 795.46 350.973 795.523 350.282C795.649 348.903 795.952 347.213 796.355 345.415C797.159 341.823 798.334 337.905 799.171 335.397L799.174 335.388C802.225 325.952 812.569 320.8 822.314 323.951Z" fill="white" stroke="#8C501D" stroke-width="2"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M820.512 322.44C812.796 324.144 807 331.386 807 340.061C807 349.911 814.473 357.914 823.744 358.059C833.312 354.525 836.104 347.44 836.14 342.248C836.725 332.664 829.911 324.295 820.512 322.44Z" fill="${color}"/>
+      </svg>`;
+
+    case 'eye_pair_05':
+      return `<svg viewBox="635 242 40 45" class="cc-preview-icon">
+        <ellipse cx="655.5" cy="265.5" rx="14.5" ry="19.5" fill="${color}"/>
+        <circle cx="651.5" cy="257.5" r="5.5" fill="white"/>
+        <ellipse cx="661.5" cy="273" rx="2.5" ry="3" fill="white"/>
+        <path d="M640 249C640 249.667 640.7 252.2 641.5 253C642.5 254 644 254.5 645.5 254" stroke="#8C501D" stroke-width="2" stroke-linecap="round"/>
+      </svg>`;
+
+    case 'eye_pair_06':
+      return `<svg viewBox="635 165 48 52" class="cc-preview-icon">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M642.139 178.213C641.994 178.742 642.267 179.299 642.749 179.458L670.096 188.462L670.11 188.466C671.34 188.826 673.255 189.082 675.009 188.623C675.896 188.391 676.782 187.965 677.508 187.234C678.244 186.492 678.77 185.482 678.985 184.179C679.075 183.636 678.747 183.115 678.252 183.016C677.757 182.917 677.283 183.278 677.193 183.821C677.044 184.718 676.704 185.329 676.276 185.76C675.837 186.202 675.259 186.501 674.586 186.677C673.225 187.033 671.64 186.842 670.592 186.538L643.273 177.542C642.791 177.383 642.283 177.684 642.139 178.213Z" fill="#8C501D"/>
+        <path d="M656.678 212C646.362 212 638 202.822 638 191.5C638 186.642 639.54 182.179 642.113 178.666C642.168 179.029 642.406 179.345 642.749 179.458L670.096 188.462L670.11 188.466C671.34 188.826 673.255 189.082 675.009 188.623C675.062 188.609 675.115 188.594 675.168 188.579C675.292 189.533 675.356 190.508 675.356 191.5C675.356 202.822 666.993 212 656.678 212Z" fill="${color}"/>
+        <path d="M674.821 186.61C672.823 177.649 665.458 171 656.678 171C651.294 171 646.443 173.5 643.034 177.5C643.113 177.502 643.194 177.516 643.273 177.542L670.593 186.538C671.64 186.842 673.225 187.033 674.586 186.677C674.666 186.656 674.744 186.634 674.821 186.61Z" fill="#FFAFA4"/>
+        <circle cx="648" cy="191" r="5" fill="white"/>
+      </svg>`;
+
+    case 'eye_pair_07':
+      return `<svg viewBox="630 95 50 45" class="cc-preview-icon">
+        <ellipse cx="655" cy="117.5" rx="22" ry="19.5" fill="white" stroke="#8C501D" stroke-width="2"/>
+        <ellipse cx="660.5" cy="116" rx="17.5" ry="18" fill="${color}"/>
+        <rect x="641.6" y="88.7" width="45.7" height="19" fill="#FFAFA4"/>
+      </svg>`;
+
+    case 'eye_pair_08':
+      return `<svg viewBox="470 245 45 45" class="cc-preview-icon">
+        <circle cx="493" cy="265" r="17" fill="white" stroke="#8C501D" stroke-width="2"/>
+        <circle cx="491" cy="264" r="11" fill="${color}"/>
+        <line x1="494" y1="282" x2="494" y2="287" stroke="#8C501D" stroke-width="2" stroke-linecap="round"/>
+        <line x1="504" y1="277" x2="507" y2="281" stroke="#8C501D" stroke-width="2" stroke-linecap="round"/>
+        <line x1="482" y1="278" x2="479" y2="282" stroke="#8C501D" stroke-width="2" stroke-linecap="round"/>
+      </svg>`;
+
+    case 'eye_pair_09':
+      return `<svg viewBox="470 160 45 45" class="cc-preview-icon">
+        <circle cx="493" cy="191" r="17" fill="white" stroke="#8C501D" stroke-width="2"/>
+        <circle cx="491" cy="190" r="11" fill="${color}"/>
+        <line x1="493" y1="173" x2="493" y2="168" stroke="#8C501D" stroke-width="2" stroke-linecap="round"/>
+        <line x1="503.6" y1="177.7" x2="506.1" y2="173.4" stroke="#8C501D" stroke-width="2" stroke-linecap="round"/>
+        <line x1="481.5" y1="179" x2="478.5" y2="175" stroke="#8C501D" stroke-width="2" stroke-linecap="round"/>
+      </svg>`;
+
+    case 'eye_pair_10':
+      return `<svg viewBox="470 95 45 45" class="cc-preview-icon">
+        <circle cx="493" cy="117" r="17" fill="white" stroke="#8C501D" stroke-width="2"/>
+        <circle cx="491" cy="116" r="11" fill="${color}"/>
+      </svg>`;
+
+    case 'eye_pair_11':
+      return `<svg viewBox="155 325 40 25" class="cc-preview-icon">
+        <path d="M159.408 333.664C160.708 336.455 165.544 342.232 174.48 343.014C183.416 343.795 188.743 338.908 190.29 336.366" stroke="#8C501D" stroke-width="4" stroke-linecap="round"/>
+      </svg>`;
+
+    case 'eye_pair_12':
     default:
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><ellipse cx="20" cy="20" rx="12" ry="16" fill="${color}"/><circle cx="16" cy="14" r="4.5" fill="#FFFFFF"/><circle cx="23" cy="24" r="2.5" fill="#FFFFFF"/></svg>`;
+      return `<svg viewBox="470 330 45 25" class="cc-preview-icon">
+        <path d="M477.408 345.336C478.708 342.545 483.544 336.768 492.48 335.986C501.416 335.205 506.743 340.092 508.29 342.634" stroke="#8C501D" stroke-width="4" stroke-linecap="round"/>
+      </svg>`;
   }
 }
 
