@@ -194,19 +194,19 @@ export function getCheeksSvg(cheeksId) {
 export function getTopSvg(topId, primary = '#19c8b9') {
   switch (topId) {
     case 'top_cupcake_dress':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M12 10 L28 10 L24 18 L32 32 L8 32 L16 18 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M12 9 L28 9 L24 17 L33 32 L7 32 L16 17 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/><path d="M7 32 Q13 29 20 32 Q27 29 33 32" fill="none" stroke="#ffffff" stroke-width="2"/></svg>`;
     case 'top_sweater':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M10 8 L30 8 L36 24 L30 25 L28 32 L12 32 L10 25 L4 24 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/><rect x="15" y="6" width="10" height="4" rx="2" fill="#ffffff"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M10 8 L30 8 L36 24 L30 25 L28 32 L12 32 L10 25 L4 24 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/><rect x="14" y="6" width="12" height="5" rx="2.5" fill="#ffffff" stroke="#0f8e83" stroke-width="1.5"/><rect x="12" y="29" width="16" height="3" fill="#ffffff"/></svg>`;
     case 'top_long_sleeve':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M12 10 L28 10 L34 28 L29 29 L26 32 L14 32 L11 29 L6 28 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M12 9 L28 9 L35 27 L30 28 L27 32 L13 32 L10 28 L5 27 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/><rect x="13" y="29" width="14" height="3" fill="#ffffff"/><rect x="5" y="25" width="4" height="3" fill="#ffffff"/><rect x="31" y="25" width="4" height="3" fill="#ffffff"/></svg>`;
     case 'top_puffy_sleeve':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><circle cx="10" cy="14" r="5" fill="${primary}"/><circle cx="30" cy="14" r="5" fill="${primary}"/><path d="M13 10 L27 10 L25 32 L15 32 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><circle cx="9" cy="14" r="6" fill="${primary}" stroke="#0f8e83" stroke-width="1.5"/><circle cx="31" cy="14" r="6" fill="${primary}" stroke="#0f8e83" stroke-width="1.5"/><path d="M13 9 L27 9 L25 32 L15 32 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/><path d="M15 9 Q20 15 25 9" fill="none" stroke="#ffffff" stroke-width="2"/></svg>`;
     case 'top_sleeveless':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M14 10 L26 10 L24 32 L16 32 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M14 9 L26 9 L24 32 L16 32 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/><rect x="17" y="9" width="6" height="4" fill="#ffffff"/></svg>`;
     case 'top_crop_top':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M12 10 L28 10 L25 22 L15 22 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M12 9 L28 9 L25 21 L15 21 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/><rect x="15" y="19" width="10" height="3" fill="#ffffff"/></svg>`;
     default:
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M12 10 L28 10 L32 18 L28 20 L26 32 L14 32 L12 20 L8 18 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M12 9 L28 9 L32 17 L28 19 L26 32 L14 32 L12 19 L8 17 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/><path d="M16 9 Q20 14 24 9" fill="none" stroke="#ffffff" stroke-width="2"/></svg>`;
   }
 }
 

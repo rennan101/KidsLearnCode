@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 2500 2500" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,0,-37)">
+        <g id="_01_Orelha_Esquerda" affinity:id="01_Orelha_Esquerda">
+            <path d="M900,810C800,805 765,850 765,890C765,940 815,975 900,970L900,810Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+        </g>
+    </g>
+    <g transform="matrix(1,0,0,1,0,-37)">
+        <g id="_02_Orelha_Direita" affinity:id="02_Orelha_Direita">
+            <path d="M1600,810C1700,805 1735,850 1735,890C1735,940 1685,975 1600,970L1600,810Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+        </g>
+    </g>
+    <g id="_03_Pe_Esquerdo" affinity:id="03_Pe_Esquerdo">
+        <path d="M1070,2030C1070,1990 1210,1990 1210,2030C1220,2075 1215,2135 1165,2148C1125,2150 1065,2130 1070,2030Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+    </g>
+    <g id="_04_Perna_Esquerda" affinity:id="04_Perna_Esquerda">
+        <path d="M1065,1670C1065,1600 1225,1600 1225,1670L1205,2040C1205,2065 1075,2065 1075,2040L1065,1670Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+    </g>
+    <g id="_05_Pe_Direito" affinity:id="05_Pe_Direito">
+        <path d="M1290,2030C1290,1990 1430,1990 1430,2030C1435,2075 1430,2135 1385,2148C1345,2150 1285,2130 1290,2030Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+    </g>
+    <g id="_06_Perna_Direita" affinity:id="06_Perna_Direita">
+        <path d="M1275,1670C1275,1600 1435,1600 1435,1670L1425,2040C1425,2065 1295,2065 1295,2040L1275,1670Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+    </g>
+    <g id="_07_Pescoco" affinity:id="07_Pescoco">
+        <rect x="1130" y="1080" width="240" height="180" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+    </g>
+    <g id="_08_Tronco_Corpo" affinity:id="08_Tronco_Corpo">
+        <path d="M1150,1170C1200,1160 1300,1160 1350,1170C1410,1200 1450,1320 1455,1460C1465,1580 1430,1695 1340,1725C1290,1740 1210,1740 1160,1725C1070,1695 1035,1580 1045,1460C1050,1320 1090,1200 1150,1170Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+    </g>
+    <g id="_09_Braco_Esquerdo" affinity:id="09_Braco_Esquerdo">
+        <path d="M1120,1195C1155,1205 1170,1245 1150,1280L890,1590C870,1612 835,1602 820,1575C805,1548 815,1515 842,1500L1092,1205C1100,1198 1110,1195 1120,1195Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+    </g>
+    <g id="_10_Mao_Esquerda" affinity:id="10_Mao_Esquerda">
+        <circle cx="820" cy="1600" r="62" style="fill:rgb(246,218,185);"/>
+    </g>
+    <g id="_11_Braco_Direito" affinity:id="11_Braco_Direito">
+        <path d="M1380,1195C1345,1205 1330,1245 1350,1280L1610,1590C1630,1612 1665,1602 1680,1575C1695,1548 1685,1515 1658,1500L1408,1205C1400,1198 1390,1195 1380,1195Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+    </g>
+    <g id="_12_Mao_Direita" affinity:id="12_Mao_Direita">
+        <circle cx="1680" cy="1600" r="62" style="fill:rgb(246,218,185);"/>
+    </g>
+    <g id="_13_Roupa_Camiseta" affinity:id="13_Roupa_Camiseta">
+    </g>
+    <g id="_14_Cabeca" affinity:id="14_Cabeca">
+        <path d="M1250,410C1480,410 1640,560 1640,760C1640,920 1560,1080 1420,1135C1350,1160 1150,1160 1080,1135C940,1080 860,920 860,760C860,560 1020,410 1250,410Z" style="fill:rgb(246,218,185);fill-rule:nonzero;"/>
+    </g>
+    <g id="_19_Cabelo" affinity:id="19_Cabelo">
+    </g>
+</svg>
