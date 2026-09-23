@@ -1149,6 +1149,16 @@ export class ModularAvatarRenderer {
       ctx.fill();
 
       ctx.save();
+
+      // Para cabelos que possuem mechas longas que passam atrás dos ombros/corpo (hair_curtains_bob, hair_fluffy_afro, hair_long_straight),
+      // aplicamos uma máscara de corte (clip) para que na camada frontal apareça apenas a franja/topo do rosto
+      if (['hair_curtains_bob', 'hair_fluffy_afro', 'hair_long_straight'].includes(cfg.hairStyle)) {
+        ctx.beginPath();
+        // Máscara que cobre a cabeça até a altura do nariz/bochechas (y: -500 a 120), não descendo na frente do pescoço/tronco
+        ctx.rect(-500, -500, 1000, 620);
+        ctx.clip();
+      }
+
       ctx.scale(4.588, 4.588);
       ctx.translate(-hairDef.cx, -hairDef.topY - 100);
       if (Array.isArray(hairDef.frontPaths)) {
@@ -1193,7 +1203,19 @@ export class ModularAvatarRenderer {
         ctx.fill();
       }
     } else {
-      if (Array.isArray(hairDef.backPaths)) {
+      // Para cabelos com volume traseiro ou mechas longas atrás do corpo (curtains bob, fluffy afro, long straight, twin braids, etc.)
+      if (['hair_curtains_bob', 'hair_fluffy_afro', 'hair_long_straight'].includes(cfg.hairStyle)) {
+        ctx.save();
+        ctx.scale(4.588, 4.588);
+        ctx.translate(-hairDef.cx, -hairDef.topY - 100);
+        if (Array.isArray(hairDef.frontPaths)) {
+          for (const d of hairDef.frontPaths) {
+            const path = this.getPath2D(d);
+            ctx.fill(path);
+          }
+        }
+        ctx.restore();
+      } else if (Array.isArray(hairDef.backPaths)) {
         for (const bp of hairDef.backPaths) {
           ctx.save();
           ctx.scale(4.588, 4.588);
@@ -1245,6 +1267,15 @@ export class ModularAvatarRenderer {
         ctx.scale(4.588, 4.588);
         ctx.translate(-bp.cx, -bp.topY - 100);
         const path = this.getPath2D(bp.d);
+        ctx.fill(path);
+        ctx.restore();
+      }
+    } else if (Array.isArray(hairDef.frontPaths)) {
+      for (const fp of hairDef.frontPaths) {
+        ctx.save();
+        ctx.scale(4.588, 4.588);
+        ctx.translate(-hairDef.cx, -hairDef.topY - 100);
+        const path = this.getPath2D(fp);
         ctx.fill(path);
         ctx.restore();
       }

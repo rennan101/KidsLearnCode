@@ -118,9 +118,69 @@ export const GLASSES_OPTIONS = [
 export function getHairSvg(hairId, color = '#3d2314') {
   const hair = SVG_HAIRS.find(h => h.id === hairId) || SVG_HAIRS[0];
   const paths = hair.frontPaths.map(d => `<path d="${d}" fill="${color}" stroke="#241208" stroke-width="2.5" stroke-linejoin="round"/>`).join('');
-  const minX = hair.cx - 100;
-  const minY = hair.topY - 10;
-  return `<svg viewBox="${minX} ${minY} 200 180" class="cc-preview-icon">${paths}</svg>`;
+  let minX = hair.cx - 120;
+  let minY = hair.topY - 15;
+  let width = 240;
+  let height = 240;
+
+  if (hairId === 'hair_side_swoosh') {
+    minX = 40;
+    minY = 180;
+    width = 220;
+    height = 110;
+  } else if (hairId === 'hair_classic_bowl') {
+    minX = 50;
+    minY = 30;
+    width = 190;
+    height = 110;
+  } else if (hairId === 'hair_curtains_bob') {
+    minX = 320;
+    minY = 15;
+    width = 250;
+    height = 250;
+  } else if (hairId === 'hair_fluffy_afro') {
+    minX = 300;
+    minY = 270;
+    width = 285;
+    height = 210;
+  } else if (hairId === 'hair_long_straight') {
+    minX = 315;
+    minY = 510;
+    width = 255;
+    height = 285;
+  } else if (hairId === 'hair_short_spikes') {
+    minX = 635;
+    minY = 170;
+    width = 205;
+    height = 100;
+  } else if (hairId === 'hair_wavy_bob') {
+    minX = 610;
+    minY = 345;
+    width = 255;
+    height = 195;
+  } else if (hairId === 'hair_twin_buns') {
+    minX = 10;
+    minY = 465;
+    width = 280;
+    height = 140;
+  } else if (hairId === 'hair_twin_braids') {
+    minX = 610;
+    minY = 565;
+    width = 255;
+    height = 220;
+  } else if (hairId === 'hair_hero_spikes') {
+    minX = 915;
+    minY = 15;
+    width = 235;
+    height = 160;
+  } else if (hairId === 'hair_high_ponytail') {
+    minX = 940;
+    minY = 420;
+    width = 180;
+    height = 140;
+  }
+
+  return `<svg viewBox="${minX} ${minY} ${width} ${height}" class="cc-preview-icon">${paths}</svg>`;
 }
 
 export function getEyeSvg(eyeId, color = '#8C501D') {
