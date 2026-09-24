@@ -296,10 +296,11 @@ export class ModularAvatarRenderer {
     const img = this.getSvgImage(`headback_${headId}_${hair}`, backSvg);
 
     if (img && img.complete && img.naturalWidth > 0) {
-      const [,, vw, vh] = headDef.viewBox.split(' ').map(Number);
+      const parts = (headDef.viewBox || '0 0 970 823').split(' ').map(Number);
+      const [vx, vy, vw, vh] = parts.length === 4 ? parts : [0, 0, parts[0], parts[1]];
       const cx = headDef.cx !== undefined ? headDef.cx : vw / 2;
       const cy = headDef.cy !== undefined ? headDef.cy : 350;
-      ctx.drawImage(img, -cx, -cy, vw, vh);
+      ctx.drawImage(img, vx - cx, vy - cy, vw, vh);
     }
   }
 
@@ -319,10 +320,11 @@ export class ModularAvatarRenderer {
 
     if (img && img.complete && img.naturalWidth > 0) {
       // O viewBox de headDef está mapeado com precisão pelo centro (1250, 760)
-      const [,, vw, vh] = headDef.viewBox.split(' ').map(Number);
+      const parts = (headDef.viewBox || '0 0 970 823').split(' ').map(Number);
+      const [vx, vy, vw, vh] = parts.length === 4 ? parts : [0, 0, parts[0], parts[1]];
       const cx = headDef.cx !== undefined ? headDef.cx : vw / 2;
       const cy = headDef.cy !== undefined ? headDef.cy : 350;
-      ctx.drawImage(img, -cx, -cy, vw, vh);
+      ctx.drawImage(img, vx - cx, vy - cy, vw, vh);
     } else {
       // Fallback vetorial instantâneo enquanto a imagem carrega no primeiro tick
       ctx.fillStyle = skin;
@@ -632,19 +634,21 @@ export class ModularAvatarRenderer {
       // Manga Longa / Suéter: cobre todo o braço do ombro até o punho sem afunilamento
       ctx.beginPath();
       if (isLeft) {
-        ctx.moveTo(0, -6);
-        ctx.bezierCurveTo(38, 10, 54, 52, 34, 90);
-        ctx.lineTo(-235, 400);
-        ctx.bezierCurveTo(-255, 422, -290, 412, -305, 385);
-        ctx.bezierCurveTo(-318, 355, -308, 320, -282, 302);
-        ctx.lineTo(-32, 8);
+        ctx.moveTo(55, -5);
+        ctx.bezierCurveTo(62, 45, 45, 95, 30, 120);
+        ctx.lineTo(-235, 405);
+        ctx.bezierCurveTo(-255, 425, -295, 415, -310, 385);
+        ctx.bezierCurveTo(-320, 355, -310, 320, -282, 300);
+        ctx.lineTo(-45, 10);
+        ctx.bezierCurveTo(-35, -20, 10, -25, 55, -5);
       } else {
-        ctx.moveTo(0, -6);
-        ctx.bezierCurveTo(-38, 10, -54, 52, -34, 90);
-        ctx.lineTo(235, 400);
-        ctx.bezierCurveTo(255, 422, 290, 412, 305, 385);
-        ctx.bezierCurveTo(318, 355, 308, 320, 282, 302);
-        ctx.lineTo(32, 8);
+        ctx.moveTo(-55, -5);
+        ctx.bezierCurveTo(-62, 45, -45, 95, -30, 120);
+        ctx.lineTo(235, 405);
+        ctx.bezierCurveTo(255, 425, 295, 415, 310, 385);
+        ctx.bezierCurveTo(320, 355, 310, 320, 282, 300);
+        ctx.lineTo(45, 10);
+        ctx.bezierCurveTo(35, -20, -10, -25, -55, -5);
       }
       ctx.closePath();
       ctx.fill();
@@ -654,13 +658,13 @@ export class ModularAvatarRenderer {
       ctx.beginPath();
       if (isLeft) {
         ctx.moveTo(-195, 345);
-        ctx.lineTo(-235, 400);
-        ctx.bezierCurveTo(-255, 422, -290, 412, -305, 385);
+        ctx.lineTo(-235, 405);
+        ctx.bezierCurveTo(-255, 425, -295, 415, -310, 385);
         ctx.lineTo(-265, 330);
       } else {
         ctx.moveTo(195, 345);
-        ctx.lineTo(235, 400);
-        ctx.bezierCurveTo(255, 422, 290, 412, 305, 385);
+        ctx.lineTo(235, 405);
+        ctx.bezierCurveTo(255, 425, 295, 415, 310, 385);
         ctx.lineTo(265, 330);
       }
       ctx.closePath();
@@ -670,29 +674,31 @@ export class ModularAvatarRenderer {
       // Manga Bufante: volume esférico generoso no ombro cobrindo toda a articulação
       ctx.beginPath();
       if (isLeft) {
-        ctx.arc(-25, 55, 110, 0, Math.PI * 2);
+        ctx.arc(-25, 55, 115, 0, Math.PI * 2);
       } else {
-        ctx.arc(25, 55, 110, 0, Math.PI * 2);
+        ctx.arc(25, 55, 115, 0, Math.PI * 2);
       }
       ctx.fill();
 
     } else if (topStyle === 'top_sleeveless' || topStyle === 'top_crop_top') {
       // Regata / Crop Top: braços descobertos
     } else {
-      // Manga Curta padrão (Tee / Vestido): cobre do ombro até metade do bíceps sem afunilar
+      // Manga Curta padrão (Tee / Vestido): envolve 100% o ombro, axila e bíceps
       ctx.beginPath();
       if (isLeft) {
-        ctx.moveTo(0, -6);
-        ctx.bezierCurveTo(38, 10, 54, 52, 34, 90);
-        ctx.lineTo(-105, 220);
-        ctx.bezierCurveTo(-135, 215, -165, 190, -160, 155);
-        ctx.lineTo(-32, 8);
+        ctx.moveTo(55, -5);
+        ctx.bezierCurveTo(62, 45, 45, 95, 30, 120);
+        ctx.lineTo(-75, 240);
+        ctx.bezierCurveTo(-115, 255, -175, 215, -185, 175);
+        ctx.lineTo(-45, 10);
+        ctx.bezierCurveTo(-35, -20, 10, -25, 55, -5);
       } else {
-        ctx.moveTo(0, -6);
-        ctx.bezierCurveTo(-38, 10, -54, 52, -34, 90);
-        ctx.lineTo(105, 220);
-        ctx.bezierCurveTo(135, 215, 165, 190, 160, 155);
-        ctx.lineTo(32, 8);
+        ctx.moveTo(-55, -5);
+        ctx.bezierCurveTo(-62, 45, -45, 95, -30, 120);
+        ctx.lineTo(75, 240);
+        ctx.bezierCurveTo(115, 255, 175, 215, 185, 175);
+        ctx.lineTo(45, 10);
+        ctx.bezierCurveTo(35, -20, -10, -25, -55, -5);
       }
       ctx.closePath();
       ctx.fill();

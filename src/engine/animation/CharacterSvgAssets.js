@@ -221,12 +221,45 @@ export const SVG_HEADS = [
   }
 ];
 
+const PADDED_HEAD_VIEWBOX = {
+  head_01: "-220 -160 1410 1100",
+  head_02: "-200 -160 1451 1150",
+  head_03: "-200 -160 1370 1100",
+  head_04: "-200 -160 1370 1120",
+  head_05: "-150 -150 1509 1739",
+  head_06: "-200 -180 1370 1250",
+  head_07: "-200 -160 1370 1200",
+  head_08: "-200 -160 1370 1050",
+  head_09: "-200 -160 1370 1100",
+  head_10: "-200 -160 1370 1050",
+  head_11: "-200 -180 1370 1150",
+  head_12: "-200 -160 1370 1200",
+  head_13: "-220 -160 1465 1150",
+  head_14: "-200 -160 1418 1300",
+  head_15: "-200 -180 1592 1200",
+  head_16: "-150 -150 1509 1739",
+  head_17: "-200 -180 1565 1150",
+  head_18: "-200 -160 1370 1200",
+  head_19: "-200 -160 1370 1350",
+  head_20: "-220 -160 1510 1120",
+  head_21: "-220 -160 1472 1200"
+};
+
+SVG_HEADS.forEach(h => {
+  if (PADDED_HEAD_VIEWBOX[h.id]) {
+    h.viewBox = PADDED_HEAD_VIEWBOX[h.id];
+  }
+});
+
 export function getHeadBackSvgContent(headId, hairColor = "#4a2e18") {
   const head = SVG_HEADS.find(h => h.id === headId) || SVG_HEADS[0];
   if (!head || !head.backSvgContent) return null;
   let svg = head.backSvgContent;
   svg = svg.replace(/rgb\(74,46,24\)/g, hairColor);
   svg = svg.replace(/rgb\(246,218,185\)/g, "none");
+  if (head.viewBox) {
+    svg = svg.replace(/viewBox="[^"]*"/, `viewBox="${head.viewBox}"`);
+  }
   return svg;
 }
 
@@ -235,6 +268,9 @@ export function getHeadSvgContent(headId, skinTone = "#f6dab9", hairColor = "#4a
   let svg = head.svgContent;
   svg = svg.replace(/rgb\(246,218,185\)/g, skinTone);
   svg = svg.replace(/rgb\(74,46,24\)/g, hairColor);
+  if (head.viewBox) {
+    svg = svg.replace(/viewBox="[^"]*"/, `viewBox="${head.viewBox}"`);
+  }
   return svg;
 }
 

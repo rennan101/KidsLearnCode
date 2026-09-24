@@ -126,8 +126,8 @@
 }
 
 .cc-preview-stage {
-  width: 320px;
-  height: 420px;
+  width: 340px;
+  height: 440px;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -141,8 +141,8 @@
 }
 
 .cc-canvas {
-  width: 320px;
-  height: 420px;
+  width: 340px;
+  height: 440px;
   image-rendering: auto;
   display: block;
 }
@@ -375,7 +375,7 @@
   justify-content: center;
   cursor: var(--animal-cursor-pointer, pointer);
   box-shadow: 0 4px 0 #e2d9be;
-  padding: 8px;
+  padding: 4px;
   box-sizing: border-box;
   transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s, background 0.12s;
   outline: none;
@@ -400,10 +400,11 @@
 }
 
 .cc-preview-icon {
-  width: 56px;
-  height: 56px;
+  width: 62px;
+  height: 62px;
   pointer-events: none;
   display: block;
+  overflow: visible;
 }
 
 /* Footer / Action Bar */
