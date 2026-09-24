@@ -186,12 +186,13 @@ export class ModularAvatarRenderer {
     // 3. Tronco e Roupas (costas)
     this.drawTorsoAndNeck(ctx, pose.root.rot, cfg, 'north');
 
-    // 4. Cabeça Oficial de Costas
+    // 4. Cabeça Oficial de Costas (base na cor do cabelo + cabelo traseiro na frente da cabeça e orelhas)
     ctx.save();
     ctx.translate(1250, 760);
     ctx.rotate(headRot);
 
     this.drawHeadBase(ctx, cfg, 'north');
+    this.drawBackHair(ctx, cfg, 'north');
 
     ctx.restore();
 
@@ -286,7 +287,6 @@ export class ModularAvatarRenderer {
   }
 
   drawBackHair(ctx, cfg, dir) {
-    if (dir === 'north') return;
     const hair = cfg.hairColor || '#3d2314';
     const headId = cfg.headStyle || 'head_01';
     const backSvg = getHeadBackSvgContent(headId, hair);
@@ -304,7 +304,9 @@ export class ModularAvatarRenderer {
   }
 
   drawHeadBase(ctx, cfg, dir) {
-    const skin = cfg.skinTone || '#ffd0a8';
+    const isBackView = dir === 'north';
+    // Na vista traseira (north), a cabeça inteira fica na cor do cabelo
+    const skin = isBackView ? (cfg.hairColor || '#3d2314') : (cfg.skinTone || '#ffd0a8');
     const hair = cfg.hairColor || '#3d2314';
     const headId = cfg.headStyle || 'head_01';
 
@@ -641,7 +643,7 @@ export class ModularAvatarRenderer {
     ctx.fill(footLPath);
 
     // Calça e Sapato Esquerdo
-    this.renderLegClothingAndShoe(ctx, bottomColor, shoeColor, shoeTrim, bottomStyle, shoesStyle, 'left');
+    this.renderLegClothingAndShoe(ctx, bottomColor, shoeColor, shoeTrim, bottomStyle, shoesStyle, 'left', dir);
 
     ctx.restore();
 
@@ -661,14 +663,16 @@ export class ModularAvatarRenderer {
     ctx.fill(footRPath);
 
     // Calça e Sapato Direito
-    this.renderLegClothingAndShoe(ctx, bottomColor, shoeColor, shoeTrim, bottomStyle, shoesStyle, 'right');
+    this.renderLegClothingAndShoe(ctx, bottomColor, shoeColor, shoeTrim, bottomStyle, shoesStyle, 'right', dir);
 
     ctx.restore();
 
     ctx.restore();
   }
 
-  renderLegClothingAndShoe(ctx, bottomColor, shoeColor, shoeTrim, bottomStyle, shoesStyle, side) {
+  renderLegClothingAndShoe(ctx, bottomColor, shoeColor, shoeTrim, bottomStyle, shoesStyle, side, dir = 'south') {
+    const isBackView = dir === 'north';
+
     // 1. Calça / Shorts
     if (bottomStyle === 'pants_cargo') {
       // Calça comprida cobrindo até quase o pé
@@ -698,9 +702,11 @@ export class ModularAvatarRenderer {
       ctx.roundRect(-85, 370, 170, 180, 20);
       ctx.fill();
 
-      // Fivela da bota
-      ctx.fillStyle = '#f59e0b';
-      ctx.fillRect(-45, 410, 90, 20);
+      // Fivela da bota (apenas vista frontal / lateral)
+      if (!isBackView) {
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(-45, 410, 90, 20);
+      }
 
       // Sola escura
       ctx.fillStyle = '#0f172a';
@@ -713,14 +719,16 @@ export class ModularAvatarRenderer {
       ctx.roundRect(-85, 510, 170, 40, 15);
       ctx.fill();
 
-      // Tiras brancas
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 14;
-      ctx.beginPath();
-      ctx.moveTo(-65, 510);
-      ctx.lineTo(0, 430);
-      ctx.lineTo(65, 510);
-      ctx.stroke();
+      // Tiras brancas frontais em V (apenas vista frontal / lateral)
+      if (!isBackView) {
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 14;
+        ctx.beginPath();
+        ctx.moveTo(-65, 510);
+        ctx.lineTo(0, 430);
+        ctx.lineTo(65, 510);
+        ctx.stroke();
+      }
 
     } else {
       // Tênis clássico
@@ -729,12 +737,16 @@ export class ModularAvatarRenderer {
       ctx.roundRect(-80, 420, 160, 130, 25);
       ctx.fill();
 
-      // Biqueira e sola branca
+      // Sola branca
       ctx.fillStyle = shoeTrim;
       ctx.fillRect(-85, 515, 170, 35);
-      ctx.beginPath();
-      ctx.arc(0, 450, 20, 0, Math.PI * 2);
-      ctx.fill();
+
+      // Biqueira e detalhe circular frontal (apenas vista frontal / lateral)
+      if (!isBackView) {
+        ctx.beginPath();
+        ctx.arc(0, 450, 20, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   }
 
