@@ -18,6 +18,7 @@ import {
   SVG_MOUTHS,
   SVG_BLUSHES,
   getHeadSvgContent,
+  getHeadBackSvgContent,
   getEyeSvgContent,
   getNoseSvgContent,
   getMouthSvgContent,
@@ -108,13 +109,20 @@ export class ModularAvatarRenderer {
     const headRot = pose.head.rot;
     const isCelebrating = state === 'celebrate';
 
+    // 0. Cabelo Traseiro (quando for longo / chiquinhas / marias chiquinhas / cachos que caem atrás)
+    ctx.save();
+    ctx.translate(1250, 760);
+    ctx.rotate(headRot);
+    this.drawBackHair(ctx, cfg, 'south');
+    ctx.restore();
+
     // 1. Pernas e Pés de Base_char_flat.svg (_04_Perna_Esquerda, _06_Perna_Direita, _03_Pe_Esquerdo, _05_Pe_Direito)
     this.drawLegs(ctx, pose, cfg, 'south');
 
-    // 2. Pescoço (_07_Pescoco) e Tronco (_08_Tronco_Corpo) + Roupas oficiais (assets/Tops)
+    // 2. Pescoço (_07_Pescoco) e Tronco (_08_Tronco_Corpo) + Roupas oficiais (assets/Tops) - desenhado SOBRE o cabelo traseiro
     this.drawTorsoAndNeck(ctx, pose.root.rot, cfg, 'south');
 
-    // 3. Braços e Mãos (_09_Braco_Esquerdo, _11_Braco_Direito, _10_Mao_Esquerda, _12_Mao_Direita)
+    // 3. Braços e Mãos (_09_Braco_Esquerdo, _11_Braco_Direito, _10_Mao_Esquerda, _12_Mao_Direita) - desenhado SOBRE o cabelo traseiro
     if (!isCelebrating) {
       this.drawArms(ctx, pose, cfg, 'south');
     }
@@ -178,6 +186,13 @@ export class ModularAvatarRenderer {
     const headRot = pose.head.rot;
     const isCelebrating = state === 'celebrate';
 
+    // 0. Cabelo Traseiro (fica atrás de pernas, tronco e braços)
+    ctx.save();
+    ctx.translate(1250, 760);
+    ctx.rotate(headRot);
+    this.drawBackHair(ctx, cfg, 'east');
+    ctx.restore();
+
     // 1. Pernas e Pés
     this.drawLegs(ctx, pose, cfg, 'east');
 
@@ -239,6 +254,24 @@ export class ModularAvatarRenderer {
     ctx.restore();
   }
 
+  drawBackHair(ctx, cfg, dir) {
+    if (dir === 'north') return;
+    const hair = cfg.hairColor || '#3d2314';
+    const headId = cfg.headStyle || 'head_01';
+    const backSvg = getHeadBackSvgContent(headId, hair);
+    if (!backSvg) return;
+
+    const headDef = SVG_HEADS.find(h => h.id === headId) || SVG_HEADS[0];
+    const img = this.getSvgImage(`headback_${headId}_${hair}`, backSvg);
+
+    if (img && img.complete && img.naturalWidth > 0) {
+      const [,, vw, vh] = headDef.viewBox.split(' ').map(Number);
+      const cx = headDef.cx !== undefined ? headDef.cx : vw / 2;
+      const cy = headDef.cy !== undefined ? headDef.cy : 350;
+      ctx.drawImage(img, -cx, -cy, vw, vh);
+    }
+  }
+
   drawHeadBase(ctx, cfg, dir) {
     const skin = cfg.skinTone || '#ffd0a8';
     const hair = cfg.hairColor || '#3d2314';
@@ -252,10 +285,11 @@ export class ModularAvatarRenderer {
     const img = this.getSvgImage(`head_${headId}_${skin}_${hair}`, headSvg);
 
     if (img && img.complete && img.naturalWidth > 0) {
-      // O viewBox de headDef (ex: 0 0 970 823) está alinhado com o centro (1250, 760)
-      // Mapeamento exato do canvas: o topo da cabeça está em y: -350, centro x: 0
+      // O viewBox de headDef está mapeado com precisão pelo centro (1250, 760)
       const [,, vw, vh] = headDef.viewBox.split(' ').map(Number);
-      ctx.drawImage(img, -vw / 2, -350, vw, vh);
+      const cx = headDef.cx !== undefined ? headDef.cx : vw / 2;
+      const cy = headDef.cy !== undefined ? headDef.cy : 350;
+      ctx.drawImage(img, -cx, -cy, vw, vh);
     } else {
       // Fallback vetorial instantâneo enquanto a imagem carrega no primeiro tick
       ctx.fillStyle = skin;
@@ -691,8 +725,8 @@ export class ModularAvatarRenderer {
 
       if (blushImg && blushImg.complete && blushImg.naturalWidth > 0) {
         const [,, vw, vh] = blushDef.viewBox.split(' ').map(Number);
-        // Centralizado no rosto (y: 60)
-        ctx.drawImage(blushImg, -vw * 2.2, 50, vw * 4.4, vh * 4.4);
+        // Centralizado no rosto (y: 135)
+        ctx.drawImage(blushImg, -vw * 2.2, 135 - (vh * 2.2) / 2, vw * 4.4, vh * 4.4);
       }
     }
 
@@ -705,8 +739,8 @@ export class ModularAvatarRenderer {
 
     if (eyeImg && eyeImg.complete && eyeImg.naturalWidth > 0) {
       const [,, vw, vh] = eyeDef.viewBox.split(' ').map(Number);
-      // Centralizado horizontalmente no rosto (y: -60)
-      ctx.drawImage(eyeImg, -vw * 2.4, -60 - (vh * 2.4) / 2, vw * 4.8, vh * 4.8);
+      // Centralizado horizontalmente no rosto (y: 15)
+      ctx.drawImage(eyeImg, -vw * 2.4, 15 - (vh * 2.4) / 2, vw * 4.8, vh * 4.8);
     }
 
     // 3. Nariz (assets/characters/Nose: 4 narizes)
@@ -717,8 +751,8 @@ export class ModularAvatarRenderer {
 
     if (noseImg && noseImg.complete && noseImg.naturalWidth > 0) {
       const [,, vw, vh] = noseDef.viewBox.split(' ').map(Number);
-      // Centralizado horizontalmente na altura do nariz (y: 40)
-      ctx.drawImage(noseImg, -vw * 2.4, 40 - (vh * 2.4) / 2, vw * 4.8, vh * 4.8);
+      // Centralizado horizontalmente na altura do nariz (y: 110)
+      ctx.drawImage(noseImg, -vw * 2.4, 110 - (vh * 2.4) / 2, vw * 4.8, vh * 4.8);
     }
 
     // 4. Boca (assets/characters/Mouth: 8 bocas)
@@ -729,8 +763,8 @@ export class ModularAvatarRenderer {
 
     if (mouthImg && mouthImg.complete && mouthImg.naturalWidth > 0) {
       const [,, vw, vh] = mouthDef.viewBox.split(' ').map(Number);
-      // Centralizado horizontalmente na altura da boca (y: 155)
-      ctx.drawImage(mouthImg, -vw * 2.4, 155 - (vh * 2.4) / 2, vw * 4.8, vh * 4.8);
+      // Centralizado horizontalmente na altura da boca (y: 225)
+      ctx.drawImage(mouthImg, -vw * 2.4, 225 - (vh * 2.4) / 2, vw * 4.8, vh * 4.8);
     }
 
     ctx.restore();
@@ -1331,24 +1365,24 @@ export class ModularAvatarRenderer {
       if (cfg.glassesStyle === 'sunglasses_cool') {
         ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
         ctx.beginPath();
-        ctx.roundRect(80, -55, 175, 145, 28);
+        ctx.roundRect(80, -40, 175, 145, 28);
         ctx.fill();
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.moveTo(80, 0);
-        ctx.lineTo(-90, 20);
+        ctx.moveTo(80, 15);
+        ctx.lineTo(-90, 35);
         ctx.stroke();
       } else {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
         ctx.beginPath();
-        ctx.ellipse(155, 20, 80, 90, 0, 0, Math.PI * 2);
+        ctx.ellipse(155, 15, 80, 90, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.moveTo(90, 20);
-        ctx.lineTo(-90, 20);
+        ctx.moveTo(90, 15);
+        ctx.lineTo(-90, 35);
         ctx.stroke();
       }
 
@@ -1358,25 +1392,25 @@ export class ModularAvatarRenderer {
         ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
         [-175, 185].forEach(gx => {
           ctx.beginPath();
-          ctx.roundRect(gx - 90, -65, 180, 150, 36);
+          ctx.roundRect(gx - 90, -50, 180, 150, 36);
           ctx.fill();
           ctx.stroke();
         });
         ctx.beginPath();
-        ctx.moveTo(-80, 0);
-        ctx.lineTo(90, 0);
+        ctx.moveTo(-80, 15);
+        ctx.lineTo(90, 15);
         ctx.stroke();
       } else {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
         [-175, 185].forEach(gx => {
           ctx.beginPath();
-          ctx.arc(gx, 20, 100, 0, Math.PI * 2);
+          ctx.arc(gx, 15, 100, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
         });
         ctx.beginPath();
-        ctx.moveTo(-75, 20);
-        ctx.lineTo(85, 20);
+        ctx.moveTo(-75, 15);
+        ctx.lineTo(85, 15);
         ctx.stroke();
       }
     }
