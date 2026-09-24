@@ -55,7 +55,7 @@ Os dragões voadores concedem a habilidade de **sobrevoar relevos, rios e obstá
 * **Esquiva Tática (Tecla `1`):** *Rajada de Vento* — Salto com pirueta aérea rápida, ficando invulnerável por 0.8s e criando um turbilhão que empurra inimigos.
 * **Descrição Visual:** Dragãozinho alado esguio e adorável, escamas azul-celeste aveludadas, bochechas rosadas, asas fofas emplumadas brancas com pontas douradas e cauda com peninhas. Dorso com pequena sela de couro macio bege.
 * **Prompt de Geração:**
-  > `Cute sky wind dragon companion mount, Animal Crossing New Horizons art style, Sea of Stars high 3/4 top-down camera angle, soft azure-blue velvety scales, adorable big amber eyes with rosy cheeks, fluffy white feathered wings with gold tips, feathered tail, soft leather rider saddle on back, clean 2.5D vector illustration, smooth 3D clay lighting, ambient occlusion, isolated on transparent background`
+  > `Cute sky wind dragon companion mount, Animal Crossing New Horizons in a flat vector art style, top-down camera angle, soft azure-blue velvety scales, adorable big amber eyes with rosy cheeks, fluffy white feathered wings with gold tips, feathered tail, soft leather rider saddle on back, clean 2.5D vector illustration, smooth 3D clay lighting, ambient occlusion, isolated on transparent background`
 
 ---
 

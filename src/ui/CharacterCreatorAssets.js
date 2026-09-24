@@ -18,6 +18,7 @@ import {
   SVG_MOUTHS,
   SVG_BLUSHES,
   getHeadSvgContent,
+  getHeadBackSvgContent,
   getEyeSvgContent,
   getNoseSvgContent,
   getMouthSvgContent,
@@ -129,9 +130,19 @@ export const GLASSES_OPTIONS = [
 /* ========================================================================= */
 
 export function getHeadSvg(headId, skinTone = '#f6dab9', hairColor = '#4a2e18') {
-  let svg = getHeadSvgContent(headId, skinTone, hairColor);
-  svg = svg.replace('<svg ', '<svg class="cc-preview-icon" ');
-  return svg;
+  const frontSvg = getHeadSvgContent(headId, skinTone, hairColor);
+  const backSvg = getHeadBackSvgContent(headId, hairColor);
+
+  if (backSvg) {
+    const backMatch = backSvg.match(/<svg[^>]*>([\s\S]*?)<\/svg>/);
+    if (backMatch) {
+      const backInner = backMatch[1];
+      const combined = frontSvg.replace(/(<svg[^>]*>)/, `$1\n${backInner}`);
+      return combined.replace('<svg ', '<svg class="cc-preview-icon" ');
+    }
+  }
+
+  return frontSvg.replace('<svg ', '<svg class="cc-preview-icon" ');
 }
 
 export function getEyeSvg(eyeId, eyeColor = '#8C501D') {
