@@ -19,7 +19,6 @@ import {
   SVG_BLUSHES,
   getHeadSvgContent,
   getHeadBackSvgContent,
-  getHeadFrontSvgContent,
   getEyeSvgContent,
   getNoseSvgContent,
   getMouthSvgContent,
@@ -29,6 +28,15 @@ import {
   SVG_BASE_CHARACTER,
   SVG_TOPS
 } from './SvgAssetCatalog.js';
+
+// Limite Y (espaço local da cabeça) para clip de cabelo longo.
+// Acima deste Y: cabelo renderiza na frente (step 4). 
+// Abaixo: hidden no layer frontal; backSvgContent (step 0) mostra a parte de trás.
+const HAIR_CLIP_Y = {
+  'head_14': 430,  // Cachos Longos – coroa visível, corpo longo via backSvgContent
+  'head_15': 430,  // Afro Puffs – puffs acima do queixo
+  'head_16': 455,  // Espetado Selvagem – topo espetado visível, resto via sandwich
+};
 
 export class ModularAvatarRenderer {
   constructor() {
@@ -133,13 +141,24 @@ export class ModularAvatarRenderer {
     ctx.translate(1250, 760);
     ctx.rotate(headRot);
 
+    // Clip de cabelo: heads com cabelo longo que sobrepõe o corpo são clipados ao queixo.
+    // O backSvgContent (step 0) já exibiu a parte inferior do cabelo atrás do corpo.
+    const _hairClipY = HAIR_CLIP_Y[cfg.headStyle];
+    if (_hairClipY !== undefined) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(-1500, -900, 3000, 900 + _hairClipY);
+      ctx.clip();
+    }
+
     this.drawHeadBase(ctx, cfg, 'south');
     this.drawFaceFeatures(ctx, cfg, 'south');
-    this.drawFrontHair(ctx, cfg, 'south');
 
     if (cfg.glassesStyle && cfg.glassesStyle !== 'none') {
       this.drawGlasses(ctx, cfg, 'south');
     }
+
+    if (_hairClipY !== undefined) ctx.restore();
 
     ctx.restore();
 
@@ -211,13 +230,22 @@ export class ModularAvatarRenderer {
     ctx.translate(1250, 760);
     ctx.rotate(headRot);
 
+    const _hairClipYE = HAIR_CLIP_Y[cfg.headStyle];
+    if (_hairClipYE !== undefined) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(-1500, -900, 3000, 900 + _hairClipYE);
+      ctx.clip();
+    }
+
     this.drawHeadBase(ctx, cfg, 'south');
     this.drawFaceFeatures(ctx, cfg, 'south');
-    this.drawFrontHair(ctx, cfg, 'east');
 
     if (cfg.glassesStyle && cfg.glassesStyle !== 'none') {
       this.drawGlasses(ctx, cfg, 'south');
     }
+
+    if (_hairClipYE !== undefined) ctx.restore();
 
     ctx.restore();
 
@@ -266,25 +294,6 @@ export class ModularAvatarRenderer {
 
     const headDef = SVG_HEADS.find(h => h.id === headId) || SVG_HEADS[0];
     const img = this.getSvgImage(`headback_${headId}_${hair}`, backSvg);
-
-    if (img && img.complete && img.naturalWidth > 0) {
-      const [,, vw, vh] = headDef.viewBox.split(' ').map(Number);
-      const cx = headDef.cx !== undefined ? headDef.cx : vw / 2;
-      const cy = headDef.cy !== undefined ? headDef.cy : 350;
-      ctx.drawImage(img, -cx, -cy, vw, vh);
-    }
-  }
-
-
-  drawFrontHair(ctx, cfg, dir) {
-    if (dir === 'north') return;
-    const hair = cfg.hairColor || '#3d2314';
-    const headId = cfg.headStyle || 'head_01';
-    const frontSvg = getHeadFrontSvgContent(headId, hair);
-    if (!frontSvg) return;
-
-    const headDef = SVG_HEADS.find(h => h.id === headId) || SVG_HEADS[0];
-    const img = this.getSvgImage(`headfront_${headId}_${hair}`, frontSvg);
 
     if (img && img.complete && img.naturalWidth > 0) {
       const [,, vw, vh] = headDef.viewBox.split(' ').map(Number);
