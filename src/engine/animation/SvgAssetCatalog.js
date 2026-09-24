@@ -487,70 +487,10 @@ export const SVG_BASE_CHARACTER = {
   }
 };
 
-export const SVG_TOPS = [
-  {
-    id: 'top_tee',
-    name: 'Camiseta Clássica',
-    desc: 'Camiseta clássica de manga curta com gola e detalhes',
-    file: 'tops.svg',
-    col: 3,
-    type: 'tee',
-    sleeveType: 'short'
-  },
-  {
-    id: 'top_crop_top',
-    name: 'Top Cropped',
-    desc: 'Top curto e despojado com corte de cintura alta',
-    file: 'tops.svg',
-    col: 0,
-    type: 'crop',
-    sleeveType: 'none'
-  },
-  {
-    id: 'top_cupcake_dress',
-    name: 'Vestido Cupcake',
-    desc: 'Vestido com saia rodada ampla e babados delicados',
-    file: 'tops.svg',
-    col: 1,
-    type: 'dress',
-    sleeveType: 'short',
-    skirt: true
-  },
-  {
-    id: 'top_long_sleeve',
-    name: 'Manga Longa',
-    desc: 'Blusa confortável de mangas compridas e punhos',
-    file: 'tops.svg',
-    col: 5,
-    type: 'long_sleeve',
-    sleeveType: 'long'
-  },
-  {
-    id: 'top_puffy_sleeve',
-    name: 'Manga Bufante',
-    desc: 'Blusa charmosa com mangas volumosas nos ombros',
-    file: 'tops.svg',
-    col: 6,
-    type: 'puffy',
-    sleeveType: 'puffy'
-  },
-  {
-    id: 'top_sleeveless',
-    name: 'Regata Sem Mangas',
-    desc: 'Regata leve de alças para dias ensolarados',
-    file: 'tops.svg',
-    col: 4,
-    type: 'sleeveless',
-    sleeveType: 'none'
-  },
-  {
-    id: 'top_sweater',
-    name: 'Suéter de Lã',
-    desc: 'Suéter aconchegante com gola estruturada e textura',
-    file: 'tops.svg',
-    col: 2,
-    type: 'sweater',
-    sleeveType: 'long',
-    collar: true
-  }
-];
+export {
+  SVG_TOPS,
+  getTopSvgContent,
+  getTopTorsoSvgContent,
+  getTopSleeveLSvgContent,
+  getTopSleeveRSvgContent
+} from './CharacterTopSvgAssets.js';

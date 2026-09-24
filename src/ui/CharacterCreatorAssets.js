@@ -171,54 +171,45 @@ export function getBlushSvg(blushId) {
   return svg;
 }
 
-export function getTopSvg(topId, primary = '#19c8b9') {
-  switch (topId) {
-    case 'top_cupcake_dress':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M12 9 L28 9 L24 17 L33 32 L7 32 L16 17 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/><path d="M7 32 Q13 29 20 32 Q27 29 33 32" fill="none" stroke="#ffffff" stroke-width="2"/></svg>`;
-    case 'top_sweater':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M10 8 L30 8 L36 24 L30 25 L28 32 L12 32 L10 25 L4 24 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/><rect x="14" y="6" width="12" height="5" rx="2.5" fill="#ffffff" stroke="#0f8e83" stroke-width="1.5"/><rect x="12" y="29" width="16" height="3" fill="#ffffff"/></svg>`;
-    case 'top_long_sleeve':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M12 9 L28 9 L35 27 L30 28 L27 32 L13 32 L10 28 L5 27 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/><rect x="13" y="29" width="14" height="3" fill="#ffffff"/><rect x="5" y="25" width="4" height="3" fill="#ffffff"/><rect x="31" y="25" width="4" height="3" fill="#ffffff"/></svg>`;
-    case 'top_puffy_sleeve':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><circle cx="9" cy="14" r="6" fill="${primary}" stroke="#0f8e83" stroke-width="1.5"/><circle cx="31" cy="14" r="6" fill="${primary}" stroke="#0f8e83" stroke-width="1.5"/><path d="M13 9 L27 9 L25 32 L15 32 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/><path d="M15 9 Q20 15 25 9" fill="none" stroke="#ffffff" stroke-width="2"/></svg>`;
-    case 'top_sleeveless':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M14 9 L26 9 L24 32 L16 32 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/><rect x="17" y="9" width="6" height="4" fill="#ffffff"/></svg>`;
-    case 'top_crop_top':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M12 9 L28 9 L25 21 L15 21 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/><rect x="15" y="19" width="10" height="3" fill="#ffffff"/></svg>`;
-    default:
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M12 9 L28 9 L32 17 L28 19 L26 32 L14 32 L12 19 L8 17 Z" fill="${primary}" stroke="#0f8e83" stroke-width="2"/><path d="M16 9 Q20 14 24 9" fill="none" stroke="#ffffff" stroke-width="2"/></svg>`;
+export function getTopSvg(topId) {
+  const top = SVG_TOPS.find(t => t.id === topId) || SVG_TOPS[0];
+  let svg = top.svgContent;
+  if (!svg.includes('class=')) {
+    svg = svg.replace('<svg ', '<svg class="cc-preview-icon" ');
   }
+  return svg;
 }
 
 export function getBottomSvg(bottomId, color = '#2563eb') {
   switch (bottomId) {
     case 'pants_cargo':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M11 8 L29 8 L31 32 L22 32 L20 18 L18 32 L9 32 Z" fill="${color}" stroke="#1d4ed8" stroke-width="2"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M11 8 L29 8 L31 32 L22 32 L20 18 L18 32 L9 32 Z" fill="${color}"/></svg>`;
     case 'skirt_pleated':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M13 10 L27 10 L33 28 L7 28 Z" fill="${color}" stroke="#1d4ed8" stroke-width="2"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M13 10 L27 10 L33 28 L7 28 Z" fill="${color}"/></svg>`;
     default:
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M11 10 L29 10 L31 24 L22 24 L20 16 L18 24 L9 24 Z" fill="${color}" stroke="#1d4ed8" stroke-width="2"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M11 10 L29 10 L31 24 L22 24 L20 16 L18 24 L9 24 Z" fill="${color}"/></svg>`;
   }
 }
 
 export function getShoesSvg(shoesId, color = '#ea580c') {
   switch (shoesId) {
     case 'boots_hunter':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M13 10 L22 10 L22 22 L27 22 C30 22 31 25 31 28 L11 28 L11 12 Z" fill="${color}" stroke="#9a3412" stroke-width="2"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M13 10 L22 10 L22 22 L27 22 C30 22 31 25 31 28 L11 28 L11 12 Z" fill="${color}"/></svg>`;
     case 'sandals_beach':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><rect x="8" y="24" width="24" height="6" rx="3" fill="${color}" stroke="#9a3412" stroke-width="2"/><path d="M14 24 L20 16 L26 24" fill="none" stroke="#ffffff" stroke-width="2.5"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><rect x="8" y="24" width="24" height="6" rx="3" fill="${color}"/><path d="M14 24 L20 16 L26 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/></svg>`;
     default:
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M10 18 L18 14 L23 20 L29 20 C31 20 32 23 32 26 L8 26 C8 23 9 19 10 18 Z" fill="${color}" stroke="#9a3412" stroke-width="2"/><rect x="8" y="26" width="24" height="4" fill="#ffffff"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M10 18 L18 14 L23 20 L29 20 C31 20 32 23 32 26 L8 26 C8 23 9 19 10 18 Z" fill="${color}"/><rect x="8" y="26" width="24" height="4" rx="1" fill="#ffffff"/></svg>`;
   }
 }
 
 export function getGlassesSvg(glassesId) {
   switch (glassesId) {
     case 'sunglasses_cool':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><rect x="6" y="14" width="12" height="12" rx="3" fill="#0f172a"/><rect x="22" y="14" width="12" height="12" rx="3" fill="#0f172a"/><line x1="18" y1="18" x2="22" y2="18" stroke="#0f172a" stroke-width="2.5"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><rect x="6" y="14" width="12" height="12" rx="3" fill="#0f172a"/><rect x="22" y="14" width="12" height="12" rx="3" fill="#0f172a"/><rect x="18" y="18" width="4" height="3" fill="#0f172a"/></svg>`;
     case 'round_wire':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><circle cx="12" cy="20" r="7" fill="none" stroke="#5c3c26" stroke-width="2.5"/><circle cx="28" cy="20" r="7" fill="none" stroke="#5c3c26" stroke-width="2.5"/><line x1="19" y1="20" x2="21" y2="20" stroke="#5c3c26" stroke-width="2.5"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><circle cx="12" cy="20" r="7" fill="none" stroke="#5c3c26" stroke-width="2"/><circle cx="28" cy="20" r="7" fill="none" stroke="#5c3c26" stroke-width="2"/><line x1="19" y1="20" x2="21" y2="20" stroke="#5c3c26" stroke-width="2"/></svg>`;
     default:
       return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><circle cx="20" cy="20" r="12" fill="none" stroke="#c4b89e" stroke-width="2"/><line x1="12" y1="12" x2="28" y2="28" stroke="#c4b89e" stroke-width="2"/></svg>`;
   }
 }
+

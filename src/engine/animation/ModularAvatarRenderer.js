@@ -427,147 +427,54 @@ export class ModularAvatarRenderer {
   }
 
   renderTopOnTorso(ctx, topStyle, primary, secondary, skin, dir) {
+    const topDef = SVG_TOPS.find(t => t.id === topStyle) || SVG_TOPS[0];
+    const topSvg = topDef.torsoSvgContent || topDef.svgContent;
+    const img = this.getSvgImage(`top_torso_${topDef.id}`, topSvg);
+
     ctx.save();
-    ctx.fillStyle = primary;
 
-    if (topStyle === 'top_cupcake_dress') {
-      // Vestido Cupcake: cobre todo o tronco e desce em saia rodada volumosa
-      ctx.beginPath();
-      ctx.moveTo(-95, -280);
-      ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
-      ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
-      ctx.bezierCurveTo(218, 130, 250, 260, 260, 360);
-      ctx.lineTo(-260, 360);
-      ctx.bezierCurveTo(-250, 260, -218, 130, -208, 10);
-      ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
-      ctx.closePath();
-      ctx.fill();
-
-      // Detalhes / Laço frontal
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.beginPath();
-        ctx.arc(0, -170, 32, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = secondary;
-        ctx.lineWidth = 8;
-        ctx.beginPath();
-        ctx.arc(0, 10, 180, 0.2 * Math.PI, 0.8 * Math.PI);
-        ctx.stroke();
-      }
-
-    } else if (topStyle === 'top_crop_top') {
-      // Top Curto: segue perfeitamente o tronco até a linha da cintura/costelas
-      ctx.beginPath();
-      ctx.moveTo(-95, -280);
-      ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
-      ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
-      ctx.bezierCurveTo(210, 50, 208, 80, 204, 100);
-      ctx.lineTo(-204, 100);
-      ctx.bezierCurveTo(-208, 80, -210, 50, -208, 10);
-      ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
-      ctx.closePath();
-      ctx.fill();
-
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.fillRect(-204, 85, 408, 15);
-      }
-
-    } else if (topStyle === 'top_sweater') {
-      // Suéter Quente: corte largo e aconchegante cobrindo todo o tronco
-      ctx.beginPath();
-      ctx.moveTo(-98, -282);
-      ctx.bezierCurveTo(-50, -292, 50, -292, 98, -282);
-      ctx.bezierCurveTo(165, -250, 208, -130, 212, 10);
-      ctx.bezierCurveTo(220, 130, 190, 230, 185, 235);
-      ctx.lineTo(-185, 235);
-      ctx.bezierCurveTo(-190, 230, -220, 130, -212, 10);
-      ctx.bezierCurveTo(-208, -130, -165, -250, -98, -282);
-      ctx.closePath();
-      ctx.fill();
-
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.beginPath();
-        ctx.roundRect(-75, -292, 150, 28, 14);
-        ctx.fill();
-        ctx.fillRect(-185, 215, 370, 20);
-      }
-
-    } else if (topStyle === 'top_sleeveless') {
-      // Regata / Sem Mangas
-      ctx.beginPath();
-      ctx.moveTo(-65, -280);
-      ctx.bezierCurveTo(-30, -260, 30, -260, 65, -280);
-      ctx.bezierCurveTo(120, -230, 185, -90, 206, 10);
-      ctx.bezierCurveTo(215, 130, 185, 210, 180, 215);
-      ctx.lineTo(-180, 215);
-      ctx.bezierCurveTo(-185, 210, -215, 130, -206, 10);
-      ctx.bezierCurveTo(-185, -90, -120, -230, -65, -280);
-      ctx.closePath();
-      ctx.fill();
-
-    } else if (topStyle === 'top_puffy_sleeve') {
-      // Camisa para Manga Bufante
-      ctx.beginPath();
-      ctx.moveTo(-95, -280);
-      ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
-      ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
-      ctx.bezierCurveTo(215, 130, 185, 210, 180, 215);
-      ctx.lineTo(-180, 215);
-      ctx.bezierCurveTo(-185, 210, -215, 130, -208, 10);
-      ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
-      ctx.closePath();
-      ctx.fill();
-
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.beginPath();
-        ctx.roundRect(-50, -275, 100, 16, 8);
-        ctx.fill();
-      }
-
-    } else if (topStyle === 'top_long_sleeve') {
-      // Camisa de Manga Longa (corpo)
-      ctx.beginPath();
-      ctx.moveTo(-95, -280);
-      ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
-      ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
-      ctx.bezierCurveTo(215, 130, 185, 210, 180, 215);
-      ctx.lineTo(-180, 215);
-      ctx.bezierCurveTo(-185, 210, -215, 130, -208, 10);
-      ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
-      ctx.closePath();
-      ctx.fill();
-
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        ctx.beginPath();
-        ctx.roundRect(-60, -275, 120, 16, 8);
-        ctx.fill();
-      }
-
+    if (img && img.complete && img.naturalWidth > 0) {
+      // Proporção precisa alinhada ao tronco (centro x=0, gola y=-280)
+      const scale = 4.1;
+      const targetW = topDef.torsoW * scale;
+      const targetH = topDef.torsoH * scale;
+      ctx.drawImage(img, -targetW / 2, -280, targetW, targetH);
     } else {
-      // Camiseta Clássica (top_tee padrão)
-      ctx.beginPath();
-      ctx.moveTo(-95, -280);
-      ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
-      ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
-      ctx.bezierCurveTo(215, 130, 185, 210, 180, 215);
-      ctx.lineTo(-180, 215);
-      ctx.bezierCurveTo(-185, 210, -215, 130, -208, 10);
-      ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
-      ctx.closePath();
-      ctx.fill();
-
-      if (dir !== 'north') {
-        ctx.strokeStyle = secondary;
-        ctx.lineWidth = 10;
+      // Fallback vetorial instantâneo com a cor oficial do tops.svg
+      ctx.fillStyle = topDef.primaryColor || primary;
+      if (topStyle === 'top_cupcake_dress') {
         ctx.beginPath();
-        ctx.arc(0, -280, 65, 0.15 * Math.PI, 0.85 * Math.PI);
-        ctx.stroke();
+        ctx.moveTo(-95, -280);
+        ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
+        ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
+        ctx.bezierCurveTo(218, 130, 250, 260, 260, 360);
+        ctx.lineTo(-260, 360);
+        ctx.bezierCurveTo(-250, 260, -218, 130, -208, 10);
+        ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
+        ctx.closePath();
+        ctx.fill();
+      } else if (topStyle === 'top_crop_top') {
+        ctx.beginPath();
+        ctx.moveTo(-95, -280);
+        ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
+        ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
+        ctx.bezierCurveTo(210, 50, 208, 80, 204, 100);
+        ctx.lineTo(-204, 100);
+        ctx.bezierCurveTo(-208, 80, -210, 50, -208, 10);
+        ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(-95, -280);
+        ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
+        ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
+        ctx.bezierCurveTo(215, 130, 185, 210, 180, 215);
+        ctx.lineTo(-180, 215);
+        ctx.bezierCurveTo(-185, 210, -215, 130, -208, 10);
+        ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
+        ctx.closePath();
+        ctx.fill();
       }
     }
 
@@ -576,9 +483,10 @@ export class ModularAvatarRenderer {
 
   drawArms(ctx, pose, cfg, dir) {
     const skin = cfg.skinTone || '#f6dab9';
-    const primary = cfg.topColorPrimary || '#19c8b9';
-    const secondary = cfg.topColorSecondary || '#ffffff';
     const topStyle = cfg.topStyle || 'top_tee';
+    const topDef = SVG_TOPS.find(t => t.id === topStyle) || SVG_TOPS[0];
+    const primary = topDef.primaryColor || cfg.topColorPrimary || '#19c8b9';
+    const secondary = topDef.secondaryColor || cfg.topColorSecondary || '#ffffff';
 
     ctx.save();
 
@@ -628,10 +536,14 @@ export class ModularAvatarRenderer {
 
   renderArmSleeve(ctx, primary, secondary, topStyle, side) {
     const isLeft = side === 'left';
-    ctx.fillStyle = primary;
+    const topDef = SVG_TOPS.find(t => t.id === topStyle) || SVG_TOPS[0];
+    if (topDef.sleeveType === 'none') return;
 
-    if (topStyle === 'top_long_sleeve' || topStyle === 'top_sweater') {
-      // Manga Longa / Suéter: cobre todo o braço do ombro até o punho sem afunilamento
+    ctx.save();
+    ctx.fillStyle = topDef.primaryColor || primary;
+
+    if (topDef.sleeveType === 'long') {
+      // Manga Longa / Suéter: sobressai o braço inteiro
       ctx.beginPath();
       if (isLeft) {
         ctx.moveTo(55, -5);
@@ -653,25 +565,20 @@ export class ModularAvatarRenderer {
       ctx.closePath();
       ctx.fill();
 
-      // Punho / Acabamento secundário
-      ctx.fillStyle = secondary;
-      ctx.beginPath();
-      if (isLeft) {
-        ctx.moveTo(-195, 345);
-        ctx.lineTo(-235, 405);
-        ctx.bezierCurveTo(-255, 425, -295, 415, -310, 385);
-        ctx.lineTo(-265, 330);
-      } else {
-        ctx.moveTo(195, 345);
-        ctx.lineTo(235, 405);
-        ctx.bezierCurveTo(255, 425, 295, 415, 310, 385);
-        ctx.lineTo(265, 330);
+      // Renderiza estampa/detalhe SVG do tops.svg na manga
+      const sleeveSvg = isLeft ? topDef.sleeveLSvgContent : topDef.sleeveRSvgContent;
+      if (sleeveSvg) {
+        const img = this.getSvgImage(`top_sleeve_${side}_${topDef.id}`, sleeveSvg);
+        if (img && img.complete && img.naturalWidth > 0) {
+          const sw = (isLeft ? topDef.sleeveLW : topDef.sleeveRW) * 4.1;
+          const sh = (isLeft ? topDef.sleeveLH : topDef.sleeveRH) * 4.1;
+          const sx = isLeft ? -sw * 0.6 : -sw * 0.4;
+          ctx.drawImage(img, sx, -15, sw, sh);
+        }
       }
-      ctx.closePath();
-      ctx.fill();
 
-    } else if (topStyle === 'top_puffy_sleeve') {
-      // Manga Bufante: volume esférico generoso no ombro cobrindo toda a articulação
+    } else if (topDef.sleeveType === 'puffy') {
+      // Manga Bufante: volume esférico generoso no ombro
       ctx.beginPath();
       if (isLeft) {
         ctx.arc(-25, 55, 115, 0, Math.PI * 2);
@@ -680,10 +587,19 @@ export class ModularAvatarRenderer {
       }
       ctx.fill();
 
-    } else if (topStyle === 'top_sleeveless' || topStyle === 'top_crop_top') {
-      // Regata / Crop Top: braços descobertos
+      const sleeveSvg = isLeft ? topDef.sleeveLSvgContent : topDef.sleeveRSvgContent;
+      if (sleeveSvg) {
+        const img = this.getSvgImage(`top_sleeve_${side}_${topDef.id}`, sleeveSvg);
+        if (img && img.complete && img.naturalWidth > 0) {
+          const sw = (isLeft ? topDef.sleeveLW : topDef.sleeveRW) * 4.1;
+          const sh = (isLeft ? topDef.sleeveLH : topDef.sleeveRH) * 4.1;
+          const sx = isLeft ? -sw * 0.7 : -sw * 0.3;
+          ctx.drawImage(img, sx, -10, sw, sh);
+        }
+      }
+
     } else {
-      // Manga Curta padrão (Tee / Vestido): envolve 100% o ombro, axila e bíceps
+      // Manga Curta padrão (Tee / Vestido Cupcake): envolve 100% o ombro e bíceps
       ctx.beginPath();
       if (isLeft) {
         ctx.moveTo(55, -5);
@@ -702,8 +618,22 @@ export class ModularAvatarRenderer {
       }
       ctx.closePath();
       ctx.fill();
+
+      const sleeveSvg = isLeft ? topDef.sleeveLSvgContent : topDef.sleeveRSvgContent;
+      if (sleeveSvg) {
+        const img = this.getSvgImage(`top_sleeve_${side}_${topDef.id}`, sleeveSvg);
+        if (img && img.complete && img.naturalWidth > 0) {
+          const sw = (isLeft ? topDef.sleeveLW : topDef.sleeveRW) * 4.1;
+          const sh = (isLeft ? topDef.sleeveLH : topDef.sleeveRH) * 4.1;
+          const sx = isLeft ? -sw * 0.65 : -sw * 0.35;
+          ctx.drawImage(img, sx, -10, sw, sh);
+        }
+      }
     }
+
+    ctx.restore();
   }
+
 
   drawLegs(ctx, pose, cfg, dir) {
     const skin = cfg.skinTone || '#f6dab9';
