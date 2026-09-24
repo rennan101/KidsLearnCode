@@ -120,10 +120,11 @@ export class CharacterCreator {
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Enquadra perfeitamente o avatar centralizado no canvas (320x340)
+    // Enquadra o avatar centralizado no canvas (320x420)
+    // targetY maior dá espaço no topo para cabelos altos
     const scale = 0.96;
     const targetX = this.canvas.width / 2;
-    const targetY = 24;
+    const targetY = 80;
 
     this.renderer.render(
       this.ctx,
@@ -169,7 +170,7 @@ export class CharacterCreator {
           <!-- Left Stage -->
           <div class="cc-stage-panel">
             <div class="cc-preview-stage">
-              <canvas id="cc-preview-canvas" width="320" height="340" class="cc-canvas"></canvas>
+              <canvas id="cc-preview-canvas" width="320" height="420" class="cc-canvas"></canvas>
             </div>
 
             <div class="cc-stage-controls">

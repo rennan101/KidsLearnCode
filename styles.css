@@ -454,7 +454,7 @@ header.app-header {
   flex: 1;
   position: relative;
   background: var(--animal-bg-content, #f7f3df);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .canvas-wrapper.editing {

@@ -127,7 +127,7 @@
 
 .cc-preview-stage {
   width: 320px;
-  height: 340px;
+  height: 420px;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -142,7 +142,7 @@
 
 .cc-canvas {
   width: 320px;
-  height: 340px;
+  height: 420px;
   image-rendering: auto;
   display: block;
 }
