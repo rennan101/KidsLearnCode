@@ -136,6 +136,9 @@ export class ModularAvatarRenderer {
       this.drawArms(ctx, pose, cfg, 'south');
     }
 
+    // 3.5 Pescoço desenhado na frente do cabelo traseiro
+    this.drawNeck(ctx, cfg.skinTone || '#f6dab9', pose);
+
     // 4. Cabeça e Feições Faciais (assets/characters/Heads, Eyes, Mouth, Nose, Blush)
     ctx.save();
     ctx.translate(1250, 760);
@@ -225,6 +228,9 @@ export class ModularAvatarRenderer {
     if (!isCelebrating) {
       this.drawArms(ctx, pose, cfg, 'east');
     }
+
+    // 3.5 Pescoço desenhado na frente do cabelo traseiro
+    this.drawNeck(ctx, cfg.skinTone || '#f6dab9', pose);
 
     // 4. Cabeça Oficial e Feições
     ctx.save();
@@ -333,6 +339,16 @@ export class ModularAvatarRenderer {
     ctx.restore();
   }
 
+  drawNeck(ctx, skin, pose) {
+    ctx.save();
+    ctx.translate(1250, 1450);
+    if (pose && pose.root) ctx.rotate(pose.root.rot);
+    ctx.fillStyle = skin;
+    // Pescoço oficial (_07_Pescoco de Base_char_flat.svg: x=1130, y=1080, w=240, h=180 -> relativo a (1250, 1450): x=-120, y=-370, w=240, h=180)
+    ctx.fillRect(-120, -370, 240, 180);
+    ctx.restore();
+  }
+
   drawTorsoAndNeck(ctx, rot, cfg, dir) {
     const skin = cfg.skinTone || '#f6dab9';
     const primary = cfg.topColorPrimary || '#19c8b9';
@@ -353,7 +369,7 @@ export class ModularAvatarRenderer {
     const torsoLocalPath = this.getPath2D('M-100 -280C-50 -290 50 -290 100 -280C160 -250 200 -130 205 10C215 130 180 245 90 275C40 290 -40 290 -90 275C-180 245 -215 130 -205 10C-200 -130 -160 -250 -100 -280Z');
     ctx.fill(torsoLocalPath);
 
-    // 3. ROUPAS SUPERIORES OFICIAIS (assets/Tops) - Renderização vetorial exata
+    // 3. ROUPAS SUPERIORES OFICIAIS (assets/Tops) - Renderização anatômica com encaixe perfeito no tronco
     this.renderTopOnTorso(ctx, topStyle, primary, secondary, skin, dir);
 
     // 4. Shorts / Calça / Saia (Pelve) - 100% Flat Fill
@@ -416,103 +432,149 @@ export class ModularAvatarRenderer {
 
   renderTopOnTorso(ctx, topStyle, primary, secondary, skin, dir) {
     ctx.save();
-    // Escala SVG oficial de Tops (largura 213px -> 430px de ombro a ombro)
-    // Coordenadas dos Tops têm centro X=107.5 e gola superior em Y=1477 (Cupcake Dress em Y=825)
-    ctx.save();
+    ctx.fillStyle = primary;
 
     if (topStyle === 'top_cupcake_dress') {
-      ctx.translate(0, -280);
-      ctx.scale(3.4, 3.4);
-      ctx.translate(-107.5, -825);
+      // Vestido Cupcake: cobre todo o tronco e desce em saia rodada volumosa
+      ctx.beginPath();
+      ctx.moveTo(-95, -280);
+      ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
+      ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
+      ctx.bezierCurveTo(218, 130, 250, 260, 260, 360);
+      ctx.lineTo(-260, 360);
+      ctx.bezierCurveTo(-250, 260, -218, 130, -208, 10);
+      ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
+      ctx.closePath();
+      ctx.fill();
 
-      // SVG path oficial de Cupcake Dress.svg
-      const dressPath = this.getPath2D('M80.5 825C48.5 815 30.3 854.8 32.5 864.3C31.7 865 30 865.3 31 867.3C31.5 870.8 36.3 876.7 39 878.5C41.5 880.2 48 882 51 883C52.2 883.8 52.8 882 53 881C56.5 881 59.7 882.6 61 877.8V884.5C48.2 897 21 933.5 21 963.5C21 967.5 32 969.5 32 965.5C32 969.5 42.5 971.5 42.5 967.5C42.5 971.5 53 971.5 53 967.5C53 971.5 64 973.5 64 969.5C64 973.5 75 974 75 970C75 974 85.5 974 85.5 970C85.5 974 96.5 974.5 96.5 970.5C96.5 974.5 108 974.5 108 970.5C108 974.5 119 974.5 119 970.5C119 974.5 129 974 129 970C129 974 139.5 973.5 139.5 969.5C139.5 973.5 150.5 973.5 150.5 969.5C150.5 973.5 161.5 971.5 161.5 967.5C161.5 971.5 172 971.5 172 967.5C172 971.5 182.5 969.5 182.5 965.5C182.5 969.5 193.5 967.5 193.5 963.5C193.5 929.9 166.8 896 153.5 885L153 875.5C154.8 882.6 158 881 161.5 881C161.7 882 162.3 883.8 163.5 883C166.5 882 173 880.2 175.5 878.5C178.2 876.7 183 870.8 183.5 867.3C184.5 865.3 182.8 865 182 864.3C184.2 854.8 166 815 134 825C127.8 827.5 121.5 832.5 107 832.5C92.5 832.5 86.7 827.5 80.5 825Z');
-      ctx.fillStyle = primary;
-      ctx.fill(dressPath);
-
-      // Detalhe frontal da saia
-      if (dir !== 'north') {
-        const detailPath = this.getPath2D('M107.97 845.709C95.057 845.709 84.7984 847.717 81.2832 848.722L87.5244 878.207H129.492L134.442 848.722C130.999 847.717 120.883 845.709 107.97 845.709Z');
-        ctx.fillStyle = secondary;
-        ctx.fill(detailPath);
-      }
-
-    } else if (topStyle === 'top_crop_top') {
-      ctx.translate(0, -280);
-      ctx.scale(3.4, 3.4);
-      ctx.translate(-107.5, -1477);
-
-      // SVG path oficial de Crop Top.svg
-      const cropPath = this.getPath2D('M31 1512.5C37.8 1498.5 69 1477 80.5 1477C86.6667 1479.5 93 1484.5 107.5 1484.5C122 1484.5 128 1479.5 134 1477C145.5 1477 176.7 1498.5 183.5 1512.5C181.333 1522 168 1533.5 164 1535.5C161 1533.5 154.6 1529.1 153 1527.5C151 1525.5 158 1545 157.5 1552.5C146.5 1554.5 120.1 1556.5 106.5 1556.5C92.9 1556.5 68 1555 57 1552.5C56.5 1545 63.5 1525.5 61.5 1527.5C59.9 1529.1 53.5 1533.5 50.5 1535.5C46.5 1533.5 33.1667 1522 31 1512.5Z');
-      ctx.fillStyle = primary;
-      ctx.fill(cropPath);
-
-      if (dir !== 'north') {
-        ctx.fillStyle = secondary;
-        const trimBottom = this.getPath2D('M57 1552.5C68 1555 92.9 1556.5 106.5 1556.5C120.1 1556.5 146.5 1554.5 157.5 1552.5L157 1545C146 1547 120 1548.5 106.5 1548.5C93 1548.5 68 1547 57 1545Z');
-        ctx.fill(trimBottom);
-      }
-
-    } else if (topStyle === 'top_sweater') {
-      ctx.translate(0, -280);
-      ctx.scale(3.4, 3.4);
-      ctx.translate(-107.5, -1477);
-
-      // SVG path oficial de Sweater.svg
-      const sweaterPath = this.getPath2D('M79.8 1476.7C79.4 1477.3 79 1478 79 1478.5C69 1475.5 41.6 1498.7 34 1511.5C30 1518.2 25 1522.6 20.6 1526.5C14.5 1531.8 9.6 1536.1 10.5 1544C8.2 1545.8 3.7 1550 4.5 1552C7.8 1555.8 15.5 1563.7 19.5 1564.5C23.5 1564.5 26.8 1559.8 28 1557.5C32.5 1559 47.2 1547.2 50 1542C52.8 1536.8 58.8 1530.2 61.5 1527.5C56.7 1538.2 49.1 1560.5 57.5 1564.5C56.8 1567.8 56.2 1575.7 57 1576.5C71 1578.5 99.6 1578.5 106 1578.5C112.4 1578.5 149.5 1578 158.5 1576.5C159.3 1575.7 158.2 1567.8 157.5 1564.5C165.9 1560.5 158.3 1538.2 153.5 1527.5C156.2 1530.2 162.2 1536.8 165 1542C167.8 1547.2 182.5 1559 187 1557.5C188.2 1559.8 191.5 1564.5 195.5 1564.5C199.5 1563.7 207.2 1555.8 210.5 1552C211.3 1550 206.8 1545.8 204.5 1544C205.4 1536.1 200.5 1531.8 194.4 1526.5C190 1522.6 185 1518.2 181 1511.5C173.4 1498.7 146 1475.5 136 1478.5C136 1478 134.9 1477.2 134 1476.6C127.2 1478.3 117.6 1480 106.7 1480C96 1480 86.6 1478.4 79.8 1476.7Z');
-      ctx.fillStyle = primary;
-      ctx.fill(sweaterPath);
-
-      // Barra e gola do suéter
+      // Detalhes / Laço frontal
       if (dir !== 'north') {
         ctx.fillStyle = secondary;
         ctx.beginPath();
-        ctx.roundRect(85, 1474, 43, 10, 5);
+        ctx.arc(0, -170, 32, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = secondary;
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.arc(0, 10, 180, 0.2 * Math.PI, 0.8 * Math.PI);
+        ctx.stroke();
+      }
+
+    } else if (topStyle === 'top_crop_top') {
+      // Top Curto: segue perfeitamente o tronco até a linha da cintura/costelas
+      ctx.beginPath();
+      ctx.moveTo(-95, -280);
+      ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
+      ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
+      ctx.bezierCurveTo(210, 50, 208, 80, 204, 100);
+      ctx.lineTo(-204, 100);
+      ctx.bezierCurveTo(-208, 80, -210, 50, -208, 10);
+      ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
+      ctx.closePath();
+      ctx.fill();
+
+      if (dir !== 'north') {
+        ctx.fillStyle = secondary;
+        ctx.fillRect(-204, 85, 408, 15);
+      }
+
+    } else if (topStyle === 'top_sweater') {
+      // Suéter Quente: corte largo e aconchegante cobrindo todo o tronco
+      ctx.beginPath();
+      ctx.moveTo(-98, -282);
+      ctx.bezierCurveTo(-50, -292, 50, -292, 98, -282);
+      ctx.bezierCurveTo(165, -250, 208, -130, 212, 10);
+      ctx.bezierCurveTo(220, 130, 190, 230, 185, 235);
+      ctx.lineTo(-185, 235);
+      ctx.bezierCurveTo(-190, 230, -220, 130, -212, 10);
+      ctx.bezierCurveTo(-208, -130, -165, -250, -98, -282);
+      ctx.closePath();
+      ctx.fill();
+
+      if (dir !== 'north') {
+        ctx.fillStyle = secondary;
+        ctx.beginPath();
+        ctx.roundRect(-75, -292, 150, 28, 14);
+        ctx.fill();
+        ctx.fillRect(-185, 215, 370, 20);
+      }
+
+    } else if (topStyle === 'top_sleeveless') {
+      // Regata / Sem Mangas
+      ctx.beginPath();
+      ctx.moveTo(-65, -280);
+      ctx.bezierCurveTo(-30, -260, 30, -260, 65, -280);
+      ctx.bezierCurveTo(120, -230, 185, -90, 206, 10);
+      ctx.bezierCurveTo(215, 130, 185, 210, 180, 215);
+      ctx.lineTo(-180, 215);
+      ctx.bezierCurveTo(-185, 210, -215, 130, -206, 10);
+      ctx.bezierCurveTo(-185, -90, -120, -230, -65, -280);
+      ctx.closePath();
+      ctx.fill();
+
+    } else if (topStyle === 'top_puffy_sleeve') {
+      // Camisa para Manga Bufante
+      ctx.beginPath();
+      ctx.moveTo(-95, -280);
+      ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
+      ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
+      ctx.bezierCurveTo(215, 130, 185, 210, 180, 215);
+      ctx.lineTo(-180, 215);
+      ctx.bezierCurveTo(-185, 210, -215, 130, -208, 10);
+      ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
+      ctx.closePath();
+      ctx.fill();
+
+      if (dir !== 'north') {
+        ctx.fillStyle = secondary;
+        ctx.beginPath();
+        ctx.roundRect(-50, -275, 100, 16, 8);
         ctx.fill();
       }
 
-    } else if (topStyle === 'top_puffy_sleeve') {
-      ctx.translate(0, -280);
-      ctx.scale(3.4, 3.4);
-      ctx.translate(-107.5, -1477);
-
-      // SVG path oficial de Puffy Sleeve.svg
-      const puffyPath = this.getPath2D('M80.5 1477C48.5 1467 30.3 1506.8 32.5 1516.3C31.7 1517 30 1517.3 31 1519.3C31.5 1522.8 36.3 1528.7 39 1530.5C41.5 1532.2 48 1534 51 1535C52.2 1535.8 52.8 1534 53 1533C56.5 1533 59.7 1534.5 61 1529.8C59.5 1538.6 54.6 1568.9 57.5 1575.5L58.5 1580.5C60 1580.5 64 1582 64 1578C64 1582 75 1582 75 1578C75 1582 85.5 1582 85.5 1578C85.5 1582 96 1582 96 1578C96 1582 107 1582 107 1578C107 1582 118.5 1582 118.5 1578C118.5 1582 129.5 1582 129.5 1578C129.5 1582 140.5 1582 140.5 1578C140.5 1582 151 1582 151 1578C151 1582 155 1580.5 156.5 1580.5L157.5 1575.5C160.4 1568.9 155.5 1538.6 154 1529.8C155.3 1534.5 158.5 1533 162 1533C162.2 1534 162.8 1535.8 164 1535C167 1534 173.5 1532.2 176 1530.5C178.7 1528.7 183.5 1522.8 184 1519.3C185 1517.3 183.3 1517 182.5 1516.3C184.7 1506.8 166.5 1467 134.5 1477C128.3 1479.5 122 1484.5 107.5 1484.5C93 1484.5 86.7 1479.5 80.5 1477Z');
-      ctx.fillStyle = primary;
-      ctx.fill(puffyPath);
-
-    } else if (topStyle === 'top_sleeveless') {
-      ctx.translate(0, -280);
-      ctx.scale(3.4, 3.4);
-      ctx.translate(-107.5, -1477);
-
-      // SVG path oficial de Sleeveless.svg
-      const sleeveLessPath = this.getPath2D('M107.5 1581.5C93.9 1581.5 68 1580 57 1577.5C56.5 1570.1 64 1529 65 1524C69.8 1519.2 70.2 1494.5 70.5 1482C72.9 1480.4 79.7 1478.2 82.5 1477.5C85 1478.2 90 1479.3 90 1482.5C90 1479.5 98.5 1480.3 98.5 1483.5C98.5 1481 107.5 1481 107.5 1485C107.5 1481 116.5 1481 116.5 1483.5C116.5 1480.3 125 1479.5 125 1482.5C125 1479.7 130 1478 132.5 1477.5C135.3 1478.2 142.6 1480.4 145 1482C145.2 1493.5 146.5 1518 150.5 1524C153.3 1539 159.2 1571.5 158 1577.5C147 1580 121.1 1581.5 107.5 1581.5Z');
-      ctx.fillStyle = primary;
-      ctx.fill(sleeveLessPath);
-
     } else if (topStyle === 'top_long_sleeve') {
-      ctx.translate(0, -280);
-      ctx.scale(3.4, 3.4);
-      ctx.translate(-107.5, -1477);
+      // Camisa de Manga Longa (corpo)
+      ctx.beginPath();
+      ctx.moveTo(-95, -280);
+      ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
+      ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
+      ctx.bezierCurveTo(215, 130, 185, 210, 180, 215);
+      ctx.lineTo(-180, 215);
+      ctx.bezierCurveTo(-185, 210, -215, 130, -208, 10);
+      ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
+      ctx.closePath();
+      ctx.fill();
 
-      // SVG path oficial de Long Sleeve.svg (corpo)
-      const longSleevePath = this.getPath2D('M41 1505.4C51.1 1492.5 71 1477.9 82.5 1477.9C88.7 1480.4 93 1484.5 107.5 1484.5C122 1484.5 126.3 1480.4 132.5 1477.9C144 1477.9 164.7 1493.5 174 1505.4C185 1519.4 209.5 1547 211.5 1549C210.5 1551.2 207.6 1556.2 204 1559C200.4 1561.8 189.5 1569.5 187 1569.5C177.2 1556 156.7 1528.7 153.5 1527.5C159 1559 170 1623.7 170 1630.5H45.5C44.7 1622.9 55.8 1558.7 61.5 1527.5C58.3 1528.7 37.8 1556 28 1569.5C25.5 1569.5 14.6 1561.8 11 1559C7.4 1556.2 4.5 1551.2 3.5 1549C5.5 1547 30 1519.4 41 1505.4Z');
-      ctx.fillStyle = primary;
-      ctx.fill(longSleevePath);
+      if (dir !== 'north') {
+        ctx.fillStyle = secondary;
+        ctx.beginPath();
+        ctx.roundRect(-60, -275, 120, 16, 8);
+        ctx.fill();
+      }
 
     } else {
-      // Camiseta Clássica (Tee.svg)
-      ctx.translate(0, -280);
-      ctx.scale(3.4, 3.4);
-      ctx.translate(-107.5, -1477);
+      // Camiseta Clássica (top_tee padrão)
+      ctx.beginPath();
+      ctx.moveTo(-95, -280);
+      ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
+      ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
+      ctx.bezierCurveTo(215, 130, 185, 210, 180, 215);
+      ctx.lineTo(-180, 215);
+      ctx.bezierCurveTo(-185, 210, -215, 130, -208, 10);
+      ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
+      ctx.closePath();
+      ctx.fill();
 
-      const teePath = this.getPath2D('M31 1512.5C37.8 1498.5 69 1477 80.5 1477C86.6667 1479.5 93 1484.5 107.5 1484.5C122 1484.5 128 1479.5 134 1477C145.5 1477 176.7 1498.5 183.5 1512.5C181.333 1522 168 1533.5 164 1535.5C161 1533.5 154.6 1529.1 153 1527.5C151 1525.5 158 1570 157.5 1577.5C146.5 1579.5 120.1 1581.5 106.5 1581.5C92.9 1581.5 68 1580 57 1577.5C56.5 1570 63.5 1525.5 61.5 1527.5C59.9 1529.1 53.5 1533.5 50.5 1535.5C46.5 1533.5 33.1667 1522 31 1512.5Z');
-      ctx.fillStyle = primary;
-      ctx.fill(teePath);
+      if (dir !== 'north') {
+        ctx.strokeStyle = secondary;
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        ctx.arc(0, -280, 65, 0.15 * Math.PI, 0.85 * Math.PI);
+        ctx.stroke();
+      }
     }
 
-    ctx.restore();
     ctx.restore();
   }
 
@@ -569,46 +631,75 @@ export class ModularAvatarRenderer {
   }
 
   renderArmSleeve(ctx, primary, secondary, topStyle, side) {
-    const s = side === 'left' ? -1 : 1;
+    const isLeft = side === 'left';
     ctx.fillStyle = primary;
 
     if (topStyle === 'top_long_sleeve' || topStyle === 'top_sweater') {
-      // Manga Longa (Long Sleeve.svg / Sweater.svg): cobre todo o braço até o punho
+      // Manga Longa / Suéter: cobre todo o braço do ombro até o punho sem afunilamento
       ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.bezierCurveTo(s * 35, 10, s * 50, 50, s * 30, 85);
-      ctx.lineTo(s * 210, 365);
-      ctx.bezierCurveTo(s * 230, 385, s * 270, 375, s * 280, 350);
-      ctx.lineTo(s * 28, 10);
+      if (isLeft) {
+        ctx.moveTo(0, -6);
+        ctx.bezierCurveTo(38, 10, 54, 52, 34, 90);
+        ctx.lineTo(-235, 400);
+        ctx.bezierCurveTo(-255, 422, -290, 412, -305, 385);
+        ctx.bezierCurveTo(-318, 355, -308, 320, -282, 302);
+        ctx.lineTo(-32, 8);
+      } else {
+        ctx.moveTo(0, -6);
+        ctx.bezierCurveTo(-38, 10, -54, 52, -34, 90);
+        ctx.lineTo(235, 400);
+        ctx.bezierCurveTo(255, 422, 290, 412, 305, 385);
+        ctx.bezierCurveTo(318, 355, 308, 320, 282, 302);
+        ctx.lineTo(32, 8);
+      }
       ctx.closePath();
       ctx.fill();
 
-      // Punho branco
+      // Punho / Acabamento secundário
       ctx.fillStyle = secondary;
       ctx.beginPath();
-      ctx.moveTo(s * 190, 335);
-      ctx.lineTo(s * 230, 395);
-      ctx.lineTo(s * 270, 365);
-      ctx.lineTo(s * 240, 315);
+      if (isLeft) {
+        ctx.moveTo(-195, 345);
+        ctx.lineTo(-235, 400);
+        ctx.bezierCurveTo(-255, 422, -290, 412, -305, 385);
+        ctx.lineTo(-265, 330);
+      } else {
+        ctx.moveTo(195, 345);
+        ctx.lineTo(235, 400);
+        ctx.bezierCurveTo(255, 422, 290, 412, 305, 385);
+        ctx.lineTo(265, 330);
+      }
       ctx.closePath();
       ctx.fill();
 
     } else if (topStyle === 'top_puffy_sleeve') {
-      // Manga Bufante (Puffy Sleeve.svg): Manga esférica volumosa no ombro
+      // Manga Bufante: volume esférico generoso no ombro cobrindo toda a articulação
       ctx.beginPath();
-      ctx.arc(s * 40, 45, 105, 0, Math.PI * 2);
+      if (isLeft) {
+        ctx.arc(-25, 55, 110, 0, Math.PI * 2);
+      } else {
+        ctx.arc(25, 55, 110, 0, Math.PI * 2);
+      }
       ctx.fill();
 
     } else if (topStyle === 'top_sleeveless' || topStyle === 'top_crop_top') {
-      // Sem mangas: braço inteiro de pele exposto (nada a sobrepor)
+      // Regata / Crop Top: braços descobertos
     } else {
-      // Manga Curta padrão (Tee.svg / Cupcake Dress.svg)
+      // Manga Curta padrão (Tee / Vestido): cobre do ombro até metade do bíceps sem afunilar
       ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.bezierCurveTo(s * 35, 10, s * 50, 50, s * 30, 85);
-      ctx.lineTo(s * 95, 185);
-      ctx.bezierCurveTo(s * 130, 175, s * 150, 145, s * 140, 115);
-      ctx.lineTo(s * 28, 10);
+      if (isLeft) {
+        ctx.moveTo(0, -6);
+        ctx.bezierCurveTo(38, 10, 54, 52, 34, 90);
+        ctx.lineTo(-105, 220);
+        ctx.bezierCurveTo(-135, 215, -165, 190, -160, 155);
+        ctx.lineTo(-32, 8);
+      } else {
+        ctx.moveTo(0, -6);
+        ctx.bezierCurveTo(-38, 10, -54, 52, -34, 90);
+        ctx.lineTo(105, 220);
+        ctx.bezierCurveTo(135, 215, 165, 190, 160, 155);
+        ctx.lineTo(32, 8);
+      }
       ctx.closePath();
       ctx.fill();
     }
