@@ -103,6 +103,8 @@ export const BLUSH_OPTIONS = [
 
 export const TOP_OPTIONS = SVG_TOPS.map(t => ({
   id: t.id,
+  baseId: t.baseId,
+  variantIndex: t.variantIndex,
   name: t.name,
   desc: t.desc
 }));

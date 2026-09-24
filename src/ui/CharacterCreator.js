@@ -546,8 +546,8 @@ export class CharacterCreator {
       <div class="cc-section-title" style="margin-top: 18px;">Estilo da Camisa / Roupa Superior</div>
       <div class="cc-items-grid">
         ${TOP_OPTIONS.map(opt => `
-          <button class="cc-item-card ${this.currentConfig.topStyle === opt.id ? 'active' : ''}" data-top="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
-            ${getTopSvg(opt.id, this.currentConfig.topColorPrimary)}
+          <button class="cc-item-card ${(this.currentConfig.topStyle === opt.id || (this.currentConfig.topStyle === opt.baseId && opt.variantIndex === 1)) ? 'active' : ''}" data-top="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
+            ${getTopSvg(opt.id)}
           </button>
         `).join('')}
       </div>

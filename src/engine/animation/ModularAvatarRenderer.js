@@ -536,44 +536,48 @@ export class ModularAvatarRenderer {
 
   renderArmSleeve(ctx, primary, secondary, topStyle, side) {
     const isLeft = side === 'left';
-    const topDef = SVG_TOPS.find(t => t.id === topStyle) || SVG_TOPS[0];
+    const topDef = SVG_TOPS.find(t => t.id === topStyle || t.baseId === topStyle) || SVG_TOPS[0];
     if (topDef.sleeveType === 'none') return;
 
     ctx.save();
     ctx.fillStyle = topDef.primaryColor || primary;
 
+    const sw = (isLeft ? topDef.sleeveLW : topDef.sleeveRW) * 4.1;
+    const sh = (isLeft ? topDef.sleeveLH : topDef.sleeveRH) * 4.1;
+
     if (topDef.sleeveType === 'long') {
-      // Manga Longa / Suéter: sobressai o braço inteiro
+      // Manga Longa / Suéter: sobressai o braço inteiro do ombro até o punho
       ctx.beginPath();
       if (isLeft) {
-        ctx.moveTo(55, -5);
-        ctx.bezierCurveTo(62, 45, 45, 95, 30, 120);
+        ctx.moveTo(40, -10);
+        ctx.bezierCurveTo(60, 40, 45, 95, 30, 120);
         ctx.lineTo(-235, 405);
         ctx.bezierCurveTo(-255, 425, -295, 415, -310, 385);
         ctx.bezierCurveTo(-320, 355, -310, 320, -282, 300);
         ctx.lineTo(-45, 10);
-        ctx.bezierCurveTo(-35, -20, 10, -25, 55, -5);
+        ctx.bezierCurveTo(-35, -20, 10, -25, 40, -10);
       } else {
-        ctx.moveTo(-55, -5);
-        ctx.bezierCurveTo(-62, 45, -45, 95, -30, 120);
+        ctx.moveTo(-40, -10);
+        ctx.bezierCurveTo(-60, 40, -45, 95, -30, 120);
         ctx.lineTo(235, 405);
         ctx.bezierCurveTo(255, 425, 295, 415, 310, 385);
         ctx.bezierCurveTo(320, 355, 310, 320, 282, 300);
         ctx.lineTo(45, 10);
-        ctx.bezierCurveTo(35, -20, -10, -25, -55, -5);
+        ctx.bezierCurveTo(35, -20, -10, -25, -40, -10);
       }
       ctx.closePath();
       ctx.fill();
 
-      // Renderiza estampa/detalhe SVG do tops.svg na manga
+      // Renderiza estampa/detalhe SVG do tops.svg na manga perfeitamente alinhada
       const sleeveSvg = isLeft ? topDef.sleeveLSvgContent : topDef.sleeveRSvgContent;
       if (sleeveSvg) {
         const img = this.getSvgImage(`top_sleeve_${side}_${topDef.id}`, sleeveSvg);
         if (img && img.complete && img.naturalWidth > 0) {
-          const sw = (isLeft ? topDef.sleeveLW : topDef.sleeveRW) * 4.1;
-          const sh = (isLeft ? topDef.sleeveLH : topDef.sleeveRH) * 4.1;
-          const sx = isLeft ? -sw * 0.6 : -sw * 0.4;
-          ctx.drawImage(img, sx, -15, sw, sh);
+          if (isLeft) {
+            ctx.drawImage(img, -sw + 10, -10, sw, sh);
+          } else {
+            ctx.drawImage(img, -10, -10, sw, sh);
+          }
         }
       }
 
@@ -581,9 +585,9 @@ export class ModularAvatarRenderer {
       // Manga Bufante: volume esférico generoso no ombro
       ctx.beginPath();
       if (isLeft) {
-        ctx.arc(-25, 55, 115, 0, Math.PI * 2);
+        ctx.arc(-20, 50, 115, 0, Math.PI * 2);
       } else {
-        ctx.arc(25, 55, 115, 0, Math.PI * 2);
+        ctx.arc(20, 50, 115, 0, Math.PI * 2);
       }
       ctx.fill();
 
@@ -591,10 +595,11 @@ export class ModularAvatarRenderer {
       if (sleeveSvg) {
         const img = this.getSvgImage(`top_sleeve_${side}_${topDef.id}`, sleeveSvg);
         if (img && img.complete && img.naturalWidth > 0) {
-          const sw = (isLeft ? topDef.sleeveLW : topDef.sleeveRW) * 4.1;
-          const sh = (isLeft ? topDef.sleeveLH : topDef.sleeveRH) * 4.1;
-          const sx = isLeft ? -sw * 0.7 : -sw * 0.3;
-          ctx.drawImage(img, sx, -10, sw, sh);
+          if (isLeft) {
+            ctx.drawImage(img, -sw + 15, -15, sw, sh);
+          } else {
+            ctx.drawImage(img, -15, -15, sw, sh);
+          }
         }
       }
 
@@ -602,19 +607,19 @@ export class ModularAvatarRenderer {
       // Manga Curta padrão (Tee / Vestido Cupcake): envolve 100% o ombro e bíceps
       ctx.beginPath();
       if (isLeft) {
-        ctx.moveTo(55, -5);
-        ctx.bezierCurveTo(62, 45, 45, 95, 30, 120);
+        ctx.moveTo(40, -10);
+        ctx.bezierCurveTo(60, 40, 45, 95, 30, 120);
         ctx.lineTo(-75, 240);
         ctx.bezierCurveTo(-115, 255, -175, 215, -185, 175);
         ctx.lineTo(-45, 10);
-        ctx.bezierCurveTo(-35, -20, 10, -25, 55, -5);
+        ctx.bezierCurveTo(-35, -20, 10, -25, 40, -10);
       } else {
-        ctx.moveTo(-55, -5);
-        ctx.bezierCurveTo(-62, 45, -45, 95, -30, 120);
+        ctx.moveTo(-40, -10);
+        ctx.bezierCurveTo(-60, 40, -45, 95, -30, 120);
         ctx.lineTo(75, 240);
         ctx.bezierCurveTo(115, 255, 175, 215, 185, 175);
         ctx.lineTo(45, 10);
-        ctx.bezierCurveTo(35, -20, -10, -25, -55, -5);
+        ctx.bezierCurveTo(35, -20, -10, -25, -40, -10);
       }
       ctx.closePath();
       ctx.fill();
@@ -623,16 +628,18 @@ export class ModularAvatarRenderer {
       if (sleeveSvg) {
         const img = this.getSvgImage(`top_sleeve_${side}_${topDef.id}`, sleeveSvg);
         if (img && img.complete && img.naturalWidth > 0) {
-          const sw = (isLeft ? topDef.sleeveLW : topDef.sleeveRW) * 4.1;
-          const sh = (isLeft ? topDef.sleeveLH : topDef.sleeveRH) * 4.1;
-          const sx = isLeft ? -sw * 0.65 : -sw * 0.35;
-          ctx.drawImage(img, sx, -10, sw, sh);
+          if (isLeft) {
+            ctx.drawImage(img, -sw + 10, -10, sw, sh);
+          } else {
+            ctx.drawImage(img, -10, -10, sw, sh);
+          }
         }
       }
     }
 
     ctx.restore();
   }
+
 
 
   drawLegs(ctx, pose, cfg, dir) {
