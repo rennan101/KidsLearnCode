@@ -19,6 +19,7 @@ import {
   SVG_BLUSHES,
   getHeadSvgContent,
   getHeadBackSvgContent,
+  getHeadFrontSvgContent,
   getEyeSvgContent,
   getNoseSvgContent,
   getMouthSvgContent,
@@ -134,6 +135,7 @@ export class ModularAvatarRenderer {
 
     this.drawHeadBase(ctx, cfg, 'south');
     this.drawFaceFeatures(ctx, cfg, 'south');
+    this.drawFrontHair(ctx, cfg, 'south');
 
     if (cfg.glassesStyle && cfg.glassesStyle !== 'none') {
       this.drawGlasses(ctx, cfg, 'south');
@@ -211,6 +213,7 @@ export class ModularAvatarRenderer {
 
     this.drawHeadBase(ctx, cfg, 'south');
     this.drawFaceFeatures(ctx, cfg, 'south');
+    this.drawFrontHair(ctx, cfg, 'east');
 
     if (cfg.glassesStyle && cfg.glassesStyle !== 'none') {
       this.drawGlasses(ctx, cfg, 'south');
@@ -263,6 +266,25 @@ export class ModularAvatarRenderer {
 
     const headDef = SVG_HEADS.find(h => h.id === headId) || SVG_HEADS[0];
     const img = this.getSvgImage(`headback_${headId}_${hair}`, backSvg);
+
+    if (img && img.complete && img.naturalWidth > 0) {
+      const [,, vw, vh] = headDef.viewBox.split(' ').map(Number);
+      const cx = headDef.cx !== undefined ? headDef.cx : vw / 2;
+      const cy = headDef.cy !== undefined ? headDef.cy : 350;
+      ctx.drawImage(img, -cx, -cy, vw, vh);
+    }
+  }
+
+
+  drawFrontHair(ctx, cfg, dir) {
+    if (dir === 'north') return;
+    const hair = cfg.hairColor || '#3d2314';
+    const headId = cfg.headStyle || 'head_01';
+    const frontSvg = getHeadFrontSvgContent(headId, hair);
+    if (!frontSvg) return;
+
+    const headDef = SVG_HEADS.find(h => h.id === headId) || SVG_HEADS[0];
+    const img = this.getSvgImage(`headfront_${headId}_${hair}`, frontSvg);
 
     if (img && img.complete && img.naturalWidth > 0) {
       const [,, vw, vh] = headDef.viewBox.split(' ').map(Number);
