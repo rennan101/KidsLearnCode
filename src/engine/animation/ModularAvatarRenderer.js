@@ -118,26 +118,23 @@ export class ModularAvatarRenderer {
     const headRot = pose.head.rot;
     const isCelebrating = state === 'celebrate';
 
-    // 0. Cabelo Traseiro (quando for longo / chiquinhas / marias chiquinhas / cachos que caem atrás)
+    // 0. Cabelo Traseiro (camada mais de trás: fica atrás do pescoço, tronco e roupas)
     ctx.save();
     ctx.translate(1250, 760);
     ctx.rotate(headRot);
     this.drawBackHair(ctx, cfg, 'south');
     ctx.restore();
 
-    // 1. Pernas e Pés de Base_char_flat.svg (_04_Perna_Esquerda, _06_Perna_Direita, _03_Pe_Esquerdo, _05_Pe_Direito)
+    // 1. Pernas e Pés de Base_char_flat.svg
     this.drawLegs(ctx, pose, cfg, 'south');
 
-    // 2. Pescoço (_07_Pescoco) e Tronco (_08_Tronco_Corpo) + Roupas oficiais (assets/Tops) - desenhado SOBRE o cabelo traseiro
+    // 2. Pescoço, Tronco e Roupas (O Pescoço cobre o Cabelo Traseiro, e a Roupa/Gola cobre a base do Pescoço)
     this.drawTorsoAndNeck(ctx, pose.root.rot, cfg, 'south');
 
-    // 3. Braços e Mãos (_09_Braco_Esquerdo, _11_Braco_Direito, _10_Mao_Esquerda, _12_Mao_Direita) - desenhado SOBRE o cabelo traseiro
+    // 3. Braços e Mãos (desenhados com suas mangas sobre o tronco)
     if (!isCelebrating) {
       this.drawArms(ctx, pose, cfg, 'south');
     }
-
-    // 3.5 Pescoço desenhado na frente do cabelo traseiro
-    this.drawNeck(ctx, cfg.skinTone || '#f6dab9', pose);
 
     // 4. Cabeça e Feições Faciais (assets/characters/Heads, Eyes, Mouth, Nose, Blush)
     ctx.save();
@@ -211,7 +208,7 @@ export class ModularAvatarRenderer {
     const headRot = pose.head.rot;
     const isCelebrating = state === 'celebrate';
 
-    // 0. Cabelo Traseiro (fica atrás de pernas, tronco e braços)
+    // 0. Cabelo Traseiro (fica atrás de pernas, pescoço, tronco e braços)
     ctx.save();
     ctx.translate(1250, 760);
     ctx.rotate(headRot);
@@ -221,16 +218,13 @@ export class ModularAvatarRenderer {
     // 1. Pernas e Pés
     this.drawLegs(ctx, pose, cfg, 'east');
 
-    // 2. Tronco e Roupas
+    // 2. Pescoço, Tronco e Roupas (O Pescoço cobre o Cabelo Traseiro, e a Roupa/Gola cobre a base do Pescoço)
     this.drawTorsoAndNeck(ctx, pose.root.rot, cfg, 'east');
 
     // 3. Braços
     if (!isCelebrating) {
       this.drawArms(ctx, pose, cfg, 'east');
     }
-
-    // 3.5 Pescoço desenhado na frente do cabelo traseiro
-    this.drawNeck(ctx, cfg.skinTone || '#f6dab9', pose);
 
     // 4. Cabeça Oficial e Feições
     ctx.save();
