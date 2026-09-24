@@ -1365,7 +1365,7 @@ export class ModularAvatarRenderer {
       if (cfg.glassesStyle === 'sunglasses_cool') {
         ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
         ctx.beginPath();
-        ctx.roundRect(80, -40, 175, 145, 28);
+        ctx.roundRect(80, -55, 175, 145, 28);
         ctx.fill();
         ctx.stroke();
 
@@ -1392,7 +1392,7 @@ export class ModularAvatarRenderer {
         ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
         [-175, 185].forEach(gx => {
           ctx.beginPath();
-          ctx.roundRect(gx - 90, -50, 180, 150, 36);
+          ctx.roundRect(gx - 90, -60, 180, 150, 36);
           ctx.fill();
           ctx.stroke();
         });

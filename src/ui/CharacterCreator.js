@@ -406,7 +406,7 @@ export class CharacterCreator {
 
     const sectionStyles = document.createElement('div');
     sectionStyles.innerHTML = `
-      <div class="cc-section-title" style="margin-top: 18px;">Cabeça & Penteado (21 Modelos)</div>
+      <div class="cc-section-title" style="margin-top: 18px;">Cabeça & Penteado</div>
       <div class="cc-items-grid">
         ${HEAD_STYLE_OPTIONS.map(opt => `
           <button class="cc-item-card ${this.currentConfig.headStyle === opt.id ? 'active' : ''}" data-head="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
