@@ -43,7 +43,6 @@ export class MultiplayerClient {
         isMoving: false,
         isSprinting: false,
         isMounted: true,
-        activeDragonId: 'dragon_fly_storm',
         timer: 0,
         animTimer: 0,
         chatCooldown: 12.0
@@ -51,6 +50,21 @@ export class MultiplayerClient {
     ];
 
     this.supabaseClient = null;
+
+    // Throttling e detecção de mudança para economizar cota do Supabase Realtime
+    this.lastBroadcastTime = 0;
+    this.broadcastIntervalMs = 120; // ~8 updates por segundo máx quando em movimento
+    this.lastSentState = {
+      x: null,
+      y: null,
+      direction: null,
+      isMoving: null,
+      isSprinting: null,
+      isMounted: null,
+      activeDragonId: null,
+      idleHeartbeatTime: 0
+    };
+
     this.connect();
   }
 
@@ -169,23 +183,59 @@ export class MultiplayerClient {
   }
 
   sendLocalPlayerUpdate(player, heroId, name = 'Aventureiro', activeDragonId = null) {
+    const now = performance.now();
+    const currentX = Math.round(player.x);
+    const currentY = Math.round(player.y);
+    const currentHeroId = heroId || player.heroId;
+
+    // Detect if state actually changed
+    const hasMoved = this.lastSentState.x !== currentX || this.lastSentState.y !== currentY;
+    const hasActionChanged = 
+      this.lastSentState.direction !== player.direction ||
+      this.lastSentState.isMoving !== player.isMoving ||
+      this.lastSentState.isSprinting !== player.isSprinting ||
+      this.lastSentState.isMounted !== player.isMounted ||
+      this.lastSentState.activeDragonId !== activeDragonId;
+
+    const timeSinceLastSend = now - this.lastBroadcastTime;
+    const shouldSendPeriodicIdle = (now - this.lastSentState.idleHeartbeatTime) > 10000; // Heartbeat a cada 10s quando parado
+
+    // Send only if enough time passed AND (player moved OR action changed OR heartbeat)
+    const shouldSend = (timeSinceLastSend >= this.broadcastIntervalMs && (hasMoved || hasActionChanged)) || shouldSendPeriodicIdle;
+
+    if (!shouldSend) {
+      return;
+    }
+
+    this.lastBroadcastTime = now;
+    this.lastSentState.x = currentX;
+    this.lastSentState.y = currentY;
+    this.lastSentState.direction = player.direction;
+    this.lastSentState.isMoving = player.isMoving;
+    this.lastSentState.isSprinting = player.isSprinting;
+    this.lastSentState.isMounted = player.isMounted;
+    this.lastSentState.activeDragonId = activeDragonId;
+    if (shouldSendPeriodicIdle) {
+      this.lastSentState.idleHeartbeatTime = now;
+    }
+
     if (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({
         type: 'PLAYER_UPDATE',
-        x: Math.round(player.x),
-        y: Math.round(player.y),
+        x: currentX,
+        y: currentY,
         direction: player.direction,
         isMoving: player.isMoving,
         isSprinting: player.isSprinting,
         isMounted: player.isMounted,
-        heroId: heroId || player.heroId,
+        heroId: currentHeroId,
         name,
         activeDragonId
       }));
     }
 
     if (this.supabaseClient) {
-      this.supabaseClient.broadcastPlayerPosition(player, heroId || player.heroId, name, activeDragonId);
+      this.supabaseClient.broadcastPlayerPosition(player, currentHeroId, name, activeDragonId);
     }
   }
 
