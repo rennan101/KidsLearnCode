@@ -427,7 +427,7 @@ export class ModularAvatarRenderer {
   }
 
   renderTopOnTorso(ctx, topStyle, primary, secondary, skin, dir) {
-    const topDef = SVG_TOPS.find(t => t.id === topStyle) || SVG_TOPS[0];
+    const topDef = SVG_TOPS.find(t => t.id === topStyle || t.baseId === topStyle) || SVG_TOPS[0];
     const topSvg = topDef.torsoSvgContent || topDef.svgContent;
     const img = this.getSvgImage(`top_torso_${topDef.id}`, topSvg);
 
@@ -484,16 +484,20 @@ export class ModularAvatarRenderer {
   drawArms(ctx, pose, cfg, dir) {
     const skin = cfg.skinTone || '#f6dab9';
     const topStyle = cfg.topStyle || 'top_tee';
-    const topDef = SVG_TOPS.find(t => t.id === topStyle) || SVG_TOPS[0];
+    const topDef = SVG_TOPS.find(t => t.id === topStyle || t.baseId === topStyle) || SVG_TOPS[0];
     const primary = topDef.primaryColor || cfg.topColorPrimary || '#19c8b9';
     const secondary = topDef.secondaryColor || cfg.topColorSecondary || '#ffffff';
+    const rootRot = (pose.root && pose.root.rot) ? pose.root.rot : 0;
 
     ctx.save();
+    // Centraliza na origem do tronco (1250, 1450) e herda a rotação/bobbing do corpo
+    ctx.translate(1250, 1450);
+    ctx.rotate(rootRot);
 
     // Braço Esquerdo (_09_Braco_Esquerdo e _10_Mao_Esquerda)
-    // Articula no ombro esquerdo (1120, 1195)
+    // Articula no ombro esquerdo local: (-130, -255) relativo ao tronco (1250, 1450)
     ctx.save();
-    ctx.translate(1120, 1195);
+    ctx.translate(-130, -255);
     ctx.rotate(pose.arm_l.rot);
 
     // Braço de pele base
@@ -501,7 +505,7 @@ export class ModularAvatarRenderer {
     ctx.fillStyle = skin;
     ctx.fill(armLPath);
 
-    // Mão esquerda (_10_Mao_Esquerda: cx=820, cy=1600, r=62 -> local: cx=-300, cy=405, r=62)
+    // Mão esquerda (_10_Mao_Esquerda: local cx=-300, cy=405, r=62)
     ctx.beginPath();
     ctx.arc(-300, 405, 62, 0, Math.PI * 2);
     ctx.fill();
@@ -512,16 +516,16 @@ export class ModularAvatarRenderer {
     ctx.restore();
 
     // Braço Direito (_11_Braco_Direito e _12_Mao_Direita)
-    // Articula no ombro direito (1380, 1195)
+    // Articula no ombro direito local: (+130, -255) relativo ao tronco (1250, 1450)
     ctx.save();
-    ctx.translate(1380, 1195);
+    ctx.translate(130, -255);
     ctx.rotate(pose.arm_r.rot);
 
     const armRPath = this.getPath2D('M0 0C-35 10 -50 50 -30 85L230 395C250 417 285 407 300 380C315 353 305 320 278 305L28 10C20 3 10 0 0 0Z');
     ctx.fillStyle = skin;
     ctx.fill(armRPath);
 
-    // Mão direita (_12_Mao_Direita: cx=1680, cy=1600, r=62 -> local: cx=300, cy=405, r=62)
+    // Mão direita (_12_Mao_Direita: local cx=300, cy=405, r=62)
     ctx.beginPath();
     ctx.arc(300, 405, 62, 0, Math.PI * 2);
     ctx.fill();
