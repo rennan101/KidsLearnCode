@@ -63,7 +63,9 @@
 <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_495_57"/>
 <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_495_57" result="shape"/>
 </filter>
+<clipPath id="clip_top_crop_top_03_torso"><path d="M 49.5 336.0 L 49.5 326.0 L 103.0 326.0 L 103.0 336.0 L 122.0 386.5 L 175.0 386.5 L 175.0 426.0 L -20.0 426.0 L -20.0 386.5 L 30.5 386.5 Z"/></clipPath>
 </defs>
+<g clip-path="url(#clip_top_crop_top_03_torso)">
 <mask id="mask7_495_57" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="336" width="153" height="80">
 <path d="M0 371.5C6.8 357.5 38 336 49.5 336C55.6667 338.5 62 343.5 76.5 343.5C91 343.5 97 338.5 103 336C114.5 336 145.7 357.5 152.5 371.5C150.333 381 137 392.5 133 394.5C130 392.5 123.6 388.1 122 386.5C120 384.5 127 404 126.5 411.5C115.5 413.5 89.1 415.5 75.5 415.5C61.9 415.5 37 414 26 411.5C25.5 404 32.5 384.5 30.5 386.5C28.9 388.1 22.5 392.5 19.5 394.5C15.5 392.5 2.1667 381 0 371.5Z" fill="black"/>
 </mask>
@@ -89,6 +91,7 @@
 </g>
 <g filter="url(#filter36_d_495_57)">
 <path d="M27 394H5C6.9317 394 7.7724 392.046 7.9512 391.07C7.9512 386.168 10.2764 385.653 11.439 386.008C11.439 380.467 18.6829 376.951 18.6829 389.738C18.6829 387.074 22.9756 387.074 22.9756 389.738C22.9756 391.869 25.6585 393.467 27 394Z" fill="#EBF3FF"/>
+</g>
 </g>
 </g>
 </svg>
