@@ -174,7 +174,10 @@ export function getBlushSvg(blushId) {
 }
 
 export function getTopSvg(topId) {
-  const top = SVG_TOPS.find(t => t.id === topId) || SVG_TOPS[0];
+  const top = SVG_TOPS.find(t => t.id === topId || t.baseId === topId) || SVG_TOPS[0];
+  if (top.fullPath) {
+    return `<img src="${top.fullPath}" class="cc-preview-icon" alt="${top.name}" loading="lazy" />`;
+  }
   let svg = top.svgContent;
   if (!svg.includes('class=')) {
     svg = svg.replace('<svg ', '<svg class="cc-preview-icon" ');

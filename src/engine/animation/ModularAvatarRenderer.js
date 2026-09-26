@@ -426,10 +426,33 @@ export class ModularAvatarRenderer {
     ctx.restore();
   }
 
+  getAssetImage(path, fallbackSvgString = '') {
+    if (!this.svgImageCache.has(path)) {
+      const img = new Image();
+      if (path && (path.endsWith('.svg') || path.endsWith('.png'))) {
+        img.src = path;
+      } else if (fallbackSvgString) {
+        const blob = new Blob([fallbackSvgString], { type: 'image/svg+xml;charset=utf-8' });
+        img.src = URL.createObjectURL(blob);
+      }
+      this.svgImageCache.set(path, img);
+    }
+    const cached = this.svgImageCache.get(path);
+    if (cached && fallbackSvgString && !cached._hasFallback) {
+      cached.onerror = () => {
+        cached._hasFallback = true;
+        const blob = new Blob([fallbackSvgString], { type: 'image/svg+xml;charset=utf-8' });
+        cached.src = URL.createObjectURL(blob);
+      };
+    }
+    return cached;
+  }
+
   renderTopOnTorso(ctx, topStyle, primary, secondary, skin, dir) {
     const topDef = SVG_TOPS.find(t => t.id === topStyle || t.baseId === topStyle) || SVG_TOPS[0];
+    const topPath = topDef.torsoPath || `assets/Tops/${topDef.folder || 'Tee'}/${topDef.id}_torso.svg`;
     const topSvg = topDef.torsoSvgContent || topDef.svgContent;
-    const img = this.getSvgImage(`top_torso_${topDef.id}`, topSvg);
+    const img = this.getAssetImage(topPath, topSvg);
 
     ctx.save();
 
@@ -572,10 +595,11 @@ export class ModularAvatarRenderer {
       ctx.closePath();
       ctx.fill();
 
-      // Renderiza estampa/detalhe SVG do tops.svg na manga perfeitamente alinhada
+      // Renderiza estampa/detalhe SVG da manga dos arquivos _sleeve_l.svg ou _sleeve_r.svg de assets/Tops
+      const sleevePath = isLeft ? topDef.sleeveLPath : topDef.sleeveRPath;
       const sleeveSvg = isLeft ? topDef.sleeveLSvgContent : topDef.sleeveRSvgContent;
-      if (sleeveSvg) {
-        const img = this.getSvgImage(`top_sleeve_${side}_${topDef.id}`, sleeveSvg);
+      if (sleevePath || sleeveSvg) {
+        const img = this.getAssetImage(sleevePath || `top_sleeve_${side}_${topDef.id}`, sleeveSvg);
         if (img && img.complete && img.naturalWidth > 0) {
           if (isLeft) {
             ctx.drawImage(img, -sw + 10, -10, sw, sh);
@@ -595,9 +619,10 @@ export class ModularAvatarRenderer {
       }
       ctx.fill();
 
+      const sleevePath = isLeft ? topDef.sleeveLPath : topDef.sleeveRPath;
       const sleeveSvg = isLeft ? topDef.sleeveLSvgContent : topDef.sleeveRSvgContent;
-      if (sleeveSvg) {
-        const img = this.getSvgImage(`top_sleeve_${side}_${topDef.id}`, sleeveSvg);
+      if (sleevePath || sleeveSvg) {
+        const img = this.getAssetImage(sleevePath || `top_sleeve_${side}_${topDef.id}`, sleeveSvg);
         if (img && img.complete && img.naturalWidth > 0) {
           if (isLeft) {
             ctx.drawImage(img, -sw + 15, -15, sw, sh);
@@ -628,9 +653,10 @@ export class ModularAvatarRenderer {
       ctx.closePath();
       ctx.fill();
 
+      const sleevePath = isLeft ? topDef.sleeveLPath : topDef.sleeveRPath;
       const sleeveSvg = isLeft ? topDef.sleeveLSvgContent : topDef.sleeveRSvgContent;
-      if (sleeveSvg) {
-        const img = this.getSvgImage(`top_sleeve_${side}_${topDef.id}`, sleeveSvg);
+      if (sleevePath || sleeveSvg) {
+        const img = this.getAssetImage(sleevePath || `top_sleeve_${side}_${topDef.id}`, sleeveSvg);
         if (img && img.complete && img.naturalWidth > 0) {
           if (isLeft) {
             ctx.drawImage(img, -sw + 10, -10, sw, sh);

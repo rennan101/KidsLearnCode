@@ -1,4 +1,4 @@
-<svg viewBox="732.0 1151.0 153.0 105.0" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="732.0 1151.0 32 65" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <filter id="filter344_d_495_57" x="791" y="1170" width="34.5" height="62" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
 <feFlood flood-opacity="0" result="BackgroundImageFix"/>
@@ -18,9 +18,11 @@
 <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_495_57"/>
 <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_495_57" result="shape"/>
 </filter>
+<clipPath id="clip_top_tee_08_sl"><rect x="732.0" y="1151.0" width="32" height="65"/></clipPath>
 </defs>
+<g clip-path="url(#clip_top_tee_08_sl)">
 <mask id="mask47_495_57" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="732" y="1151" width="153" height="105">
-<path d="M732 1186.5C738.8 1172.5 770 1151 781.5 1151L762.5 1201.5C760.9 1203.1 754.5 1207.5 751.5 1209.5C747.5 1207.5 734.167 1196 732 1186.5Z" fill="black"/>
+<path d="M732 1186.5C738.8 1172.5 770 1151 781.5 1151C787.667 1153.5 804 1171.5 808.5 1176.5C813 1171.5 829 1153.5 835 1151C846.5 1151 877.7 1172.5 884.5 1186.5C882.333 1196 869 1207.5 865 1209.5C862 1207.5 855.6 1203.1 854 1201.5C852 1199.5 859 1244 858.5 1251.5C847.5 1253.5 821.1 1255.5 807.5 1255.5C793.9 1255.5 769 1254 758 1251.5C757.5 1244 764.5 1199.5 762.5 1201.5C760.9 1203.1 754.5 1207.5 751.5 1209.5C747.5 1207.5 734.167 1196 732 1186.5Z" fill="black"/>
 </mask>
 <g mask="url(#mask47_495_57)">
 <path d="M914 1141H701V1304H914V1141Z" fill="#F4F6F8"/>
@@ -39,5 +41,6 @@
 <path d="M867 1188C869.8 1184.4 874.833 1175.5 877 1171.5L886.5 1186C887.3 1191.2 872.833 1204.17 865.5 1210L855 1203C856.5 1202.5 863.5 1192.5 867 1188Z" fill="#67A3FD"/>
 <path d="M737.5 1176.5C739 1179.5 742.7 1186.5 745.5 1190.5C748.3 1194.5 756 1202.5 759.5 1206" stroke="#F4F6F8" stroke-width="3"/>
 <path d="M879 1176.5C877.5 1179.5 873.8 1186.5 871 1190.5C868.2 1194.5 860.5 1202.5 857 1206" stroke="#F4F6F8" stroke-width="3"/>
+</g>
 </g>
 </svg>

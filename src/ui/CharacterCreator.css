@@ -405,6 +405,7 @@
   pointer-events: none;
   display: block;
   overflow: visible;
+  object-fit: contain;
 }
 
 /* Footer / Action Bar */
