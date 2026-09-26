@@ -489,8 +489,26 @@ export const SVG_BASE_CHARACTER = {
 
 export {
   SVG_TOPS,
-  getTopSvgContent,
-  getTopTorsoSvgContent,
-  getTopSleeveLSvgContent,
-  getTopSleeveRSvgContent
+  getTopSvgDef
 } from './CharacterTopSvgAssets.js';
+
+export function getTopSvgContent(topId) {
+  const def = SVG_TOPS.find(t => t.id === topId || t.baseId === topId) || SVG_TOPS[0];
+  return def ? def.svgContent : '';
+}
+
+export function getTopTorsoSvgContent(topId) {
+  const def = SVG_TOPS.find(t => t.id === topId || t.baseId === topId) || SVG_TOPS[0];
+  return def ? def.torsoSvgContent : '';
+}
+
+export function getTopSleeveLSvgContent(topId) {
+  const def = SVG_TOPS.find(t => t.id === topId || t.baseId === topId) || SVG_TOPS[0];
+  return def ? def.sleeveLSvgContent : null;
+}
+
+export function getTopSleeveRSvgContent(topId) {
+  const def = SVG_TOPS.find(t => t.id === topId || t.baseId === topId) || SVG_TOPS[0];
+  return def ? def.sleeveRSvgContent : null;
+}
+
