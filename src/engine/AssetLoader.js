@@ -2258,6 +2258,7 @@ export class AssetLoader {
 
     // Register 10 Dragons in Overworld Tiles (Category: 'Dragons')
     for (const dragon of DRAGON_CATALOG) {
+      const isStorm = dragon.id === 'dragon_fly_storm';
       this.overworldTiles.push({
         id: dragon.id,
         name: dragon.name,
@@ -2267,7 +2268,7 @@ export class AssetLoader {
         isDragon: true,
         characterType: 'dragon',
         dragonData: dragon,
-        src: generateDragonSVG(dragon),
+        src: isStorm ? 'assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_1.svg' : generateDragonSVG(dragon),
         gridW: 1,
         gridH: 1,
         collider: {

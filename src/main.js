@@ -3284,10 +3284,13 @@ class RPGApplication {
         slotBtn.title = drag ? `${drag.name} (Nv. ${drag.level || 1}) - Clique para alternar` : `Slot ${i + 1} Vazio`;
 
         if (drag) {
+          const isStorm = drag.id === 'dragon_fly_storm';
           slotBtn.innerHTML = `
             <span class="dragon-hud-key-pill">${i + 1}</span>
             <div class="dragon-hud-avatar" style="background: ${drag.color || '#38bdf8'}; border-color: ${drag.secondaryColor || '#fef08a'};">
-              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 20px; height: 20px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              ${isStorm 
+                ? `<img src="assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_1.svg" alt="${drag.name}" style="width: 22px; height: 22px; object-fit: contain;" />` 
+                : `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 20px; height: 20px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`}
             </div>
             <span class="dragon-hud-level-badge">Nv.${drag.level || 1}</span>
           `;
@@ -4039,7 +4042,11 @@ class RPGApplication {
       if (dragonDetailIcon) {
         dragonDetailIcon.style.borderColor = drag.color || '#38bdf8';
         dragonDetailIcon.style.color = drag.color || '#38bdf8';
-        dragonDetailIcon.innerHTML = `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+        if (drag.id === 'dragon_fly_storm') {
+          dragonDetailIcon.innerHTML = `<img src="assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_1.svg" alt="${drag.name}" style="width: 44px; height: 44px; object-fit: contain;" />`;
+        } else {
+          dragonDetailIcon.innerHTML = `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+        }
       }
       if (dragonDetailName) {
         dragonDetailName.innerText = `${drag.name} (Nv. ${drag.level || 1})`;
@@ -4114,11 +4121,14 @@ class RPGApplication {
           slotCard.dataset.slotIndex = i;
 
           if (drag) {
+            const isStorm = drag.id === 'dragon_fly_storm';
             slotCard.draggable = true;
             slotCard.innerHTML = `
               <span class="ac-formation-slot-badge">Slot ${i + 1}</span>
               <div class="dragon-hud-avatar" style="background: ${drag.color || '#38bdf8'}; border-color: ${drag.secondaryColor || '#fef08a'};">
-                <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 20px; height: 20px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                ${isStorm
+                  ? `<img src="assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_1.svg" alt="${drag.name}" style="width: 24px; height: 24px; object-fit: contain;" />`
+                  : `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 20px; height: 20px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`}
               </div>
               <span style="font-size: 0.72rem; font-weight: 800; color: #794f27; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%;">${drag.name.split(',')[0]}</span>
               <span class="dragon-hud-level-badge">Nv.${drag.level || 1}</span>
@@ -4191,10 +4201,13 @@ class RPGApplication {
           slotEl.dataset.slot = i;
 
           if (drag) {
+            const isStorm = drag.id === 'dragon_fly_storm';
             slotEl.draggable = true;
             slotEl.innerHTML = `
-              <div class="ac-pocket-slot-icon" style="color: ${drag.color || '#38bdf8'};">
-                <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              <div class="ac-pocket-slot-icon" style="color: ${drag.color || '#38bdf8'}; display: flex; align-items: center; justify-content: center;">
+                ${isStorm
+                  ? `<img src="assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_1.svg" alt="${drag.name}" style="width: 32px; height: 32px; object-fit: contain;" />`
+                  : `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`}
               </div>
               <span class="ac-pocket-slot-badge" style="background: #0369a1; border-color: #38bdf8;">Nv.${drag.level || 1}</span>
             `;

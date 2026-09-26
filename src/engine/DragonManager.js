@@ -79,6 +79,8 @@ export const DRAGON_CATALOG = [
     color: '#818cf8',
     secondaryColor: '#22d3ee',
     icon: 'Trovão',
+    iconPath: 'assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_1.svg',
+    image: 'assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_1.svg',
     fieldMove: 'Iluminação por Faíscas e Voo Elétrico',
     mountSpeedMultiplier: 1.9,
     socketOffset: { x: 0, y: -18 },
