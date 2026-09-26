@@ -1,4 +1,4 @@
-<svg viewBox="853.0 173.0 32 65" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="732.0 173.0 153.0 105.0" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <filter id="filter379_d_495_57" x="728" y="167" width="85" height="119" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
 <feFlood flood-opacity="0" result="BackgroundImageFix"/>
@@ -90,11 +90,9 @@
 <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_495_57"/>
 <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_495_57" result="shape"/>
 </filter>
-<clipPath id="clip_top_tee_02_sr"><rect x="853.0" y="173.0" width="32" height="65"/></clipPath>
 </defs>
-<g clip-path="url(#clip_top_tee_02_sr)">
 <mask id="mask56_495_57" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="732" y="173" width="153" height="105">
-<path d="M732 208.5C738.8 194.5 770 173 781.5 173C787.667 175.5 794 180.5 808.5 180.5C823 180.5 829 175.5 835 173C846.5 173 877.7 194.5 884.5 208.5C882.333 218 869 229.5 865 231.5C862 229.5 855.6 225.1 854 223.5C852 221.5 859 266 858.5 273.5C847.5 275.5 821.1 277.5 807.5 277.5C793.9 277.5 769 276 758 273.5C757.5 266 764.5 221.5 762.5 223.5C760.9 225.1 754.5 229.5 751.5 231.5C747.5 229.5 734.167 218 732 208.5Z" fill="black"/>
+<path d="M835 173C846.5 173 877.7 194.5 884.5 208.5C882.333 218 869 229.5 865 231.5C862 229.5 855.6 225.1 854 223.5L835 173Z" fill="black"/>
 </mask>
 <g mask="url(#mask56_495_57)">
 <path d="M914 163H701V326H914V163Z" fill="#5C790B"/>
@@ -135,6 +133,5 @@
 <path d="M849.635 226.5C850.435 225.3 848.635 219 847.635 216C845.635 215 827.635 213.5 826.635 214.5C825.635 215.5 824.135 223.5 825.635 225C827.135 226.5 848.635 228 849.635 226.5Z" fill="#9CC42D"/>
 </g>
 <path d="M837.635 229C836.254 229 835.135 227.881 835.135 226.5C835.135 225.119 836.254 224 837.635 224C839.015 224 840.135 225.119 840.135 226.5C840.135 227.881 839.015 229 837.635 229Z" fill="#F4FCE3"/>
-</g>
 </g>
 </svg>

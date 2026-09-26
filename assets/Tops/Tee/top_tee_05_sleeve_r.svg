@@ -1,4 +1,4 @@
-<svg viewBox="853.0 662.0 32 65" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="732.0 662.0 153.0 105.0" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <filter id="filter376_d_495_57" x="780" y="686" width="59" height="60" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
 <feFlood flood-opacity="0" result="BackgroundImageFix"/>
@@ -18,11 +18,9 @@
 <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_495_57"/>
 <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_495_57" result="shape"/>
 </filter>
-<clipPath id="clip_top_tee_05_sr"><rect x="853.0" y="662.0" width="32" height="65"/></clipPath>
 </defs>
-<g clip-path="url(#clip_top_tee_05_sr)">
 <mask id="mask53_495_57" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="732" y="662" width="153" height="105">
-<path d="M732 697.5C738.8 683.5 770 662 781.5 662C787.667 664.5 794 669.5 808.5 669.5C823 669.5 829 664.5 835 662C846.5 662 877.7 683.5 884.5 697.5C882.333 707 869 718.5 865 720.5C862 718.5 855.6 714.1 854 712.5C852 710.5 859 755 858.5 762.5C847.5 764.5 821.1 766.5 807.5 766.5C793.9 766.5 769 765 758 762.5C757.5 755 764.5 710.5 762.5 712.5C760.9 714.1 754.5 718.5 751.5 720.5C747.5 718.5 734.167 707 732 697.5Z" fill="black"/>
+<path d="M835 662C846.5 662 877.7 683.5 884.5 697.5C882.333 707 869 718.5 865 720.5C862 718.5 855.6 714.1 854 712.5L835 662Z" fill="black"/>
 </mask>
 <g mask="url(#mask53_495_57)">
 <path d="M914 652H701V815H914V652Z" fill="#212121"/>
@@ -47,6 +45,5 @@
 <path d="M748 708.5C742.4 702.9 737.667 693.5 736 689.5L729 700.5L750.5 725.5L760 720C758.333 718.5 753.6 714.1 748 708.5Z" fill="#88AC22"/>
 <path d="M869.5 708.5C875.1 702.9 879.833 693.5 881.5 689.5L888.5 700.5L867 725.5L857.5 720C859.167 718.5 863.9 714.1 869.5 708.5Z" fill="#88AC22"/>
 <path d="M811 760C797 760 767.5 757 754.5 755.5V764C767.833 765.833 797.8 769.5 811 769.5C824.2 769.5 850.167 765.833 861.5 764V755.5C850.5 757 825 760 811 760Z" fill="#FFD465"/>
-</g>
 </g>
 </svg>

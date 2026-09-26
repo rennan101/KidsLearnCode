@@ -1,0 +1,43 @@
+<svg viewBox="732.0 1151.0 153.0 105.0" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<filter id="filter344_d_495_57" x="791" y="1170" width="34.5" height="62" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="1"/>
+<feGaussianBlur stdDeviation="1.5"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.168627 0 0 0 0 0.415686 0 0 0 0 0.788235 0 0 0 0.4 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_495_57"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_495_57" result="shape"/>
+</filter>
+<filter id="filter345_d_495_57" x="768.5" y="1142" width="80" height="37.5" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="1"/>
+<feGaussianBlur stdDeviation="1"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.237778 0 0 0 0 0.499333 0 0 0 0 0.891667 0 0 0 0.4 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_495_57"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_495_57" result="shape"/>
+</filter>
+</defs>
+<mask id="mask47_495_57" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="732" y="1151" width="153" height="105">
+<path d="M732 1186.5C738.8 1172.5 770 1151 781.5 1151L762.5 1201.5C760.9 1203.1 754.5 1207.5 751.5 1209.5C747.5 1207.5 734.167 1196 732 1186.5Z M835 1151C846.5 1151 877.7 1172.5 884.5 1186.5C882.333 1196 869 1207.5 865 1209.5C862 1207.5 855.6 1203.1 854 1201.5L835 1151Z" fill="black"/>
+</mask>
+<g mask="url(#mask47_495_57)">
+<path d="M914 1141H701V1304H914V1141Z" fill="#F4F6F8"/>
+<g filter="url(#filter344_d_495_57)">
+<path d="M804.5 1188C801 1190.33 794 1196.6 794 1203C794 1206.95 795.219 1210.53 796.272 1213.63C797.353 1216.81 798.259 1219.47 797.5 1221.5C800.833 1218.5 807.6 1211.1 808 1205.5C809 1201.5 810 1191.2 808 1186L804.5 1188Z" fill="#2C6BCA"/>
+<path d="M808 1205.5C809.5 1213 814.5 1228 822.5 1228C820 1224.5 820.146 1215.62 820.5 1213.5C821 1210.5 824.5 1194.5 812 1188L808 1186C810 1191.2 809 1201.5 808 1205.5Z" fill="#1D57AE"/>
+<path d="M803.5 1183C803.9 1181.8 807 1183 808.5 1183C810 1183 813.1 1181.8 813.5 1183C814 1184.5 813.707 1186.79 813 1187.5C812 1188.5 809.5 1188.5 808.5 1188C807.5 1188.5 805 1188.5 804 1187.5C803.293 1186.79 803 1184.5 803.5 1183Z" fill="white"/>
+<path d="M808.5 1183.5C795.7 1183.5 793.45 1175.83 794.117 1172H822.117C822.784 1175.83 821.3 1183.5 808.5 1183.5Z" fill="#2867C7"/>
+</g>
+<g filter="url(#filter345_d_495_57)">
+<path d="M808.5 1176.5C777.7 1176.5 771.833 1158.83 770.5 1150C781.667 1148.67 804.9 1146 808.5 1146C812.1 1146 835.333 1148.67 846.5 1150C845.167 1158.83 839.3 1176.5 808.5 1176.5Z" fill="#67A3FD"/>
+<path d="M808.5 1175C778.916 1175 773.281 1157.04 772 1148.07C782.726 1146.71 805.042 1144 808.5 1144C811.958 1144 834.274 1146.71 845 1148.07C843.719 1157.04 838.084 1175 808.5 1175Z" fill="white"/>
+<path d="M808.5 1174C779.726 1174 774.246 1156.04 773 1147.07C783.432 1145.71 805.137 1143 808.5 1143C811.863 1143 833.568 1145.71 844 1147.07C842.754 1156.04 837.274 1174 808.5 1174Z" fill="#C7DDFF"/>
+</g>
+<path d="M750 1188C747.2 1184.4 742.166 1175.5 740 1171.5L730.5 1186C729.7 1191.2 744.166 1204.17 751.5 1210L762 1203C760.5 1202.5 753.5 1192.5 750 1188Z" fill="#67A3FD"/>
+<path d="M867 1188C869.8 1184.4 874.833 1175.5 877 1171.5L886.5 1186C887.3 1191.2 872.833 1204.17 865.5 1210L855 1203C856.5 1202.5 863.5 1192.5 867 1188Z" fill="#67A3FD"/>
+<path d="M737.5 1176.5C739 1179.5 742.7 1186.5 745.5 1190.5C748.3 1194.5 756 1202.5 759.5 1206" stroke="#F4F6F8" stroke-width="3"/>
+<path d="M879 1176.5C877.5 1179.5 873.8 1186.5 871 1190.5C868.2 1194.5 860.5 1202.5 857 1206" stroke="#F4F6F8" stroke-width="3"/>
+</g>
+</svg>
