@@ -226,16 +226,32 @@ class RPGApplication {
 
   setupWindowResize() {
     const resize = () => {
+      if (!this.canvasWrapper || !this.canvas) return;
       const rect = this.canvasWrapper.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        this.canvas.width = Math.round(rect.width);
-        this.canvas.height = Math.round(rect.height);
-        this.camera.resize(this.canvas.width, this.canvas.height);
+      const w = Math.round(rect.width);
+      const h = Math.round(rect.height);
+      if (w > 0 && h > 0) {
+        if (this.canvas.width !== w || this.canvas.height !== h) {
+          this.canvas.width = w;
+          this.canvas.height = h;
+          this.camera.resize(w, h);
+        }
       }
     };
-    window.addEventListener('resize', resize);
+
+    window.addEventListener('resize', resize, { passive: true });
+    window.addEventListener('orientationchange', resize, { passive: true });
+
+    if (typeof ResizeObserver !== 'undefined' && this.canvasWrapper) {
+      const ro = new ResizeObserver(() => resize());
+      ro.observe(this.canvasWrapper);
+    }
+
     this.updateCanvasDimensions = resize;
     resize();
+    // Second tick resize to catch layout completion
+    setTimeout(resize, 60);
+    setTimeout(resize, 300);
   }
 
   // Mouse and touch adjustable drawer on the left edge / corner + Expand Toggle

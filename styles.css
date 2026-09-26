@@ -6877,5 +6877,182 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
   font-size: 0.78rem;
 }
 
+/* ==========================================================================
+   COMPREHENSIVE RESPONSIVE WINDOW ADAPTATION (Dynamic Screen Fitting)
+   ========================================================================== */
+
+/* Universal Responsive Canvas & Viewport Fitting */
+html, body {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-width: 100vw;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.app-body {
+  width: 100vw;
+  max-width: 100vw;
+  height: calc(100vh - 56px);
+  height: calc(100dvh - 56px);
+  overflow: hidden;
+}
+
+.canvas-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+canvas#game-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* All Modals Fit Player Window */
+.modal-card,
+.crafting-card,
+.dragon-card,
+.backpack-card,
+.ac-dialogue-box,
+.character-creator-container,
+.hero-select-card,
+.auth-card,
+.coding-card {
+  max-width: 95vw !important;
+  max-height: 88vh !important;
+  max-height: 88dvh !important;
+}
+
+/* Header & HUD Scaling for Medium Screens (1200px and below) */
+@media (max-width: 1200px) {
+  header.app-header {
+    padding: 0 10px;
+  }
+  .header-left-bar,
+  .header-right-bar {
+    gap: 6px;
+  }
+  .hero-header-name {
+    max-width: 95px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .header-xp-track {
+    width: 75px;
+  }
+  .header-xp-text {
+    font-size: 0.65rem;
+  }
+  .mode-btn {
+    padding: 6px 12px;
+    font-size: 0.82rem;
+  }
+}
+
+/* Header & HUD Scaling for Small Laptops / Tablets (992px and below) */
+@media (max-width: 992px) {
+  .hero-header-info {
+    max-width: 90px;
+  }
+  .header-xp-track {
+    display: none;
+  }
+  .header-btn-label {
+    display: none;
+  }
+  .mode-btn span {
+    font-size: 0.80rem;
+  }
+  .toggle-drawer-btn {
+    right: 170px;
+    top: 10px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+  }
+  .minimap-hud {
+    width: 140px;
+    height: 140px;
+    top: 10px;
+    right: 10px;
+  }
+  .dragon-quick-hud {
+    right: 10px;
+    transform: translateY(-50%) scale(0.9);
+  }
+  .dragon-skill-bar {
+    bottom: 14px;
+    transform: translateX(-50%) scale(0.9);
+  }
+}
+
+/* Ultra Compact Scaling for Mobile / Narrow Windows (768px and below) */
+@media (max-width: 768px) {
+  header.app-header {
+    height: 48px;
+    min-height: 48px;
+    padding: 0 6px;
+  }
+  .app-body {
+    height: calc(100vh - 48px);
+    height: calc(100dvh - 48px);
+  }
+  .hero-profile-btn {
+    padding: 2px 6px;
+  }
+  .hero-avatar-mini {
+    width: 28px;
+    height: 28px;
+  }
+  .hero-header-name {
+    display: none;
+  }
+  .mode-toggle {
+    padding: 2px;
+    gap: 3px;
+  }
+  .mode-btn {
+    padding: 5px 8px;
+    font-size: 0.75rem;
+  }
+  .minimap-hud {
+    width: 110px;
+    height: 110px;
+    top: 8px;
+    right: 8px;
+  }
+  .toggle-drawer-btn {
+    right: 125px;
+    top: 8px;
+    padding: 5px 8px;
+    font-size: 0.72rem;
+  }
+  .toggle-drawer-btn span {
+    display: none;
+  }
+  .dragon-quick-hud {
+    right: 6px;
+    transform: translateY(-50%) scale(0.8);
+  }
+  .dragon-skill-bar {
+    bottom: 8px;
+    transform: translateX(-50%) scale(0.82);
+  }
+  .ac-time-widget {
+    bottom: 20px;
+    left: 8px;
+    transform: scale(0.78);
+    transform-origin: bottom left;
+  }
+  .canvas-controls-overlay.vertical-toolbar {
+    top: 8px;
+    left: 8px;
+  }
+}
+
+
 
 
