@@ -94,11 +94,6 @@
           <span class="header-btn-label">Sair</span>
         </button>
 
-        <!-- Auto-Save Status Indicator Badge (Editor Mode) -->
-        <div id="save-status" class="save-status saved" title="Status de persistência do mapa" style="display: none;">
-          <span class="save-dot"></span>
-          <span>Salvo</span>
-        </div>
       </div>
     </div>
 
@@ -126,37 +121,33 @@
       <!-- Map Persistence, Collider Overlay & Quick Actions (Admin / Editor Only) -->
       <div class="header-actions" id="header-admin-actions">
         <!-- Toggle Collider Wireframe Overlay -->
-        <button id="btn-toggle-colliders" class="action-btn active" title="Exibir ou ocultar caixas de colisão invisíveis" style="display: none;">
+        <button id="btn-toggle-colliders" class="action-btn active" title="Colisores (Exibir/Ocultar)" style="display: none;">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
           </svg>
-          <span>Colisores</span>
         </button>
 
-        <button id="btn-save-json" class="action-btn" title="Salvar mapa em arquivo JSON" style="display: none;">
+        <button id="btn-save-json" class="action-btn" title="Salvar Mapa (JSON)" style="display: none;">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
             <polyline points="17 21 17 13 7 13 7 21"></polyline>
             <polyline points="7 3 7 8 15 8"></polyline>
           </svg>
-          <span>Salvar JSON</span>
         </button>
-        <button id="btn-load-json" class="action-btn" title="Carregar mapa em JSON" style="display: none;">
+        <button id="btn-load-json" class="action-btn" title="Carregar Mapa (JSON)" style="display: none;">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
           </svg>
-          <span>Carregar JSON</span>
         </button>
         <input type="file" id="file-input-json" accept=".json" style="display: none;">
         
-        <button id="btn-clear-map" class="action-btn danger" title="Limpar mapa e reiniciar mundo" style="display: none;">
+        <button id="btn-clear-map" class="action-btn danger" title="Limpar Mapa e Reiniciar Mundo" style="display: none;">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="3 6 5 6 21 6"></polyline>
             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
             <line x1="10" y1="11" x2="10" y2="17"></line>
             <line x1="14" y1="11" x2="14" y2="17"></line>
           </svg>
-          <span>Limpar Mapa</span>
         </button>
       </div>
     </div>
