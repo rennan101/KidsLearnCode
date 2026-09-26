@@ -2420,6 +2420,15 @@ class RPGApplication {
         // Advanced 2.5D Y-Sort Depth Sorting for all solid objects and characters
         for (const layerName of rawLayerOrder) {
           if (layerName === 'solid') {
+            // Render Dragon Underlay (Bodies, Wings, Shadows, Nests) BEFORE player and solid objects
+            if (this.dragonManager && this.mode === 'play') {
+              try {
+                this.dragonManager.renderUnderlay(this.ctx, this.assetLoader, this.player);
+              } catch (dragonUnderlayErr) {
+                console.error('Error rendering dragon underlay:', dragonUnderlayErr);
+              }
+            }
+
             // Collect visible solid tiles and characters entities for unified Y-sorting
             const ySortEntities = [];
 
@@ -2516,6 +2525,13 @@ class RPGApplication {
         for (const layerName of rawLayerOrder) {
           try {
             if (layerName === 'characters') {
+              if (this.dragonManager && this.mode === 'play') {
+                try {
+                  this.dragonManager.renderUnderlay(this.ctx, this.assetLoader, this.player);
+                } catch (dErr) {
+                  console.error('Error rendering dragon underlay fallback:', dErr);
+                }
+              }
               this.player.render(this.ctx, this.assetLoader, showColliders);
               playerRendered = true;
               this.tileMap.renderLayer(this.ctx, 'characters', this.assetLoader, this.camera, isEditor, showColliders);
@@ -2546,12 +2562,12 @@ class RPGApplication {
         }
       }
 
-      // Render Dragon Companion, Targets, Particles and Wild Nests
+      // Render Dragon Overhead Overlays (Badges, HP Bars, Emotes, Particles, Damage Numbers)
       if (this.dragonManager && this.mode === 'play') {
         try {
-          this.dragonManager.render(this.ctx, this.assetLoader, this.player);
+          this.dragonManager.renderOverlay(this.ctx, this.assetLoader, this.player);
         } catch (dragonErr) {
-          console.error('Error rendering dragon entity:', dragonErr);
+          console.error('Error rendering dragon overlay:', dragonErr);
         }
       }
 

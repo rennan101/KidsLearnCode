@@ -718,6 +718,24 @@ export class DragonManager {
 
     // Out of Combat Timer for Gradual HP Regeneration
     this.outOfCombatTimer = 0; // When > 0, dragon is in battle
+
+    // Animated Sprite Assets Loader & Cache
+    this.dragonSpriteFrames = {};
+    this.loadDragonSpriteFrames();
+  }
+
+  // Load and cache SVG frame animation assets for dragons
+  loadDragonSpriteFrames() {
+    this.dragonSpriteFrames = {};
+    const stormFrames = [];
+    for (let i = 1; i <= 8; i++) {
+      const img = new Image();
+      img.src = `assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_${i}.svg`;
+      stormFrames.push(img);
+    }
+    this.dragonSpriteFrames['dragon_fly_storm'] = {
+      flying: stormFrames
+    };
   }
 
   // Trigger Combat Activity (resets out-of-battle timer)
@@ -1936,31 +1954,53 @@ export class DragonManager {
     }
   }
 
-  // Render Companion, Targets, Nests, and Combat UI in World Space
-  render(ctx, assetLoader, player = null) {
+  // Render Dragon Underlay (Nests, Targets, Wild Dragons Body/Wings, Companion Body/Wings) - Below Player
+  renderUnderlay(ctx, assetLoader, player = null) {
     // 1. Render Wild Dragon Nests
     this.renderWildNests(ctx);
 
     // 2. Render Training Targets
     this.renderTrainingTargets(ctx);
 
-    // 3. Render Autonomous Wild Dragons (placed in world by ADM)
-    this.renderWildDragons(ctx, player, assetLoader);
+    // 3. Render Autonomous Wild Dragons Body & Shadows
+    for (const entity of this.wildDragons.values()) {
+      this.renderWildDragonEntityBody(ctx, entity, player);
+    }
 
-    // 4. Render Active Dragon Companion (if not mounted, or socket underlay)
+    // 4. Render Active Dragon Companion Body & Shadow
     const dragon = this.getActiveDragon();
     if (dragon && this.mode !== 'none') {
-      this.renderDragonEntity(ctx, dragon, player);
+      this.renderDragonEntityBody(ctx, dragon, player);
     }
 
     // 5. Render Defeat & Reverse Hatch Egg Transformation Animations
     this.renderDefeatEggAnimations(ctx);
+  }
 
-    // 6. Render Combat Particles
+  // Render Dragon Overlay (Badges, HP/Energy Bars, Key Prompts, Emotes, Particles, Numbers) - Above Player
+  renderOverlay(ctx, assetLoader, player = null) {
+    // 1. Wild Dragons Overhead UI
+    for (const entity of this.wildDragons.values()) {
+      this.renderWildDragonEntityOverlay(ctx, entity, player);
+    }
+
+    // 2. Active Companion Overhead UI
+    const dragon = this.getActiveDragon();
+    if (dragon && this.mode !== 'none') {
+      this.renderDragonEntityOverlay(ctx, dragon, player);
+    }
+
+    // 3. Render Combat Particles
     this.renderParticles(ctx);
 
-    // 7. Render Floating Damage Numbers
+    // 4. Render Floating Damage Numbers
     this.renderDamageNumbers(ctx);
+  }
+
+  // Render Companion, Targets, Nests, and Combat UI in World Space (Full Combined Pass)
+  render(ctx, assetLoader, player = null) {
+    this.renderUnderlay(ctx, assetLoader, player);
+    this.renderOverlay(ctx, assetLoader, player);
   }
 
   // Render Autonomous Wild Dragons with FSM Animations, Shadows, Badges, and Emotes
@@ -1971,6 +2011,11 @@ export class DragonManager {
   }
 
   renderWildDragonEntity(ctx, entity, player = null) {
+    this.renderWildDragonEntityBody(ctx, entity, player);
+    this.renderWildDragonEntityOverlay(ctx, entity, player);
+  }
+
+  renderWildDragonEntityBody(ctx, entity, player = null) {
     ctx.save();
 
     const alt = entity.flightAltitude || 0;
@@ -2001,9 +2046,30 @@ export class DragonManager {
       ctx.restore();
     }
 
-    // 2. Dragon Drawing (with direction flipping)
-    ctx.save();
+    // 2. Dragon Drawing (Animated SVG frames for dragon_fly_storm or vector canvas)
     const isWest = entity.direction === 'west';
+    const isStorm = (entity.catalog?.id === 'dragon_fly_storm' || entity.tileId === 'dragon_fly_storm');
+
+    if (isStorm && this.dragonSpriteFrames['dragon_fly_storm']?.flying) {
+      const frames = this.dragonSpriteFrames['dragon_fly_storm'].flying;
+      const frameIdx = Math.floor((entity.animTimer * 10) % frames.length);
+      const frameImg = frames[frameIdx];
+
+      if (frameImg && frameImg.complete && frameImg.naturalWidth > 0) {
+        ctx.save();
+        ctx.translate(drawX + 32, drawY + 28);
+        if (isWest) {
+          ctx.scale(-1, 1);
+        }
+        ctx.drawImage(frameImg, -42, -42, 84, 84);
+        ctx.restore();
+        ctx.restore();
+        return;
+      }
+    }
+
+    // Vector Canvas Fallback
+    ctx.save();
     if (isWest) {
       ctx.translate(drawX + 64, drawY);
       ctx.scale(-1, 1);
@@ -2062,7 +2128,6 @@ export class DragonManager {
 
     // 2f. Eyes (sleeping or open)
     if (entity.fsmState === 'sleep') {
-      // Sleeping curved eye lines
       ctx.strokeStyle = '#1e293b';
       ctx.lineWidth = 1.8;
       ctx.beginPath();
@@ -2072,7 +2137,6 @@ export class DragonManager {
       ctx.arc(37, 20, 3, 0.1 * Math.PI, 0.9 * Math.PI, false);
       ctx.stroke();
     } else {
-      // Big expressive eyes
       ctx.fillStyle = '#1e293b';
       ctx.beginPath();
       ctx.arc(27, 19, 3.2, 0, Math.PI * 2);
@@ -2095,6 +2159,16 @@ export class DragonManager {
     ctx.fill();
 
     ctx.restore();
+    ctx.restore();
+  }
+
+  renderWildDragonEntityOverlay(ctx, entity, player = null) {
+    ctx.save();
+
+    const alt = entity.flightAltitude || 0;
+    const bounce = (entity.fsmState === 'sleep') ? 0 : Math.sin(entity.animTimer * (alt > 10 ? 8 : 4)) * (alt > 10 ? 6 : 4);
+    const drawX = Math.round(entity.x);
+    const drawY = Math.round(entity.y + bounce - alt);
 
     // 3. Overhead Dragon Name, Level Badge & HP/Energy Bars (Animal Island UI Style)
     ctx.save();
@@ -2183,14 +2257,12 @@ export class DragonManager {
       const emoteY = drawY - 44;
 
       if (entity.emote.type === 'zzz') {
-        // Floating Zzz
         ctx.fillStyle = '#38bdf8';
         ctx.font = 'bold 12px "Outfit", sans-serif';
         ctx.textAlign = 'center';
         const zOffset = (entity.animTimer * 10) % 15;
         ctx.fillText('Zzz...', emoteX, emoteY - zOffset);
       } else if (entity.emote.type === 'heart') {
-        // Heart Bubble
         ctx.fillStyle = '#f43f5e';
         ctx.beginPath();
         ctx.arc(emoteX, emoteY, 10, 0, Math.PI * 2);
@@ -2205,7 +2277,6 @@ export class DragonManager {
         ctx.textBaseline = 'middle';
         ctx.fillText('♥', emoteX, emoteY);
       } else if (entity.emote.type === 'battle') {
-        // Battle Alert Mark
         ctx.fillStyle = '#ef4444';
         ctx.beginPath();
         ctx.arc(emoteX, emoteY, 10, 0, Math.PI * 2);
@@ -2220,7 +2291,6 @@ export class DragonManager {
         ctx.textBaseline = 'middle';
         ctx.fillText('⚔', emoteX, emoteY);
       } else if (entity.emote.type === 'flee') {
-        // Flee Exclamation Alert Mark
         ctx.fillStyle = '#f59e0b';
         ctx.beginPath();
         ctx.arc(emoteX, emoteY, 10, 0, Math.PI * 2);
@@ -2235,7 +2305,6 @@ export class DragonManager {
         ctx.textBaseline = 'middle';
         ctx.fillText('!', emoteX, emoteY + 0.5);
       } else if (entity.emote.type === 'curious') {
-        // Curious Question Mark
         ctx.fillStyle = '#10b981';
         ctx.beginPath();
         ctx.arc(emoteX, emoteY, 10, 0, Math.PI * 2);
@@ -2261,33 +2330,28 @@ export class DragonManager {
       const badgeX = drawX + 32 - badgeSize / 2;
       const badgeY = drawY - (entity.emote ? 68 : 48);
 
-      // Sombra suave do badge
       ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
       ctx.beginPath();
       if (ctx.roundRect) ctx.roundRect(badgeX - 1, badgeY - 1, badgeSize + 2, badgeSize + 2, 6);
       else ctx.rect(badgeX - 1, badgeY - 1, badgeSize + 2, badgeSize + 2);
       ctx.fill();
 
-      // Keycap dourado
       ctx.fillStyle = '#f59e0b';
       ctx.beginPath();
       if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, badgeSize, badgeSize, 5);
       else ctx.rect(badgeX, badgeY, badgeSize, badgeSize);
       ctx.fill();
 
-      // Borda dourada suave
       ctx.strokeStyle = '#fef08a';
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Letra R centralizada
       ctx.fillStyle = '#0f172a';
       ctx.font = 'bold 12px "JetBrains Mono", monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('R', badgeX + badgeSize / 2, badgeY + badgeSize / 2 + 0.5);
 
-      // Pontinha triangular sutil abaixo do badge
       ctx.fillStyle = '#f59e0b';
       ctx.beginPath();
       ctx.moveTo(drawX + 29, badgeY + badgeSize);
@@ -2301,6 +2365,11 @@ export class DragonManager {
   }
 
   renderDragonEntity(ctx, dragon, player = null) {
+    this.renderDragonEntityBody(ctx, dragon, player);
+    this.renderDragonEntityOverlay(ctx, dragon, player);
+  }
+
+  renderDragonEntityBody(ctx, dragon, player = null) {
     ctx.save();
 
     const isMounted = this.mode === 'mounted';
@@ -2309,7 +2378,7 @@ export class DragonManager {
     const drawX = Math.round(this.x);
     const drawY = Math.round(this.y + bounce - alt);
 
-    // 1. Single Unified Ground Shadow (Always rendered on the terrain floor, expands & softens with altitude)
+    // 1. Single Unified Ground Shadow (Always rendered on the terrain floor)
     ctx.save();
     const shadowScaleX = 20 + (alt * 0.14);
     const shadowScaleY = 8 + (alt * 0.06);
@@ -2339,11 +2408,31 @@ export class DragonManager {
       ctx.globalAlpha = 0.4;
     }
 
-    // Draw Cute Harmonized Animal Crossing-style Dragon (2.5D Vector Canvas)
+    // 2. Animated SVG Sprite for dragon_fly_storm (Volt)
+    const isWest = this.direction === 'west';
+    if (dragon.id === 'dragon_fly_storm' && this.dragonSpriteFrames['dragon_fly_storm']?.flying) {
+      const frames = this.dragonSpriteFrames['dragon_fly_storm'].flying;
+      const frameIdx = Math.floor((this.floatTimer * 10) % frames.length);
+      const frameImg = frames[frameIdx];
+
+      if (frameImg && frameImg.complete && frameImg.naturalWidth > 0) {
+        ctx.save();
+        ctx.translate(drawX + 24, drawY + 20);
+        if (isWest) {
+          ctx.scale(-1, 1);
+        }
+        ctx.drawImage(frameImg, -42, -42, 84, 84);
+        ctx.restore();
+        ctx.restore();
+        return;
+      }
+    }
+
+    // 3. Vector Canvas Dragon Fallback
     const bodyColor = dragon.color || '#38bdf8';
     const accentColor = dragon.secondaryColor || '#fef08a';
 
-    // 1. Dragon Wings / Fins with dynamic flap frequency in flight
+    // 3a. Dragon Wings / Fins with dynamic flap frequency in flight
     ctx.fillStyle = accentColor;
     const flapFreq = alt > 10 ? 14 : 8;
     const flapAmp = alt > 10 ? 9 : 6;
@@ -2357,25 +2446,25 @@ export class DragonManager {
     ctx.ellipse(drawX + 40, drawY + 16 - wingFlap, 12, 8, Math.PI / 4, 0, Math.PI * 2);
     ctx.fill();
 
-    // 2. Dragon Chubby Body
+    // 3b. Dragon Chubby Body
     ctx.fillStyle = bodyColor;
     ctx.beginPath();
     ctx.ellipse(drawX + 24, drawY + 26, 18, 16, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 3. Belly highlight
+    // 3c. Belly highlight
     ctx.fillStyle = accentColor;
     ctx.beginPath();
     ctx.ellipse(drawX + 24, drawY + 28, 11, 10, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 4. Head with cute round snout
+    // 3d. Head with cute round snout
     ctx.fillStyle = bodyColor;
     ctx.beginPath();
     ctx.arc(drawX + 24, drawY + 12, 14, 0, Math.PI * 2);
     ctx.fill();
 
-    // 5. Cute Horns / Ears
+    // 3e. Cute Horns / Ears
     ctx.fillStyle = accentColor;
     ctx.beginPath();
     ctx.moveTo(drawX + 16, drawY + 4);
@@ -2389,7 +2478,7 @@ export class DragonManager {
     ctx.lineTo(drawX + 28, drawY + 2);
     ctx.fill();
 
-    // 6. Big Expressive Eyes
+    // 3f. Big Expressive Eyes
     ctx.fillStyle = '#1e293b';
     ctx.beginPath();
     ctx.arc(drawX + 19, drawY + 11, 3.2, 0, Math.PI * 2);
@@ -2409,6 +2498,18 @@ export class DragonManager {
     ctx.arc(drawX + 15, drawY + 15, 2.5, 0, Math.PI * 2);
     ctx.arc(drawX + 33, drawY + 15, 2.5, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.restore();
+  }
+
+  renderDragonEntityOverlay(ctx, dragon, player = null) {
+    ctx.save();
+
+    const isMounted = this.mode === 'mounted';
+    const alt = isMounted ? (this.flightAltitude || 0) : 0;
+    const bounce = Math.sin(this.floatTimer * (alt > 10 ? 8 : 4)) * (alt > 10 ? 6 : 4);
+    const drawX = Math.round(this.x);
+    const drawY = Math.round(this.y + bounce - alt);
 
     // 7. Overhead Dragon Name, Level Badge, and HP & Energy Bars (Always visible in Play Mode)
     ctx.save();
