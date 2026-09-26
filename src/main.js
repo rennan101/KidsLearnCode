@@ -962,8 +962,13 @@ class RPGApplication {
           return;
         }
 
-        // Key R: Quick Mount / Dismount on Active Dragon
-        if (e.key === 'r' || e.key === 'R') {
+        // Space / Key R: Quick Mount / Dismount on Active Dragon
+        if (e.code === 'Space' || e.key === ' ' || e.key === 'r' || e.key === 'R') {
+          const activeTag = document.activeElement?.tagName?.toLowerCase();
+          if (activeTag === 'input' || activeTag === 'textarea' || document.activeElement?.isContentEditable) {
+            return;
+          }
+          e.preventDefault();
           if (this.toggleQuickMount) {
             this.toggleQuickMount();
           }
@@ -4162,7 +4167,7 @@ class RPGApplication {
       if (dragonDetailActions) {
         dragonDetailActions.style.display = 'flex';
         if (btnMountLabel) {
-          btnMountLabel.innerText = isActive && isMounted ? 'Desmontar' : 'Montar [R]';
+          btnMountLabel.innerText = isActive && isMounted ? 'Desmontar' : 'Montar [Espaço]';
         }
         if (btnMountDragon) {
           btnMountDragon.className = `ac-pocket-action-btn ${isActive && isMounted ? 'danger' : ''}`;
@@ -4690,7 +4695,7 @@ class RPGApplication {
         const label = document.getElementById('quick-mount-label');
         if (btn) btn.classList.toggle('mounted', isMounted);
         if (label) {
-          label.innerText = isMounted ? 'Desmontar [R]' : 'Montar [R]';
+          label.innerText = isMounted ? 'Desmontar [Espaço]' : 'Montar [Espaço]';
         }
         this.player.isMounted = isMounted;
         this.player.mountSpeedMultiplier = res.dragon?.mountSpeedMultiplier || 1.8;

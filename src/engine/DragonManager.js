@@ -1497,24 +1497,25 @@ export class DragonManager {
       this.direction = player.direction;
       this.state = 'mounted';
     } else if (this.mode === 'follow') {
-      // Follow target anchor point slightly behind player
-      let offsetX = -42;
-      let offsetY = 12;
-      if (player.direction === 'east') { offsetX = -46; offsetY = 6; }
-      else if (player.direction === 'west') { offsetX = 46; offsetY = 6; }
-      else if (player.direction === 'north') { offsetX = 0; offsetY = 46; }
-      else if (player.direction === 'south') { offsetX = 0; offsetY = -42; }
+      // Follow target anchor point exactly 1 sqm (tile) behind player (Pokemon follower style)
+      const sqm = (tileMap && tileMap.tileSize) ? tileMap.tileSize : 32;
+      let offsetX = 0;
+      let offsetY = 0;
+      if (player.direction === 'east') { offsetX = -sqm; offsetY = 0; }
+      else if (player.direction === 'west') { offsetX = sqm; offsetY = 0; }
+      else if (player.direction === 'north') { offsetX = 0; offsetY = sqm; }
+      else if (player.direction === 'south') { offsetX = 0; offsetY = -sqm; }
 
       this.targetX = player.x + offsetX;
       this.targetY = player.y + offsetY;
 
       // Smooth exponential lerp toward target
-      const lerpSpeed = player.isSprinting ? 8.0 : 5.0;
+      const lerpSpeed = player.isSprinting ? 12.0 : 8.0;
       this.x += (this.targetX - this.x) * Math.min(1.0, lerpSpeed * dt);
       this.y += (this.targetY - this.y) * Math.min(1.0, lerpSpeed * dt);
 
       const dist = Math.hypot(player.x - this.x, player.y - this.y);
-      this.state = dist > 20 ? 'follow' : 'idle';
+      this.state = dist > 14 ? 'follow' : 'idle';
       this.direction = player.direction;
     }
 
@@ -2513,7 +2514,9 @@ export class DragonManager {
     const drawX = Math.round(this.x);
     const drawY = Math.round(this.y + bounce - alt);
 
-    // 7. Overhead Dragon Name, Level Badge, and HP & Energy Bars (Always visible in Play Mode)
+    // 7. Overhead Dragon Name & Level Badge (Always visible in Play Mode)
+    // HP & Energy Bars ONLY appear when in combat per design requirement
+    const inCombat = this.isInCombat();
     ctx.save();
     const lvlText = `Nv. ${dragon.level || 1} • ${dragon.name.split(',')[0]}`;
     ctx.font = 'bold 9.5px "Nunito", sans-serif';
@@ -2521,7 +2524,7 @@ export class DragonManager {
     const badgeW = Math.max(50, textMetrics.width + 12);
     const badgeH = 15;
     const badgeX = drawX + 24 - badgeW / 2;
-    const badgeY = drawY - 30;
+    const badgeY = inCombat ? (drawY - 30) : (drawY - 18);
 
     // 3D Level Badge shadow & body
     ctx.fillStyle = '#0f8e83';
@@ -2545,73 +2548,76 @@ export class DragonManager {
     ctx.textBaseline = 'middle';
     ctx.fillText(lvlText, drawX + 24, badgeY + badgeH / 2);
 
-    // 7b. Overhead HP Bar (58px wide)
-    const barW = 58;
-    const barX = drawX + 24 - barW / 2;
-    const hpY = drawY - 13;
-    const curHp = (dragon.hp !== undefined) ? dragon.hp : (dragon.maxHp || 100);
-    const maxHp = dragon.maxHp || 100;
-    const hpRatio = Math.max(0, Math.min(1, curHp / maxHp));
+    // 7b. Overhead HP & Energy Bars (Rendered EXCLUSIVELY when in combat)
+    if (inCombat) {
+      const barW = 58;
+      const barX = drawX + 24 - barW / 2;
+      const hpY = drawY - 13;
+      const curHp = (dragon.hp !== undefined) ? dragon.hp : (dragon.maxHp || 100);
+      const maxHp = dragon.maxHp || 100;
+      const hpRatio = Math.max(0, Math.min(1, curHp / maxHp));
 
-    // HP background
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(barX, hpY, barW, 6, 2.5);
-    else ctx.rect(barX, hpY, barW, 6);
-    ctx.fill();
+      // HP background
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(barX, hpY, barW, 6, 2.5);
+      else ctx.rect(barX, hpY, barW, 6);
+      ctx.fill();
 
-    // HP fill
-    const hpColor = hpRatio > 0.5 ? '#10b981' : (hpRatio > 0.25 ? '#f59e0b' : '#ef4444');
-    ctx.fillStyle = hpColor;
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(barX, hpY, barW * hpRatio, 6, 2.5);
-    else ctx.rect(barX, hpY, barW * hpRatio, 6);
-    ctx.fill();
+      // HP fill
+      const hpColor = hpRatio > 0.5 ? '#10b981' : (hpRatio > 0.25 ? '#f59e0b' : '#ef4444');
+      ctx.fillStyle = hpColor;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(barX, hpY, barW * hpRatio, 6, 2.5);
+      else ctx.rect(barX, hpY, barW * hpRatio, 6);
+      ctx.fill();
 
-    ctx.strokeStyle = '#334155';
-    ctx.lineWidth = 0.8;
-    ctx.stroke();
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
 
-    // 7c. Overhead Energy Bar (58px wide)
-    const energyY = drawY - 6;
-    const curEnergy = (dragon.energy !== undefined) ? dragon.energy : (dragon.maxEnergy || 100);
-    const maxEnergy = dragon.maxEnergy || 100;
-    const energyRatio = Math.max(0, Math.min(1, curEnergy / maxEnergy));
+      // 7c. Overhead Energy Bar (58px wide)
+      const energyY = drawY - 6;
+      const curEnergy = (dragon.energy !== undefined) ? dragon.energy : (dragon.maxEnergy || 100);
+      const maxEnergy = dragon.maxEnergy || 100;
+      const energyRatio = Math.max(0, Math.min(1, curEnergy / maxEnergy));
 
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(barX, energyY, barW, 4, 1.8);
-    else ctx.rect(barX, energyY, barW, 4);
-    ctx.fill();
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(barX, energyY, barW, 4, 1.8);
+      else ctx.rect(barX, energyY, barW, 4);
+      ctx.fill();
 
-    ctx.fillStyle = '#06b6d4';
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(barX, energyY, barW * energyRatio, 4, 1.8);
-    else ctx.rect(barX, energyY, barW * energyRatio, 4);
-    ctx.fill();
+      ctx.fillStyle = '#06b6d4';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(barX, energyY, barW * energyRatio, 4, 1.8);
+      else ctx.rect(barX, energyY, barW * energyRatio, 4);
+      ctx.fill();
+    }
     ctx.restore();
 
-    // 8. Proximity Mount [R] Keycap Balloon or Flight Altitude Indicator
+    // 8. Proximity Mount [Espaço] Keycap Balloon or Flight Altitude Indicator
     if (this.mode === 'follow') {
       const dist = player ? Math.hypot(player.x - this.x, player.y - this.y) : 999;
       const isNearby = dist < 120;
 
       if (isNearby) {
-        // Balão compacto com tecla [R]
-        const badgeSize = 22;
-        const badgeX = drawX + 24 - badgeSize / 2;
-        const badgeY = drawY - 54;
+        // Balão informativo com tecla [Espaço]
+        const badgeW = 44;
+        const badgeH = 18;
+        const badgeX = drawX + 24 - badgeW / 2;
+        const badgeY = inCombat ? (drawY - 54) : (drawY - 42);
 
         ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(badgeX - 1, badgeY - 1, badgeSize + 2, badgeSize + 2, 6);
-        else ctx.rect(badgeX - 1, badgeY - 1, badgeSize + 2, badgeSize + 2);
+        if (ctx.roundRect) ctx.roundRect(badgeX - 1, badgeY - 1, badgeW + 2, badgeH + 2, 6);
+        else ctx.rect(badgeX - 1, badgeY - 1, badgeW + 2, badgeH + 2);
         ctx.fill();
 
         ctx.fillStyle = '#f59e0b';
         ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, badgeSize, badgeSize, 5);
-        else ctx.rect(badgeX, badgeY, badgeSize, badgeSize);
+        if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 5);
+        else ctx.rect(badgeX, badgeY, badgeW, badgeH);
         ctx.fill();
 
         ctx.strokeStyle = '#fef08a';
@@ -2619,16 +2625,16 @@ export class DragonManager {
         ctx.stroke();
 
         ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 12px "JetBrains Mono", monospace';
+        ctx.font = 'bold 9.5px "Nunito", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('R', badgeX + badgeSize / 2, badgeY + badgeSize / 2 + 0.5);
+        ctx.fillText('Espaço', badgeX + badgeW / 2, badgeY + badgeH / 2 + 0.5);
 
         ctx.fillStyle = '#f59e0b';
         ctx.beginPath();
-        ctx.moveTo(drawX + 21, badgeY + badgeSize);
-        ctx.lineTo(drawX + 24, badgeY + badgeSize + 3);
-        ctx.lineTo(drawX + 27, badgeY + badgeSize);
+        ctx.moveTo(drawX + 21, badgeY + badgeH);
+        ctx.lineTo(drawX + 24, badgeY + badgeH + 3);
+        ctx.lineTo(drawX + 27, badgeY + badgeH);
         ctx.fill();
       }
     } else if (isMounted && this.canActiveDragonFly() && alt > 8) {
