@@ -604,7 +604,7 @@ canvas#game-canvas {
 .asset-drawer {
   width: 360px;
   min-width: 280px;
-  max-width: 700px;
+  max-width: 900px;
   background: var(--animal-bg-card, #fdfbf7);
   border-left: 3px solid var(--animal-border-wood, #7a583e);
   display: flex;
@@ -628,16 +628,16 @@ canvas#game-canvas {
 .drawer-resizer {
   position: absolute;
   top: 0;
-  left: -5px;
-  width: 10px;
+  left: -8px;
+  width: 16px;
   bottom: 0;
   cursor: ew-resize;
-  z-index: 40;
-  transition: background 0.15s;
+  z-index: 50;
+  transition: background 0.15s, opacity 0.15s;
 }
 
 .drawer-resizer:hover, .drawer-resizer.dragging {
-  background: var(--animal-primary, #19c8b9);
+  background: rgba(25, 200, 185, 0.5);
 }
 
 .drawer-header {

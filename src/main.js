@@ -238,38 +238,84 @@ class RPGApplication {
     resize();
   }
 
-  // Mouse adjustable drawer on the left edge / corner
+  // Mouse and touch adjustable drawer on the left edge / corner + Expand Toggle
   setupDrawerResizing() {
     const resizer = document.getElementById('drawer-resizer');
     const drawer = document.getElementById('asset-drawer');
+    const btnExpand = document.getElementById('btn-expand-drawer');
     if (!resizer || !drawer) return;
 
     let isResizing = false;
+    let savedWidth = 360;
 
-    resizer.addEventListener('mousedown', (e) => {
+    const startResize = (clientX) => {
       isResizing = true;
       resizer.classList.add('dragging');
       document.body.style.cursor = 'ew-resize';
-      e.preventDefault();
-    });
+      document.body.style.userSelect = 'none';
+    };
 
-    window.addEventListener('mousemove', (e) => {
+    const doResize = (clientX) => {
       if (!isResizing) return;
-      const newWidth = Math.max(260, Math.min(window.innerWidth * 0.7, window.innerWidth - e.clientX));
+      const newWidth = Math.max(280, Math.min(window.innerWidth * 0.85, window.innerWidth - clientX));
       drawer.style.width = `${newWidth}px`;
-      const rect = this.canvasWrapper.getBoundingClientRect();
-      this.canvas.width = rect.width;
-      this.canvas.height = rect.height;
-      this.camera.resize(rect.width, rect.height);
-    });
+      if (this.updateCanvasDimensions) {
+        this.updateCanvasDimensions();
+      }
+    };
 
-    window.addEventListener('mouseup', () => {
+    const stopResize = () => {
       if (isResizing) {
         isResizing = false;
         resizer.classList.remove('dragging');
         document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        if (this.updateCanvasDimensions) {
+          this.updateCanvasDimensions();
+        }
+      }
+    };
+
+    resizer.addEventListener('mousedown', (e) => {
+      startResize(e.clientX);
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', (e) => doResize(e.clientX));
+    window.addEventListener('mouseup', stopResize);
+
+    // Touch events for touchpads / touchscreens
+    resizer.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches[0]) {
+        startResize(e.touches[0].clientX);
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    window.addEventListener('touchmove', (e) => {
+      if (isResizing && e.touches && e.touches[0]) {
+        doResize(e.touches[0].clientX);
       }
     });
+    window.addEventListener('touchend', stopResize);
+
+    // Double-click on resizer handle or click on expand button toggles wide mode
+    const toggleExpand = () => {
+      const currentWidth = parseInt(drawer.style.width, 10) || drawer.offsetWidth || 360;
+      if (currentWidth < 520) {
+        savedWidth = currentWidth;
+        const targetWidth = Math.min(750, Math.max(540, Math.round(window.innerWidth * 0.55)));
+        drawer.style.width = `${targetWidth}px`;
+      } else {
+        drawer.style.width = `${savedWidth || 360}px`;
+      }
+      if (this.updateCanvasDimensions) {
+        this.updateCanvasDimensions();
+      }
+    };
+
+    resizer.addEventListener('dblclick', toggleExpand);
+    btnExpand?.addEventListener('click', toggleExpand);
   }
 
   setupLayerManager() {
