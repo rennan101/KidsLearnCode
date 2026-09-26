@@ -535,16 +535,20 @@ export class ModularAvatarRenderer {
     ctx.arc(-300, 405, 62, 0, Math.PI * 2);
     ctx.fill();
 
-    // Quando tem mangas, cobre o ombro completamente com a cor da camisa para não expor a pele do ombro
+    // Quando tem mangas, cobre o ombro e a parte de cima do braço completamente com a cor da camisa para disfarçar o encaixe
     if (hasSleeves) {
       ctx.fillStyle = primary;
       ctx.beginPath();
-      ctx.ellipse(0, 15, 56, 56, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 15, 68, 68, 0, 0, Math.PI * 2);
       ctx.fill();
 
       if (topDef.sleeveType === 'long') {
         const sleeveLongLPath = this.getPath2D('M0 0C35 10 50 50 30 85L-210 375C-230 395 -265 385 -280 360C-295 335 -285 305 -260 290L-28 10C-20 3 -10 0 0 0Z');
         ctx.fill(sleeveLongLPath);
+      } else {
+        // Para mangas curtas / médias / bufantes: preenche a metade superior do braço com a cor da camisa
+        const sleeveUpperLPath = this.getPath2D('M0 0C35 10 50 50 30 85L-135 230C-155 245 -180 235 -190 215C-200 195 -190 170 -170 155L-28 10C-20 3 -10 0 0 0Z');
+        ctx.fill(sleeveUpperLPath);
       }
     }
 
@@ -568,16 +572,20 @@ export class ModularAvatarRenderer {
     ctx.arc(300, 405, 62, 0, Math.PI * 2);
     ctx.fill();
 
-    // Quando tem mangas, cobre o ombro completamente com a cor da camisa para não expor a pele do ombro
+    // Quando tem mangas, cobre o ombro e a parte de cima do braço completamente com a cor da camisa para disfarçar o encaixe
     if (hasSleeves) {
       ctx.fillStyle = primary;
       ctx.beginPath();
-      ctx.ellipse(0, 15, 56, 56, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 15, 68, 68, 0, 0, Math.PI * 2);
       ctx.fill();
 
       if (topDef.sleeveType === 'long') {
         const sleeveLongRPath = this.getPath2D('M0 0C-35 10 -50 50 -30 85L210 375C230 395 265 385 280 360C295 335 285 305 260 290L28 10C20 3 10 0 0 0Z');
         ctx.fill(sleeveLongRPath);
+      } else {
+        // Para mangas curtas / médias / bufantes: preenche a metade superior do braço com a cor da camisa
+        const sleeveUpperRPath = this.getPath2D('M0 0C-35 10 -50 50 -30 85L135 230C155 245 180 235 190 215C200 195 190 170 170 155L28 10C20 3 10 0 0 0Z');
+        ctx.fill(sleeveUpperRPath);
       }
     }
 
@@ -1475,6 +1483,40 @@ export class ModularAvatarRenderer {
     const offCtx = offCanvas.getContext('2d');
     const scale = size / 265;
     this.render(offCtx, size / 2, 4, 'south', 'idle', 0, config || DEFAULT_AVATAR_CONFIG, scale);
+    return offCanvas.toDataURL('image/png');
+  }
+
+  getAvatarHeadPortrait(config, size = 64) {
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = size;
+    offCanvas.height = size;
+    const offCtx = offCanvas.getContext('2d');
+    const cfg = config || DEFAULT_AVATAR_CONFIG;
+
+    offCtx.save();
+    offCtx.imageSmoothingEnabled = true;
+    offCtx.imageSmoothingQuality = 'high';
+
+    // Enquadramento perfeito focado na cabeça do personagem (cabelo, orelha, olhos, nariz, boca, blush, óculos)
+    const headScale = (size / 920);
+    offCtx.translate(size / 2, size / 2 + size * 0.05);
+    offCtx.scale(headScale, headScale);
+
+    // 1. Cabelo Traseiro
+    this.drawBackHair(offCtx, cfg, 'south');
+
+    // 2. Base da Cabeça + Cabelo Frontal + Orelhas
+    this.drawHeadBase(offCtx, cfg, 'south');
+
+    // 3. Feições Faciais (Blush, Olhos, Nariz, Boca)
+    this.drawFaceFeatures(offCtx, cfg, 'south');
+
+    // 4. Acessórios (Óculos)
+    if (cfg.glassesStyle && cfg.glassesStyle !== 'none') {
+      this.drawGlasses(offCtx, cfg, 'south');
+    }
+
+    offCtx.restore();
     return offCanvas.toDataURL('image/png');
   }
 }

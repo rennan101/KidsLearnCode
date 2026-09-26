@@ -2957,3 +2957,35 @@ export class DragonManager {
   }
 }
 
+export function getDragonAvatarSvg(dragon, size = 32) {
+  if (!dragon) return '';
+  if (dragon.id === 'dragon_fly_storm') {
+    return `<img src="assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_1.svg" alt="${dragon.name}" style="width: ${size}px; height: ${size}px; object-fit: contain;" />`;
+  }
+  const body = dragon.color || '#38bdf8';
+  const accent = dragon.secondaryColor || '#fef08a';
+  return `
+    <svg viewBox="0 0 48 48" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
+      <!-- Horns -->
+      <polygon points="15,18 10,6 20,15" fill="${accent}" stroke="#5c3c26" stroke-width="1.5" stroke-linejoin="round" />
+      <polygon points="33,18 38,6 28,15" fill="${accent}" stroke="#5c3c26" stroke-width="1.5" stroke-linejoin="round" />
+      <!-- Head Base -->
+      <circle cx="24" cy="25" r="16" fill="${body}" stroke="#5c3c26" stroke-width="2" />
+      <!-- Snout -->
+      <ellipse cx="24" cy="29" rx="10" ry="7" fill="${accent}" stroke="#5c3c26" stroke-width="1.5" />
+      <!-- Nostrils -->
+      <circle cx="21" cy="29" r="1.2" fill="#5c3c26" />
+      <circle cx="27" cy="29" r="1.2" fill="#5c3c26" />
+      <!-- Eyes -->
+      <circle cx="18" cy="22" r="3.5" fill="#0f172a" />
+      <circle cx="30" cy="22" r="3.5" fill="#0f172a" />
+      <!-- Catchlights -->
+      <circle cx="17" cy="21" r="1.2" fill="#ffffff" />
+      <circle cx="29" cy="21" r="1.2" fill="#ffffff" />
+      <!-- Cheeks -->
+      <circle cx="13" cy="28" r="2.5" fill="rgba(244, 114, 182, 0.65)" />
+      <circle cx="35" cy="28" r="2.5" fill="rgba(244, 114, 182, 0.65)" />
+    </svg>
+  `;
+}
+

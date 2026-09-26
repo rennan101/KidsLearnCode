@@ -6626,7 +6626,9 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
 }
 
 .ac-formation-slot-card {
-  height: 68px;
+  min-height: 84px;
+  height: auto;
+  padding: 6px 4px;
   background: #fdfbf7;
   border: 2px solid #c4b89e;
   border-radius: 14px;
@@ -6635,7 +6637,7 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
   position: relative;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -6658,6 +6660,14 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
   border-color: #f59e0b;
   box-shadow: 0 3px 0 0 #d97706;
   background: #fffbeb;
+}
+
+.ac-formation-slot-card .dragon-hud-level-badge {
+  position: static;
+  bottom: auto;
+  margin-top: 2px;
+  padding: 1px 8px;
+  font-size: 0.65rem;
 }
 
 .ac-formation-slot-badge {
