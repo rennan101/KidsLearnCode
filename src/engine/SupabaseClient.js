@@ -326,9 +326,16 @@ export class SupabaseClient {
     }
 
     try {
-      // 1. Tenta salvar na tabela game_saves usando UUID global válido
+      // 1. Sempre dispara broadcast em tempo real para sincronizar players online
+      this.broadcastMapUpdate(mapData);
+
+      // 2. Apenas tenta salvar no banco se houver usuário autenticado válido
+      if (!this.user || this.user.isGuest || !this.isValidUUID(this.user.id)) {
+        return { success: true, broadcastOnly: true };
+      }
+
       const payload = {
-        user_id: SupabaseClient.GLOBAL_MAP_UUID,
+        user_id: this.user.id,
         map_data: mapData,
         player_data: { x: mapData.spawnPoint?.x || 320, y: mapData.spawnPoint?.y || 320 },
         inventory_data: {},
@@ -341,28 +348,23 @@ export class SupabaseClient {
         .from('game_saves')
         .upsert(payload, { onConflict: 'user_id' });
 
-      // 2. Dispara broadcast em tempo real para todos os clientes conectados
-      this.broadcastMapUpdate(mapData);
-
       if (error) {
         return { success: false, error: error.message };
       }
       return { success: true };
     } catch (err) {
-      // Mesmo se o banco falhar, emite via Realtime broadcast para outros players online
-      this.broadcastMapUpdate(mapData);
       return { success: false, error: err.message };
     }
   }
 
   async loadGlobalWorldMap() {
-    if (!this.client) return null;
+    if (!this.client || !this.user || this.user.isGuest || !this.isValidUUID(this.user.id)) return null;
 
     try {
       const { data, error } = await this.client
         .from('game_saves')
         .select('map_data, updated_at')
-        .eq('user_id', SupabaseClient.GLOBAL_MAP_UUID)
+        .eq('user_id', this.user.id)
         .maybeSingle();
 
       if (error || !data || !data.map_data) return null;
