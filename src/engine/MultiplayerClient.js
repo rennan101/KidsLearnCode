@@ -43,6 +43,7 @@ export class MultiplayerClient {
         isMoving: false,
         isSprinting: false,
         isMounted: true,
+        activeDragonId: 'dragon_fly_storm',
         timer: 0,
         animTimer: 0,
         chatCooldown: 12.0
