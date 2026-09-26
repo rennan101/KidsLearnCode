@@ -1125,12 +1125,23 @@ class RPGApplication {
     });
 
     // Drawer toggle button
-    btnToggleDrawer.addEventListener('click', () => {
-      assetDrawer.classList.toggle('collapsed');
+    const toggleAssetDrawer = () => {
+      const isCollapsed = assetDrawer.classList.contains('collapsed') || assetDrawer.style.display === 'none';
+      if (isCollapsed) {
+        assetDrawer.classList.remove('collapsed');
+        assetDrawer.style.display = 'flex';
+      } else {
+        assetDrawer.classList.add('collapsed');
+        assetDrawer.style.display = 'none';
+      }
       if (this.updateCanvasDimensions) {
         this.updateCanvasDimensions();
       }
-    });
+    };
+
+    btnToggleDrawer?.addEventListener('click', toggleAssetDrawer);
+    const btnCloseDrawer = document.getElementById('btn-close-drawer');
+    btnCloseDrawer?.addEventListener('click', toggleAssetDrawer);
 
     // Editor Tools Selection
     const tools = ['select', 'brush', 'fill', 'spawn', 'collider', 'eraser', 'eyedropper'];
