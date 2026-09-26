@@ -456,14 +456,15 @@ export class ModularAvatarRenderer {
 
     ctx.save();
 
+    const scale = 4.1;
+    const fullW = topDef.w * scale;
+    const fullH = topDef.h * scale;
+
     if (img && img.complete && img.naturalWidth > 0) {
-      // Proporção precisa alinhada ao tronco (centro x=0, gola y=-280)
-      const scale = 4.1;
-      const targetW = topDef.torsoW * scale;
-      const targetH = topDef.torsoH * scale;
-      ctx.drawImage(img, -targetW / 2, -280, targetW, targetH);
+      // Proporção 100% fiel alinhada ao tronco e gola (centro x=0, gola y=-280)
+      ctx.drawImage(img, -fullW / 2, -280, fullW, fullH);
     } else {
-      // Fallback vetorial instantâneo com a cor oficial do tops.svg
+      // Fallback vetorial instantâneo com a cor oficial enquanto carrega
       ctx.fillStyle = topDef.primaryColor || primary;
       if (topStyle === 'top_cupcake_dress') {
         ctx.beginPath();
@@ -533,7 +534,7 @@ export class ModularAvatarRenderer {
     ctx.arc(-300, 405, 62, 0, Math.PI * 2);
     ctx.fill();
 
-    // Manga da roupa esquerda
+    // Manga da roupa esquerda (assets/Tops _sleeve_l.svg)
     this.renderArmSleeve(ctx, primary, secondary, topStyle, 'left');
 
     ctx.restore();
@@ -553,7 +554,7 @@ export class ModularAvatarRenderer {
     ctx.arc(300, 405, 62, 0, Math.PI * 2);
     ctx.fill();
 
-    // Manga da roupa direita
+    // Manga da roupa direita (assets/Tops _sleeve_r.svg)
     this.renderArmSleeve(ctx, primary, secondary, topStyle, 'right');
 
     ctx.restore();
@@ -567,102 +568,23 @@ export class ModularAvatarRenderer {
     if (topDef.sleeveType === 'none') return;
 
     ctx.save();
-    ctx.fillStyle = topDef.primaryColor || primary;
 
-    const sw = (isLeft ? topDef.sleeveLW : topDef.sleeveRW) * 4.1;
-    const sh = (isLeft ? topDef.sleeveLH : topDef.sleeveRH) * 4.1;
+    const scale = 4.1;
+    const fullW = topDef.w * scale;
+    const fullH = topDef.h * scale;
 
-    if (topDef.sleeveType === 'long') {
-      // Manga Longa / Suéter: sobressai o braço inteiro do ombro até o punho
-      ctx.beginPath();
-      if (isLeft) {
-        ctx.moveTo(40, -10);
-        ctx.bezierCurveTo(60, 40, 45, 95, 30, 120);
-        ctx.lineTo(-235, 405);
-        ctx.bezierCurveTo(-255, 425, -295, 415, -310, 385);
-        ctx.bezierCurveTo(-320, 355, -310, 320, -282, 300);
-        ctx.lineTo(-45, 10);
-        ctx.bezierCurveTo(-35, -20, 10, -25, 40, -10);
-      } else {
-        ctx.moveTo(-40, -10);
-        ctx.bezierCurveTo(-60, 40, -45, 95, -30, 120);
-        ctx.lineTo(235, 405);
-        ctx.bezierCurveTo(255, 425, 295, 415, 310, 385);
-        ctx.bezierCurveTo(320, 355, 310, 320, 282, 300);
-        ctx.lineTo(45, 10);
-        ctx.bezierCurveTo(35, -20, -10, -25, -40, -10);
-      }
-      ctx.closePath();
-      ctx.fill();
+    const sleevePath = isLeft ? topDef.sleeveLPath : topDef.sleeveRPath;
+    const sleeveSvg = isLeft ? topDef.sleeveLSvgContent : topDef.sleeveRSvgContent;
 
-      // Renderiza estampa/detalhe SVG da manga dos arquivos _sleeve_l.svg ou _sleeve_r.svg de assets/Tops
-      const sleevePath = isLeft ? topDef.sleeveLPath : topDef.sleeveRPath;
-      const sleeveSvg = isLeft ? topDef.sleeveLSvgContent : topDef.sleeveRSvgContent;
-      if (sleevePath || sleeveSvg) {
-        const img = this.getAssetImage(sleevePath || `top_sleeve_${side}_${topDef.id}`, sleeveSvg);
-        if (img && img.complete && img.naturalWidth > 0) {
-          if (isLeft) {
-            ctx.drawImage(img, -sw + 10, -10, sw, sh);
-          } else {
-            ctx.drawImage(img, -10, -10, sw, sh);
-          }
-        }
-      }
-
-    } else if (topDef.sleeveType === 'puffy') {
-      // Manga Bufante: volume esférico generoso no ombro
-      ctx.beginPath();
-      if (isLeft) {
-        ctx.arc(-20, 50, 115, 0, Math.PI * 2);
-      } else {
-        ctx.arc(20, 50, 115, 0, Math.PI * 2);
-      }
-      ctx.fill();
-
-      const sleevePath = isLeft ? topDef.sleeveLPath : topDef.sleeveRPath;
-      const sleeveSvg = isLeft ? topDef.sleeveLSvgContent : topDef.sleeveRSvgContent;
-      if (sleevePath || sleeveSvg) {
-        const img = this.getAssetImage(sleevePath || `top_sleeve_${side}_${topDef.id}`, sleeveSvg);
-        if (img && img.complete && img.naturalWidth > 0) {
-          if (isLeft) {
-            ctx.drawImage(img, -sw + 15, -15, sw, sh);
-          } else {
-            ctx.drawImage(img, -15, -15, sw, sh);
-          }
-        }
-      }
-
-    } else {
-      // Manga Curta padrão (Tee / Vestido Cupcake): envolve 100% o ombro e bíceps
-      ctx.beginPath();
-      if (isLeft) {
-        ctx.moveTo(40, -10);
-        ctx.bezierCurveTo(60, 40, 45, 95, 30, 120);
-        ctx.lineTo(-75, 240);
-        ctx.bezierCurveTo(-115, 255, -175, 215, -185, 175);
-        ctx.lineTo(-45, 10);
-        ctx.bezierCurveTo(-35, -20, 10, -25, 40, -10);
-      } else {
-        ctx.moveTo(-40, -10);
-        ctx.bezierCurveTo(-60, 40, -45, 95, -30, 120);
-        ctx.lineTo(75, 240);
-        ctx.bezierCurveTo(115, 255, 175, 215, 185, 175);
-        ctx.lineTo(45, 10);
-        ctx.bezierCurveTo(35, -20, -10, -25, -40, -10);
-      }
-      ctx.closePath();
-      ctx.fill();
-
-      const sleevePath = isLeft ? topDef.sleeveLPath : topDef.sleeveRPath;
-      const sleeveSvg = isLeft ? topDef.sleeveLSvgContent : topDef.sleeveRSvgContent;
-      if (sleevePath || sleeveSvg) {
-        const img = this.getAssetImage(sleevePath || `top_sleeve_${side}_${topDef.id}`, sleeveSvg);
-        if (img && img.complete && img.naturalWidth > 0) {
-          if (isLeft) {
-            ctx.drawImage(img, -sw + 10, -10, sw, sh);
-          } else {
-            ctx.drawImage(img, -10, -10, sw, sh);
-          }
+    if (sleevePath || sleeveSvg) {
+      const img = this.getAssetImage(sleevePath || `top_sleeve_${side}_${topDef.id}`, sleeveSvg);
+      if (img && img.complete && img.naturalWidth > 0) {
+        if (isLeft) {
+          // Ombro esquerdo está em (-130, -255) relativo ao tronco -> offset local do top: (-fullW/2 + 130, -25)
+          ctx.drawImage(img, -fullW / 2 + 130, -25, fullW, fullH);
+        } else {
+          // Ombro direito está em (+130, -255) relativo ao tronco -> offset local do top: (-fullW/2 - 130, -25)
+          ctx.drawImage(img, -fullW / 2 - 130, -25, fullW, fullH);
         }
       }
     }
