@@ -1127,6 +1127,9 @@ class RPGApplication {
     // Drawer toggle button
     btnToggleDrawer.addEventListener('click', () => {
       assetDrawer.classList.toggle('collapsed');
+      if (this.updateCanvasDimensions) {
+        this.updateCanvasDimensions();
+      }
     });
 
     // Editor Tools Selection
@@ -1662,7 +1665,7 @@ class RPGApplication {
       indicator.className = 'save-status saved';
       indicator.innerHTML = `
         <span class="save-dot"></span>
-        <span>${engine} Salvo</span>
+        <span>Salvo</span>
       `;
     } else if (state === 'error') {
       indicator.className = 'save-status error';
@@ -1895,12 +1898,16 @@ class RPGApplication {
       this.canvasWrapper?.classList.remove('editing');
     } else {
       if (assetDrawer) {
+        assetDrawer.classList.remove('collapsed');
         assetDrawer.style.display = 'flex';
       }
       if (btnToggleDrawer) btnToggleDrawer.style.display = 'flex';
       if (editorTools) editorTools.style.display = 'flex';
       if (playHint) playHint.style.display = 'none';
       this.canvasWrapper?.classList.add('editing');
+      if (this.updateCanvasDimensions) {
+        this.updateCanvasDimensions();
+      }
     }
   }
 
