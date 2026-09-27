@@ -758,7 +758,7 @@ export class TileMap {
           const badgeW = Math.max(44, textMetrics.width + 16);
           const badgeH = 18;
           const badgeX = destX + 32 - badgeW / 2;
-          const badgeY = destY - 58;
+          const badgeY = destY - 28;
 
           // Badge shadow 3D
           ctx.fillStyle = '#7a583e';
@@ -806,7 +806,7 @@ export class TileMap {
             ctx.save();
             const qBob = Math.sin(animTime * 4.5 + (x * 2 + y)) * 3;
             const qX = destX + 32;
-            const qY = badgeY - 15 + qBob;
+            const qY = badgeY - 18 + qBob;
             const qR = 10;
 
             // Quest shadow

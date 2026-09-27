@@ -2920,8 +2920,21 @@ class RPGApplication {
     if (this.mode === 'play') {
       const nearbyNpc = this.findNearbyNPC(this.player.x, this.player.y, 110);
       if (nearbyNpc) {
+        let hasActiveQuest = false;
+        const npcData = nearbyNpc.npcData;
+        if (npcData?.questIds && npcData.questIds.length > 0) {
+          const blockly = window.gameBlocklySystem;
+          if (blockly) {
+            const prog = blockly.getNpcProgress(nearbyNpc.tileId);
+            hasActiveQuest = !prog || !prog.isFinished;
+          } else {
+            hasActiveQuest = true;
+          }
+        }
+
         const bob = Math.sin(performance.now() / 160) * 3;
-        const screenPos = this.camera.worldToScreen(nearbyNpc.worldX + 32, nearbyNpc.worldY - 80 + bob);
+        const promptOffsetY = hasActiveQuest ? 68 : 50;
+        const screenPos = this.camera.worldToScreen(nearbyNpc.worldX + 32, nearbyNpc.worldY - promptOffsetY + bob);
         this.ctx.save();
 
         const btnSize = 26;

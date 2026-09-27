@@ -158,7 +158,7 @@ export class DialogueAndChatSystem {
 
         // Stacking calculation: index 0 is oldest (higher), index 1 is newest (just above head)
         const stackOffset = (bubbleCount - 1 - index) * 42; // 42px per stack level
-        const bubbleY = screenPos.y - 48 - stackOffset;
+        const bubbleY = screenPos.y - 84 - stackOffset;
         const bubbleX = screenPos.x;
 
         // Pop-in animation scale in the first 160ms

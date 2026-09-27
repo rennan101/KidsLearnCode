@@ -2308,7 +2308,7 @@ export class DragonManager {
     const badgeW = Math.max(46, textMetrics.width + 10);
     const badgeH = 14;
     const badgeX = drawX + 32 - badgeW / 2;
-    const badgeY = drawY - 44;
+    const badgeY = drawY - 32;
 
     // Badge shadow 3D
     ctx.fillStyle = '#d97706';
@@ -2336,7 +2336,7 @@ export class DragonManager {
     // 3b. Overhead HP Bar (52px wide)
     const barW = 52;
     const barX = drawX + 32 - barW / 2;
-    const hpY = drawY - 26;
+    const hpY = drawY - 14;
     const curHp = (entity.hp !== undefined) ? entity.hp : (entity.maxHp || 100);
     const maxHp = entity.maxHp || 100;
     const hpRatio = Math.max(0, Math.min(1, curHp / maxHp));
@@ -2344,16 +2344,16 @@ export class DragonManager {
     // HP background
     ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(barX, hpY, barW, 5, 2);
-    else ctx.rect(barX, hpY, barW, 5);
+    if (ctx.roundRect) ctx.roundRect(barX, hpY, barW, 4, 2);
+    else ctx.rect(barX, hpY, barW, 4);
     ctx.fill();
 
     // HP Fill
     const hpColor = hpRatio > 0.5 ? '#10b981' : (hpRatio > 0.25 ? '#f59e0b' : '#ef4444');
     ctx.fillStyle = hpColor;
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(barX, hpY, barW * hpRatio, 5, 2);
-    else ctx.rect(barX, hpY, barW * hpRatio, 5);
+    if (ctx.roundRect) ctx.roundRect(barX, hpY, barW * hpRatio, 4, 2);
+    else ctx.rect(barX, hpY, barW * hpRatio, 4);
     ctx.fill();
 
     // HP Border
@@ -2362,29 +2362,29 @@ export class DragonManager {
     ctx.stroke();
 
     // 3c. Overhead Energy Bar (52px wide)
-    const energyY = drawY - 19;
+    const energyY = drawY - 8;
     const curEnergy = (entity.energy !== undefined) ? entity.energy : (entity.maxEnergy || 100);
     const maxEnergy = entity.maxEnergy || 100;
     const energyRatio = Math.max(0, Math.min(1, curEnergy / maxEnergy));
 
     ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(barX, energyY, barW, 3.5, 1.5);
-    else ctx.rect(barX, energyY, barW, 3.5);
+    if (ctx.roundRect) ctx.roundRect(barX, energyY, barW, 3, 1.5);
+    else ctx.rect(barX, energyY, barW, 3);
     ctx.fill();
 
     ctx.fillStyle = '#06b6d4';
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(barX, energyY, barW * energyRatio, 3.5, 1.5);
-    else ctx.rect(barX, energyY, barW * energyRatio, 3.5);
+    if (ctx.roundRect) ctx.roundRect(barX, energyY, barW * energyRatio, 3, 1.5);
+    else ctx.rect(barX, energyY, barW * energyRatio, 3);
     ctx.fill();
     ctx.restore();
 
-    // 4. Emote Balloon above head (Animal Island Style)
+    // 4. Emote Balloon above level badge (Animal Island Style)
     if (entity.emote) {
       ctx.save();
       const emoteX = drawX + 32;
-      const emoteY = drawY - 44;
+      const emoteY = drawY - 50;
 
       if (entity.emote.type === 'zzz') {
         ctx.fillStyle = '#38bdf8';
@@ -2452,13 +2452,13 @@ export class DragonManager {
       ctx.restore();
     }
 
-    // 5. Proximity [R] Keycap Prompt when Player is close
+    // 5. Proximity [R] Keycap Prompt when Player is close (Placed safely above emote or level badge)
     const distToPlayer = player ? Math.hypot((player.x + 24) - (entity.x + 32), (player.y + 24) - (entity.y + 32)) : 999;
     if (distToPlayer < 90 && entity.fsmState !== 'chase' && entity.fsmState !== 'attack') {
       ctx.save();
       const badgeSize = 22;
       const badgeX = drawX + 32 - badgeSize / 2;
-      const badgeY = drawY - (entity.emote ? 68 : 48);
+      const badgeY = drawY - (entity.emote ? 76 : 56);
 
       ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
       ctx.beginPath();
