@@ -27,6 +27,7 @@ const FRAGMENT_SHADER_SRC = `
   varying vec2 v_uv;
 
   uniform vec2 u_resolution;
+  uniform vec2 u_viewportSize;
   uniform vec2 u_camera;
   uniform float u_zoom;
   uniform float u_time;
@@ -116,11 +117,11 @@ const FRAGMENT_SHADER_SRC = `
 
   void main() {
     // 1. Correct WebGL to 2D Canvas World Coordinate Projection
-    // In WebGL, v_uv.y is 0 at the bottom and 1 at the top.
-    // In 2D Canvas, Y is 0 at the top and increases downwards.
-    // Therefore screen Y from top is (1.0 - v_uv.y) * u_resolution.y.
-    vec2 screenCoord = vec2(v_uv.x * u_resolution.x, (1.0 - v_uv.y) * u_resolution.y);
-    vec2 worldPos = u_camera + (screenCoord / u_zoom);
+    // v_uv is (0,0) at bottom-left and (1,1) at top-right.
+    // In world coordinates, visible camera span from left to right is u_viewportSize.x / u_zoom
+    // and from top to bottom is u_viewportSize.y / u_zoom.
+    vec2 worldOffset = vec2(v_uv.x * u_viewportSize.x, (1.0 - v_uv.y) * u_viewportSize.y) / u_zoom;
+    vec2 worldPos = u_camera + worldOffset;
 
     // 2. Zelda Wind Waker Shader Calculation
     float iTime = u_time * u_distortionSpeed;
@@ -229,6 +230,7 @@ export class WebGLWaterShader {
 
     this.locations = {
       resolution: gl.getUniformLocation(program, 'u_resolution'),
+      viewportSize: gl.getUniformLocation(program, 'u_viewportSize'),
       camera: gl.getUniformLocation(program, 'u_camera'),
       zoom: gl.getUniformLocation(program, 'u_zoom'),
       time: gl.getUniformLocation(program, 'u_time'),
@@ -273,6 +275,7 @@ export class WebGLWaterShader {
     };
 
     gl.uniform2f(this.locations.resolution, w, h);
+    gl.uniform2f(this.locations.viewportSize, width, height);
     gl.uniform2f(this.locations.camera, camX, camY);
     gl.uniform1f(this.locations.zoom, zoom || 1.0);
     gl.uniform1f(this.locations.time, timeSec || 0.0);
