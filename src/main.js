@@ -1981,6 +1981,8 @@ class RPGApplication {
       if (playHint) playHint.style.display = 'flex';
       const quickMountHud = document.getElementById('quick-actions-hud');
       if (quickMountHud) quickMountHud.style.display = 'flex';
+      const isMounted = this.player?.isMounted && this.dragonManager?.isMounted();
+      this.updateQuickMountHUD?.(isMounted);
       this.canvasWrapper?.classList.remove('editing');
     } else {
       if (assetDrawer) {
@@ -4348,9 +4350,14 @@ class RPGApplication {
       this.dragonManager.setActiveDragon(selectedDragon.id);
       if (isActive && isMounted) {
         this.dragonManager.setMode('follow');
+        this.player.isMounted = false;
+        this.updateQuickMountHUD?.(false);
         this.showToast(`Você desmontou de ${selectedDragon.name}.`);
       } else {
         this.dragonManager.setMode('mounted');
+        this.player.isMounted = true;
+        this.player.mountSpeedMultiplier = selectedDragon.mountSpeedMultiplier || 1.8;
+        this.updateQuickMountHUD?.(true);
         this.showToast(`Você montou em ${selectedDragon.name}! (+Velocidade)`);
       }
       renderDragonsTab();
@@ -4363,6 +4370,8 @@ class RPGApplication {
       if (!selectedDragon) return;
       this.dragonManager.setActiveDragon(selectedDragon.id);
       this.dragonManager.setMode('follow');
+      this.player.isMounted = false;
+      this.updateQuickMountHUD?.(false);
       this.showToast(`${selectedDragon.name} agora está te acompanhando!`);
       renderDragonsTab();
       updateDragonDetailPanel(selectedDragon);
@@ -4717,21 +4726,30 @@ class RPGApplication {
   }
 
   setupQuickMountButton() {
+    const updateQuickMountHUD = (isMounted) => {
+      const btn = document.getElementById('btn-quick-mount');
+      const label = document.getElementById('quick-mount-label');
+      const altitudeHud = document.getElementById('flight-altitude-hud');
+
+      if (btn) btn.classList.toggle('mounted', !!isMounted);
+      if (label) {
+        label.innerText = isMounted ? 'Descer [Espaço]' : 'Voar [Espaço]';
+      }
+      if (altitudeHud) {
+        altitudeHud.style.display = isMounted ? 'flex' : 'none';
+      }
+    };
+
     this.toggleQuickMount = () => {
       if (this.mode !== 'play') return;
       const res = this.dragonManager.toggleMount();
       if (res.success) {
         const isMounted = res.mounted;
-        const btn = document.getElementById('btn-quick-mount');
-        const label = document.getElementById('quick-mount-label');
-        if (btn) btn.classList.toggle('mounted', isMounted);
-        if (label) {
-          label.innerText = isMounted ? 'Desmontar [Espaço]' : 'Montar [Espaço]';
-        }
+        updateQuickMountHUD(isMounted);
         this.player.isMounted = isMounted;
         this.player.mountSpeedMultiplier = res.dragon?.mountSpeedMultiplier || 1.8;
         if (isMounted) {
-          this.showToast(`Você montou em ${res.dragon.name}! (+Velocidade de Corrida)`);
+          this.showToast(`Você montou em ${res.dragon.name}! (+Velocidade de Voo)`);
         } else {
           this.showToast(`Você desmontou de ${res.dragon.name}.`);
         }
@@ -4744,6 +4762,26 @@ class RPGApplication {
     if (btn) {
       btn.addEventListener('click', () => this.toggleQuickMount());
     }
+
+    const btnAscend = document.getElementById('btn-flight-ascend');
+    if (btnAscend) {
+      btnAscend.addEventListener('click', () => {
+        if (this.dragonManager && this.dragonManager.isMounted() && this.dragonManager.canActiveDragonFly()) {
+          this.dragonManager.ascendFlight(25);
+        }
+      });
+    }
+
+    const btnDescend = document.getElementById('btn-flight-descend');
+    if (btnDescend) {
+      btnDescend.addEventListener('click', () => {
+        if (this.dragonManager && this.dragonManager.isMounted() && this.dragonManager.canActiveDragonFly()) {
+          this.dragonManager.descendFlight(25);
+        }
+      });
+    }
+
+    this.updateQuickMountHUD = updateQuickMountHUD;
   }
 
   setupNetworkDisconnectionMonitor() {

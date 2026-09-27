@@ -289,8 +289,24 @@
 
       <!-- Quick Mount Dragon Action Button (HUD) -->
       <div class="quick-actions-hud" id="quick-actions-hud">
-        <button id="btn-quick-mount" class="quick-mount-btn" title="Montar / Desmontar [Espaço]">
-          <span id="quick-mount-label">Montar [Espaço]</span>
+        <!-- Flight Altitude Controls (Visible ONLY when Mounted) -->
+        <div class="flight-altitude-hud" id="flight-altitude-hud" style="display: none;">
+          <button id="btn-flight-ascend" class="flight-hud-btn" title="Subir Voo Mais Alto [E]">
+            <span class="flight-key-badge">E</span>
+            <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+          </button>
+          <button id="btn-flight-descend" class="flight-hud-btn" title="Descer Voo [Q]">
+            <span class="flight-key-badge">Q</span>
+            <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <button id="btn-quick-mount" class="quick-mount-btn" title="Voar / Descer [Espaço]">
+          <span id="quick-mount-label">Voar [Espaço]</span>
         </button>
       </div>
 
