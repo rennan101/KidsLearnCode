@@ -1,8 +1,7 @@
-// Hero Player Entity with 4-Way Movement, Sprint (Shift), Crafting and Mount Support
-
 import { PLAYABLE_HEROES } from './CharacterRegistry.js';
 import { ModularAvatarRenderer } from './animation/ModularAvatarRenderer.js';
 import { DEFAULT_AVATAR_CONFIG } from './animation/AvatarConfig.js';
+import { MASTER_NPC_CONFIGS } from './animation/NPCAppearanceGenerator.js';
 
 export class Player {
   constructor(x = 320, y = 320, heroId = 'custom_avatar') {
@@ -476,8 +475,11 @@ export class Player {
       ctx.restore();
     }
 
-    // 2. Se for o Avatar Customizável do Jogador, renderiza via Modular Cutout Engine
-    if (this.heroId === 'custom_avatar' && this.modularAvatarRenderer) {
+    // 2. Se for Avatar Modular (Customizável ou Herói com AvatarConfig), renderiza via Modular Cutout Engine
+    const heroAvatarCfg = this.customAvatarConfig || MASTER_NPC_CONFIGS[this.heroId];
+    const isModular = (this.heroId === 'custom_avatar' || !!this.customAvatarConfig || !!MASTER_NPC_CONFIGS[this.heroId]);
+
+    if (isModular && this.modularAvatarRenderer) {
       let animState = 'idle';
       if (this.isCrafting) {
         animState = 'craft';
@@ -500,7 +502,7 @@ export class Player {
         dir,
         animState,
         this.animTimer,
-        this.customAvatarConfig || DEFAULT_AVATAR_CONFIG,
+        heroAvatarCfg || DEFAULT_AVATAR_CONFIG,
         avatarScale
       );
 
@@ -657,8 +659,11 @@ export class Player {
     const renderW = this.width * s;
     const renderH = this.height * s;
 
-    // 1. Modular Cutout Custom Avatar
-    if (this.heroId === 'custom_avatar' && this.modularAvatarRenderer) {
+    // 1. Modular Cutout Avatar (Custom Avatar or Hero with Modular Appearance)
+    const heroAvatarCfg = this.customAvatarConfig || MASTER_NPC_CONFIGS[this.heroId];
+    const isModular = (this.heroId === 'custom_avatar' || !!this.customAvatarConfig || !!MASTER_NPC_CONFIGS[this.heroId]);
+
+    if (isModular && this.modularAvatarRenderer) {
       const avatarScale = 0.315 * s;
       const targetX = centerX;
       const targetY = centerY + (20 * s) - (265 * avatarScale);
@@ -669,8 +674,8 @@ export class Player {
         targetY,
         dir,
         'riding',
-        0,
-        this.customAvatarConfig || DEFAULT_AVATAR_CONFIG,
+        this.animTimer || 0,
+        heroAvatarCfg || DEFAULT_AVATAR_CONFIG,
         avatarScale
       );
       return;

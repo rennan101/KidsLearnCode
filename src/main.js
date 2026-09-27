@@ -1766,7 +1766,7 @@ class RPGApplication {
         previewBox.className = 'tile-preview-box';
 
         const img = document.createElement('img');
-        const isNpcTile = tile.id.startsWith('npc_') || (tile.isCharacter && tile.characterType === 'npc');
+        const isNpcTile = tile.id.startsWith('npc_') || tile.id.startsWith('char_') || (tile.isCharacter && (tile.characterType === 'npc' || tile.characterType === 'hero'));
         if (isNpcTile) {
           img.src = this.getNpcPortrait(tile.id);
         } else {

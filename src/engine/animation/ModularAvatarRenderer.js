@@ -38,6 +38,50 @@ const HAIR_CLIP_Y = {
   'head_16': 455,  // Espetado Selvagem – topo espetado visível, resto via sandwich
 };
 
+function getCharacterSeed(cfg) {
+  if (!cfg) return 1;
+  const str = `${cfg.name || ''}_${cfg.headStyle || ''}_${cfg.eyeShape || ''}_${cfg.skinTone || ''}`;
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash) % 10000;
+}
+
+function getBlinkFactor(time, seed = 0) {
+  if (time <= 0) return 0;
+  // Unique pseudo-random cycle interval per character (3.2s to 5.0s)
+  const seedNorm = (seed % 1000) / 1000;
+  const cycle = 3.2 + seedNorm * 1.8;
+  const timeOffset = seedNorm * 10;
+  const phase = (time + timeOffset) % cycle;
+  
+  const blinkDuration = 0.16; // 160ms for a snappy, natural blink
+  if (phase < blinkDuration) {
+    const p = phase / blinkDuration;
+    // Fast close (0-0.45), hold (0.45-0.55), snappy open (0.55-1.0)
+    if (p < 0.45) {
+      return p / 0.45;
+    } else if (p <= 0.55) {
+      return 1.0;
+    } else {
+      return 1.0 - ((p - 0.55) / 0.45);
+    }
+  }
+
+  // Natural double blink (~25% of cycles)
+  const hasDoubleBlink = (seed % 4) === 0;
+  if (hasDoubleBlink && phase > 0.28 && phase < 0.28 + blinkDuration) {
+    const p = (phase - 0.28) / blinkDuration;
+    if (p < 0.45) return p / 0.45;
+    if (p <= 0.55) return 1.0;
+    return 1.0 - ((p - 0.55) / 0.45);
+  }
+
+  return 0.0;
+}
+
 export class ModularAvatarRenderer {
   constructor() {
     this.rig = new SkeletonRig();
@@ -100,12 +144,15 @@ export class ModularAvatarRenderer {
       this.drawShadow(ctx, 1250, 2140, pose.shadow.scale);
     }
 
+    const charSeed = getCharacterSeed(config);
+    const blinkFactor = getBlinkFactor(time, charSeed);
+
     if (effectiveDir === 'north') {
       this.renderNorth(ctx, pose, config, state);
     } else if (effectiveDir === 'east') {
-      this.renderEast(ctx, pose, config, state);
+      this.renderEast(ctx, pose, config, state, blinkFactor);
     } else {
-      this.renderSouth(ctx, pose, config, state);
+      this.renderSouth(ctx, pose, config, state, blinkFactor);
     }
 
     ctx.restore();
@@ -114,7 +161,7 @@ export class ModularAvatarRenderer {
   /* ========================================================================= */
   /*  RENDERIZAÇÃO: VISTA FRONTAL (SOUTH)                                      */
   /* ========================================================================= */
-  renderSouth(ctx, pose, cfg, state) {
+  renderSouth(ctx, pose, cfg, state, blinkFactor = 0) {
     const headRot = pose.head.rot;
     const isCelebrating = state === 'celebrate';
 
@@ -152,7 +199,7 @@ export class ModularAvatarRenderer {
     }
 
     this.drawHeadBase(ctx, cfg, 'south');
-    this.drawFaceFeatures(ctx, cfg, 'south');
+    this.drawFaceFeatures(ctx, cfg, 'south', blinkFactor);
 
     if (cfg.glassesStyle && cfg.glassesStyle !== 'none') {
       this.drawGlasses(ctx, cfg, 'south');
@@ -204,7 +251,7 @@ export class ModularAvatarRenderer {
   /* ========================================================================= */
   /*  RENDERIZAÇÃO: VISTA LATERAL (EAST / PERFIL)                              */
   /* ========================================================================= */
-  renderEast(ctx, pose, cfg, state) {
+  renderEast(ctx, pose, cfg, state, blinkFactor = 0) {
     const headRot = pose.head.rot;
     const isCelebrating = state === 'celebrate';
 
@@ -240,7 +287,7 @@ export class ModularAvatarRenderer {
     }
 
     this.drawHeadBase(ctx, cfg, 'south');
-    this.drawFaceFeatures(ctx, cfg, 'south');
+    this.drawFaceFeatures(ctx, cfg, 'south', blinkFactor);
 
     if (cfg.glassesStyle && cfg.glassesStyle !== 'none') {
       this.drawGlasses(ctx, cfg, 'south');
@@ -764,7 +811,7 @@ export class ModularAvatarRenderer {
   /*  FEIÇÕES FACIAIS (assets/Face Components.svg)                             */
   /* ========================================================================= */
 
-  drawFaceFeatures(ctx, cfg, dir) {
+  drawFaceFeatures(ctx, cfg, dir, blinkFactor = 0) {
     if (dir === 'north') return;
 
     ctx.save();
@@ -783,7 +830,7 @@ export class ModularAvatarRenderer {
       }
     }
 
-    // 2. Olhos (assets/characters/Eyes: 20 pares)
+    // 2. Olhos (assets/characters/Eyes: 20 pares) com piscar de olhos natural
     const eyeId = cfg.eyeShape || 'olhos_1';
     const eyeColor = cfg.eyeColor || '#8C501D';
     const eyeSvg = getEyeSvgContent(eyeId, eyeColor);
@@ -792,8 +839,20 @@ export class ModularAvatarRenderer {
 
     if (eyeImg && eyeImg.complete && eyeImg.naturalWidth > 0) {
       const [,, vw, vh] = eyeDef.viewBox.split(' ').map(Number);
+      const eyeCenterY = 15;
+
+      ctx.save();
+      if (blinkFactor > 0) {
+        // Deformação vertical natural em direção à linha do olhar (y: 15)
+        const scaleY = Math.max(0.04, 1.0 - blinkFactor * 0.96);
+        ctx.translate(0, eyeCenterY);
+        ctx.scale(1.0, scaleY);
+        ctx.translate(0, -eyeCenterY);
+      }
+
       // Centralizado horizontalmente no rosto (y: 15)
-      ctx.drawImage(eyeImg, -vw * 2.4, 15 - (vh * 2.4) / 2, vw * 4.8, vh * 4.8);
+      ctx.drawImage(eyeImg, -vw * 2.4, eyeCenterY - (vh * 2.4) / 2, vw * 4.8, vh * 4.8);
+      ctx.restore();
     }
 
     // 3. Nariz (assets/characters/Nose: 4 narizes)

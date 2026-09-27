@@ -4,6 +4,10 @@
  * chat sincronizado e suporte a bots amigáveis de demonstração offline.
  */
 
+import { ModularAvatarRenderer } from './animation/ModularAvatarRenderer.js';
+import { MASTER_NPC_CONFIGS } from './animation/NPCAppearanceGenerator.js';
+import { DEFAULT_AVATAR_CONFIG } from './animation/AvatarConfig.js';
+
 export class MultiplayerClient {
   constructor(serverUrl = 'ws://localhost:8080') {
     this.serverUrl = serverUrl;
@@ -11,6 +15,7 @@ export class MultiplayerClient {
     this.isConnected = false;
     this.playerId = null;
     this.remotePlayers = new Map();
+    this.avatarRenderer = new ModularAvatarRenderer();
 
     // Simulated offline bots for rich lively island when running standalone
     this.simulatedBots = [
@@ -357,51 +362,71 @@ export class MultiplayerClient {
       ctx.fill();
     }
 
-    // 2. Sprite Frame
-    const rowMap = { south: 0, east: 1, north: 2, west: 3 };
-    const row = rowMap[player.direction] ?? 0;
-    let col = 0;
-    if (player.isMoving) {
-      col = 2 + (Math.floor(player.animTimer * 8) % 3);
+    // 2. Modular Cutout Avatar or Sprite Frame
+    const avatarConfig = player.avatarConfig || MASTER_NPC_CONFIGS[heroId];
+    if (avatarConfig && this.avatarRenderer) {
+      let animState = 'idle';
+      if (player.isMounted) animState = 'riding';
+      else if (player.isMoving) animState = 'walk';
+
+      const avatarScale = 0.33;
+      const targetX = drawX + 32;
+      const targetY = drawY + 60 - (265 * avatarScale);
+
+      this.avatarRenderer.render(
+        ctx,
+        targetX,
+        targetY,
+        player.direction || 'south',
+        animState,
+        player.animTimer || performance.now() / 1000,
+        avatarConfig,
+        avatarScale
+      );
     } else {
-      col = Math.floor(player.animTimer * 3) % 2;
-    }
+      const rowMap = { south: 0, east: 1, north: 2, west: 3 };
+      const row = rowMap[player.direction] ?? 0;
+      let col = 0;
+      if (player.isMoving) {
+        col = 2 + (Math.floor((player.animTimer || 0) * 8) % 3);
+      } else {
+        col = Math.floor((player.animTimer || 0) * 3) % 2;
+      }
 
-    const heroId = player.heroId || 'char_wolf_hunter_m';
-    let sprite = null;
-
-    if (heroId === 'char_wolf_hunter_m') {
-      if (player.direction === 'south') {
-        if (player.isMoving) {
-          const frameNum = (Math.floor((player.animTimer || 0) * 12) % 17) + 1;
-          const frameIdx = String(frameNum).padStart(3, '0');
-          sprite = assetLoader?.getImage(`assets/characters/char_wolf_hunter_m/Walk_Down/sprite_${frameIdx}.png`);
-        } else {
-          sprite = assetLoader?.getImage(`assets/characters/char_wolf_hunter_m/Walk_Down/sprite_001.png`);
-        }
-      } else if (player.direction === 'north') {
-        if (player.isMoving) {
-          const frameNum = (Math.floor((player.animTimer || 0) * 12) % 15) + 1;
-          const frameIdx = String(frameNum).padStart(3, '0');
-          sprite = assetLoader?.getImage(`assets/characters/char_wolf_hunter_m/Walk_Up/sprite_${frameIdx}.png`);
-        } else {
-          sprite = assetLoader?.getImage(`assets/characters/char_wolf_hunter_m/Walk_Up/sprite_001.png`);
+      let sprite = null;
+      if (heroId === 'char_wolf_hunter_m') {
+        if (player.direction === 'south') {
+          if (player.isMoving) {
+            const frameNum = (Math.floor((player.animTimer || 0) * 12) % 17) + 1;
+            const frameIdx = String(frameNum).padStart(3, '0');
+            sprite = assetLoader?.getImage(`assets/characters/char_wolf_hunter_m/Walk_Down/sprite_${frameIdx}.png`);
+          } else {
+            sprite = assetLoader?.getImage(`assets/characters/char_wolf_hunter_m/Walk_Down/sprite_001.png`);
+          }
+        } else if (player.direction === 'north') {
+          if (player.isMoving) {
+            const frameNum = (Math.floor((player.animTimer || 0) * 12) % 15) + 1;
+            const frameIdx = String(frameNum).padStart(3, '0');
+            sprite = assetLoader?.getImage(`assets/characters/char_wolf_hunter_m/Walk_Up/sprite_${frameIdx}.png`);
+          } else {
+            sprite = assetLoader?.getImage(`assets/characters/char_wolf_hunter_m/Walk_Up/sprite_001.png`);
+          }
         }
       }
-    }
 
-    if (!sprite) {
-      const frameUrl = `assets/characters/${heroId}/frames/wolf_hunter_r${row}_c${col}.png`;
-      sprite = assetLoader?.getImage(frameUrl) 
-        || assetLoader?.getImage(`assets/characters/${heroId}/portrait.jpg`)
-        || (player.isMoving ? assetLoader?.getImage(`Geralt/running/rotations/${player.direction}.png`) : assetLoader?.getImage(`Geralt/Idle/rotations/${player.direction}.png`));
-    }
+      if (!sprite) {
+        const frameUrl = `assets/characters/${heroId}/frames/wolf_hunter_r${row}_c${col}.png`;
+        sprite = assetLoader?.getImage(frameUrl) 
+          || assetLoader?.getImage(`assets/characters/${heroId}/portrait.jpg`)
+          || (player.isMoving ? assetLoader?.getImage(`Geralt/running/rotations/${player.direction}.png`) : assetLoader?.getImage(`Geralt/Idle/rotations/${player.direction}.png`));
+      }
 
-    if (sprite) {
-      ctx.drawImage(sprite, drawX, drawY, 64, 64);
-    } else {
-      ctx.fillStyle = '#6366f1';
-      ctx.fillRect(drawX + 16, drawY + 16, 32, 48);
+      if (sprite) {
+        ctx.drawImage(sprite, drawX, drawY, 64, 64);
+      } else {
+        ctx.fillStyle = '#6366f1';
+        ctx.fillRect(drawX + 16, drawY + 16, 32, 48);
+      }
     }
 
     // 3. Name Tag and Online Badge (omitted in reflections)

@@ -921,7 +921,7 @@ export class EditorController {
       // Multi-tile Brush ghost preview (with rotation)
       if (meta) {
         ctx.globalAlpha = 0.65;
-        const isNpcMeta = meta.id.startsWith('npc_') || (meta.isCharacter && meta.characterType === 'npc');
+        const isNpcMeta = meta.id.startsWith('npc_') || meta.id.startsWith('char_') || (meta.isCharacter && (meta.characterType === 'npc' || meta.characterType === 'hero' || meta.isNPC));
         if (isNpcMeta && this.tileMap.avatarRenderer) {
           const npcData = getNPCData(meta.id);
           const avatarConfig = npcData?.avatarConfig;

@@ -2388,27 +2388,37 @@ export class AssetLoader {
     // Register Secondary Hero NPCs in Overworld Tiles (Category: 'Characters')
     if (Array.isArray(SECONDARY_HERO_NPCS)) {
       for (const npc of SECONDARY_HERO_NPCS) {
-        this.overworldTiles.push({
-          id: npc.id,
-          name: npc.name,
-          category: 'Characters',
-          layer: 'characters',
-          isCharacter: true,
-          isNPC: true,
-          characterType: 'npc',
-          npcData: npc,
-          timeOfDay: npc.timeOfDay,
-          src: `assets/characters/${npc.id}/frames/wolf_hunter_r0_c0.png`,
-          gridW: 1,
-          gridH: 1,
-          collider: {
-            enabled: true,
-            x: 18,
-            y: 44,
-            w: 28,
-            h: 18
-          }
-        });
+        const existing = this.overworldTiles.find(t => t.id === npc.id);
+        if (existing) {
+          existing.name = npc.name;
+          existing.npcData = npc;
+          existing.timeOfDay = npc.timeOfDay;
+          existing.isNPC = true;
+          existing.isCharacter = true;
+          existing.characterType = 'hero';
+        } else {
+          this.overworldTiles.push({
+            id: npc.id,
+            name: npc.name,
+            category: 'Characters',
+            layer: 'characters',
+            isCharacter: true,
+            isNPC: true,
+            characterType: 'hero',
+            npcData: npc,
+            timeOfDay: npc.timeOfDay,
+            src: `assets/characters/${npc.id}/frames/wolf_hunter_r0_c0.png`,
+            gridW: 1,
+            gridH: 1,
+            collider: {
+              enabled: true,
+              x: 18,
+              y: 44,
+              w: 28,
+              h: 18
+            }
+          });
+        }
       }
     }
 

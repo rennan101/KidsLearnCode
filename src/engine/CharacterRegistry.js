@@ -5,11 +5,8 @@
 
 import { MASTER_NPC_CONFIGS, generateNPCAppearance } from './animation/NPCAppearanceGenerator.js';
 
-// Personagens jogáveis: o jogador utiliza exclusivamente seu Avatar Customizável modular.
-export const PLAYABLE_HEROES = [];
-
-// Heróis da ilha convertidos em NPCs Secundários (com horários de aparição: vampiros e bruxos à noite, caçadores e arqueiros de dia)
-export const SECONDARY_HERO_NPCS = [
+// 8 Heróis da Ilha Lua com aparências modulares completas e horários de aparição
+export const PLAYABLE_HEROES = [
   {
     id: "char_wolf_hunter_m",
     name: "Ragnar, o Caçador",
@@ -91,6 +88,8 @@ export const SECONDARY_HERO_NPCS = [
     greeting: "Hihi! A lua cheia é a melhor conselheira para quem busca inspiração nos feitiços da ilha!"
   }
 ];
+
+export const SECONDARY_HERO_NPCS = PLAYABLE_HEROES;
 
 export const VILLAGE_NPCS = [
   {
@@ -257,8 +256,19 @@ export const MASTER_SEQUENCE_IDS = [
 ];
 
 export function getNPCData(npcId) {
-  const found = VILLAGE_NPCS.find(n => n.id === npcId) || SECONDARY_HERO_NPCS.find(n => n.id === npcId);
+  const found = VILLAGE_NPCS.find(n => n.id === npcId) || 
+                SECONDARY_HERO_NPCS.find(n => n.id === npcId) ||
+                PLAYABLE_HEROES.find(n => n.id === npcId);
   if (found) return found;
+  if (MASTER_NPC_CONFIGS[npcId]) {
+    return {
+      id: npcId,
+      name: MASTER_NPC_CONFIGS[npcId].name || npcId,
+      role: 'Herói da Ilha',
+      category: 'hero',
+      avatarConfig: MASTER_NPC_CONFIGS[npcId]
+    };
+  }
   return {
     id: npcId,
     name: npcId,
