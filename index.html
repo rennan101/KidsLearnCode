@@ -322,26 +322,19 @@
       <!-- Circular RPG Minimap (Top Right) -->
       <div class="minimap-hud" id="minimap-hud">
         <div class="minimap-bezel">
-          <!-- Cardinal Direction Compass Points -->
-          <div class="compass-marker marker-n" title="Norte">N</div>
-          <div class="compass-marker marker-e" title="Leste">L</div>
-          <div class="compass-marker marker-s" title="Sul">S</div>
-          <div class="compass-marker marker-w" title="Oeste">O</div>
-          
           <div class="minimap-inner-mask">
             <canvas id="minimap-canvas"></canvas>
           </div>
         </div>
 
         <!-- Minimap Actions & Expand Toggle -->
-        <button id="btn-minimap-expand" class="minimap-btn-expand" title="Expandir Mapa Tático (M)">
+        <button id="btn-minimap-expand" class="minimap-btn-expand" title="Expandir Mapa">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 3 21 3 21 9"></polyline>
             <polyline points="9 21 3 21 3 15"></polyline>
             <line x1="21" y1="3" x2="14" y2="10"></line>
             <line x1="3" y1="21" x2="10" y2="14"></line>
           </svg>
-          <span class="minimap-key-hint">M</span>
         </button>
       </div>
 
@@ -356,40 +349,19 @@
                 <line x1="8" y1="2" x2="8" y2="18"></line>
                 <line x1="16" y1="6" x2="16" y2="22"></line>
               </svg>
-              <span>Cartografia &amp; Visão Geral da Ilha</span>
+              <span>Mapa</span>
             </div>
             <div class="expanded-map-actions">
-              <div class="tool-group mini">
-                <button id="btn-map-zoom-in" class="tool-btn" title="Aproximar Zoom">
-                  <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    <line x1="11" y1="8" x2="11" y2="14"></line>
-                    <line x1="8" y1="11" x2="14" y2="11"></line>
-                  </svg>
-                </button>
-                <button id="btn-map-zoom-out" class="tool-btn" title="Afastar Zoom">
-                  <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    <line x1="8" y1="11" x2="14" y2="11"></line>
-                  </svg>
-                </button>
-              </div>
-              <button id="btn-close-expanded-map" class="action-btn danger" title="Fechar Mapa (M ou Esc)">
-                <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <button id="btn-close-expanded-map" class="modal-close-pill-btn" title="Fechar">
+                <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
-                <span>Fechar [M]</span>
               </button>
             </div>
           </div>
           <div class="expanded-map-canvas-container">
             <canvas id="expanded-map-canvas"></canvas>
-          </div>
-          <div class="expanded-map-footer">
-            <span>Clique e arraste para navegar | Duplo clique para viagem rápida | Pressione [M] ou [ESC] para fechar</span>
           </div>
         </div>
       </div>

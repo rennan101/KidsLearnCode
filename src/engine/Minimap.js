@@ -1,12 +1,11 @@
-// High-fantasy RPG Circular & Expanded Minimap Engine
+// High-fantasy RPG Circular & Expanded Minimap Engine (Real Asset Colors & Clean Animal Island UI)
 
 export class Minimap {
-  constructor(tileMap, assetLoader, player, camera, dayNightSystem = null) {
+  constructor(tileMap, assetLoader, player, camera) {
     this.tileMap = tileMap;
     this.assetLoader = assetLoader;
     this.player = player;
     this.camera = camera;
-    this.dayNightSystem = dayNightSystem;
 
     // DOM Elements
     this.container = document.getElementById('minimap-hud');
@@ -24,15 +23,18 @@ export class Minimap {
     this.isPanningExpanded = false;
     this.panStart = { x: 0, y: 0 };
 
-    // Tile color cache for fast map rendering
+    // Dynamic tile color cache for real sampled colors
+    this.tileColorCache = new Map();
+
+    // Default base fallback palette
     this.tileColorMap = {
-      'water-animated': '#2563eb',
       'water-wind-waker': '#0284c7',
-      'grass': '#15803d',
-      'grass-detail-1': '#16a34a',
-      'grass-detail-2': '#22c55e',
+      'water-animated': '#2563eb',
+      'grass': '#5d9948',
+      'grass-detail-1': '#68ab52',
+      'grass-detail-2': '#4e853c',
       'stump': '#78350f',
-      'bush-green': '#166534',
+      'bush-green': '#2d6a4f',
       'bush-red': '#991b1b',
       'bush-blue': '#1e40af',
       'bush-white': '#e2e8f0',
@@ -51,8 +53,8 @@ export class Minimap {
       'crate': '#92400e',
       'sign': '#a16207',
       'haybale': '#eab308',
-      'tree-1': '#064e3b',
-      'tree-2': '#065f46',
+      'tree-1': '#1b4332',
+      'tree-2': '#2d6a4f',
       'cabbage': '#4ade80',
       'corn': '#fde047',
       'pumpkin': '#f97316',
@@ -178,23 +180,73 @@ export class Minimap {
     }
   }
 
-  getTileColor(tileId) {
+  /**
+   * Extrai ou calcula a cor real e autêntica de cada asset para renderizar no mapa
+   * @param {string} tileId 
+   * @param {object} meta 
+   * @returns {string} Cor CSS
+   */
+  getTileColor(tileId, meta = null) {
+    if (this.tileColorCache.has(tileId)) {
+      return this.tileColorCache.get(tileId);
+    }
+
+    // Cores específicas por ID ou Categoria
     if (this.tileColorMap[tileId]) {
+      this.tileColorCache.set(tileId, this.tileColorMap[tileId]);
       return this.tileColorMap[tileId];
     }
-    if (tileId.startsWith('dirt-') || tileId.startsWith('sprite_001-') || tileId.startsWith('dirt-edge-')) {
-      return '#b45309'; // Dirt path earthy brown
+
+    if (!meta && this.assetLoader) {
+      meta = this.assetLoader.getTileMetadata(tileId);
     }
-    if (tileId.startsWith('flower-')) {
-      return '#f43f5e';
+
+    let color = '#475569';
+
+    if (tileId.includes('water') || tileId.includes('ocean') || tileId.includes('sea') || meta?.category === 'Water') {
+      color = '#0284c7'; // Azul vibrante da água
+    } else if (tileId.startsWith('dirt-') || tileId.startsWith('sprite_001-') || tileId.startsWith('dirt-edge-') || tileId.includes('sand') || tileId.includes('path') || tileId.includes('soil')) {
+      color = '#c68a4c'; // Areia e caminho de terra real
+    } else if (tileId.startsWith('flower-') || tileId.includes('rose') || tileId.includes('tulip')) {
+      color = '#f43f5e'; // Flor vibrante
+    } else if (tileId.startsWith('seedbag-')) {
+      color = '#d97706';
+    } else if (tileId.startsWith('tree-') || tileId.includes('pine') || tileId.includes('oak')) {
+      color = '#1b4332'; // Copa da árvore verde musgo profundo
+    } else if (tileId.startsWith('bush-') || tileId.includes('foliage')) {
+      color = '#2d6a4f'; // Arbustos vivos
+    } else if (tileId.startsWith('house-') || tileId.includes('roof') || tileId.includes('building')) {
+      color = '#b91c1c'; // Telhados
+    } else if (tileId.startsWith('rock-') || tileId.includes('stone') || tileId.includes('cliff')) {
+      color = '#64748b'; // Rochas e pedras
+    } else if (tileId.startsWith('fence') || tileId.startsWith('stump') || tileId.startsWith('wood')) {
+      color = '#78350f'; // Madeira
+    } else if (tileId.includes('grass')) {
+      color = '#5d9948'; // Grama viva
     }
-    if (tileId.startsWith('seedbag-')) {
-      return '#d97706';
+
+    // Se temos imagem carregada, tentamos amostrar a cor média real
+    if (meta && meta.src && this.assetLoader) {
+      const img = this.assetLoader.getImage(meta.src);
+      if (img && img.complete && img.naturalWidth > 0) {
+        try {
+          const sampleCanvas = document.createElement('canvas');
+          sampleCanvas.width = 1;
+          sampleCanvas.height = 1;
+          const sctx = sampleCanvas.getContext('2d');
+          sctx.drawImage(img, 0, 0, 1, 1);
+          const p = sctx.getImageData(0, 0, 1, 1).data;
+          if (p[3] > 60) {
+            color = `rgb(${p[0]}, ${p[1]}, ${p[2]})`;
+          }
+        } catch {
+          // Fallback para mapeamento heurístico se houver restrição de segurança
+        }
+      }
     }
-    if (tileId.startsWith('tree-')) {
-      return '#065f46';
-    }
-    return '#475569';
+
+    this.tileColorCache.set(tileId, color);
+    return color;
   }
 
   render(isEditor = false) {
@@ -236,31 +288,9 @@ export class Minimap {
       focusY = this.camera.y + (this.camera.viewportHeight / this.camera.zoom) / 2;
     }
 
-    // Draw semi-transparent fantasy background (Genshin Impact style)
-    ctx.fillStyle = isExpandedMode ? '#070a10' : 'rgba(10, 16, 26, 0.78)';
+    // Fundo aconchegante pergaminho/oceano profundo
+    ctx.fillStyle = isExpandedMode ? '#0c1017' : 'rgba(12, 16, 23, 0.85)';
     ctx.fillRect(0, 0, width, height);
-
-    // Coordinate grid lines for expanded tactical overview
-    if (isExpandedMode) {
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.08)';
-      ctx.lineWidth = 1;
-      const step = 64 * scale;
-      const startGridX = (centerX + panOffsetX - (focusX * scale)) % step;
-      const startGridY = (centerY + panOffsetY - (focusY * scale)) % step;
-
-      for (let x = startGridX; x < width; x += step) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
-        ctx.stroke();
-      }
-      for (let y = startGridY; y < height; y += step) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
-        ctx.stroke();
-      }
-    }
 
     // World to minimap screen transform
     ctx.translate(centerX + panOffsetX, centerY + panOffsetY);
@@ -281,7 +311,7 @@ export class Minimap {
       this.renderTileLayer(ctx, layerName, focusX, focusY, scale, minTileX, maxTileX, minTileY, maxTileY, isEditor);
     }
 
-    // 4. Render Spawn Point Marker
+    // Render Spawn Point Marker
     if (this.tileMap.spawnPoint) {
       const sp = this.tileMap.spawnPoint;
       const sx = (sp.x - focusX) * scale;
@@ -292,7 +322,7 @@ export class Minimap {
       ctx.fill();
     }
 
-    // 5. Render Camera Viewport Rectangle in Editor mode or Expanded View
+    // Render Camera Viewport Rectangle in Editor mode or Expanded View
     if (this.camera && (isEditor || isExpandedMode)) {
       const camWorldX = this.camera.x;
       const camWorldY = this.camera.y;
@@ -311,7 +341,7 @@ export class Minimap {
       ctx.fillRect(camMinimapX, camMinimapY, camMinimapW, camMinimapH);
     }
 
-    // 6. Render Player (Geralt) Compass / Position Indicator
+    // Render Player Compass / Position Indicator
     if (this.player) {
       const px = (this.player.x + 32 - focusX) * scale;
       const py = (this.player.y + 32 - focusY) * scale;
@@ -320,7 +350,7 @@ export class Minimap {
       ctx.translate(px, py);
 
       // Player glowing pulse circle
-      ctx.fillStyle = 'rgba(245, 158, 11, 0.35)';
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.4)';
       ctx.beginPath();
       ctx.arc(0, 0, 8, 0, Math.PI * 2);
       ctx.fill();
@@ -348,91 +378,28 @@ export class Minimap {
 
     ctx.restore();
 
-    // Genshin Impact style: Smooth radial edge transparency fade (feathered border)
+    // Feathered circular mask on compact minimap
     if (!isExpandedMode) {
       ctx.save();
       ctx.globalCompositeOperation = 'destination-in';
-      const maskGrad = ctx.createRadialGradient(centerX, centerY, width * 0.32, centerX, centerY, width * 0.5);
+      const maskGrad = ctx.createRadialGradient(centerX, centerY, width * 0.36, centerX, centerY, width * 0.5);
       maskGrad.addColorStop(0, 'rgba(0, 0, 0, 1)');
-      maskGrad.addColorStop(0.72, 'rgba(0, 0, 0, 0.95)');
-      maskGrad.addColorStop(0.90, 'rgba(0, 0, 0, 0.45)');
+      maskGrad.addColorStop(0.75, 'rgba(0, 0, 0, 0.95)');
+      maskGrad.addColorStop(0.92, 'rgba(0, 0, 0, 0.45)');
       maskGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = maskGrad;
       ctx.fillRect(0, 0, width, height);
       ctx.restore();
 
-      // Subtle delicate inner compass guide ring
+      // Delicate warm gold/cream inner border ring
       ctx.save();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(253, 251, 247, 0.35)';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.arc(centerX, centerY, width * 0.44, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.12)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, width * 0.35, 0, Math.PI * 2);
+      ctx.arc(centerX, centerY, width * 0.45, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
-
-      // Draw Radial Day/Night Orbital Sun/Moon and Action Points on Circular Rim
-      if (this.dayNightSystem) {
-        this.renderDayNightAndAPRing(ctx, centerX, centerY, width * 0.44);
-      }
     }
-  }
-
-  renderDayNightAndAPRing(ctx, cx, cy, radius) {
-    const isDay = this.dayNightSystem.isDay();
-    const progress = this.dayNightSystem.getCycleProgress();
-    const currentAP = this.dayNightSystem.currentAP;
-    const maxAP = this.dayNightSystem.currentMaxAP;
-    const nightBonus = this.dayNightSystem.nightAPBonus;
-    const { formatted } = this.dayNightSystem.getCurrentTime();
-
-    // 1. Draw Rim Bezel Ring
-    ctx.strokeStyle = isDay ? 'rgba(245, 158, 11, 0.4)' : 'rgba(99, 102, 241, 0.4)';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // 2. Draw Orbital Sun or Moon icon along the rim
-    const orbitalAngle = progress * Math.PI * 2 - Math.PI / 2;
-    const orbitX = cx + Math.cos(orbitalAngle) * (radius - 2);
-    const orbitY = cy + Math.sin(orbitalAngle) * (radius - 2);
-
-    ctx.save();
-    ctx.font = '14px sans-serif';
-    // Draw Sun / Moon Vector Indicator
-    ctx.beginPath();
-    ctx.arc(orbitX, orbitY, 5, 0, Math.PI * 2);
-    ctx.fillStyle = isDay ? '#f59e0b' : '#c7d2fe';
-    ctx.fill();
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.restore();
-
-    // 3. Draw Action Points (AP) segmented arc along the top-left rim
-    const totalSegments = maxAP;
-    const startArc = Math.PI * 0.75;
-    const arcSpan = Math.PI * 0.7;
-    const segmentAngle = arcSpan / totalSegments;
-
-    for (let i = 0; i < totalSegments; i++) {
-      const segStart = startArc + i * segmentAngle + 0.03;
-      const segEnd = segStart + segmentAngle - 0.06;
-      const isFilled = i < currentAP;
-
-      ctx.strokeStyle = isFilled ? '#10b981' : 'rgba(255, 255, 255, 0.2)';
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius - 8, segStart, segEnd);
-      ctx.stroke();
-    }
-
   }
 
   renderTileLayer(ctx, layerName, focusX, focusY, scale, minTileX, maxTileX, minTileY, maxTileY, isEditor) {
@@ -465,8 +432,8 @@ export class Minimap {
         const mapW = widthPx * scale;
         const mapH = heightPx * scale;
 
-        if (cell.tileId && cell.tileId.startsWith('npc_')) {
-          // NPC Master quest indicator dot
+        if (cell.tileId && (cell.tileId.startsWith('npc_') || cell.tileId.startsWith('char_') || meta.isNPC)) {
+          // NPC indicator dot
           ctx.save();
           ctx.fillStyle = '#38bdf8';
           ctx.beginPath();
@@ -479,7 +446,7 @@ export class Minimap {
           continue;
         }
 
-        const color = this.getTileColor(cell.tileId);
+        const color = this.getTileColor(cell.tileId, meta);
         ctx.fillStyle = color;
 
         if (layerName === 'solid' && (cell.tileId.startsWith('tree-') || cell.tileId.startsWith('bush-'))) {

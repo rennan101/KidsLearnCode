@@ -199,9 +199,43 @@
   gap: 10px;
 }
 
-.tool-group.mini .tool-btn {
-  padding: 5px 8px;
-  font-size: 0.75rem;
+.modal-close-pill-btn {
+  background: #fdfbf7;
+  border: 2px solid #7a583e;
+  color: #794f27;
+  width: 34px;
+  height: 34px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 3px 0 0 #5c3c26;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.modal-close-pill-btn .ui-icon {
+  width: 18px;
+  height: 18px;
+  stroke: #794f27;
+}
+
+.modal-close-pill-btn:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 0 #991b1b;
+}
+
+.modal-close-pill-btn:hover .ui-icon {
+  stroke: #b91c1c;
+}
+
+.modal-close-pill-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 #5c3c26;
 }
 
 .expanded-map-canvas-container {

@@ -60,7 +60,7 @@ class RPGApplication {
     this.player = new Player(320, 320);
     this.player.dragonManager = this.dragonManager;
     this.camera = new Camera();
-    this.minimap = new Minimap(this.tileMap, this.assetLoader, this.player, this.camera, this.dayNightSystem);
+    this.minimap = new Minimap(this.tileMap, this.assetLoader, this.player, this.camera);
 
     // Sequential Master NPC progression filters
     this.tileMap.isNpcVisible = (npcId) => this.isNpcUnlocked(npcId);
@@ -2933,8 +2933,10 @@ class RPGApplication {
         }
 
         const bob = Math.sin(performance.now() / 160) * 3;
-        const promptOffsetY = hasActiveQuest ? 68 : 50;
-        const screenPos = this.camera.worldToScreen(nearbyNpc.worldX + 32, nearbyNpc.worldY - promptOffsetY + bob);
+        // Se houver missão ativa, o '!' fica no centro (badgeY - 18 = -62px); o prompt [E] fica elegantemente ao lado direito
+        const promptOffsetX = hasActiveQuest ? 28 : 0;
+        const promptOffsetY = hasActiveQuest ? 62 : 72;
+        const screenPos = this.camera.worldToScreen(nearbyNpc.worldX + 32 + promptOffsetX, nearbyNpc.worldY - promptOffsetY + bob);
         this.ctx.save();
 
         const btnSize = 26;
@@ -3026,8 +3028,6 @@ class RPGApplication {
     let nearest = null;
     let minDistance = radius;
 
-    const isNight = this.dayNightSystem ? this.dayNightSystem.isNight() : false;
-
     const layersToCheck = ['characters', 'solid', 'decor'];
     for (const layerName of layersToCheck) {
       const layer = this.tileMap.layers[layerName];
@@ -3043,10 +3043,6 @@ class RPGApplication {
           if (dist <= minDistance) {
             const npcData = CharacterRegistry.getNPCData(tileId);
             if (npcData) {
-              // Time of day appearance restriction
-              if (npcData.timeOfDay === 'night' && !isNight) continue;
-              if (npcData.timeOfDay === 'day' && isNight) continue;
-
               minDistance = dist;
               nearest = {
                 ...npcData,

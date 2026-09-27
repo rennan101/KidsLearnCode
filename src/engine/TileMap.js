@@ -707,17 +707,6 @@ export class TileMap {
     if (cell.tileId.startsWith('npc_') || cell.tileId.startsWith('char_') || tileMeta.isNPC || tileMeta.isCharacter) {
       const npcData = getNPCData(cell.tileId);
 
-      // Play Mode: Check time of day appearance schedule
-      if (!isEditor && npcData?.timeOfDay) {
-        const isNight = (typeof window !== 'undefined' && window.gameDayNightSystem) ? window.gameDayNightSystem.isNight() : false;
-        if (npcData.timeOfDay === 'night' && !isNight) {
-          return; // Vampiros e Bruxos só aparecem à noite
-        }
-        if (npcData.timeOfDay === 'day' && isNight) {
-          return; // Caçadores e Arqueiros só aparecem de dia / manhã
-        }
-      }
-
       // Play Mode: Check water placement (Ensure NPCs only stand on land/terra, never in water)
       if (!isEditor) {
         const groundCell = this.layers.ground?.get(this.getKey(x, y));
@@ -758,7 +747,7 @@ export class TileMap {
           const badgeW = Math.max(44, textMetrics.width + 16);
           const badgeH = 18;
           const badgeX = destX + 32 - badgeW / 2;
-          const badgeY = destY - 28;
+          const badgeY = destY - 44;
 
           // Badge shadow 3D
           ctx.fillStyle = '#7a583e';

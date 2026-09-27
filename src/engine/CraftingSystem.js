@@ -253,18 +253,11 @@ export class CraftingSystem {
     const recipe = this.recipes.find(r => r.id === recipeId || r.assetId === recipeId);
     if (!recipe) return { success: false, reason: 'Receita não encontrada!' };
 
-    // Check Day/Night & Action Points
-    const apCheck = this.dayNightSystem.canPerformAction();
-    if (!apCheck.allowed) {
-      return { success: false, reason: apCheck.reason };
-    }
-
     if (!this.hasMaterials(recipe)) {
       return { success: false, reason: 'Materiais insuficientes no inventário!' };
     }
 
-    // Deduct AP & Materials
-    this.dayNightSystem.consumeAction(recipe.apCost);
+    // Deduct Materials
     for (const req of recipe.materials) {
       const current = this.inventory.get(req.item) || 0;
       this.inventory.set(req.item, current - req.count);
