@@ -1481,6 +1481,7 @@ export class DragonManager {
   update(deltaTime, player, tileMap, inventorySystem = null) {
     const dt = Math.min(deltaTime / 1000, 0.1);
     this.floatTimer += dt;
+    this.currentTileMap = tileMap;
 
     // 0. Synchronize and Update Autonomous Wild Dragons in Scene (FSM)
     if (tileMap) {
@@ -1721,8 +1722,8 @@ export class DragonManager {
       const centerX = currentX + (isMounted ? 32 : 24);
       const centerY = currentY + (isMounted ? 46 : 38);
 
-      const isOnWater = tileMap ? tileMap.isWaterAt(centerX, centerY) : true;
-      const isSwimming = (isWaterType || isOnWater) && alt <= 6;
+      const isOnWater = tileMap ? tileMap.isWaterAt(centerX, centerY) : false;
+      const isSwimming = isOnWater && alt <= 6;
 
       if (isSwimming) {
         let vx = 0;
@@ -1796,9 +1797,8 @@ export class DragonManager {
     for (const entity of this.wildDragons.values()) {
       const centerX = entity.x + 32;
       const centerY = entity.y + 46;
-      const isOnWater = tileMap ? tileMap.isWaterAt(centerX, centerY) : true;
-      const isWaterType = entity.category === 'water';
-      const isSwimming = (isWaterType || isOnWater) && (entity.flightAltitude <= 6);
+      const isOnWater = tileMap ? tileMap.isWaterAt(centerX, centerY) : false;
+      const isSwimming = isOnWater && (entity.flightAltitude <= 6);
 
       if (isSwimming) {
         const isMoving = entity.fsmState === 'roam' || (entity.targetX !== undefined && Math.hypot(entity.targetX - entity.x, entity.targetY - entity.y) > 6);
@@ -2317,7 +2317,8 @@ export class DragonManager {
     ctx.restore();
 
     // 1b. Zelda Wind Waker Water Bow Wave & Ripples for Aquatic Dragons
-    if (entity.category === 'water' && alt <= 6) {
+    const isOnWater = this.currentTileMap ? this.currentTileMap.isWaterAt(drawX + 32, entity.y + 52) : false;
+    if (isOnWater && alt <= 6) {
       const isMoving = entity.fsmState === 'roam';
       this.renderSwimmingBowWave(ctx, drawX + 32, entity.y + 52, dir, isMoving, entity.animTimer, 1.0);
     }
@@ -2682,7 +2683,8 @@ export class DragonManager {
     ctx.restore();
 
     // 1b. Ondas Aquáticas para Dragões de Água (Zelda Wind Waker Bow Wave & Ripples)
-    if ((dragon.category === 'water' || (player && player.isMoving)) && alt <= 6) {
+    const isOnWater = this.currentTileMap ? this.currentTileMap.isWaterAt(drawX + 32, this.y + 54) : false;
+    if (isOnWater && alt <= 6) {
       const isMoving = player && (player.isMoving || (player.vx !== undefined && (player.vx !== 0 || player.vy !== 0)));
       this.renderSwimmingBowWave(ctx, drawX + 32, this.y + 54, dir, isMoving, this.floatTimer, 1.1);
     }
@@ -2999,7 +3001,8 @@ export class DragonManager {
     ctx.restore();
 
     // 1b. Aquatic Swimming Wave Ripples for Water Dragons
-    if (dragon.category === 'water' && alt <= 6) {
+    const isOnWater = this.currentTileMap ? this.currentTileMap.isWaterAt(drawX + 24, this.y + 44) : false;
+    if (isOnWater && alt <= 6) {
       const isMoving = this.state === 'follow';
       this.renderSwimmingBowWave(ctx, drawX + 24, this.y + 44, dir, isMoving, this.floatTimer, 0.95);
     }

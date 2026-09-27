@@ -1,6 +1,6 @@
 // Infinite/Expandable Sparse TileMap engine with exact grid unit scaling
 import { ModularAvatarRenderer } from './animation/ModularAvatarRenderer.js';
-import { getNPCData } from './CharacterRegistry.js';
+import { getNPCData, hasAvailableQuestForNpc } from './CharacterRegistry.js';
 import { WaterWaveRenderer } from './WaterWaveRenderer.js';
 import { WebGLWaterShader } from './WebGLWaterShader.js';
 import { ShorelineFoamRenderer } from './ShorelineFoamRenderer.js';
@@ -184,22 +184,30 @@ export class TileMap {
       return false;
     }
 
+    // Check if there is ANY non-water covering tile on top of this coordinate (bridge, pier, solid, decor, top)
+    const upperLayers = ['solid', 'decor', 'top'];
+    for (const layerName of upperLayers) {
+      const cell = this.layers[layerName]?.get(key);
+      if (cell && cell.tileId) {
+        const id = cell.tileId.toLowerCase();
+        // If it's a bridge, platform, path, or any non-water structure, it covers the water
+        const isWaterTile = id === 'water-wind-waker' || id === 'water-animated' || id.includes('water');
+        if (!isWaterTile) {
+          return false; // Covered by bridge, dock, path, roof, or object
+        }
+      }
+    }
+
     const groundCell = this.layers.ground?.get(key);
     if (groundCell && groundCell.tileId) {
       const id = groundCell.tileId.toLowerCase();
-      if (id === 'water-animated' || id.includes('water') || id.includes('ocean') || id.includes('river')) {
+      if (id === 'water-wind-waker' || id === 'water-animated' || id.includes('water') || id.includes('ocean') || id.includes('river')) {
         return true;
       }
       if (assetLoader) {
         const meta = assetLoader.getTileMetadata(groundCell.tileId);
         if (meta && (meta.category === 'Water' || meta.isWater)) return true;
       }
-    }
-
-    const decorCell = this.layers.decor?.get(key);
-    if (decorCell && decorCell.tileId) {
-      const id = decorCell.tileId.toLowerCase();
-      if (id.includes('water') || id.includes('ocean')) return true;
     }
 
     return false;
@@ -747,7 +755,7 @@ export class TileMap {
           const badgeW = Math.max(44, textMetrics.width + 16);
           const badgeH = 18;
           const badgeX = destX + 32 - badgeW / 2;
-          const badgeY = destY - 44;
+          const badgeY = destY - 58; // Posicionado confortavelmente acima do avatar/cabeça
 
           // Badge shadow 3D
           ctx.fillStyle = '#7a583e';
@@ -779,23 +787,18 @@ export class TileMap {
           ctx.fillText(nameText, destX + 32, badgeY + badgeH / 2);
           ctx.restore();
 
-          // Active Mission Indicator ("!" Animal Island UI Golden Quest Bubble)
+          // Active Mission Indicator ("!" Animal Island UI Golden Quest Bubble - Apenas quando houver quest disponível agora)
           let hasActiveQuest = false;
-          if (!isEditor && npcData?.questIds && npcData.questIds.length > 0) {
+          if (!isEditor) {
             const blockly = (typeof window !== 'undefined') ? window.gameBlocklySystem : null;
-            if (blockly) {
-              const prog = blockly.getNpcProgress(cell.tileId);
-              hasActiveQuest = !prog || !prog.isFinished;
-            } else {
-              hasActiveQuest = true;
-            }
+            hasActiveQuest = hasAvailableQuestForNpc(cell.tileId, blockly);
           }
 
           if (hasActiveQuest) {
             ctx.save();
             const qBob = Math.sin(animTime * 4.5 + (x * 2 + y)) * 3;
             const qX = destX + 32;
-            const qY = badgeY - 18 + qBob;
+            const qY = badgeY - 16 + qBob;
             const qR = 10;
 
             // Quest shadow

@@ -244,23 +244,60 @@ export const VILLAGE_NPCS = [
   }
 ];
 
-export function getNPCData(npcId) {
-  const found = VILLAGE_NPCS.find(n => n.id === npcId) || SECONDARY_HERO_NPCS.find(n => n.id === npcId);
-  if (found) return found;
-  return {
-    id: npcId,
-    name: npcId,
-    role: 'Morador da Ilha',
-    category: 'villager',
-    avatarConfig: generateNPCAppearance(npcId, 'villager')
-  };
+export const MASTER_SEQUENCE_IDS = [
+  'npc_monkey_builder',
+  'npc_bull_blacksmith',
+  'npc_rabbit_farmer',
+  'npc_alligator_ferryman',
+  'npc_penguin_angler',
+  'npc_chameleon_magician',
+  'npc_shark_surfer',
+  'npc_owl_professor',
+  'npc_turtle_elder'
+];
+
+/**
+ * Returns true if and only if this NPC has a quest available to be done right now.
+ */
+export function hasAvailableQuestForNpc(npcId, blocklySystem = null) {
+  if (!blocklySystem && typeof window !== 'undefined') {
+    blocklySystem = window.gameBlocklySystem;
+  }
+  if (!blocklySystem) return false;
+
+  const npcData = getNPCData(npcId);
+  if (!npcData || !npcData.questIds || npcData.questIds.length === 0) {
+    return false;
+  }
+
+  const prog = blocklySystem.getNpcProgress(npcId);
+  if (!prog || prog.totalCount === 0 || prog.isFinished) {
+    return false;
+  }
+
+  // Linear progression check for Master NPCs
+  const masterIdx = MASTER_SEQUENCE_IDS.indexOf(npcId);
+  if (masterIdx > 0) {
+    const currentUnfinishedIndex = MASTER_SEQUENCE_IDS.findIndex(mid => {
+      const p = blocklySystem.getNpcProgress(mid);
+      return !p || !p.isFinished;
+    });
+    if (currentUnfinishedIndex !== -1 && masterIdx > currentUnfinishedIndex) {
+      // Locked behind an earlier master
+      return false;
+    }
+  }
+
+  return true;
 }
 
 export const CharacterRegistry = {
   PLAYABLE_HEROES,
   VILLAGE_NPCS,
   SECONDARY_HERO_NPCS,
-  getNPCData
+  MASTER_SEQUENCE_IDS,
+  getNPCData,
+  hasAvailableQuestForNpc
 };
 
 export default CharacterRegistry;

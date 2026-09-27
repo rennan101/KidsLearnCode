@@ -10,7 +10,7 @@ import { CraftingSystem } from './engine/CraftingSystem.js';
 import { DragonManager, DRAGON_CATALOG, getDragonAvatarSvg } from './engine/DragonManager.js';
 import { BlocklyLuaSystem } from './engine/BlocklyLuaSystem.js';
 import { MultiplayerClient } from './engine/MultiplayerClient.js';
-import { CharacterRegistry, PLAYABLE_HEROES } from './engine/CharacterRegistry.js';
+import { CharacterRegistry, PLAYABLE_HEROES, hasAvailableQuestForNpc } from './engine/CharacterRegistry.js';
 import { InventorySystem } from './engine/InventorySystem.js';
 import { StorageManager } from './engine/StorageManager.js';
 import { SupabaseClient } from './engine/SupabaseClient.js';
@@ -2920,22 +2920,13 @@ class RPGApplication {
     if (this.mode === 'play') {
       const nearbyNpc = this.findNearbyNPC(this.player.x, this.player.y, 110);
       if (nearbyNpc) {
-        let hasActiveQuest = false;
-        const npcData = nearbyNpc.npcData;
-        if (npcData?.questIds && npcData.questIds.length > 0) {
-          const blockly = window.gameBlocklySystem;
-          if (blockly) {
-            const prog = blockly.getNpcProgress(nearbyNpc.tileId);
-            hasActiveQuest = !prog || !prog.isFinished;
-          } else {
-            hasActiveQuest = true;
-          }
-        }
+        const hasActiveQuest = hasAvailableQuestForNpc(nearbyNpc.tileId, this.blocklySystem);
 
         const bob = Math.sin(performance.now() / 160) * 3;
-        // Se houver missão ativa, o '!' fica no centro (badgeY - 18 = -62px); o prompt [E] fica elegantemente ao lado direito
-        const promptOffsetX = hasActiveQuest ? 28 : 0;
-        const promptOffsetY = hasActiveQuest ? 62 : 72;
+        // Se houver missão ativa ("!" visível a Y = -74px no centro), o [E] aparece lado a lado (+24px à direita)
+        // Se NÃO houver missão ativa, o [E] fica centralizado acima do nome do NPC sem sobreposições
+        const promptOffsetX = hasActiveQuest ? 24 : 0;
+        const promptOffsetY = 74;
         const screenPos = this.camera.worldToScreen(nearbyNpc.worldX + 32 + promptOffsetX, nearbyNpc.worldY - promptOffsetY + bob);
         this.ctx.save();
 
