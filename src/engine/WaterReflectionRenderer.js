@@ -115,7 +115,7 @@ export class WaterReflectionRenderer {
     this.renderShorelineObjectReflections(ctx, tileMap, assetLoader, camera, isEditor, timeSec);
 
     // 3. Render Characters & NPCs Reflections near water (pure body, no overhead name badges or prompts)
-    this.renderNPCReflections(ctx, tileMap, assetLoader, camera, isEditor, timeSec);
+    this.renderNPCReflections(ctx, tileMap, assetLoader, camera, isEditor, timeSec, renderContext);
 
     // 4. Render Wild Dragons Reflections (flying over or swimming in water)
     if (dragonManager && dragonManager.wildDragons) {
@@ -173,7 +173,29 @@ export class WaterReflectionRenderer {
   /**
    * Render inverted reflections for NPCs on shore (without overhead badges or prompts)
    */
-  renderNPCReflections(ctx, tileMap, assetLoader, camera, isEditor, timeSec) {
+  renderNPCReflections(ctx, tileMap, assetLoader, camera, isEditor, timeSec, renderContext = {}) {
+    if (!isEditor && renderContext?.npcManager) {
+      for (const npc of renderContext.npcManager.getEntities()) {
+        const tx = Math.floor(npc.x / 64);
+        const ty = Math.floor(npc.y / 64);
+        if (!this.hasNeighborWater(tileMap, tx, ty)) continue;
+
+        const baseY = npc.y + 64;
+        const destX = npc.x;
+        const waveSway = Math.sin(timeSec * 3.0 + (destX + baseY) * 0.04) * 3.0;
+
+        ctx.save();
+        ctx.translate(destX + waveSway, baseY);
+        ctx.scale(1, this.reflectionScaleY);
+        ctx.translate(-destX, -baseY);
+        ctx.globalAlpha = this.reflectionAlpha * 0.85;
+
+        renderContext.npcManager.renderNPCEntity(ctx, npc, true);
+        ctx.restore();
+      }
+      return;
+    }
+
     const charLayer = tileMap.layers.characters;
     if (!charLayer || charLayer.size === 0) return;
 

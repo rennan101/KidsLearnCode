@@ -20,6 +20,7 @@ import { TutorialManager } from './engine/TutorialManager.js';
 import { soundFX } from './engine/SoundFX.js';
 import { CharacterCreator } from './ui/CharacterCreator.js';
 import { DEFAULT_AVATAR_CONFIG } from './engine/animation/AvatarConfig.js';
+import { NPCManager } from './engine/NPCManager.js';
 
 
 class RPGApplication {
@@ -57,6 +58,7 @@ class RPGApplication {
 
     this.assetLoader = new AssetLoader();
     this.tileMap = new TileMap();
+    this.npcManager = new NPCManager(this.tileMap, this.assetLoader);
     this.player = new Player(320, 320);
     this.player.dragonManager = this.dragonManager;
     this.camera = new Camera();
@@ -83,9 +85,15 @@ class RPGApplication {
       this.player.isDialogueActive = true;
       this.player.resetKeys();
       this.activeDialogueNPC = npc;
+      if (npc?.id) {
+        this.npcManager?.startDialogue(npc.id, this.player.x, this.player.y);
+      }
       this.tutorialManager?.onNPCDialogueOpened(npc?.id);
     };
     this.dialogueSystem.onDialogueClose = () => {
+      if (this.activeDialogueNPC?.id) {
+        this.npcManager?.endDialogue(this.activeDialogueNPC.id);
+      }
       this.player.isDialogueActive = false;
       this.activeDialogueNPC = null;
     };
@@ -1322,6 +1330,12 @@ class RPGApplication {
       // Snap camera directly onto Geralt so playmode never starts on empty black space
       this.camera.follow(this.player.x + 32, this.player.y + 32, 1.0);
       this.updateAdminAndModeUI();
+
+      // Sync active wandering NPCs and Heroes in Play Mode
+      if (this.npcManager) {
+        this.npcManager.syncFromTileMap(this.tileMap);
+      }
+
       this.saveGameToStorage(true);
     });
 
@@ -1987,6 +2001,9 @@ class RPGApplication {
           if (this.mode === 'play') {
             this.camera.zoom = this.tileMap.playCameraZoom || 1.0;
           }
+          if (this.npcManager) {
+            this.npcManager.syncFromTileMap(this.tileMap);
+          }
         }
 
         // 2. Restaurar Player
@@ -2642,6 +2659,11 @@ class RPGApplication {
         );
       }
 
+      // Update Wandering Animal Island NPCs & Heroes AI
+      if (this.npcManager) {
+        this.npcManager.update(deltaTime, this.player, this.multiplayerClient, this.dayNightSystem, this.tileMap);
+      }
+
       const statusPos = document.getElementById('status-pos');
       if (statusPos) {
         statusPos.innerText = `X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`;
@@ -2737,8 +2759,9 @@ class RPGApplication {
             }
 
             // 2. Characters layer tiles within viewport (2 blocks padding)
+            // In Editor Mode, draw static tile cells. In Play Mode, NPCManager handles wandering dynamic NPCs.
             const charLayer = this.tileMap.layers.characters;
-            if (charLayer && charLayer.size > 0) {
+            if (charLayer && charLayer.size > 0 && isEditor) {
               const padding = 2;
               const startCol = Math.floor(this.camera.x / this.tileMap.tileSize) - padding;
               const endCol = Math.ceil((this.camera.x + this.camera.viewportWidth / this.camera.zoom) / this.tileMap.tileSize) + padding;
@@ -2759,6 +2782,20 @@ class RPGApplication {
                     baseY
                   });
                 }
+              }
+            }
+
+            // 2b. Dynamic Wandering NPCs & Heroes in Play Mode
+            if (!isEditor && this.npcManager) {
+              const npcEntities = this.npcManager.getEntities();
+              for (const npc of npcEntities) {
+                // Base Y at feet position
+                const baseY = npc.y + (npc.height || 64);
+                ySortEntities.push({
+                  type: 'npc',
+                  npc,
+                  baseY
+                });
               }
             }
 
@@ -2785,6 +2822,8 @@ class RPGApplication {
                     this.player.render(this.ctx, this.assetLoader, showColliders);
                     playerRendered = true;
                   }
+                } else if (item.type === 'npc') {
+                  this.npcManager.renderNPCEntity(this.ctx, item.npc);
                 } else if (item.type === 'tile') {
                   this.tileMap.drawTileCell(this.ctx, item.cell, item.x, item.y, this.assetLoader, isEditor, showColliders);
                 }
@@ -3014,6 +3053,11 @@ class RPGApplication {
   }
 
   findNearbyNPC(worldX, worldY, radius = 110) {
+    if (this.mode === 'play' && this.npcManager) {
+      const dynamicNpc = this.npcManager.findNearbyNPC(worldX, worldY, radius);
+      if (dynamicNpc) return dynamicNpc;
+    }
+
     if (!this.tileMap || !this.tileMap.layers) return null;
 
     let nearest = null;
