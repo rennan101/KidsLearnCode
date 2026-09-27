@@ -16,46 +16,46 @@ export const MAGMA_PALETTES = {
   'classic-magma': {
     id: 'classic-magma',
     name: 'Magma Primordial (MinionsArt)',
-    crustDark: '#120704',      // Deep Obsidian Basalt (near black with warm undertone)
-    crustLight: '#2c1208',     // Heated volcanic rock crust
-    coolingCrimson: '#9a1a08', // Solidifying fracture rim (vivid ruby crimson)
-    lavaOrange: '#ff5500',     // Vibrant neon lava orange (MinionsArt main stream)
-    lavaGold: '#ffaa00',       // High temperature molten gold
-    coreHot: '#fff066',        // Incandescent core yellow
-    highlight: '#ffffff'       // White-hot heat peaks
+    crustDark: '#4a0308',      // Fundo Vermelho Rubro Escuro
+    crustLight: '#6e0710',     // Fundo Vermelho Rubro Intermediário
+    coolingCrimson: '#990c17', // Borda Vermelho Rubro Vivo
+    lavaOrange: '#ff5e00',     // Strokes Neon Laranja Brilhante
+    lavaGold: '#ffb300',       // Transição Dourada Incandescente
+    coreHot: '#ffd600',        // Núcleo Amarelo Brilhante
+    highlight: '#fff59d'       // Linha de Pico Amarelada Quente
   },
   'infernal-blood': {
     id: 'infernal-blood',
     name: 'Inferno Carmesim',
-    crustDark: '#0d0205',
-    crustLight: '#250810',
+    crustDark: '#380205',
+    crustLight: '#5a040b',
     coolingCrimson: '#88001b',
-    lavaOrange: '#ee1133',
-    lavaGold: '#ff4d6d',
-    coreHot: '#ffccd5',
-    highlight: '#ffffff'
+    lavaOrange: '#ff2a3a',
+    lavaGold: '#ff758f',
+    coreHot: '#ffe5ec',
+    highlight: '#fff3b0'
   },
   'toxic-acid': {
     id: 'toxic-acid',
     name: 'Magma Tóxico / Peste Verde',
-    crustDark: '#020f06',
-    crustLight: '#072611',
-    coolingCrimson: '#05662a',
-    lavaOrange: '#00cc44',
-    lavaGold: '#55ff77',
+    crustDark: '#0a2e12',
+    crustLight: '#124e20',
+    coolingCrimson: '#1b7a35',
+    lavaOrange: '#00e64d',
+    lavaGold: '#66ff88',
     coreHot: '#ccffdd',
-    highlight: '#ffffff'
+    highlight: '#f0fff4'
   },
   'astral-void': {
     id: 'astral-void',
     name: 'Plasma Astral / Chama Cósmica',
-    crustDark: '#090514',
-    crustLight: '#180e30',
-    coolingCrimson: '#43197f',
-    lavaOrange: '#7b2cbf',
+    crustDark: '#20083b',
+    crustLight: '#350e61',
+    coolingCrimson: '#5c19aa',
+    lavaOrange: '#9d4edd',
     lavaGold: '#c77dff',
     coreHot: '#e0aaff',
-    highlight: '#ffffff'
+    highlight: '#fff1c2'
   }
 };
 
@@ -189,56 +189,62 @@ const FRAGMENT_SHADER_SRC = `
     float layer1 = lavalayer(wuv + dist.xy);
     float layer2 = lavalayer(vec2(1.0) - wuv - dist.yx);
 
-    // 4. Base Basalt Rock Plates (Solid Obsidian & Warm Crust)
-    vec3 col = mix(u_crustDark, u_crustLight, layer1 * 0.4);
+    // 4. Base Ruby Red Ground Plates (Vermelho Rubro Sólido e Aconchegante)
+    vec3 col = mix(u_crustDark, u_crustLight, layer1 * 0.45);
 
     // 5. Dynamic Neon Pulse (Highly visible rhythmic breathing + spatial traveling waves)
-    float pulseA = sin(iTime * 3.2) * 0.5 + 0.5; // 0.0 to 1.0
-    float pulseB = sin(iTime * 1.6 + (wuv.x + wuv.y) * 3.5) * 0.5 + 0.5;
-    float neonGlow = 0.65 + 0.45 * pulseA + 0.25 * pulseB; // 0.65 to 1.35x brightness pulse
+    float pulseA = sin(iTime * 3.4) * 0.5 + 0.5; // 0.0 to 1.0
+    float pulseB = sin(iTime * 1.8 + (wuv.x + wuv.y) * 3.8) * 0.5 + 0.5;
+    float neonGlow = 0.70 + 0.50 * pulseA + 0.30 * pulseB; // 0.70 to 1.50x brightness pulse
 
     // Crack Vein and Core Detection (MinionsArt Multi-Step Ramp)
     float veinValue = max(layer1, layer2);
     float coreVein = layer1 * layer2;
 
-    // Step 1: Cooling Crimson Fracture Rim around Basalt Plates
+    // Step 1: Soft Blurred Neon Orange Outer Glow (Strokes desfocados brilhando em neon laranja)
+    if (veinValue > 0.03) {
+      float outerGlow = smoothstep(0.03, 0.55, veinValue) * (0.75 * neonGlow);
+      col = mix(col, u_lavaOrange, outerGlow);
+    }
+
+    // Step 2: Cooling Crimson Transition on Ruby Plate Edges
     if (layer1 > 0.02 || layer2 > 0.02) {
-      float t = smoothstep(0.02, 0.28, veinValue);
+      float t = smoothstep(0.02, 0.24, veinValue);
       col = mix(col, u_coolingCrimson, t);
     }
 
-    // Step 2: Main Flowing Lava Stream (MinionsArt Neon Orange)
-    if (layer1 > 0.22 || layer2 > 0.22) {
-      float t = smoothstep(0.22, 0.55, veinValue);
-      vec3 activeOrange = u_lavaOrange * (0.9 + 0.3 * neonGlow);
+    // Step 3: Main Flowing Lava Stream with Intense Neon Orange Stroke
+    if (layer1 > 0.18 || layer2 > 0.18) {
+      float t = smoothstep(0.18, 0.52, veinValue);
+      vec3 activeOrange = u_lavaOrange * (1.10 + 0.45 * neonGlow);
       col = mix(col, activeOrange, t);
     }
 
-    // Step 3: Bright High-Heat Golden Stream
-    if (layer1 > 0.50 || layer2 > 0.50) {
-      float t = smoothstep(0.50, 0.82, veinValue);
-      vec3 activeGold = u_lavaGold * (1.0 + 0.4 * neonGlow);
+    // Step 4: Bright High-Heat Golden Stream
+    if (layer1 > 0.46 || layer2 > 0.46) {
+      float t = smoothstep(0.46, 0.78, veinValue);
+      vec3 activeGold = u_lavaGold * (1.10 + 0.40 * neonGlow);
       col = mix(col, activeGold, t);
     }
 
-    // Step 4: Incandescent Core Line (Dual-layer intersecting fissures)
-    if (layer2 > 0.70 || coreVein > 0.10) {
-      float t = smoothstep(0.70, 0.95, layer2);
-      float tc = smoothstep(0.10, 0.45, coreVein);
+    // Step 5: Incandescent Core Line (Amarelo Dourado Quente)
+    if (layer2 > 0.65 || coreVein > 0.08) {
+      float t = smoothstep(0.65, 0.90, layer2);
+      float tc = smoothstep(0.08, 0.40, coreVein);
       float coreMix = max(t, tc);
-      vec3 activeCore = u_coreHot * (1.1 + 0.5 * neonGlow) * u_heatIntensity;
+      vec3 activeCore = u_coreHot * (1.15 + 0.50 * neonGlow) * u_heatIntensity;
       col = mix(col, activeCore, coreMix);
     }
 
-    // Step 5: White-Hot Glowing Peak Line with intense neon pulsation (MinionsArt Cel Highlight)
-    if (layer2 > 0.88 || coreVein > 0.40) {
-      float t = max(smoothstep(0.88, 1.0, layer2), smoothstep(0.40, 0.75, coreVein));
-      col = mix(col, u_highlight, t * clamp(neonGlow, 0.8, 1.4));
+    // Step 6: Warm Yellowish Peak Highlight Line (Amarelada com super brilho neon pulsante)
+    if (layer2 > 0.82 || coreVein > 0.30) {
+      float t = max(smoothstep(0.82, 0.98, layer2), smoothstep(0.30, 0.68, coreVein));
+      col = mix(col, u_highlight, t * clamp(neonGlow, 0.9, 1.5));
     }
 
-    // Step 6: Emissive Neon Bloom / Halo on basalt borders
-    if (veinValue > 0.12) {
-      float halo = smoothstep(0.12, 0.75, veinValue) * (0.35 * neonGlow);
+    // Step 7: Final Neon Bloom / Soft Blurred Halo in Orange onto Ruby Background
+    if (veinValue > 0.08) {
+      float halo = smoothstep(0.08, 0.70, veinValue) * (0.45 * neonGlow);
       col += u_lavaOrange * halo;
     }
 

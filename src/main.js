@@ -58,6 +58,7 @@ class RPGApplication {
 
     this.assetLoader = new AssetLoader();
     this.tileMap = new TileMap();
+    this.isFullLightActive = false;
     this.npcManager = new NPCManager(this.tileMap, this.assetLoader);
     this.player = new Player(320, 320);
     this.player.dragonManager = this.dragonManager;
@@ -1141,6 +1142,18 @@ class RPGApplication {
           return;
         }
 
+        // Key L: Toggle local player illumination / flashlight (ilumina tudo e desliga)
+        if (e.key === 'l' || e.key === 'L') {
+          const activeTag = document.activeElement?.tagName?.toLowerCase();
+          if (activeTag === 'input' || activeTag === 'textarea' || document.activeElement?.isContentEditable) {
+            return;
+          }
+          this.isFullLightActive = !this.isFullLightActive;
+          this.soundSystem?.playClickSound?.();
+          this.showToast(this.isFullLightActive ? 'Lanterna / Iluminação Total Ativada [L]' : 'Iluminação Noturna Restaurada [L]');
+          return;
+        }
+
         // Space: Quick Mount / Dismount on Active Dragon (Key R removed per user request)
         if (e.code === 'Space' || e.key === ' ') {
           const activeTag = document.activeElement?.tagName?.toLowerCase();
@@ -1284,7 +1297,9 @@ class RPGApplication {
       const worldX = camX + (mouseScreenX / currentZoom);
       const worldY = camY + (mouseScreenY / currentZoom);
 
-      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
+      // Smooth, non-drastic zoom step
+      const zoomDelta = Math.max(-0.06, Math.min(0.06, -e.deltaY * 0.0008));
+      const zoomFactor = 1 + zoomDelta;
       const minZoom = 0.3;
       const maxZoom = 3.5;
       const newZoom = Math.max(minZoom, Math.min(maxZoom, currentZoom * zoomFactor));
@@ -2953,7 +2968,7 @@ class RPGApplication {
     }
 
     // 1. Day / Night Atmospheric Lighting Tint & Deep Night Darkness Overlay (Play Mode)
-    if (this.mode === 'play' && this.dayNightSystem) {
+    if (this.mode === 'play' && this.dayNightSystem && !this.isFullLightActive) {
       const ambient = this.dayNightSystem.getAmbientLight();
       if (ambient.alpha > 0.02) {
         this.ctx.save();

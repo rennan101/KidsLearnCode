@@ -49,19 +49,23 @@ export class MagmaRenderer {
   }
 
   renderSingleTileFallback(ctx, x, y, size, timeSec, pal) {
-    // 1. Base Dark Basalt Background
-    ctx.fillStyle = pal.crustDark;
+    ctx.save();
+
+    // 1. Base Ruby Red Background (Vermelho Rubro)
+    ctx.fillStyle = pal.crustDark || '#4a0308';
     ctx.fillRect(x, y, size, size);
 
     // 2. Animated Flowing Magma Fractures (Simulated using layered paths)
     const t = timeSec * this.config.flowSpeed;
     const wave1 = Math.sin(t * 1.5 + (x * 0.05) + (y * 0.03)) * 6;
     const wave2 = Math.cos(t * 1.8 + (x * 0.04) - (y * 0.06)) * 5;
-    const pulse = 0.85 + Math.sin(t * 3.0 + x * 0.1) * 0.15;
+    const pulse = 0.85 + Math.sin(t * 3.4 + x * 0.1) * 0.20;
 
-    // Glowing Underlayer
-    ctx.strokeStyle = pal.coolingCrimson;
-    ctx.lineWidth = 14;
+    // Glowing Blurred Neon Orange Outer Stroke (Desfocado e brilhando)
+    ctx.shadowColor = '#ff5e00';
+    ctx.shadowBlur = 14;
+    ctx.strokeStyle = pal.lavaOrange || '#ff5e00';
+    ctx.lineWidth = 12;
     ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(x - 4, y + 20 + wave1);
@@ -70,26 +74,24 @@ export class MagmaRenderer {
     ctx.bezierCurveTo(x + size * 0.4 + wave2, y + size * 0.4, x + size * 0.6, y + size * 0.7 + wave1, x + size * 0.8, y + size + 4);
     ctx.stroke();
 
-    // Active Orange Molten Stream
-    ctx.strokeStyle = pal.lavaOrange;
-    ctx.lineWidth = 8;
-    ctx.beginPath();
-    ctx.moveTo(x - 4, y + 20 + wave1);
-    ctx.bezierCurveTo(x + size * 0.3, y + 10 + wave2, x + size * 0.7, y + size * 0.8 + wave1, x + size + 4, y + size * 0.6 + wave2);
-    ctx.moveTo(x + 10, y - 4);
-    ctx.bezierCurveTo(x + size * 0.4 + wave2, y + size * 0.4, x + size * 0.6, y + size * 0.7 + wave1, x + size * 0.8, y + size + 4);
+    // Incandescent Core Yellow
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = '#ffd600';
+    ctx.strokeStyle = pal.coreHot || '#ffd600';
+    ctx.lineWidth = 5 * pulse;
     ctx.stroke();
 
-    // Incandescent Core Yellow Center
-    ctx.strokeStyle = pal.coreHot;
-    ctx.lineWidth = 3 * pulse;
-    ctx.beginPath();
-    ctx.moveTo(x - 4, y + 20 + wave1);
-    ctx.bezierCurveTo(x + size * 0.3, y + 10 + wave2, x + size * 0.7, y + size * 0.8 + wave1, x + size + 4, y + size * 0.6 + wave2);
+    // Warm Yellowish Peak Highlight Line (Amarelada)
+    ctx.shadowBlur = 4;
+    ctx.shadowColor = '#fff59d';
+    ctx.strokeStyle = pal.highlight || '#fff59d';
+    ctx.lineWidth = 2;
     ctx.stroke();
 
-    // 3. Basalt Rock Plates Overlaid
-    ctx.fillStyle = pal.crustLight;
+    ctx.restore();
+
+    // 3. Ruby Red Rock Plates Overlaid
+    ctx.fillStyle = pal.crustLight || '#6e0710';
     ctx.beginPath();
     ctx.ellipse(x + size * 0.25, y + size * 0.75, size * 0.18, size * 0.14, 0.4, 0, Math.PI * 2);
     ctx.fill();
