@@ -953,15 +953,27 @@ class RPGApplication {
       const h = previewCanvas.height;
       ctx.clearRect(0, 0, w, h);
 
-      const previewCells = [];
-      const tileSize = 64;
-      for (let y = 0; y < h; y += tileSize) {
-        for (let x = 0; x < w; x += tileSize) {
-          previewCells.push({ x, y, tileSize });
+      const cfg = this.tileMap.waterWaveRenderer.getConfig();
+      let renderedWebGL = false;
+
+      if (this.tileMap.webGLWaterShader && this.tileMap.webGLWaterShader.isSupported) {
+        const shaderCanvas = this.tileMap.webGLWaterShader.render(w, h, 0, 0, 1.0, performance.now() / 1000, cfg);
+        if (shaderCanvas) {
+          ctx.drawImage(shaderCanvas, 0, 0, w, h);
+          renderedWebGL = true;
         }
       }
 
-      this.tileMap.waterWaveRenderer.renderBatch(ctx, previewCells, performance.now());
+      if (!renderedWebGL) {
+        const previewCells = [];
+        const tileSize = 64;
+        for (let y = 0; y < h; y += tileSize) {
+          for (let x = 0; x < w; x += tileSize) {
+            previewCells.push({ x, y, tileSize });
+          }
+        }
+        this.tileMap.waterWaveRenderer.renderBatch(ctx, previewCells, performance.now());
+      }
 
       previewAnimFrameId = requestAnimationFrame(drawPreview);
     };

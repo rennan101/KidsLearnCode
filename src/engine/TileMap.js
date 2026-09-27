@@ -2,6 +2,7 @@
 import { ModularAvatarRenderer } from './animation/ModularAvatarRenderer.js';
 import { getNPCData } from './CharacterRegistry.js';
 import { WaterWaveRenderer } from './WaterWaveRenderer.js';
+import { WebGLWaterShader } from './WebGLWaterShader.js';
 
 export const TILE_SIZE = 64;
 
@@ -10,6 +11,7 @@ export class TileMap {
     this.tileSize = TILE_SIZE;
     this.avatarRenderer = new ModularAvatarRenderer();
     this.waterWaveRenderer = new WaterWaveRenderer();
+    this.webGLWaterShader = new WebGLWaterShader();
     this.waterWaveTime = 0;
 
     // Layers stored as sparse Maps keyed by `${x},${y}`:
@@ -977,7 +979,30 @@ export class TileMap {
       }
 
       if (proceduralWaveCells.length > 0) {
-        this.waterWaveRenderer.renderBatch(ctx, proceduralWaveCells, this.waterWaveTime || performance.now());
+        let renderedWithWebGL = false;
+        if (this.webGLWaterShader && this.webGLWaterShader.isSupported) {
+          const timeSec = (this.waterWaveTime || performance.now()) / 1000;
+          const config = this.waterWaveRenderer ? this.waterWaveRenderer.getConfig() : {};
+          const shaderCanvas = this.webGLWaterShader.render(camW, camH, camX, camY, camZ, timeSec, config);
+
+          if (shaderCanvas) {
+            ctx.save();
+            ctx.beginPath();
+            for (let i = 0; i < proceduralWaveCells.length; i++) {
+              const w = proceduralWaveCells[i];
+              ctx.rect(w.x, w.y, w.tileSize, w.tileSize);
+            }
+            ctx.clip();
+            ctx.drawImage(shaderCanvas, camX, camY, camW / camZ, camH / camZ);
+            ctx.restore();
+            renderedWithWebGL = true;
+          }
+        }
+
+        if (!renderedWithWebGL && this.waterWaveRenderer) {
+          this.waterWaveRenderer.renderBatch(ctx, proceduralWaveCells, this.waterWaveTime || performance.now());
+        }
+
         // Render overlays (ice/puddle/colliders) for wave cells
         for (let i = 0; i < proceduralWaveCells.length; i++) {
           const w = proceduralWaveCells[i];
