@@ -2075,17 +2075,12 @@ export class DragonManager {
       this.renderWildDragonEntityBody(ctx, entity, player);
     }
 
-    // 4. Render Active Dragon (Unified Mount when mounted or Companion when following)
+    // 4. Render Active Dragon (Apenas no modo Follow quando o jogador NÃO estiver virado para o norte)
     const dragon = this.getActiveDragon();
-    if (dragon && this.mode !== 'none') {
-      if (this.mode === 'mounted' && player) {
-        this.renderMountedUnified(ctx, assetLoader, player);
-      } else {
-        // No modo Follow: se o jogador estiver de costas (north), o dragão deve ficar na layer da frente (renderizado no Overlay)
-        const isPlayerFacingNorth = player && player.direction === 'north';
-        if (!isPlayerFacingNorth) {
-          this.renderDragonEntityBody(ctx, dragon, player);
-        }
+    if (dragon && this.mode === 'follow' && player) {
+      const isPlayerFacingNorth = player.direction === 'north';
+      if (!isPlayerFacingNorth) {
+        this.renderDragonEntityBody(ctx, dragon, player);
       }
     }
 
@@ -2100,9 +2095,12 @@ export class DragonManager {
       this.renderWildDragonEntityOverlay(ctx, entity, player);
     }
 
-    // 2. Active Companion Body (quando em Follow e o jogador está andando para o norte/costas)
+    // 2. Active Mount (Foreground acima de solid e overhead) ou Companion Body (quando em Follow e virado para o norte)
     const dragon = this.getActiveDragon();
-    if (dragon && this.mode === 'follow' && player && player.direction === 'north') {
+    if (dragon && this.mode === 'mounted' && player) {
+      // Voo Montado em Primeiro Plano Absoluto (acima de árvores, telhados, casas, pontes e overhead)
+      this.renderMountedUnified(ctx, assetLoader, player);
+    } else if (dragon && this.mode === 'follow' && player && player.direction === 'north') {
       this.renderDragonEntityBody(ctx, dragon, player);
     }
 
