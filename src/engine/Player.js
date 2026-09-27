@@ -635,4 +635,85 @@ export class Player {
       ctx.restore();
     }
   }
+
+  /**
+   * Renderiza o Cavaleiro encaixado exatamente no socket da sela do dragão
+   * @param {CanvasRenderingContext2D} ctx 
+   * @param {AssetLoader} assetLoader 
+   * @param {number} centerX - Centro X do socket do dragão
+   * @param {number} centerY - Centro Y do socket do dragão
+   * @param {string} dir - 'south' | 'north' | 'east' | 'west'
+   * @param {number} scaleMultiplier - Escala relativa da sela
+   */
+  renderAsRider(ctx, assetLoader, centerX, centerY, dir = 'south', scaleMultiplier = 0.95) {
+    if (!assetLoader) return;
+    const s = (this.scale || 1.0) * scaleMultiplier;
+    const renderW = this.width * s;
+    const renderH = this.height * s;
+
+    // 1. Modular Cutout Custom Avatar
+    if (this.heroId === 'custom_avatar' && this.modularAvatarRenderer) {
+      const avatarScale = 0.21 * s;
+      const targetX = centerX;
+      const targetY = centerY + (20 * s) - (265 * avatarScale);
+
+      this.modularAvatarRenderer.render(
+        ctx,
+        targetX,
+        targetY,
+        dir,
+        'riding',
+        0,
+        this.customAvatarConfig || DEFAULT_AVATAR_CONFIG,
+        avatarScale
+      );
+      return;
+    }
+
+    // 2. Fixed Hero Sprites (Geralt, Wolf Hunter, etc.) in static riding posture
+    const rowMap = { south: 0, east: 1, north: 2, west: 3 };
+    const row = rowMap[dir] ?? 0;
+    const col = 0; // Static seated frame
+    let flipX = false;
+    let sprite = null;
+
+    if (this.heroId === 'char_wolf_hunter_m') {
+      if (dir === 'south') {
+        sprite = assetLoader.getImage('assets/characters/char_wolf_hunter_m/Walk_Down/sprite_001.png');
+      } else if (dir === 'north') {
+        sprite = assetLoader.getImage('assets/characters/char_wolf_hunter_m/Walk_Up/sprite_001.png');
+      }
+    }
+
+    if (!sprite) {
+      let frameUrl = `assets/characters/${this.heroId}/frames/wolf_hunter_r${row}_c${col}.png`;
+      sprite = assetLoader.getImage(frameUrl);
+      if (!sprite && dir === 'west') {
+        const eastUrl = `assets/characters/${this.heroId}/frames/wolf_hunter_r1_c${col}.png`;
+        sprite = assetLoader.getImage(eastUrl);
+        if (sprite) flipX = true;
+      }
+    }
+
+    if (!sprite) {
+      sprite = assetLoader.getImage(`assets/characters/${this.heroId}/portrait.jpg`)
+        || assetLoader.getImage(`Geralt/Idle/rotations/${dir}.png`);
+    }
+
+    const drawX = Math.round(centerX - renderW / 2);
+    const drawY = Math.round(centerY - renderH / 2);
+
+    if (sprite) {
+      if (flipX) {
+        ctx.save();
+        ctx.translate(drawX + renderW, drawY);
+        ctx.scale(-1, 1);
+        ctx.drawImage(sprite, 0, 0, renderW, renderH);
+        ctx.restore();
+      } else {
+        ctx.drawImage(sprite, drawX, drawY, renderW, renderH);
+      }
+    }
+  }
 }
+

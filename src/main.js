@@ -2423,7 +2423,11 @@ class RPGApplication {
         if (Math.abs(this.camera.zoom - baseZoom) > 0.005) {
           this.camera.zoom += (baseZoom - this.camera.zoom) * 0.08;
         }
-        this.camera.follow(this.player.x + 32, this.player.y + 32, 0.1);
+        const activeDragon = this.dragonManager?.getActiveDragon();
+        const isMounted = this.dragonManager?.isMounted();
+        const flightAlt = (isMounted && this.dragonManager) ? (this.dragonManager.flightAltitude || 0) : 0;
+        const targetCamY = isMounted ? (this.player.y + 32 - flightAlt * 0.5) : (this.player.y + 32);
+        this.camera.follow(this.player.x + 32, targetCamY, 0.1);
       }
 
       // Sync active dragon mount multiplier to player
@@ -2590,8 +2594,14 @@ class RPGApplication {
             for (const item of ySortEntities) {
               try {
                 if (item.type === 'player') {
-                  this.player.render(this.ctx, this.assetLoader, showColliders);
-                  playerRendered = true;
+                  const isMounted = this.player.isMounted && this.dragonManager?.isMounted();
+                  if (isMounted) {
+                    // Unified mount rendering was already executed in dragonManager.renderUnderlay
+                    playerRendered = true;
+                  } else {
+                    this.player.render(this.ctx, this.assetLoader, showColliders);
+                    playerRendered = true;
+                  }
                 } else if (item.type === 'tile') {
                   this.tileMap.drawTileCell(this.ctx, item.cell, item.x, item.y, this.assetLoader, isEditor, showColliders);
                 }
@@ -2623,7 +2633,10 @@ class RPGApplication {
                   console.error('Error rendering dragon underlay fallback:', dErr);
                 }
               }
-              this.player.render(this.ctx, this.assetLoader, showColliders);
+              const isMounted = this.player.isMounted && this.dragonManager?.isMounted();
+              if (!isMounted) {
+                this.player.render(this.ctx, this.assetLoader, showColliders);
+              }
               playerRendered = true;
               this.tileMap.renderLayer(this.ctx, 'characters', this.assetLoader, this.camera, isEditor, showColliders);
             } else {
@@ -2638,7 +2651,10 @@ class RPGApplication {
       // Safety fallback: if player was not rendered, draw player
       if (!playerRendered) {
         try {
-          this.player.render(this.ctx, this.assetLoader, showColliders);
+          const isMounted = this.player.isMounted && this.dragonManager?.isMounted();
+          if (!isMounted) {
+            this.player.render(this.ctx, this.assetLoader, showColliders);
+          }
         } catch (pErr) {
           console.error('Error rendering player fallback:', pErr);
         }

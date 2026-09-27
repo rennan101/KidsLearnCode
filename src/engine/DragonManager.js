@@ -6,6 +6,21 @@
  * HUD Lateral de Formação (4 Slots), Drag & Drop e Pet Follow/Mount AI.
  */
 
+export const MOUNT_SOCKET_OFFSETS = {
+  dragon_fly_storm: {
+    south: { x: 0, y: -24, scale: 0.92 },
+    north: { x: 0, y: -18, scale: 0.92 },
+    east:  { x: -10, y: -20, scale: 0.92 },
+    west:  { x: 10, y: -20, scale: 0.92 }
+  },
+  default: {
+    south: { x: 0, y: -20, scale: 0.92 },
+    north: { x: 0, y: -16, scale: 0.92 },
+    east:  { x: -8, y: -18, scale: 0.92 },
+    west:  { x: 8, y: -18, scale: 0.92 }
+  }
+};
+
 export const DRAGON_CATALOG = [
   {
     id: 'dragon_fly_zephyr',
@@ -2014,10 +2029,14 @@ export class DragonManager {
       this.renderWildDragonEntityBody(ctx, entity, player);
     }
 
-    // 4. Render Active Dragon Companion Body & Shadow
+    // 4. Render Active Dragon (Unified Mount when mounted or Companion when following)
     const dragon = this.getActiveDragon();
     if (dragon && this.mode !== 'none') {
-      this.renderDragonEntityBody(ctx, dragon, player);
+      if (this.mode === 'mounted' && player) {
+        this.renderMountedUnified(ctx, assetLoader, player);
+      } else {
+        this.renderDragonEntityBody(ctx, dragon, player);
+      }
     }
 
     // 5. Render Defeat & Reverse Hatch Egg Transformation Animations
@@ -2416,6 +2435,295 @@ export class DragonManager {
       ctx.lineTo(drawX + 32, badgeY + badgeSize + 3);
       ctx.lineTo(drawX + 35, badgeY + badgeSize);
       ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  /**
+   * Renderização Unificada e Perfeita do Par Dragão + Cavaleiro
+   * Garante sobreposição milimétrica de camadas (Sandwich) por direção:
+   * - South (de frente): Cavaleiro no dorso atrás da cabeça/corpo frontal do dragão
+   * - North (de costas): Cavaleiro no dorso atrás do corpo/asas do dragão
+   * - East/West (perfil): Cavaleiro encaixado no socket da sela entre asas
+   */
+  renderMountedUnified(ctx, assetLoader, player) {
+    const dragon = this.getActiveDragon();
+    if (!dragon || !player) return;
+
+    ctx.save();
+
+    const alt = this.flightAltitude || 0;
+    const bounce = Math.sin(this.floatTimer * (alt > 10 ? 8 : 4)) * (alt > 10 ? 6 : 4);
+    const drawX = Math.round(this.x);
+    const drawY = Math.round(this.y + bounce - alt);
+
+    // 1. Sombra Unificada de Solo no Chão do Terreno
+    ctx.save();
+    const shadowScaleX = 22 + (alt * 0.14);
+    const shadowScaleY = 9 + (alt * 0.06);
+    const shadowAlpha = Math.max(0.12, 0.38 - (alt / 120) * 0.20);
+    ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(drawX + 32, this.y + 54, shadowScaleX, shadowScaleY, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 1b. Ondas Aquáticas para Dragões de Água
+    if (dragon.category === 'water') {
+      ctx.save();
+      const wavePhase = (this.floatTimer * 3.5) % (Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.ellipse(drawX + 32, this.y + 54, 24 + Math.sin(wavePhase) * 4, 10 + Math.cos(wavePhase) * 2, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Piscar de Invulnerabilidade em Esquiva Tática
+    if (this.isDodging && Math.floor(this.floatTimer * 20) % 2 === 0) {
+      ctx.globalAlpha = 0.4;
+    }
+
+    const dir = player.direction || this.direction || 'south';
+    const isWest = dir === 'west';
+    const isFrontOrBack = (dir === 'north' || dir === 'south');
+    const isStorm = (dragon.id === 'dragon_fly_storm');
+
+    // Centro Real do Dragão no Mundo
+    const dragonCenterX = drawX + 32;
+    const dragonCenterY = drawY + 28;
+
+    // Offsets de Socket do Cavaleiro por Direção
+    const socketOffsets = (MOUNT_SOCKET_OFFSETS[dragon.id] || MOUNT_SOCKET_OFFSETS.default)[dir] || MOUNT_SOCKET_OFFSETS.default.south;
+    const riderCenterX = dragonCenterX + (socketOffsets.x || 0);
+    const riderCenterY = dragonCenterY + (socketOffsets.y || 0);
+    const riderScale = socketOffsets.scale || 0.92;
+
+    // Renderização para dragon_fly_storm com Frames Animados em SVG
+    if (isStorm && this.dragonSpriteFrames['dragon_fly_storm']) {
+      const stormSet = this.dragonSpriteFrames['dragon_fly_storm'];
+      let frames = stormSet.flying_side || stormSet.flying;
+      if (dir === 'north' && stormSet.flying_north?.length) {
+        frames = stormSet.flying_north;
+      } else if (dir === 'south' && stormSet.flying_south?.length) {
+        frames = stormSet.flying_south;
+      }
+
+      const frameIdx = Math.floor((this.floatTimer * 10) % frames.length);
+      const frameImg = frames[frameIdx];
+
+      if (frameImg && frameImg.complete && frameImg.naturalWidth > 0) {
+        const spriteSize = isFrontOrBack ? 104 : 88;
+        const halfSize = spriteSize / 2;
+
+        if (dir === 'south') {
+          // South (voando de frente): O Cavaleiro fica no dorso ATRÁS da cabeça/corpo frontal do dragão
+          player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'south', riderScale);
+
+          // Dragão desenhado POR CIMA do jogador
+          ctx.save();
+          ctx.translate(dragonCenterX, dragonCenterY);
+          ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
+          ctx.restore();
+        } else if (dir === 'north') {
+          // North (voando de costas): O Cavaleiro fica ATRÁS do dragão (corpo/asas do dragão cobrem o cavaleiro)
+          player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'north', riderScale);
+
+          // Dragão de costas desenhado POR CIMA do jogador
+          ctx.save();
+          ctx.translate(dragonCenterX, dragonCenterY);
+          ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
+          ctx.restore();
+        } else {
+          // East / West (perfil lateral): Cavaleiro encaixado no socket da sela
+          player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, dir, riderScale);
+
+          ctx.save();
+          ctx.translate(dragonCenterX, dragonCenterY);
+          if (isWest) {
+            ctx.scale(-1, 1);
+          }
+          ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
+          ctx.restore();
+        }
+
+        ctx.restore();
+        return;
+      }
+    }
+
+    // Renderização Vetorial Fallback para os demais dragões do catálogo
+    const bodyColor = dragon.color || '#38bdf8';
+    const accentColor = dragon.secondaryColor || '#fef08a';
+    const flapFreq = alt > 10 ? 14 : 8;
+    const flapAmp = alt > 10 ? 9 : 6;
+    const wingFlap = Math.sin(this.floatTimer * flapFreq) * flapAmp;
+
+    if (dir === 'south') {
+      // 1. Asas Traseiras do Dragão
+      ctx.save();
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX - 16, dragonCenterY - 4 + wingFlap, 14, 9, -Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX + 16, dragonCenterY - 4 - wingFlap, 14, 9, Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // 2. Cavaleiro (atrás do peito e cabeça do dragão)
+      player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'south', riderScale);
+
+      // 3. Corpo Frontal, Peito, Cabeça, Chifres e Olhos do Dragão (Na Frente do Cavaleiro)
+      ctx.save();
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX, dragonCenterY + 8, 18, 16, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX, dragonCenterY + 10, 11, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cabeça e Focinho
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.arc(dragonCenterX, dragonCenterY - 6, 14, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Chifres
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.moveTo(dragonCenterX - 8, dragonCenterY - 14);
+      ctx.lineTo(dragonCenterX - 12, dragonCenterY - 24);
+      ctx.lineTo(dragonCenterX - 4, dragonCenterY - 16);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(dragonCenterX + 8, dragonCenterY - 14);
+      ctx.lineTo(dragonCenterX + 12, dragonCenterY - 24);
+      ctx.lineTo(dragonCenterX + 4, dragonCenterY - 16);
+      ctx.fill();
+
+      // Olhos Expressivos
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.arc(dragonCenterX - 5, dragonCenterY - 7, 3.2, 0, Math.PI * 2);
+      ctx.arc(dragonCenterX + 5, dragonCenterY - 7, 3.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(dragonCenterX - 6, dragonCenterY - 8, 1.2, 0, Math.PI * 2);
+      ctx.arc(dragonCenterX + 4, dragonCenterY - 8, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+
+    } else if (dir === 'north') {
+      // 1. Cavaleiro (atrás do dragão)
+      player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'north', riderScale);
+
+      // 2. Dragão de Costas (Corpo, Asas e Cabeça de Costas na Frente)
+      ctx.save();
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX - 16, dragonCenterY - 4 + wingFlap, 14, 9, -Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX + 16, dragonCenterY - 4 - wingFlap, 14, 9, Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX, dragonCenterY + 8, 18, 16, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(dragonCenterX, dragonCenterY - 6, 14, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.moveTo(dragonCenterX - 8, dragonCenterY - 14);
+      ctx.lineTo(dragonCenterX - 12, dragonCenterY - 24);
+      ctx.lineTo(dragonCenterX - 4, dragonCenterY - 16);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(dragonCenterX + 8, dragonCenterY - 14);
+      ctx.lineTo(dragonCenterX + 12, dragonCenterY - 24);
+      ctx.lineTo(dragonCenterX + 4, dragonCenterY - 16);
+      ctx.fill();
+      ctx.restore();
+
+    } else {
+      // East / West (Perfil lateral com asas em sanduíche)
+      ctx.save();
+      if (isWest) {
+        ctx.translate(dragonCenterX, dragonCenterY);
+        ctx.scale(-1, 1);
+        ctx.translate(-dragonCenterX, -dragonCenterY);
+      }
+
+      // 1. Asa Traseira
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX - 16, dragonCenterY - 8 + wingFlap, 13, 8, -Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 2. Cavaleiro na Sela
+      ctx.restore();
+      player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, dir, riderScale);
+
+      // 3. Corpo, Cabeça e Asa Frontal
+      ctx.save();
+      if (isWest) {
+        ctx.translate(dragonCenterX, dragonCenterY);
+        ctx.scale(-1, 1);
+        ctx.translate(-dragonCenterX, -dragonCenterY);
+      }
+
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX, dragonCenterY + 6, 18, 15, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX + 4, dragonCenterY + 8, 10, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cabeça
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.arc(dragonCenterX + 12, dragonCenterY - 4, 13, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Chifre
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.moveTo(dragonCenterX + 8, dragonCenterY - 12);
+      ctx.lineTo(dragonCenterX + 2, dragonCenterY - 22);
+      ctx.lineTo(dragonCenterX + 14, dragonCenterY - 14);
+      ctx.fill();
+
+      // Olho
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.arc(dragonCenterX + 15, dragonCenterY - 5, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Asa Dianteira
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX + 6, dragonCenterY - 6 - wingFlap, 13, 8, Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+
       ctx.restore();
     }
 

@@ -152,14 +152,31 @@ export class SkeletonRig {
       }
 
       case 'riding': {
-        // Posição sentada adaptada para montar dragões
-        pose.root.y += 2;
-        pose.hip_l.rot = 0.8;  // Pernas dobradas para a sela
-        pose.hip_r.rot = 0.8;
-        pose.leg_l.rot = -0.6;
-        pose.leg_r.rot = -0.6;
-        pose.arm_l.rot = -0.5; // Braços estendidos segurando rédeas
-        pose.arm_r.rot = -0.5;
+        // Posição sentada e firme adaptada para montar dragões (estática sem oscilação de passos)
+        pose.root.y = 40;
+        pose.root.rot = 0;
+        pose.head.bobY = 0;
+        pose.head.rot = 0;
+        if (effectiveDir === 'east') {
+          pose.hip_l.rot = 0.82;  // Pernas dobradas para a sela
+          pose.hip_r.rot = 0.82;
+          pose.leg_l.rot = -0.55;
+          pose.leg_r.rot = -0.55;
+          pose.arm_l.rot = -0.55; // Braços estendidos segurando o dragão
+          pose.arm_r.rot = -0.55;
+        } else if (effectiveDir === 'north') {
+          pose.hip_l.rot = 0.45;
+          pose.hip_r.rot = -0.45;
+          pose.arm_l.rot = -0.45;
+          pose.arm_r.rot = 0.45;
+        } else {
+          // south (frontal)
+          pose.hip_l.rot = 0.35;
+          pose.hip_r.rot = -0.35;
+          pose.arm_l.rot = 0.35;
+          pose.arm_r.rot = -0.35;
+        }
+        pose.shadow.scale = 0;
         break;
       }
 
