@@ -692,7 +692,7 @@ export class DialogueAndChatSystem {
 
     if (!isPartyMember && dragonManager) {
       choices.push({
-        label: `Adicionar à Bolsa B (Nível ${level})`,
+        label: `Adicionar à Bolsa de Dragões (Nível ${level})`,
         action: () => {
           const res = dragonManager.recruitWildDragon ? dragonManager.recruitWildDragon(dragonData, level) : null;
           if (res && res.success) {

@@ -1262,58 +1262,87 @@ export class DragonManager {
 
   adoptHatchedDragon(speciesId) {
     const species = this.dragonCatalog.find(d => d.id === speciesId);
-    if (!species) return false;
+    if (!species) return { success: false, reason: 'Espécie de dragão desconhecida.' };
 
-    if (this.dragonParty.length >= 6) {
-      return { success: false, reason: 'Mochila de Dragões cheia! (Máximo 6)' };
+    if (this.dragonParty.length >= 24) {
+      return { success: false, reason: 'Bolsa de Dragões cheia! (Máximo 24)' };
     }
 
-    const newDragon = {
-      ...species,
-      level: 1,
-      xp: 0,
-      maxXp: 100,
-      hp: 80,
-      maxHp: 80,
-      energy: 100,
-      maxEnergy: 100,
-      bond: 50,
-      status: 'ready'
-    };
+    const existingIdx = this.dragonParty.findIndex(d => d.id === species.id);
+    let targetDragon;
 
-    this.dragonParty.push(newDragon);
-    this.setActiveDragon(newDragon.id);
+    if (existingIdx !== -1) {
+      // Se já possui o dragão, sobe de nível e restaura HP
+      this.dragonParty[existingIdx].level = (this.dragonParty[existingIdx].level || 1) + 1;
+      this.dragonParty[existingIdx].hp = this.dragonParty[existingIdx].maxHp || 100;
+      targetDragon = this.dragonParty[existingIdx];
+    } else {
+      targetDragon = {
+        ...species,
+        level: 1,
+        xp: 0,
+        maxXp: 100,
+        hp: 80,
+        maxHp: 80,
+        energy: 100,
+        maxEnergy: 100,
+        bond: 50,
+        status: 'ready'
+      };
+      this.dragonParty.push(targetDragon);
+    }
 
-    return { success: true, dragon: newDragon };
+    // Auto-insere no primeiro slot livre da formação (Top 4) se houver espaço
+    const emptyFormationIdx = this.activeFormation.findIndex(id => id === null || id === undefined);
+    if (emptyFormationIdx !== -1 && !this.activeFormation.includes(targetDragon.id)) {
+      this.activeFormation[emptyFormationIdx] = targetDragon.id;
+    }
+
+    this.setActiveDragon(targetDragon.id);
+    return { success: true, dragon: targetDragon };
   }
 
   recruitWildDragon(speciesData, level = 1) {
     if (!speciesData) return { success: false, reason: 'Dragão inválido' };
     const species = this.dragonCatalog.find(d => d.id === speciesData.id) || speciesData;
 
-    if (this.dragonParty.length >= 6) {
-      return { success: false, reason: 'Sua Bolsa de Dragões está cheia! (Máximo 6)' };
+    if (this.dragonParty.length >= 24) {
+      return { success: false, reason: 'Sua Bolsa de Dragões está cheia! (Máximo 24)' };
     }
 
     const lvl = Math.max(1, parseInt(level, 10) || 1);
     const calculatedHp = 80 + (lvl - 1) * 20;
+    const existingIdx = this.dragonParty.findIndex(d => d.id === species.id);
+    let targetDragon;
 
-    const newDragon = {
-      ...species,
-      level: lvl,
-      xp: 0,
-      maxXp: Math.round(100 * Math.pow(1.3, lvl - 1)),
-      hp: calculatedHp,
-      maxHp: calculatedHp,
-      energy: 100,
-      maxEnergy: 100,
-      bond: 60,
-      status: 'ready'
-    };
+    if (existingIdx !== -1) {
+      this.dragonParty[existingIdx].level = Math.max(this.dragonParty[existingIdx].level || 1, lvl);
+      this.dragonParty[existingIdx].hp = this.dragonParty[existingIdx].maxHp || calculatedHp;
+      targetDragon = this.dragonParty[existingIdx];
+    } else {
+      targetDragon = {
+        ...species,
+        level: lvl,
+        xp: 0,
+        maxXp: Math.round(100 * Math.pow(1.3, lvl - 1)),
+        hp: calculatedHp,
+        maxHp: calculatedHp,
+        energy: 100,
+        maxEnergy: 100,
+        bond: 60,
+        status: 'ready'
+      };
+      this.dragonParty.push(targetDragon);
+    }
 
-    this.dragonParty.push(newDragon);
-    this.setActiveDragon(newDragon.id);
-    return { success: true, dragon: newDragon };
+    // Auto-insere no primeiro slot livre da formação (Top 4) se houver espaço
+    const emptyFormationIdx = this.activeFormation.findIndex(id => id === null || id === undefined);
+    if (emptyFormationIdx !== -1 && !this.activeFormation.includes(targetDragon.id)) {
+      this.activeFormation[emptyFormationIdx] = targetDragon.id;
+    }
+
+    this.setActiveDragon(targetDragon.id);
+    return { success: true, dragon: targetDragon };
   }
 
   triggerDragonDefeat(dragon, player, inventorySystem = null) {

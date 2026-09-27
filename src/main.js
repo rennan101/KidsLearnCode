@@ -962,8 +962,8 @@ class RPGApplication {
           return;
         }
 
-        // Space / Key R: Quick Mount / Dismount on Active Dragon
-        if (e.code === 'Space' || e.key === ' ' || e.key === 'r' || e.key === 'R') {
+        // Space: Quick Mount / Dismount on Active Dragon (Key R removed per user request)
+        if (e.code === 'Space' || e.key === ' ') {
           const activeTag = document.activeElement?.tagName?.toLowerCase();
           if (activeTag === 'input' || activeTag === 'textarea' || document.activeElement?.isContentEditable) {
             return;
@@ -1689,6 +1689,7 @@ class RPGApplication {
         },
         dragons: {
           party: this.dragonManager.getParty(),
+          formation: this.dragonManager.activeFormation,
           activeDragonId: this.dragonManager.getActiveDragon()?.id,
           mode: this.dragonManager.mode
         },
@@ -1862,8 +1863,11 @@ class RPGApplication {
 
         // 4. Restaurar Dragões
         if (data.dragons) {
-          if (data.dragons.party && Array.isArray(data.dragons.party)) {
-            this.dragonManager.party = data.dragons.party;
+          if (data.dragons.party && Array.isArray(data.dragons.party) && data.dragons.party.length > 0) {
+            this.dragonManager.dragonParty = data.dragons.party;
+          }
+          if (data.dragons.formation && Array.isArray(data.dragons.formation)) {
+            this.dragonManager.activeFormation = data.dragons.formation;
           }
           if (data.dragons.activeDragonId) {
             this.dragonManager.setActiveDragon(data.dragons.activeDragonId);
@@ -1871,6 +1875,8 @@ class RPGApplication {
           if (data.dragons.mode) {
             this.dragonManager.setMode(data.dragons.mode);
           }
+          this.updateDragonQuickHUD?.();
+          this.updateDragonSkillBar?.();
         }
 
         // 5. Restaurar Progresso de Código Blockly / Lua e Receitas Desbloqueadas
@@ -2974,6 +2980,9 @@ class RPGApplication {
       onRecruit: (d, res) => {
         if (res && res.success) {
           this.showToast(`✨ ${d.name} (Nv. ${d.level || 1}) entrou na sua Bolsa de Dragões!`);
+          this.triggerAutoSave();
+          this.updateDragonQuickHUD?.();
+          this.updateDragonSkillBar?.();
         } else {
           this.showToast(res?.reason || 'Não foi possível recrutar o dragão.');
         }
@@ -3283,7 +3292,10 @@ class RPGApplication {
       document.getElementById('btn-adopt-dragon')?.addEventListener('click', () => {
         const res = this.dragonManager.adoptHatchedDragon(speciesData.id);
         if (res.success) {
-          this.showToast(`${speciesData.name} foi adicionado à sua Mochila de Dragões!`);
+          this.showToast(`${speciesData.name} foi adicionado à sua Mochila e Formação de Dragões!`);
+          this.triggerAutoSave();
+          this.updateDragonQuickHUD?.();
+          this.updateDragonSkillBar?.();
         } else {
           this.showToast(res.reason);
         }
@@ -4068,11 +4080,14 @@ class RPGApplication {
       if (res.success) {
         if (res.hatched) {
           soundFX.playSuccess();
-          this.dragonManager.adoptHatchedDragon(selectedEgg.speciesId);
+          const adoptRes = this.dragonManager.adoptHatchedDragon(selectedEgg.speciesId);
           this.inventorySystem.removeEgg(selectedEgg.id);
           this.player.spawnCraftPoof();
-          this.showToast(`O ${selectedEgg.name} chocou! Um novo dragão se juntou ao seu grupo!`);
+          this.showToast(`O ${selectedEgg.name} chocou! ${adoptRes.dragon?.name || 'Um novo dragão'} se juntou ao seu grupo e formação!`);
           selectedEgg = null;
+          this.triggerAutoSave();
+          this.updateDragonQuickHUD?.();
+          this.updateDragonSkillBar?.();
           renderEggsTab();
           updateEggDetailPanel(null);
         } else {
