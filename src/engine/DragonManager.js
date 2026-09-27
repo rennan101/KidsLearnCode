@@ -2101,6 +2101,7 @@ export class DragonManager {
     if (isStorm && this.dragonSpriteFrames['dragon_fly_storm']) {
       const stormSet = this.dragonSpriteFrames['dragon_fly_storm'];
       let frames = stormSet.flying_side || stormSet.flying;
+      const isFrontOrBack = dir === 'north' || dir === 'south';
       if (dir === 'north' && stormSet.flying_north?.length) {
         frames = stormSet.flying_north;
       } else if (dir === 'south' && stormSet.flying_south?.length) {
@@ -2116,7 +2117,9 @@ export class DragonManager {
         if (isWest) {
           ctx.scale(-1, 1);
         }
-        ctx.drawImage(frameImg, -42, -42, 84, 84);
+        const spriteSize = isFrontOrBack ? 104 : 84;
+        const halfSize = spriteSize / 2;
+        ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
         ctx.restore();
         ctx.restore();
         return;
@@ -2469,6 +2472,7 @@ export class DragonManager {
     if (dragon.id === 'dragon_fly_storm' && this.dragonSpriteFrames['dragon_fly_storm']) {
       const stormSet = this.dragonSpriteFrames['dragon_fly_storm'];
       let frames = stormSet.flying_side || stormSet.flying;
+      const isFrontOrBack = dir === 'north' || dir === 'south';
       if (dir === 'north' && stormSet.flying_north?.length) {
         frames = stormSet.flying_north;
       } else if (dir === 'south' && stormSet.flying_south?.length) {
@@ -2484,7 +2488,9 @@ export class DragonManager {
         if (isWest) {
           ctx.scale(-1, 1);
         }
-        ctx.drawImage(frameImg, -42, -42, 84, 84);
+        const spriteSize = isFrontOrBack ? 104 : 84;
+        const halfSize = spriteSize / 2;
+        ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
         ctx.restore();
         ctx.restore();
         return;
