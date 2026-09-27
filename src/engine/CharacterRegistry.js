@@ -256,6 +256,18 @@ export const MASTER_SEQUENCE_IDS = [
   'npc_turtle_elder'
 ];
 
+export function getNPCData(npcId) {
+  const found = VILLAGE_NPCS.find(n => n.id === npcId) || SECONDARY_HERO_NPCS.find(n => n.id === npcId);
+  if (found) return found;
+  return {
+    id: npcId,
+    name: npcId,
+    role: 'Morador da Ilha',
+    category: 'villager',
+    avatarConfig: generateNPCAppearance(npcId, 'villager')
+  };
+}
+
 /**
  * Returns true if and only if this NPC has a quest available to be done right now.
  */

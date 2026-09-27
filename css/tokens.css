@@ -220,12 +220,12 @@ body {
 }
 
 .loader-card h1 {
-  font-family: var(--animal-font-title, 'Cinzel', serif);
-  font-size: 1.95rem;
-  letter-spacing: 2px;
+  font-family: var(--animal-font, 'Nunito', 'Outfit', sans-serif);
+  font-size: 2.1rem;
+  letter-spacing: -0.5px;
   color: var(--animal-text, #794f27);
   margin-bottom: 8px;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .loader-card p {
