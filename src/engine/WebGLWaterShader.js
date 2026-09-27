@@ -46,11 +46,12 @@ const FRAGMENT_SHADER_SRC = `
   const float TWOPI = 6.283185307;
   const float SIXPI = 18.84955592;
 
-  // 3tKBDz Wind Waker Voronoi Circle Distance Function
+  // 3tKBDz Wind Waker Voronoi Circle Distance Function (Optimized SIMD without sqrt)
   float circ(vec2 pos, vec2 c, float s) {
     c = abs(pos - c);
     c = min(c, 1.0 - c);
-    return smoothstep(0.0, 0.002, sqrt(s) - sqrt(dot(c, c))) * -1.0;
+    float d2 = dot(c, c);
+    return (d2 < s) ? smoothstep(s, s * 0.94, d2) * -1.0 : 0.0;
   }
 
   // 3tKBDz Procedural Caustic Mesh Layer
@@ -249,8 +250,10 @@ export class WebGLWaterShader {
     if (!this.isSupported || !this.gl || !this.program) return null;
     const gl = this.gl;
 
-    const w = Math.max(64, Math.floor(width));
-    const h = Math.max(64, Math.floor(height));
+    // High performance adaptive resolution scale (default 0.5x = 4x less GPU fragment work)
+    const scale = config.resolutionScale !== undefined ? config.resolutionScale : 0.5;
+    const w = Math.max(32, Math.floor(width * scale));
+    const h = Math.max(32, Math.floor(height * scale));
 
     if (this.canvas.width !== w || this.canvas.height !== h) {
       this.canvas.width = w;

@@ -51,6 +51,11 @@ export class TileMap {
     this.waterAnimFrame = 0;
     this.waterFrameDuration = 120; // 120ms per animation frame
 
+    // Performance Spatial Caches
+    this.shorelineEdgeCache = null;
+    this.reflectiveObjectsCache = null;
+    this.spatialCacheDirty = true;
+
     // Dynamic Terrain Modification Systems (Ice Bridges, Water Evaporation, Puddles)
     this.temporaryIceTiles = new Map(); // key -> { tx, ty, originalTileId, expiresAt }
     this.temporaryPuddleTiles = new Map(); // key -> { tx, ty, expiresAt }
@@ -147,6 +152,111 @@ export class TileMap {
       }
       layer.set(key, cellData);
     }
+    this.invalidateSpatialCaches();
+  }
+
+  // Invalidate pre-calculated spatial caches
+  invalidateSpatialCaches() {
+    this.spatialCacheDirty = true;
+    this.shorelineEdgeCache = null;
+    this.reflectiveObjectsCache = null;
+  }
+
+  // Pre-calculate and cache shoreline boundary cells for high performance foam rendering
+  getShorelineEdges() {
+    if (this.shorelineEdgeCache && !this.spatialCacheDirty) {
+      return this.shorelineEdgeCache;
+    }
+
+    const ground = this.layers.ground;
+    if (!ground) return [];
+
+    const edges = [];
+    const isLand = (tx, ty) => {
+      const cell = ground.get(this.getKey(tx, ty));
+      if (!cell || !cell.tileId) return false;
+      const gid = cell.tileId.toLowerCase();
+      const isWater = gid === 'water-animated' || gid === 'water-wind-waker' || gid.includes('water') || gid.includes('ocean');
+      return !isWater;
+    };
+
+    for (const [key, cell] of ground.entries()) {
+      if (!cell || !cell.tileId) continue;
+      const gid = cell.tileId.toLowerCase();
+      const isWater = gid === 'water-animated' || gid === 'water-wind-waker' || gid.includes('water') || gid.includes('ocean');
+      if (!isWater) continue;
+
+      const [tx, ty] = key.split(',').map(Number);
+      const north = isLand(tx, ty - 1);
+      const south = isLand(tx, ty + 1);
+      const west = isLand(tx - 1, ty);
+      const east = isLand(tx + 1, ty);
+
+      if (north || south || west || east) {
+        edges.push({
+          tx, ty,
+          x: tx * this.tileSize,
+          y: ty * this.tileSize,
+          north, south, west, east
+        });
+      }
+    }
+
+    this.shorelineEdgeCache = edges;
+    return edges;
+  }
+
+  // Pre-calculate and cache upright physical objects near water for reflections
+  getReflectiveUprightObjects(assetLoader) {
+    if (this.reflectiveObjectsCache && !this.spatialCacheDirty) {
+      return this.reflectiveObjectsCache;
+    }
+
+    const ground = this.layers.ground;
+    if (!ground) return [];
+
+    const isWater = (tx, ty) => {
+      const cell = ground.get(this.getKey(tx, ty));
+      if (!cell || !cell.tileId) return false;
+      const gid = cell.tileId.toLowerCase();
+      return gid === 'water-animated' || gid === 'water-wind-waker' || gid.includes('water') || gid.includes('ocean');
+    };
+
+    const hasWaterNeighbor = (tx, ty) => {
+      return isWater(tx, ty + 1) || isWater(tx, ty - 1) || isWater(tx + 1, ty) || isWater(tx - 1, ty) ||
+             isWater(tx + 1, ty + 1) || isWater(tx - 1, ty + 1) || isWater(tx + 1, ty - 1) || isWater(tx - 1, ty - 1);
+    };
+
+    const reflectiveObjects = [];
+    const layersToCheck = ['solid', 'decor'];
+
+    for (const layerName of layersToCheck) {
+      const layer = this.layers[layerName];
+      if (!layer) continue;
+
+      for (const [key, cell] of layer.entries()) {
+        if (!cell || cell.isRoot === false || !cell.tileId) continue;
+        const [tx, ty] = key.split(',').map(Number);
+
+        const tileMeta = assetLoader ? assetLoader.getTileMetadata(cell.tileId) : null;
+        if (!this.waterReflectionRenderer || !this.waterReflectionRenderer.isReflectiveUprightObject(cell.tileId, tileMeta)) continue;
+
+        if (hasWaterNeighbor(tx, ty)) {
+          const baseY = this.getCellBaseY(cell, tx, ty, assetLoader);
+          reflectiveObjects.push({
+            cell,
+            tx,
+            ty,
+            destX: tx * this.tileSize,
+            baseY
+          });
+        }
+      }
+    }
+
+    this.reflectiveObjectsCache = reflectiveObjects;
+    this.spatialCacheDirty = false;
+    return reflectiveObjects;
   }
 
   // Multi-tile placement placing root and occupation references across grid area (accounting for rotation, flipX, and custom collider)
@@ -317,9 +427,11 @@ export class TileMap {
             layer.delete(this.getKey(ox, oy));
           }
         }
+        this.invalidateSpatialCaches();
         return;
       }
     }
+    this.invalidateSpatialCaches();
   }
 
   update(deltaTime) {
@@ -1227,6 +1339,7 @@ export class TileMap {
       this.layerOrder.push('colliders');
     }
 
+    this.invalidateSpatialCaches();
     return true;
   }
 }

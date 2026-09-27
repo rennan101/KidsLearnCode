@@ -3450,15 +3450,11 @@ export class DragonManager {
         const rightX = node.x - perpX * spread;
         const rightY = node.y - perpY * spread * 0.55;
 
-        // Draw left flank curved foam stroke
+        // Draw left & right flank curved foam stroke
         ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.9})`;
         ctx.lineWidth = Math.max(1.2, (2.8 * (1.0 - progress * 0.6)));
         ctx.beginPath();
         ctx.arc(leftX, leftY, 2.5 * (1.0 - progress * 0.4), 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Draw right flank curved foam stroke
-        ctx.beginPath();
         ctx.arc(rightX, rightY, 2.5 * (1.0 - progress * 0.4), 0, Math.PI * 2);
         ctx.stroke();
       }
@@ -3505,7 +3501,8 @@ export class DragonManager {
 
     // 2. Render Expanding Foam Wake Rings
     if (this.waterWakeNodes) {
-      for (const node of this.waterWakeNodes) {
+      for (let i = 0; i < this.waterWakeNodes.length; i++) {
+        const node = this.waterWakeNodes[i];
         const progress = Math.min(1.0, node.life / node.maxLife);
         const alpha = Math.max(0, 1.0 - progress);
         if (alpha <= 0.01) continue;
@@ -3530,13 +3527,14 @@ export class DragonManager {
       }
     }
 
-    // 3. Render Wake Splash Froth Droplets
-    if (this.waterWakeSplashes) {
-      for (const s of this.waterWakeSplashes) {
+    // 3. Render Wake Splash Froth Droplets (Batched)
+    if (this.waterWakeSplashes && this.waterWakeSplashes.length > 0) {
+      ctx.fillStyle = '#ffffff';
+      for (let i = 0; i < this.waterWakeSplashes.length; i++) {
+        const s = this.waterWakeSplashes[i];
         const alpha = Math.max(0, 1.0 - (s.life / s.maxLife));
         if (alpha <= 0.01) continue;
 
-        ctx.fillStyle = s.color || '#ffffff';
         ctx.globalAlpha = alpha;
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.size * (1.0 - (s.life / s.maxLife) * 0.4), 0, Math.PI * 2);

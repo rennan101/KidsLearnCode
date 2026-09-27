@@ -31,52 +31,59 @@ export class ShorelineFoamRenderer {
   renderShorelines(ctx, tileMap, visibleWaterCells, timeMs = 0, config = {}) {
     if (!visibleWaterCells || visibleWaterCells.length === 0) return;
 
+    const edges = tileMap.getShorelineEdges ? tileMap.getShorelineEdges() : null;
+    if (!edges || edges.length === 0) return;
+
     const reach = config.shoreLapReach !== undefined ? config.shoreLapReach : 12; // Max pixel reach onto land
     const speed = config.shoreLapSpeed !== undefined ? config.shoreLapSpeed : 1.8;
     const t = (timeMs / 1000) * speed;
     const tileSize = tileMap.tileSize || 64;
 
+    // Viewport bounds from visible water cells
+    let minTx = Infinity, maxTx = -Infinity, minTy = Infinity, maxTy = -Infinity;
+    for (let i = 0; i < visibleWaterCells.length; i++) {
+      const c = visibleWaterCells[i];
+      if (c.tx < minTx) minTx = c.tx;
+      if (c.tx > maxTx) maxTx = c.tx;
+      if (c.ty < minTy) minTy = c.ty;
+      if (c.ty > maxTy) maxTy = c.ty;
+    }
+
     ctx.save();
 
-    for (let i = 0; i < visibleWaterCells.length; i++) {
-      const w = visibleWaterCells[i];
-      const tx = w.tx;
-      const ty = w.ty;
-      const cx = w.x;
-      const cy = w.y;
+    for (let i = 0; i < edges.length; i++) {
+      const e = edges[i];
+      if (e.tx < minTx - 1 || e.tx > maxTx + 1 || e.ty < minTy - 1 || e.ty > maxTy + 1) {
+        continue;
+      }
 
-      // Phase offset per tile coordinate for organic varying waves
-      const tilePhase = (tx * 3 + ty * 7) * 0.45;
-      const waveCycle = (Math.sin(t + tilePhase) + 1.0) * 0.5; // 0.0 (fully receded) to 1.0 (fully advanced)
+      const cx = e.x;
+      const cy = e.y;
+      const tilePhase = (e.tx * 3 + e.ty * 7) * 0.45;
+      const waveCycle = (Math.sin(t + tilePhase) + 1.0) * 0.5; // 0.0 to 1.0
       const lapOffset = waveCycle * reach;
       const foamAlpha = 0.35 + waveCycle * 0.55;
 
-      // Check 4 cardinal neighbors
-      const northLand = this.isLandTile(tileMap, tx, ty - 1);
-      const southLand = this.isLandTile(tileMap, tx, ty + 1);
-      const westLand = this.isLandTile(tileMap, tx - 1, ty);
-      const eastLand = this.isLandTile(tileMap, tx + 1, ty);
-
       // 1. North Shoreline Lap (Water below, Land above)
-      if (northLand) {
+      if (e.north) {
         const edgeY = cy - lapOffset;
         this.drawWaveLapBand(ctx, cx, edgeY, cx + tileSize, edgeY, 0, -1, waveCycle, foamAlpha);
       }
 
       // 2. South Shoreline Lap (Water above, Land below)
-      if (southLand) {
+      if (e.south) {
         const edgeY = cy + tileSize + lapOffset;
         this.drawWaveLapBand(ctx, cx, edgeY, cx + tileSize, edgeY, 0, 1, waveCycle, foamAlpha);
       }
 
       // 3. West Shoreline Lap (Water right, Land left)
-      if (westLand) {
+      if (e.west) {
         const edgeX = cx - lapOffset;
         this.drawWaveLapBand(ctx, edgeX, cy, edgeX, cy + tileSize, -1, 0, waveCycle, foamAlpha);
       }
 
       // 4. East Shoreline Lap (Water left, Land right)
-      if (eastLand) {
+      if (e.east) {
         const edgeX = cx + tileSize + lapOffset;
         this.drawWaveLapBand(ctx, edgeX, cy, edgeX, cy + tileSize, 1, 0, waveCycle, foamAlpha);
       }

@@ -139,52 +139,34 @@ export class WaterReflectionRenderer {
    * Render inverted reflections of solid and decor upright objects standing on shore (never flat ground)
    */
   renderShorelineObjectReflections(ctx, tileMap, assetLoader, camera, isEditor, timeSec) {
-    const layersToReflect = ['solid', 'decor'];
-    const tileSize = tileMap.tileSize || 64;
+    const shorelineObjects = tileMap.getReflectiveUprightObjects ? tileMap.getReflectiveUprightObjects(assetLoader) : null;
+    if (!shorelineObjects || shorelineObjects.length === 0) return;
 
-    const padding = 3;
-    const camX = camera?.x || 0;
-    const camY = camera?.y || 0;
-    const camW = camera?.viewportWidth || 800;
-    const camH = camera?.viewportHeight || 600;
+    const padding = 64;
+    const camX = (camera?.x || 0) - padding;
+    const camY = (camera?.y || 0) - padding;
+    const camW = (camera?.viewportWidth || 800) + padding * 2;
+    const camH = (camera?.viewportHeight || 600) + padding * 2;
     const camZ = camera?.zoom || 1.0;
+    const viewMaxX = camX + camW / camZ;
+    const viewMaxY = camY + camH / camZ;
 
-    const startCol = Math.floor(camX / tileSize) - padding;
-    const endCol = Math.ceil((camX + camW / camZ) / tileSize) + padding;
-    const startRow = Math.floor(camY / tileSize) - padding;
-    const endRow = Math.ceil((camY + camH / camZ) / tileSize) + padding;
-
-    for (const layerName of layersToReflect) {
-      const layer = tileMap.layers[layerName];
-      if (!layer || layer.size === 0) continue;
-
-      for (let ty = startRow; ty <= endRow; ty++) {
-        for (let tx = startCol; tx <= endCol; tx++) {
-          const cell = layer.get(tileMap.getKey(tx, ty));
-          if (!cell || cell.isRoot === false) continue;
-
-          const tileMeta = assetLoader.getTileMetadata(cell.tileId);
-
-          // Strictly filter out flat ground (grass, sand, soil, dirt, floor)
-          if (!this.isReflectiveUprightObject(cell.tileId, tileMeta)) continue;
-
-          // Check if this upright object is near water
-          if (!this.hasNeighborWater(tileMap, tx, ty)) continue;
-
-          const baseY = tileMap.getCellBaseY(cell, tx, ty, assetLoader);
-          const destX = tx * tileSize;
-          const waveSway = Math.sin(timeSec * 2.8 + (destX + baseY) * 0.04) * 2.5;
-
-          ctx.save();
-          ctx.translate(destX + waveSway, baseY);
-          ctx.scale(1, this.reflectionScaleY);
-          ctx.translate(-destX, -baseY);
-
-          ctx.globalAlpha = this.reflectionAlpha * 0.75;
-          tileMap.drawTileCell(ctx, cell, tx, ty, assetLoader, isEditor, false, true);
-          ctx.restore();
-        }
+    for (let i = 0; i < shorelineObjects.length; i++) {
+      const obj = shorelineObjects[i];
+      if (obj.destX < camX || obj.destX > viewMaxX || obj.baseY < camY || obj.baseY > viewMaxY) {
+        continue;
       }
+
+      const waveSway = Math.sin(timeSec * 2.8 + (obj.destX + obj.baseY) * 0.04) * 2.5;
+
+      ctx.save();
+      ctx.translate(obj.destX + waveSway, obj.baseY);
+      ctx.scale(1, this.reflectionScaleY);
+      ctx.translate(-obj.destX, -obj.baseY);
+
+      ctx.globalAlpha = this.reflectionAlpha * 0.75;
+      tileMap.drawTileCell(ctx, obj.cell, obj.tx, obj.ty, assetLoader, isEditor, false, true);
+      ctx.restore();
     }
   }
 
