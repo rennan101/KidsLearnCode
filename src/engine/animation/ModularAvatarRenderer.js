@@ -451,8 +451,7 @@ export class ModularAvatarRenderer {
   renderTopOnTorso(ctx, topStyle, primary, secondary, skin, dir) {
     const topDef = SVG_TOPS.find(t => t.id === topStyle || t.baseId === topStyle) || SVG_TOPS[0];
     const topPath = (topDef.sleeveType === 'none' ? topDef.fullPath : topDef.torsoPath) || topDef.torsoPath || topDef.fullPath || `assets/Tops/${topDef.folder || 'Tee'}/${topDef.id}_torso.svg`;
-    const topSvg = topDef.torsoSvgContent || topDef.svgContent;
-    const img = this.getAssetImage(topPath, topSvg);
+    const img = this.getTintedTopImage(topPath, topDef, primary, secondary);
 
     ctx.save();
 
@@ -465,7 +464,7 @@ export class ModularAvatarRenderer {
       ctx.drawImage(img, -fullW / 2, -280, fullW, fullH);
     } else {
       // Fallback vetorial instantâneo com a cor oficial enquanto carrega
-      ctx.fillStyle = topDef.primaryColor || primary;
+      ctx.fillStyle = primary || topDef.primaryColor;
       if (topStyle === 'top_cupcake_dress') {
         ctx.beginPath();
         ctx.moveTo(-95, -280);
@@ -509,8 +508,8 @@ export class ModularAvatarRenderer {
     const skin = cfg.skinTone || '#f6dab9';
     const topStyle = cfg.topStyle || 'top_tee';
     const topDef = SVG_TOPS.find(t => t.id === topStyle || t.baseId === topStyle) || SVG_TOPS[0];
-    const primary = topDef.primaryColor || cfg.topColorPrimary || '#19c8b9';
-    const secondary = topDef.secondaryColor || cfg.topColorSecondary || '#ffffff';
+    const primary = cfg.topColorPrimary || topDef.primaryColor || '#19c8b9';
+    const secondary = cfg.topColorSecondary || topDef.secondaryColor || '#ffffff';
     const hasSleeves = topDef.sleeveType && topDef.sleeveType !== 'none';
     const rootRot = (pose.root && pose.root.rot) ? pose.root.rot : 0;
 
@@ -600,10 +599,9 @@ export class ModularAvatarRenderer {
     const fullH = topDef.h * scale;
 
     const sleevePath = isLeft ? topDef.sleeveLPath : topDef.sleeveRPath;
-    const sleeveSvg = isLeft ? topDef.sleeveLSvgContent : topDef.sleeveRSvgContent;
 
-    if (sleevePath || sleeveSvg) {
-      const img = this.getAssetImage(sleevePath || `top_sleeve_${side}_${topDef.id}`, sleeveSvg);
+    if (sleevePath) {
+      const img = this.getTintedTopImage(sleevePath, topDef, primary, secondary);
       if (img && img.complete && img.naturalWidth > 0) {
         if (isLeft) {
           // Ombro esquerdo em (-130, -255) -> ajustado com y=-34 para encaixe perfeito
@@ -1441,30 +1439,76 @@ export class ModularAvatarRenderer {
         ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
         [-175, 185].forEach(gx => {
           ctx.beginPath();
-          ctx.roundRect(gx - 90, -60, 180, 150, 36);
+          ctx.roundRect(gx - 90, -20, 180, 150, 36);
           ctx.fill();
           ctx.stroke();
         });
         ctx.beginPath();
-        ctx.moveTo(-80, 15);
-        ctx.lineTo(90, 15);
+        ctx.moveTo(-80, 55);
+        ctx.lineTo(90, 55);
         ctx.stroke();
       } else {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
         [-175, 185].forEach(gx => {
           ctx.beginPath();
-          ctx.arc(gx, 15, 100, 0, Math.PI * 2);
+          ctx.arc(gx, 55, 100, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
         });
         ctx.beginPath();
-        ctx.moveTo(-75, 15);
-        ctx.lineTo(85, 15);
+        ctx.moveTo(-75, 55);
+        ctx.lineTo(85, 55);
         ctx.stroke();
       }
     }
 
     ctx.restore();
+  }
+
+  getTintedTopImage(path, topDef, primary, secondary) {
+    const rawSvg = topDef?.torsoSvgContent || topDef?.svgContent;
+    const cacheKey = `${path}_${primary}_${secondary}`;
+    if (this.svgImageCache.has(cacheKey)) {
+      return this.svgImageCache.get(cacheKey);
+    }
+
+    if (!rawSvg && path) {
+      if (!this._fetchingSvgs) this._fetchingSvgs = new Set();
+      if (!this._fetchingSvgs.has(path) && typeof fetch !== 'undefined') {
+        this._fetchingSvgs.add(path);
+        fetch(path)
+          .then(res => res.ok ? res.text() : '')
+          .then(text => {
+            if (text) {
+              if (path.includes('sleeve_l')) topDef.sleeveLSvgContent = text;
+              else if (path.includes('sleeve_r')) topDef.sleeveRSvgContent = text;
+              else topDef.torsoSvgContent = text;
+              this.svgImageCache.delete(cacheKey);
+            }
+          })
+          .catch(() => {});
+      }
+      return this.getAssetImage(path, rawSvg);
+    }
+
+    if (rawSvg) {
+      let tintedSvg = rawSvg;
+      if (topDef.primaryColor && primary && topDef.primaryColor.toLowerCase() !== primary.toLowerCase()) {
+        const pRegex = new RegExp(topDef.primaryColor, 'gi');
+        tintedSvg = tintedSvg.replace(pRegex, primary);
+      }
+      if (topDef.secondaryColor && secondary && topDef.secondaryColor.toLowerCase() !== secondary.toLowerCase()) {
+        const sRegex = new RegExp(topDef.secondaryColor, 'gi');
+        tintedSvg = tintedSvg.replace(sRegex, secondary);
+      }
+      const img = new Image();
+      const blob = new Blob([tintedSvg], { type: 'image/svg+xml;charset=utf-8' });
+      img.src = URL.createObjectURL(blob);
+      this.svgImageCache.set(cacheKey, img);
+      return img;
+    }
+
+    return this.getAssetImage(path, rawSvg);
   }
 
   getAvatarThumbnail(config, size = 64) {

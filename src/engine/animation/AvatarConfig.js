@@ -45,16 +45,22 @@ export const EYE_COLORS = [
 ];
 
 export const CLOTH_PALETTES = [
-  { id: 'c_teal', primary: '#19c8b9', secondary: '#ffffff', accent: '#0f8e83', name: 'Teal da Ilha' },
-  { id: 'c_navy', primary: '#1e3a8a', secondary: '#93c5fd', accent: '#172554', name: 'Azul Marinho' },
-  { id: 'c_emerald', primary: '#059669', secondary: '#a7f3d0', accent: '#064e3b', name: 'Verde Floresta' },
-  { id: 'c_sunset', primary: '#ea580c', secondary: '#fde047', accent: '#9a3412', name: 'Pôr do Sol' },
-  { id: 'c_berry', primary: '#be185d', secondary: '#fbcfe8', accent: '#831843', name: 'Framboesa' },
-  { id: 'c_gold', primary: '#d97706', secondary: '#fef3c7', accent: '#92400e', name: 'Dourado Real' },
-  { id: 'c_earth', primary: '#78350f', secondary: '#fef3c7', accent: '#451a03', name: 'Madeira & Couro' },
-  { id: 'c_charcoal', primary: '#334155', secondary: '#94a3b8', accent: '#0f172a', name: 'Cinza Carvão' },
-  { id: 'c_cream', primary: '#fdfbf7', secondary: '#19c8b9', accent: '#d6cdb7', name: 'Creme Natural' },
-  { id: 'c_violet', primary: '#7c3aed', secondary: '#ddd6fe', accent: '#4c1d95', name: 'Violeta Arcano' }
+  { id: 'c_teal', primary: '#19c8b9', secondary: '#ffffff', accent: '#0f8e83', name: 'Teal & Branco' },
+  { id: 'c_navy', primary: '#1e3a8a', secondary: '#93c5fd', accent: '#172554', name: 'Azul Marinho & Celeste' },
+  { id: 'c_emerald', primary: '#059669', secondary: '#fef08a', accent: '#064e3b', name: 'Esmeralda & Dourado' },
+  { id: 'c_sunset', primary: '#ea580c', secondary: '#fde047', accent: '#9a3412', name: 'Pôr do Sol Tropical' },
+  { id: 'c_berry', primary: '#be185d', secondary: '#fbcfe8', accent: '#831843', name: 'Framboesa & Rosa' },
+  { id: 'c_gold', primary: '#d97706', secondary: '#ffffff', accent: '#92400e', name: 'Mostarda & Bege' },
+  { id: 'c_earth', primary: '#78350f', secondary: '#fed7aa', accent: '#451a03', name: 'Couro & Areia' },
+  { id: 'c_charcoal', primary: '#334155', secondary: '#cbd5e1', accent: '#0f172a', name: 'Carvão & Prata' },
+  { id: 'c_cream', primary: '#fdfbf7', secondary: '#19c8b9', accent: '#d6cdb7', name: 'Creme & Menta' },
+  { id: 'c_violet', primary: '#7c3aed', secondary: '#fbcfe8', accent: '#4c1d95', name: 'Violeta & Lilás' },
+  { id: 'c_scarlet', primary: '#b91c1c', secondary: '#1e293b', accent: '#7f1d1d', name: 'Xadrez Escarlate & Preto' },
+  { id: 'c_indigo', primary: '#312e81', secondary: '#38bdf8', accent: '#1e1b4b', name: 'Índigo Noturno & Ciano' },
+  { id: 'c_olive', primary: '#4d7c0f', secondary: '#fef08a', accent: '#365314', name: 'Oliva & Mostarda' },
+  { id: 'c_terracotta', primary: '#c2410c', secondary: '#fed7aa', accent: '#7c2d12', name: 'Terracota & Pêssego' },
+  { id: 'c_turquoise', primary: '#0891b2', secondary: '#fef08a', accent: '#164e63', name: 'Turquesa & Dourado' },
+  { id: 'c_sakura', primary: '#f472b6', secondary: '#ffffff', accent: '#db2777', name: 'Sakura & Branco' }
 ];
 
 export const DEFAULT_AVATAR_CONFIG = {

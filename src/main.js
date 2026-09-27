@@ -3584,15 +3584,11 @@ class RPGApplication {
           <div style="flex: 1; text-align: left;">
             <div style="display: flex; align-items: center; gap: 8px;">
               <div class="hero-card-name" style="font-size: 1.15rem; margin: 0;">${customCfg.name || 'Meu Herói Customizado'}</div>
-              <span class="hero-badge archetype" style="background: #19c8b9; color: #ffffff;">Corpo Inteiro (Cutout 2D)</span>
-            </div>
-            <div style="font-size: 0.8rem; color: #725d42; margin-top: 4px;">
-              Avatar animado proceduralmente com trajes, cortes de cabelo e expressões customizáveis.
             </div>
           </div>
           <div style="display: flex; flex-direction: column; gap: 6px;">
             <button class="hero-select-btn" id="btn-edit-custom-avatar" style="background: #ffffff; color: #19c8b9; border-color: #19c8b9;">
-              Personalizar Aparência
+              Aparência
             </button>
             <button class="hero-select-btn ${isCustomActive ? 'active' : ''}" id="btn-select-custom-avatar">
               ${isCustomActive ? 'Avatar Atual' : 'Jogar com Meu Avatar'}

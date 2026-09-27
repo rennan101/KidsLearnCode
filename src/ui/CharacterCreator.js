@@ -532,7 +532,7 @@ export class CharacterCreator {
   renderTopTab(container) {
     const section = document.createElement('div');
     section.innerHTML = `
-      <div class="cc-section-title">Paleta de Cores do Tronco</div>
+      <div class="cc-section-title">Paleta de cores da camisa</div>
       <div class="cc-swatches-grid">
         ${CLOTH_PALETTES.map(p => `
           <button class="cc-swatch ${this.currentConfig.topColorPrimary === p.primary ? 'active' : ''}" 
