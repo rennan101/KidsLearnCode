@@ -344,16 +344,18 @@ export class MultiplayerClient {
     }
   }
 
-  renderRemotePlayer(ctx, player, assetLoader) {
+  renderRemotePlayer(ctx, player, assetLoader, isReflection = false) {
     ctx.save();
     const drawX = Math.round(player.x);
     const drawY = Math.round(player.y);
 
-    // 1. Shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-    ctx.beginPath();
-    ctx.ellipse(drawX + 32, drawY + 60, 16, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
+    // 1. Shadow (omitted in reflections)
+    if (!isReflection) {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.beginPath();
+      ctx.ellipse(drawX + 32, drawY + 60, 16, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // 2. Sprite Frame
     const rowMap = { south: 0, east: 1, north: 2, west: 3 };
@@ -402,15 +404,17 @@ export class MultiplayerClient {
       ctx.fillRect(drawX + 16, drawY + 16, 32, 48);
     }
 
-    // 3. Name Tag and Online Badge
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-    ctx.roundRect(drawX + 4, drawY - 14, 56, 14, 4);
-    ctx.fill();
+    // 3. Name Tag and Online Badge (omitted in reflections)
+    if (!isReflection) {
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.roundRect(drawX + 4, drawY - 14, 56, 14, 4);
+      ctx.fill();
 
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = 'bold 8px Outfit, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(player.name, drawX + 32, drawY - 4);
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 8px Outfit, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(player.name, drawX + 32, drawY - 4);
+    }
 
     ctx.restore();
   }

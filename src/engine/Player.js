@@ -451,7 +451,7 @@ export class Player {
     return false;
   }
 
-  render(ctx, assetLoader, showColliders = false) {
+  render(ctx, assetLoader, showColliders = false, isReflection = false) {
     if (!assetLoader) return;
     if (this.x === undefined || isNaN(this.x)) this.x = 320;
     if (this.y === undefined || isNaN(this.y)) this.y = 320;
@@ -466,8 +466,8 @@ export class Player {
     const drawX = Math.round(this.x);
     const drawY = Math.round(this.y + bounce - alt);
 
-    // 1. Sombra circular nos pés (omitida quando montado no dragão para ter SOMBRA ÚNICA unificada no chão renderizada pelo DragonManager)
-    if (!this.isMounted && this.heroId !== 'custom_avatar') {
+    // 1. Sombra circular nos pés (omitida em reflexos ou quando montado no dragão)
+    if (!this.isMounted && this.heroId !== 'custom_avatar' && !isReflection) {
       ctx.save();
       ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
       ctx.beginPath();
@@ -505,7 +505,7 @@ export class Player {
       );
 
       // Efeito de Nuvem Poof de Construção no Workbench estilo Animal Crossing
-      if (this.isCrafting && this.poofParticles.length > 0) {
+      if (this.isCrafting && this.poofParticles.length > 0 && !isReflection) {
         ctx.save();
         for (const p of this.poofParticles) {
           ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
@@ -519,7 +519,7 @@ export class Player {
         ctx.restore();
       }
 
-      if (showColliders) {
+      if (showColliders && !isReflection) {
         ctx.save();
         ctx.strokeStyle = '#10b981';
         ctx.lineWidth = 2;

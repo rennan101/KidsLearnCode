@@ -1,5 +1,6 @@
 // Water Reflection System (Zelda Wind Waker & Cel-Shaded RPG Style)
 // Renders dynamic, wave-distorted reflections of flying players, dragons, NPCs, and shoreline upright objects (trees, rocks, houses) onto water.
+// Excludes flat ground surfaces, dialogue boxes, overhead name pills, level badges, and interaction prompts.
 
 export class WaterReflectionRenderer {
   constructor() {
@@ -102,7 +103,7 @@ export class WaterReflectionRenderer {
 
     ctx.save();
 
-    // 1. Create Clipping Region for all visible water tiles
+    // 1. Create Clipping Region for all visible water tiles (guarantees zero leak onto land)
     ctx.beginPath();
     for (let i = 0; i < visibleWaterCells.length; i++) {
       const w = visibleWaterCells[i];
@@ -113,7 +114,7 @@ export class WaterReflectionRenderer {
     // 2. Render Shoreline Solid & Decor Upright Objects Reflections (Trees, Rocks, Buildings, Bushes)
     this.renderShorelineObjectReflections(ctx, tileMap, assetLoader, camera, isEditor, timeSec);
 
-    // 3. Render Characters & NPCs Reflections near water
+    // 3. Render Characters & NPCs Reflections near water (pure body, no overhead name badges or prompts)
     this.renderNPCReflections(ctx, tileMap, assetLoader, camera, isEditor, timeSec);
 
     // 4. Render Wild Dragons Reflections (flying over or swimming in water)
@@ -121,7 +122,7 @@ export class WaterReflectionRenderer {
       this.renderWildDragonReflections(ctx, dragonManager, player, assetLoader, timeSec);
     }
 
-    // 5. Render Remote Players Reflections (Multiplayer)
+    // 5. Render Remote Players Reflections (Multiplayer - pure body, no overhead tags)
     if (multiplayerClient) {
       this.renderMultiplayerReflections(ctx, multiplayerClient, assetLoader, timeSec);
     }
@@ -130,9 +131,6 @@ export class WaterReflectionRenderer {
     if (player) {
       this.renderPlayerReflection(ctx, player, dragonManager, assetLoader, timeSec);
     }
-
-    // 7. Cel-Shaded Water Wave Ripples Overlay over Reflections
-    this.renderReflectionRipples(ctx, visibleWaterCells, timeSec);
 
     ctx.restore();
   }
@@ -183,7 +181,7 @@ export class WaterReflectionRenderer {
           ctx.translate(-destX, -baseY);
 
           ctx.globalAlpha = this.reflectionAlpha * 0.75;
-          tileMap.drawTileCell(ctx, cell, tx, ty, assetLoader, isEditor, false);
+          tileMap.drawTileCell(ctx, cell, tx, ty, assetLoader, isEditor, false, true);
           ctx.restore();
         }
       }
@@ -191,7 +189,7 @@ export class WaterReflectionRenderer {
   }
 
   /**
-   * Render inverted reflections for NPCs on shore
+   * Render inverted reflections for NPCs on shore (without overhead badges or prompts)
    */
   renderNPCReflections(ctx, tileMap, assetLoader, camera, isEditor, timeSec) {
     const charLayer = tileMap.layers.characters;
@@ -227,7 +225,7 @@ export class WaterReflectionRenderer {
         ctx.translate(-destX, -baseY);
 
         ctx.globalAlpha = this.reflectionAlpha * 0.85;
-        tileMap.drawTileCell(ctx, cell, tx, ty, assetLoader, isEditor, false);
+        tileMap.drawTileCell(ctx, cell, tx, ty, assetLoader, isEditor, false, true);
         ctx.restore();
       }
     }
@@ -256,10 +254,10 @@ export class WaterReflectionRenderer {
       try {
         dragonManager.renderMountedUnified(ctx, assetLoader, player);
       } catch (err) {
-        player.render(ctx, assetLoader, false);
+        player.render(ctx, assetLoader, false, true);
       }
     } else {
-      player.render(ctx, assetLoader, false);
+      player.render(ctx, assetLoader, false, true);
     }
 
     ctx.restore();
@@ -285,7 +283,7 @@ export class WaterReflectionRenderer {
   }
 
   /**
-   * Render multiplayer remote players reflections
+   * Render multiplayer remote players reflections (omits overhead name tags)
    */
   renderMultiplayerReflections(ctx, multiplayerClient, assetLoader, timeSec) {
     const listToRender = multiplayerClient.isConnected 
@@ -303,42 +301,8 @@ export class WaterReflectionRenderer {
       ctx.translate(0, -groundBaseY);
 
       ctx.globalAlpha = this.reflectionAlpha * 0.85;
-      multiplayerClient.renderRemotePlayer(ctx, remote, assetLoader);
+      multiplayerClient.renderRemotePlayer(ctx, remote, assetLoader, true);
       ctx.restore();
     }
-  }
-
-  /**
-   * Subtle water ripple bands overlaid across reflections
-   */
-  renderReflectionRipples(ctx, visibleWaterCells, timeSec) {
-    ctx.save();
-    ctx.fillStyle = 'rgba(2, 132, 199, 0.18)'; // Soft ocean tint overlay
-
-    for (let i = 0; i < visibleWaterCells.length; i++) {
-      const w = visibleWaterCells[i];
-      ctx.fillRect(w.x, w.y, w.tileSize, w.tileSize);
-    }
-
-    // Subtle horizontal wave distortion lines
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
-    ctx.lineWidth = 1.2;
-
-    for (let i = 0; i < visibleWaterCells.length; i++) {
-      const w = visibleWaterCells[i];
-      const cx = w.x;
-      const cy = w.y;
-      const size = w.tileSize;
-
-      const rOffset = Math.sin(timeSec * 2.5 + (cx + cy) * 0.03) * 6;
-      ctx.beginPath();
-      ctx.moveTo(cx + 6, cy + 20 + rOffset);
-      ctx.lineTo(cx + size - 6, cy + 20 + rOffset);
-      ctx.moveTo(cx + 10, cy + 44 - rOffset);
-      ctx.lineTo(cx + size - 10, cy + 44 - rOffset);
-      ctx.stroke();
-    }
-
-    ctx.restore();
   }
 }
