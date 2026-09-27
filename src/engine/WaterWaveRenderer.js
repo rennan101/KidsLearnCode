@@ -35,12 +35,22 @@ export const WATER_PALETTES = {
   'golden-sunset': {
     id: 'golden-sunset',
     name: 'Pôr do Sol Dourado',
-    deep: '#7c2d12',
-    base: '#c2410c',
-    shallow: '#ea580c',
-    crest: '#fb923c',
-    foam: '#fed7aa',
-    highlight: '#fff7ed'
+    deep: '#78350f',
+    base: '#b45309',
+    shallow: '#d97706',
+    crest: '#f59e0b',
+    foam: '#fde68a',
+    highlight: '#fffbeb'
+  },
+  'blood-moon': {
+    id: 'blood-moon',
+    name: 'Lua de Sangue (Blood Moon)',
+    deep: '#450a0a',
+    base: '#7f1d1d',
+    shallow: '#991b1b',
+    crest: '#dc2626',
+    foam: '#fca5a5',
+    highlight: '#fee2e2'
   },
   'dawn-golden': {
     id: 'dawn-golden',

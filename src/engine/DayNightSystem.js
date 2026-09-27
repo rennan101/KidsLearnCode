@@ -190,8 +190,8 @@ export class DayNightSystem {
       // Broad Daylight (crystal clear)
       return { r: 255, g: 255, b: 255, alpha: 0.0, name: 'Dia' };
     } else if (hours >= 16 && hours <= 17) {
-      // Golden Hour / Sunset (warm sunset amber orange)
-      return { r: 245, g: 130, b: 70, alpha: 0.25, name: 'Entardecer' };
+      // Golden Hour / Sunset (warm golden-amber / orange-yellow)
+      return { r: 250, g: 170, b: 35, alpha: 0.22, name: 'Entardecer' };
     } else if (hours > 17 && hours < 20) {
       // Dusk / Twilight (deep mystical indigo)
       return { r: 20, g: 25, b: 65, alpha: 0.65, name: 'Crepúsculo' };
