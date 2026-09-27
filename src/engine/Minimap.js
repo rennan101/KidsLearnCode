@@ -144,9 +144,11 @@ export class Minimap {
         }
       });
 
-      // Wheel to zoom expanded map
+      // Wheel to zoom expanded map (only when modal is active/open)
       this.expandedCanvas.addEventListener('wheel', (e) => {
+        if (!this.isExpanded) return;
         e.preventDefault();
+        e.stopPropagation();
         const factor = e.deltaY < 0 ? 1.15 : 0.85;
         this.expandedZoom = Math.max(0.4, Math.min(3.5, this.expandedZoom * factor));
       }, { passive: false });
@@ -455,11 +457,8 @@ export class Minimap {
           ctx.arc(mapX + mapW / 2, mapY + mapH / 2, Math.max(2, mapW / 2), 0, Math.PI * 2);
           ctx.fill();
         } else if (cell.tileId.startsWith('house-')) {
-          // Roof structure block with highlight border
+          // Clean solid roof structure block without grid lines
           ctx.fillRect(mapX, mapY, mapW, mapH);
-          ctx.strokeStyle = '#fca5a5';
-          ctx.lineWidth = 1;
-          ctx.strokeRect(mapX, mapY, mapW, mapH);
         } else {
           ctx.fillRect(mapX, mapY, Math.max(1, mapW), Math.max(1, mapH));
         }

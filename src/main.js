@@ -1263,9 +1263,14 @@ class RPGApplication {
     });
 
     // Mouse wheel zoom in Editor Mode only (disabled in Play Mode per user request)
-    this.canvas.addEventListener('wheel', (e) => {
+    const handleViewportWheel = (e) => {
+      if (this.mode !== 'edit') return;
+      // Do not zoom main editor viewport if expanded map modal or another modal is active
+      if (this.minimap?.isExpanded || document.querySelector('.modal.active, .expanded-map-modal.active')) {
+        return;
+      }
+
       e.preventDefault();
-      if (this.mode === 'play') return;
 
       const rect = this.canvas.getBoundingClientRect();
       const mouseScreenX = e.clientX - rect.left;
@@ -1275,15 +1280,18 @@ class RPGApplication {
       const worldPosBefore = this.camera.screenToWorld(mouseScreenX, mouseScreenY);
 
       const zoomFactor = e.deltaY < 0 ? 1.12 : 0.89;
-      const minZoom = this.mode === 'edit' ? 0.3 : 0.6;
-      const maxZoom = this.mode === 'edit' ? 3.5 : 2.5;
+      const minZoom = 0.3;
+      const maxZoom = 3.5;
       const newZoom = Math.max(minZoom, Math.min(maxZoom, this.camera.zoom * zoomFactor));
       this.camera.zoom = newZoom;
 
       // Reposition camera so mouse points to the exact same world coordinate
       this.camera.x = worldPosBefore.x - mouseScreenX / newZoom;
       this.camera.y = worldPosBefore.y - mouseScreenY / newZoom;
-    }, { passive: false });
+    };
+
+    this.canvas.addEventListener('wheel', handleViewportWheel, { passive: false });
+    this.canvasWrapper?.addEventListener('wheel', handleViewportWheel, { passive: false });
 
     // Prevent context menu in editor for right click erasing
     this.canvas.addEventListener('contextmenu', (e) => {
