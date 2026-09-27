@@ -2310,7 +2310,7 @@ export class DragonManager {
     const badgeW = Math.max(46, textMetrics.width + 10);
     const badgeH = 14;
     const badgeX = drawX + 32 - badgeW / 2;
-    const badgeY = drawY - 28;
+    const badgeY = drawY - 44;
 
     // Badge shadow 3D
     ctx.fillStyle = '#d97706';
@@ -2338,7 +2338,7 @@ export class DragonManager {
     // 3b. Overhead HP Bar (52px wide)
     const barW = 52;
     const barX = drawX + 32 - barW / 2;
-    const hpY = drawY - 12;
+    const hpY = drawY - 26;
     const curHp = (entity.hp !== undefined) ? entity.hp : (entity.maxHp || 100);
     const maxHp = entity.maxHp || 100;
     const hpRatio = Math.max(0, Math.min(1, curHp / maxHp));
@@ -2364,7 +2364,7 @@ export class DragonManager {
     ctx.stroke();
 
     // 3c. Overhead Energy Bar (52px wide)
-    const energyY = drawY - 6;
+    const energyY = drawY - 19;
     const curEnergy = (entity.energy !== undefined) ? entity.energy : (entity.maxEnergy || 100);
     const maxEnergy = entity.maxEnergy || 100;
     const energyRatio = Math.max(0, Math.min(1, curEnergy / maxEnergy));
@@ -2992,7 +2992,7 @@ export class DragonManager {
       const badgeW = Math.max(50, textMetrics.width + 12);
       const badgeH = 15;
       const badgeX = drawX + 24 - badgeW / 2;
-      const badgeY = drawY - 30;
+      const badgeY = drawY - (isMounted ? 58 : 44);
 
       // 3D Level Badge shadow & body
       ctx.fillStyle = '#0f8e83';
@@ -3019,7 +3019,7 @@ export class DragonManager {
       // 7b. Overhead HP Bar (58px wide)
       const barW = 58;
       const barX = drawX + 24 - barW / 2;
-      const hpY = drawY - 13;
+      const hpY = drawY - (isMounted ? 40 : 26);
       const curHp = (dragon.hp !== undefined) ? dragon.hp : (dragon.maxHp || 100);
       const maxHp = dragon.maxHp || 100;
       const hpRatio = Math.max(0, Math.min(1, curHp / maxHp));
@@ -3044,7 +3044,7 @@ export class DragonManager {
       ctx.stroke();
 
       // 7c. Overhead Energy Bar (58px wide)
-      const energyY = drawY - 6;
+      const energyY = drawY - (isMounted ? 32 : 19);
       const curEnergy = (dragon.energy !== undefined) ? dragon.energy : (dragon.maxEnergy || 100);
       const maxEnergy = dragon.maxEnergy || 100;
       const energyRatio = Math.max(0, Math.min(1, curEnergy / maxEnergy));

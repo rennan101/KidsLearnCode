@@ -483,7 +483,7 @@ export class Player {
         animState = 'walk';
       }
 
-      const avatarScale = 0.22 * s;
+      const avatarScale = 0.33 * s;
       const targetX = drawX + (32 * s);
       const targetY = drawY + (60 * s) - (265 * avatarScale);
 
@@ -653,7 +653,7 @@ export class Player {
 
     // 1. Modular Cutout Custom Avatar
     if (this.heroId === 'custom_avatar' && this.modularAvatarRenderer) {
-      const avatarScale = 0.21 * s;
+      const avatarScale = 0.315 * s;
       const targetX = centerX;
       const targetY = centerY + (20 * s) - (265 * avatarScale);
 

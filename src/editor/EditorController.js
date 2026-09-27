@@ -1,5 +1,6 @@
 // Editor Controller handling multi-tile placement, infinite grid navigation, and collider editing mode
 import { UndoRedoManager } from '../engine/UndoRedoManager.js';
+import { getNPCData } from '../engine/CharacterRegistry.js';
 
 export class EditorController {
   constructor(tileMap, assetLoader, camera, onMapChange = () => {}, player = null) {
@@ -912,29 +913,50 @@ export class EditorController {
 
       // Multi-tile Brush ghost preview (with rotation)
       if (meta) {
-        ctx.globalAlpha = 0.55;
-        let img = null;
-        if (meta.isAnimated && meta.frames) {
-          img = this.assetLoader.getImage(meta.frames[0]);
-        } else if (meta.src) {
-          img = this.assetLoader.getImage(meta.src);
-        }
+        ctx.globalAlpha = 0.65;
+        const isNpcMeta = meta.id.startsWith('npc_') || (meta.isCharacter && meta.characterType === 'npc');
+        if (isNpcMeta && this.tileMap.avatarRenderer) {
+          const npcData = getNPCData(meta.id);
+          const avatarConfig = npcData?.avatarConfig;
+          if (avatarConfig) {
+            const avatarScale = 0.33;
+            const targetX = hx + 32;
+            const targetY = hy + 60 - (265 * avatarScale);
+            this.tileMap.avatarRenderer.render(
+              ctx,
+              targetX,
+              targetY,
+              'south',
+              'idle',
+              performance.now() / 1000,
+              avatarConfig,
+              avatarScale
+            );
+          }
+        } else {
+          let img = null;
+          if (meta.isAnimated && meta.frames) {
+            img = this.assetLoader.getImage(meta.frames[0]);
+          } else if (meta.src) {
+            img = this.assetLoader.getImage(meta.src);
+          }
 
-        if (img) {
-          const isFlipped = !!this.activeFlipX;
-          if (rot !== 0 || isFlipped) {
-            ctx.save();
-            ctx.translate(hx + occW / 2, hy + occH / 2);
-            if (rot !== 0) {
-              ctx.rotate((rot * Math.PI) / 180);
+          if (img) {
+            const isFlipped = !!this.activeFlipX;
+            if (rot !== 0 || isFlipped) {
+              ctx.save();
+              ctx.translate(hx + occW / 2, hy + occH / 2);
+              if (rot !== 0) {
+                ctx.rotate((rot * Math.PI) / 180);
+              }
+              if (isFlipped) {
+                ctx.scale(-1, 1);
+              }
+              ctx.drawImage(img, -rawW / 2, -rawH / 2, rawW, rawH);
+              ctx.restore();
+            } else {
+              ctx.drawImage(img, hx, hy, rawW, rawH);
             }
-            if (isFlipped) {
-              ctx.scale(-1, 1);
-            }
-            ctx.drawImage(img, -rawW / 2, -rawH / 2, rawW, rawH);
-            ctx.restore();
-          } else {
-            ctx.drawImage(img, hx, hy, rawW, rawH);
           }
         }
         ctx.globalAlpha = 1.0;

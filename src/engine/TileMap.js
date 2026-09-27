@@ -649,7 +649,7 @@ export class TileMap {
       const badgeW = Math.max(38, textMetrics.width + 12);
       const badgeH = 17;
       const badgeX = destX + 32 - badgeW / 2;
-      const badgeY = destY - 8;
+      const badgeY = destY - 28;
 
       // Badge shadow 3D
       ctx.fillStyle = '#d97706';
@@ -689,7 +689,7 @@ export class TileMap {
       const npcData = getNPCData(cell.tileId);
       const avatarConfig = npcData?.avatarConfig;
       if (avatarConfig && this.avatarRenderer) {
-        const avatarScale = 0.22;
+        const avatarScale = 0.33;
         const targetX = destX + 32;
         const targetY = destY + 60 - (265 * avatarScale);
         const animTime = performance.now() / 1000;
@@ -706,7 +706,7 @@ export class TileMap {
           avatarScale
         );
 
-        // Overhead NPC Name Badge (Animal Island UI 3D Pill)
+        // Overhead NPC Name Badge (Animal Island UI 3D Pill - Posicionada acima da cabeça 1.5x)
         ctx.save();
         const nameText = npcData.name || 'NPC';
         ctx.font = 'bold 10px "Nunito", sans-serif';
@@ -714,7 +714,7 @@ export class TileMap {
         const badgeW = Math.max(42, textMetrics.width + 14);
         const badgeH = 17;
         const badgeX = destX + 32 - badgeW / 2;
-        const badgeY = destY - 8;
+        const badgeY = destY - 38;
 
         // Badge shadow 3D
         ctx.fillStyle = '#7a583e';

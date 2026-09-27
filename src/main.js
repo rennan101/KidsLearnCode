@@ -1595,7 +1595,12 @@ class RPGApplication {
         previewBox.className = 'tile-preview-box';
 
         const img = document.createElement('img');
-        img.src = tile.isAnimated && tile.frames ? tile.frames[0] : tile.src;
+        const isNpcTile = tile.id.startsWith('npc_') || (tile.isCharacter && tile.characterType === 'npc');
+        if (isNpcTile) {
+          img.src = this.getNpcPortrait(tile.id);
+        } else {
+          img.src = tile.isAnimated && tile.frames ? tile.frames[0] : tile.src;
+        }
         img.alt = tile.name;
         previewBox.appendChild(img);
 
