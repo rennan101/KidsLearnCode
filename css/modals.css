@@ -948,15 +948,16 @@
   background: linear-gradient(135deg, #19c8b9, #0f8e83);
   border: 2px solid #0b6961;
   color: #ffffff;
-  padding: 6px 14px;
+  padding: 6px 10px;
   border-radius: var(--animal-radius-pill, 50px);
   font-family: var(--animal-font, 'Nunito', sans-serif);
   font-weight: 800;
   font-size: 0.82rem;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 0;
   transition: all 0.15s ease;
   box-shadow: 0 3px 0 0 #0b6961;
 }
