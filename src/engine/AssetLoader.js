@@ -33,6 +33,11 @@ export function generateWindWakerSVG() {
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
 
+export function generateMagmaSVG() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><rect width="64" height="64" fill="#18181b"/><path d="M 0 24 Q 20 12, 38 34 T 64 28" stroke="#991b1b" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M 0 24 Q 20 12, 38 34 T 64 28" stroke="#ea580c" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M 0 24 Q 20 12, 38 34 T 64 28" stroke="#fef08a" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M 12 0 Q 32 30, 48 64" stroke="#991b1b" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M 12 0 Q 32 30, 48 64" stroke="#ea580c" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M 12 0 Q 32 30, 48 64" stroke="#fef08a" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="16" cy="48" rx="10" ry="8" fill="#292524" stroke="#1c1917" stroke-width="1.5"/><ellipse cx="50" cy="14" rx="9" ry="7" fill="#292524" stroke="#1c1917" stroke-width="1.5"/><ellipse cx="52" cy="50" rx="8" ry="6" fill="#292524" stroke="#1c1917" stroke-width="1.5"/><circle cx="38" cy="34" r="2.5" fill="#ffffff"/><circle cx="20" cy="22" r="1.5" fill="#fef08a"/></svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
 // Asset manifest and loader for Geralt and complete RPG Tileset with all 170+ assets
 export class AssetLoader {
   constructor() {
@@ -41,6 +46,24 @@ export class AssetLoader {
 
     // Overworld individual tile assets with footprint dimensions and custom collider boxes
     this.overworldTiles = [
+      {
+            "id": "magma-animated",
+            "name": "Magma MinionsArt (Estilizado & Animado)",
+            "category": "Terrenos",
+            "layer": "ground",
+            "isMagma": true,
+            "isAnimated": true,
+            "src": generateMagmaSVG(),
+            "gridW": 1,
+            "gridH": 1,
+            "collider": {
+                  "enabled": true,
+                  "x": 0,
+                  "y": 0,
+                  "w": 64,
+                  "h": 64
+            }
+      },
       {
             "id": "water-wind-waker",
             "name": "Água Zelda Wind Waker (Cel-Shaded)",

@@ -557,8 +557,8 @@ export class EditorController {
     if (this.activeTool === 'brush') {
       const meta = this.assetLoader.getTileMetadata(this.selectedTileId);
       if (meta) {
-        const isWater = meta.layer === 'ground' || meta.id === 'water-wind-waker' || meta.id === 'water-animated' || meta.category === 'Water';
-        const targetLayer = (meta.isInvisibleAsset || meta.layer === 'colliders') ? 'colliders' : (isWater ? 'ground' : (meta.layer || this.activeLayer || 'decor'));
+        const isFluidGround = meta.layer === 'ground' || meta.id === 'water-wind-waker' || meta.id === 'water-animated' || meta.id === 'magma-animated' || meta.isMagma || meta.category === 'Water' || meta.category === 'Terrenos';
+        const targetLayer = (meta.isInvisibleAsset || meta.layer === 'colliders') ? 'colliders' : (isFluidGround ? 'ground' : (meta.layer || this.activeLayer || 'decor'));
         const isDragon = meta.isDragon || (this.selectedTileId && this.selectedTileId.startsWith('dragon_'));
         const extraProps = isDragon ? { level: Math.max(1, Math.min(100, parseInt(this.dragonPlacementLevel, 10) || 1)) } : null;
 
@@ -572,8 +572,8 @@ export class EditorController {
     } else if (this.activeTool === 'fill') {
       if (this.selectedTileId === 'character-geralt') return;
       const meta = this.assetLoader.getTileMetadata(this.selectedTileId);
-      const isWater = meta?.layer === 'ground' || meta?.id === 'water-wind-waker' || meta?.id === 'water-animated' || meta?.category === 'Water';
-      const targetLayer = (meta?.isInvisibleAsset || meta?.layer === 'colliders') ? 'colliders' : (isWater ? 'ground' : (meta?.layer || this.activeLayer || 'decor'));
+      const isFluidGround = meta?.layer === 'ground' || meta?.id === 'water-wind-waker' || meta?.id === 'water-animated' || meta?.id === 'magma-animated' || meta?.isMagma || meta?.category === 'Water' || meta?.category === 'Terrenos';
+      const targetLayer = (meta?.isInvisibleAsset || meta?.layer === 'colliders') ? 'colliders' : (isFluidGround ? 'ground' : (meta?.layer || this.activeLayer || 'decor'));
       this.floodFill(tileX, tileY, targetLayer, this.selectedTileId);
       this.onMapChange();
     } else if (this.activeTool === 'select') {
@@ -942,6 +942,8 @@ export class EditorController {
           }
         } else if (meta.id === 'water-wind-waker' && this.tileMap.waterWaveRenderer) {
           this.tileMap.waterWaveRenderer.renderPreview(ctx, hx, hy, tileSize, performance.now());
+        } else if ((meta.id === 'magma-animated' || meta.isMagma) && this.tileMap.magmaRenderer) {
+          this.tileMap.magmaRenderer.renderPreview(ctx, hx, hy, tileSize, performance.now());
         } else {
           let img = null;
           if (meta.isAnimated && meta.frames) {

@@ -378,6 +378,16 @@ export class Player {
             }
           }
 
+          // Se montado em dragão de fogo, voador ou mítico, ignora colisão sobre magma
+          const isFireDragon = isMounted && (activeDragon.element === 'Fogo' || activeDragon.element === 'fire' || activeDragon.category === 'mythic' || activeDragon.id?.includes('fire') || activeDragon.id?.includes('pyro') || activeDragon.id?.includes('ignis'));
+          if (isFireDragon || isMountedFly) {
+            const isMagmaTile = cell.tileId === 'magma-animated' || cell.tileId === 'magma-stylized' || (cell.tileId && cell.tileId.includes('magma'));
+            const isCellOnMagma = tileMap.isMagmaAt(tx * tileSize + 32, ty * tileSize + 32, assetLoader);
+            if (isMagmaTile || isCellOnMagma) {
+              continue; // Dragão de fogo ou voador atravessa magma livremente
+            }
+          }
+
           const isInvisibleCollider = (cell.tileId && cell.tileId.startsWith('invisible-collider')) || (cell.tileId && cell.tileId.includes('invisible'));
           if (cell.isRoot === false && !isInvisibleCollider) continue;
 

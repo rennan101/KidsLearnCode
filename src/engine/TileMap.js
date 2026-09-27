@@ -5,6 +5,9 @@ import { WaterWaveRenderer } from './WaterWaveRenderer.js';
 import { WebGLWaterShader } from './WebGLWaterShader.js';
 import { ShorelineFoamRenderer } from './ShorelineFoamRenderer.js';
 import { WaterReflectionRenderer } from './WaterReflectionRenderer.js';
+import { MagmaRenderer } from './MagmaRenderer.js';
+import { WebGLMagmaShader } from './WebGLMagmaShader.js';
+import { MagmaParticleEmitter } from './MagmaParticleEmitter.js';
 
 export const TILE_SIZE = 64;
 
@@ -16,7 +19,11 @@ export class TileMap {
     this.webGLWaterShader = new WebGLWaterShader();
     this.shorelineFoamRenderer = new ShorelineFoamRenderer();
     this.waterReflectionRenderer = new WaterReflectionRenderer();
+    this.magmaRenderer = new MagmaRenderer();
+    this.webGLMagmaShader = new WebGLMagmaShader();
+    this.magmaParticleEmitter = new MagmaParticleEmitter();
     this.waterWaveTime = 0;
+    this.lastRenderTime = performance.now();
 
     // Layers stored as sparse Maps keyed by `${x},${y}`:
     // 0: ground (Base water, ocean void)
@@ -113,7 +120,7 @@ export class TileMap {
 
   setTile(layerName, x, y, tileId, isRoot = true, rootX = x, rootY = y, rotation = 0, flipX = false, collider = null, depthOffset = null, extraProps = null) {
     let actualLayerName = layerName;
-    if (tileId === 'water-wind-waker' || tileId === 'water-animated') {
+    if (tileId === 'water-wind-waker' || tileId === 'water-animated' || tileId === 'magma-animated' || tileId === 'magma-stylized') {
       actualLayerName = 'ground';
       if (layerName !== 'ground' && this.layers[layerName]) {
         this.layers[layerName].delete(this.getKey(x, y));
@@ -317,6 +324,38 @@ export class TileMap {
       if (assetLoader) {
         const meta = assetLoader.getTileMetadata(groundCell.tileId);
         if (meta && (meta.category === 'Water' || meta.isWater)) return true;
+      }
+    }
+
+    return false;
+  }
+
+  // Check if world coordinate is over magma/lava (for fire dragons, heat damage, embers, and physics)
+  isMagmaAt(worldX, worldY, assetLoader = null) {
+    const tx = Math.floor(worldX / this.tileSize);
+    const ty = Math.floor(worldY / this.tileSize);
+    const key = this.getKey(tx, ty);
+
+    // Check if covered by bridges or solid structures
+    const upperLayers = ['solid', 'decor', 'top', 'overhead'];
+    for (const layerName of upperLayers) {
+      const cell = this.layers[layerName]?.get(key);
+      if (cell && cell.tileId) {
+        const id = cell.tileId.toLowerCase();
+        const isMagmaTile = id === 'magma-animated' || id === 'magma-stylized' || id.includes('magma') || id.includes('lava');
+        if (!isMagmaTile) return false;
+      }
+    }
+
+    const groundCell = this.layers.ground?.get(key);
+    if (groundCell && groundCell.tileId) {
+      const id = groundCell.tileId.toLowerCase();
+      if (id === 'magma-animated' || id === 'magma-stylized' || id.includes('magma') || id.includes('lava')) {
+        return true;
+      }
+      if (assetLoader) {
+        const meta = assetLoader.getTileMetadata(groundCell.tileId);
+        if (meta && (meta.isMagma || meta.category === 'Magma' || meta.category === 'Lava')) return true;
       }
     }
 
@@ -1052,6 +1091,15 @@ export class TileMap {
         if (img) ctx.drawImage(img, destX, destY, rawW, rawH);
       }
       return;
+    } else if (tileMeta.isMagma || cell.tileId === 'magma-animated' || cell.tileId === 'magma-stylized') {
+      // MinionsArt Stylized Magma Tile
+      if (this.magmaRenderer) {
+        this.magmaRenderer.renderPreview(ctx, destX, destY, this.tileSize, this.waterWaveTime || performance.now());
+      } else if (tileMeta.src) {
+        const img = assetLoader.getImage(tileMeta.src);
+        if (img) ctx.drawImage(img, destX, destY, rawW, rawH);
+      }
+      return;
     } else {
       let img = null;
       if (tileMeta.isAnimated && tileMeta.frames) {
@@ -1207,6 +1255,7 @@ export class TileMap {
       }
 
       const proceduralWaveCells = [];
+      const magmaCells = [];
       const regularGroundCells = [];
 
       for (let y = startRow; y <= endRow; y++) {
@@ -1215,6 +1264,8 @@ export class TileMap {
           if (!cell || cell.isRoot === false) continue;
           if (cell.tileId === 'water-wind-waker') {
             proceduralWaveCells.push({ x: x * this.tileSize, y: y * this.tileSize, tileSize: this.tileSize, cell, tx: x, ty: y });
+          } else if (cell.tileId === 'magma-animated' || cell.tileId === 'magma-stylized') {
+            magmaCells.push({ x: x * this.tileSize, y: y * this.tileSize, tileSize: this.tileSize, cell, tx: x, ty: y });
           } else {
             regularGroundCells.push({ x, y, cell });
           }
@@ -1274,6 +1325,64 @@ export class TileMap {
         }
       }
 
+      // MinionsArt Stylized Magma Batch Rendering
+      if (magmaCells.length > 0) {
+        let renderedMagmaWithWebGL = false;
+        const magmaConfig = this.magmaRenderer ? this.magmaRenderer.getConfig() : {};
+        const nowMs = this.waterWaveTime || performance.now();
+        const dt = Math.min(0.1, (nowMs - (this.lastRenderTime || nowMs)) / 1000);
+        this.lastRenderTime = nowMs;
+
+        if (this.webGLMagmaShader && this.webGLMagmaShader.isSupported) {
+          const timeSec = nowMs / 1000;
+          const shaderCanvas = this.webGLMagmaShader.render(camW, camH, camX, camY, camZ, timeSec, magmaConfig);
+
+          if (shaderCanvas) {
+            ctx.save();
+            ctx.beginPath();
+            for (let i = 0; i < magmaCells.length; i++) {
+              const m = magmaCells[i];
+              ctx.rect(m.x, m.y, m.tileSize + 0.5, m.tileSize + 0.5);
+            }
+            ctx.clip();
+            ctx.drawImage(shaderCanvas, camX, camY, camW / camZ, camH / camZ);
+            ctx.restore();
+            renderedMagmaWithWebGL = true;
+          }
+        }
+
+        if (!renderedMagmaWithWebGL && this.magmaRenderer) {
+          this.magmaRenderer.renderBatch(ctx, magmaCells, nowMs);
+        }
+
+        // Contact burning edge against non-magma terrain
+        ctx.save();
+        ctx.strokeStyle = 'rgba(234, 88, 12, 0.75)';
+        ctx.lineWidth = 3.0;
+        ctx.shadowColor = '#ea580c';
+        ctx.shadowBlur = 8;
+        for (let i = 0; i < magmaCells.length; i++) {
+          const m = magmaCells[i];
+          const tx = m.tx;
+          const ty = m.ty;
+          const isNonMagma = (nx, ny) => {
+            const ncell = layer.get(this.getKey(nx, ny));
+            return !ncell || (ncell.tileId !== 'magma-animated' && ncell.tileId !== 'magma-stylized');
+          };
+          if (isNonMagma(tx, ty - 1)) { ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x + m.tileSize, m.y); ctx.stroke(); }
+          if (isNonMagma(tx, ty + 1)) { ctx.beginPath(); ctx.moveTo(m.x, m.y + m.tileSize); ctx.lineTo(m.x + m.tileSize, m.y + m.tileSize); ctx.stroke(); }
+          if (isNonMagma(tx - 1, ty)) { ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x, m.y + m.tileSize); ctx.stroke(); }
+          if (isNonMagma(tx + 1, ty)) { ctx.beginPath(); ctx.moveTo(m.x + m.tileSize, m.y); ctx.lineTo(m.x + m.tileSize, m.y + m.tileSize); ctx.stroke(); }
+        }
+        ctx.restore();
+
+        // Update and render Ember Sparks & Bubbles
+        if (this.magmaParticleEmitter) {
+          this.magmaParticleEmitter.update(dt || 0.016, magmaCells, camera);
+          this.magmaParticleEmitter.render(ctx);
+        }
+      }
+
       for (let i = 0; i < regularGroundCells.length; i++) {
         const item = regularGroundCells[i];
         this.drawTileCell(ctx, item.cell, item.x, item.y, assetLoader, isEditor, showColliders);
@@ -1329,6 +1438,7 @@ export class TileMap {
       playCameraZoom: this.playCameraZoom || 1.0,
       layerOrder: this.layerOrder,
       waterConfig: this.waterWaveRenderer ? this.waterWaveRenderer.getConfig() : null,
+      magmaConfig: this.magmaRenderer ? this.magmaRenderer.getConfig() : null,
       layers: {
         ground: serializeLayer(this.layers.ground),
         decor: serializeLayer(this.layers.decor),
@@ -1357,6 +1467,9 @@ export class TileMap {
     }
     if (data.waterConfig && this.waterWaveRenderer) {
       this.waterWaveRenderer.setConfig(data.waterConfig);
+    }
+    if (data.magmaConfig && this.magmaRenderer) {
+      this.magmaRenderer.setConfig(data.magmaConfig);
     }
 
     const deserializeLayer = (source) => {

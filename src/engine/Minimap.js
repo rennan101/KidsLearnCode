@@ -28,6 +28,8 @@ export class Minimap {
 
     // Default base fallback palette
     this.tileColorMap = {
+      'magma-animated': '#ea580c',
+      'magma-stylized': '#ea580c',
       'water-wind-waker': '#0284c7',
       'water-animated': '#2563eb',
       'grass': '#5d9948',
