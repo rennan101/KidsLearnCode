@@ -1,5 +1,6 @@
-// Hardware-Accelerated WebGL/GLSL Shader for Stylized Animated Magma (MinionsArt Shader Logic)
-// Implements dual-noise domain warping, Voronoi basalt rock crusts, incandescent cracks, and heat emission.
+// Hardware-Accelerated WebGL/GLSL Shader for MinionsArt Stylized Lava
+// Uses dual-layer procedural Voronoi caustic lines with harmonic wave distortion,
+// converted into incandescent glowing magma cracks on dark basalt rock crust.
 
 function hexToRgbVec(hex) {
   if (!hex) return [0.9, 0.2, 0.05];
@@ -15,8 +16,8 @@ export const MAGMA_PALETTES = {
   'classic-magma': {
     id: 'classic-magma',
     name: 'Magma Primordial (MinionsArt)',
-    crustDark: '#18181b',      // Deep basalt obsidian
-    crustLight: '#292524',     // Volcanic rock surface
+    crustDark: '#121010',      // Deep basalt obsidian
+    crustLight: '#262220',     // Volcanic rock surface
     coolingCrimson: '#991b1b', // Solidifying fracture rim
     lavaOrange: '#ea580c',     // Molten lava stream
     lavaGold: '#f59e0b',       // High temperature flow
@@ -80,10 +81,9 @@ const FRAGMENT_SHADER_SRC = `
   // MinionsArt Magma Parameters
   uniform float u_flowSpeed;
   uniform float u_crustScale;
-  uniform float u_warpStrength;
   uniform float u_heatIntensity;
 
-  // Magma Thermal Colors
+  // Thermal Color Palette
   uniform vec3 u_crustDark;
   uniform vec3 u_crustLight;
   uniform vec3 u_coolingCrimson;
@@ -92,166 +92,149 @@ const FRAGMENT_SHADER_SRC = `
   uniform vec3 u_coreHot;
   uniform vec3 u_highlight;
 
-  // 2D Simplex Noise for Domain Warping & Heat Currents
-  vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-  vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-  vec3 permute(vec3 x) { return mod289(((x * 34.0) + 1.0) * x); }
+  const float TWOPI = 6.283185307;
+  const float SIXPI = 18.84955592;
 
-  float snoise(vec2 v) {
-    const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
-    vec2 i  = floor(v + dot(v, C.yy));
-    vec2 x0 = v - i + dot(i, C.xx);
-    vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-    vec4 x12 = x0.xyxy + C.xxzz;
-    x12.xy -= i1;
-    i = mod289(i);
-    vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));
-    vec3 m = max(0.5 - vec3(dot(x0, x0), dot(x12.xy, x12.xy), dot(x12.zw, x12.zw)), 0.0);
-    m = m * m;
-    m = m * m;
-    vec3 x = 2.0 * fract(p * C.www) - 1.0;
-    vec3 h = abs(x) - 0.5;
-    vec3 ox = floor(x + 0.5);
-    vec3 a0 = x - ox;
-    m *= 1.79284291400159 - 0.85373472095314 * (a0 * a0 + h * h);
-    vec3 g;
-    g.x  = a0.x  * x0.x  + h.x  * x0.y;
-    g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-    return 130.0 * dot(m, g);
+  // Optimized Voronoi Circle Distance Function
+  float circ(vec2 pos, vec2 c, float s) {
+    c = abs(pos - c);
+    c = min(c, 1.0 - c);
+    float d2 = dot(c, c);
+    return (d2 < s) ? smoothstep(s, s * 0.94, d2) * -1.0 : 0.0;
   }
 
-  // Fast Pseudo-Random Hash for Voronoi Seeds
-  vec2 hash2(vec2 p) {
-    p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
-    return fract(sin(p) * 43758.5453);
-  }
-
-  // Voronoi Cellular Distance with Edge Separation for Basalt Crust Fractures
-  vec3 voronoi(vec2 x) {
-    vec2 n = floor(x);
-    vec2 f = fract(x);
-    vec2 mg, mr;
-    float md = 8.0;
-
-    for (int j = -1; j <= 1; j++) {
-      for (int i = -1; i <= 1; i++) {
-        vec2 g = vec2(float(i), float(j));
-        vec2 o = hash2(n + g);
-        // Subtle drift animation for crust plates
-        o = 0.5 + 0.35 * sin(u_time * 0.4 + 6.2831 * o);
-        vec2 r = g + o - f;
-        float d = dot(r, r);
-        if (d < md) {
-          md = d;
-          mr = r;
-          mg = g;
-        }
-      }
-    }
-
-    // Border crack distance evaluation (F2 - F1 approximation)
-    float md2 = 8.0;
-    for (int j = -1; j <= 1; j++) {
-      for (int i = -1; i <= 1; i++) {
-        vec2 g = vec2(float(i), float(j));
-        vec2 o = hash2(n + g);
-        o = 0.5 + 0.35 * sin(u_time * 0.4 + 6.2831 * o);
-        vec2 r = g + o - f;
-        if (dot(mr - r, mr - r) > 0.00001) {
-          md2 = min(md2, dot(0.5 * (mr + r), normalize(r - mr)));
-        }
-      }
-    }
-    return vec3(sqrt(md), md2, hash2(n + mg).x);
+  // Procedural Caustic / Cellular Network Layer
+  float lavalayer(vec2 uv) {
+    uv = mod(uv, 1.0);
+    float ret = 1.0;
+    ret += circ(uv, vec2(0.37378, 0.277169), 0.0268181);
+    ret += circ(uv, vec2(0.0317477, 0.540372), 0.0193742);
+    ret += circ(uv, vec2(0.430044, 0.882218), 0.0232337);
+    ret += circ(uv, vec2(0.641033, 0.695106), 0.0117864);
+    ret += circ(uv, vec2(0.0146398, 0.0791346), 0.0299458);
+    ret += circ(uv, vec2(0.43871, 0.394445), 0.0289087);
+    ret += circ(uv, vec2(0.909446, 0.878141), 0.028466);
+    ret += circ(uv, vec2(0.310149, 0.686637), 0.0128496);
+    ret += circ(uv, vec2(0.928617, 0.195986), 0.0152041);
+    ret += circ(uv, vec2(0.0438506, 0.868153), 0.0268601);
+    ret += circ(uv, vec2(0.308619, 0.194937), 0.00806102);
+    ret += circ(uv, vec2(0.349922, 0.449714), 0.00928667);
+    ret += circ(uv, vec2(0.0449556, 0.953415), 0.023126);
+    ret += circ(uv, vec2(0.117761, 0.503309), 0.0151272);
+    ret += circ(uv, vec2(0.563517, 0.244991), 0.0292322);
+    ret += circ(uv, vec2(0.566936, 0.954457), 0.00981141);
+    ret += circ(uv, vec2(0.0489944, 0.200931), 0.0178746);
+    ret += circ(uv, vec2(0.569297, 0.624893), 0.0132408);
+    ret += circ(uv, vec2(0.298347, 0.710972), 0.0114426);
+    ret += circ(uv, vec2(0.878141, 0.771279), 0.00322719);
+    ret += circ(uv, vec2(0.150995, 0.376221), 0.00216157);
+    ret += circ(uv, vec2(0.119673, 0.541984), 0.0124621);
+    ret += circ(uv, vec2(0.629598, 0.295629), 0.0198736);
+    ret += circ(uv, vec2(0.334357, 0.266278), 0.0187145);
+    ret += circ(uv, vec2(0.918044, 0.968163), 0.0182928);
+    ret += circ(uv, vec2(0.965445, 0.505026), 0.006348);
+    ret += circ(uv, vec2(0.514847, 0.865444), 0.00623523);
+    ret += circ(uv, vec2(0.710575, 0.0415131), 0.00322689);
+    ret += circ(uv, vec2(0.71403, 0.576945), 0.0215641);
+    ret += circ(uv, vec2(0.748873, 0.413325), 0.0110795);
+    ret += circ(uv, vec2(0.0623365, 0.896713), 0.0236203);
+    ret += circ(uv, vec2(0.980482, 0.473849), 0.00573439);
+    ret += circ(uv, vec2(0.647463, 0.654349), 0.0188713);
+    ret += circ(uv, vec2(0.651406, 0.981297), 0.00710875);
+    ret += circ(uv, vec2(0.428928, 0.382426), 0.0298806);
+    ret += circ(uv, vec2(0.811545, 0.62568), 0.00265539);
+    ret += circ(uv, vec2(0.400787, 0.74162), 0.00486609);
+    ret += circ(uv, vec2(0.331283, 0.418536), 0.00598028);
+    ret += circ(uv, vec2(0.894762, 0.0657997), 0.00760375);
+    ret += circ(uv, vec2(0.525104, 0.572233), 0.0141796);
+    ret += circ(uv, vec2(0.431526, 0.911372), 0.0213234);
+    ret += circ(uv, vec2(0.658212, 0.910553), 0.000741023);
+    ret += circ(uv, vec2(0.514523, 0.243263), 0.0270685);
+    ret += circ(uv, vec2(0.0249494, 0.252872), 0.00876653);
+    ret += circ(uv, vec2(0.502214, 0.47269), 0.0234534);
+    ret += circ(uv, vec2(0.693271, 0.431469), 0.0246533);
+    ret += circ(uv, vec2(0.415, 0.884418), 0.0271696);
+    ret += circ(uv, vec2(0.149073, 0.41204), 0.00497198);
+    ret += circ(uv, vec2(0.533816, 0.897634), 0.00650833);
+    ret += circ(uv, vec2(0.0409132, 0.83406), 0.0191398);
+    ret += circ(uv, vec2(0.638585, 0.646019), 0.0206129);
+    ret += circ(uv, vec2(0.660342, 0.966541), 0.0053511);
+    ret += circ(uv, vec2(0.513783, 0.142233), 0.00471653);
+    return max(ret, 0.0);
   }
 
   void main() {
     // 1. World Coordinate Mapping
-    vec2 screenPixel = vec2(v_uv.x * u_viewportSize.x, (1.0 - v_uv.y) * u_viewportSize.y);
-    vec2 worldPos = u_camera + (screenPixel / u_zoom);
+    vec2 worldOffset = vec2(v_uv.x * u_viewportSize.x, (1.0 - v_uv.y) * u_viewportSize.y) / u_zoom;
+    vec2 worldPos = u_camera + worldOffset;
 
-    // 2. Dual-Noise Domain Warping (MinionsArt Flow Layer)
-    float time = u_time * u_flowSpeed;
-    vec2 baseUV = worldPos * 0.004;
+    // 2. Fluid Time & Scale Calculation (MinionsArt Dual Panning & Distortion)
+    float iTime = u_time * u_flowSpeed;
+    vec2 wuv = worldPos * (0.0035 * u_crustScale);
 
-    // Panning directions for flow
-    vec2 flowDir1 = vec2(time * 0.025, time * 0.015);
-    vec2 flowDir2 = vec2(-time * 0.018, time * 0.030);
+    // Parallax Height Distortion
+    float h1 = sin(wuv.x + iTime * 0.7);
+    float h2 = sin(0.841471 * wuv.x - 0.540302 * wuv.y + iTime * 0.7);
+    wuv += vec2(h1, h2) * 0.022;
 
-    // Two perturbation layers for warping
-    float noise1 = snoise(baseUV * 2.2 + flowDir1);
-    float noise2 = snoise(baseUV * 3.4 + flowDir2);
-    vec2 warp = vec2(noise1, noise2) * u_warpStrength;
+    // Dual-Layer Harmonic Texture Distortion
+    float d1 = mod(wuv.x + wuv.y, TWOPI) + iTime * 0.12;
+    float d2 = mod((wuv.x + wuv.y + 0.25) * 1.3, SIXPI) + iTime * 0.50;
+    vec2 dist = vec2(
+      sin(d1) * 0.16 + sin(d2) * 0.05,
+      cos(d1) * 0.16 + cos(d2) * 0.05
+    );
 
-    // Final Warped Coordinates for Crust & Crack Generation
-    vec2 warpedUV = baseUV + warp;
+    // 3. Dual Cellular Voronoi Caustic Layers
+    float layer1 = lavalayer(wuv + dist.xy);
+    float layer2 = lavalayer(vec2(1.0) - wuv - dist.yx);
 
-    // 3. Voronoi Basalt Plate Calculation
-    vec3 v = voronoi(warpedUV * u_crustScale);
-    float cellDist = v.x;  // Distance to cell center
-    float edgeDist = v.y;  // Distance to crack boundary
-    float cellSeed = v.z;  // Unique cell random ID
+    // 4. Basalt Rock vs Molten Lava Veins Composition
+    // layer1 forms the dark rock plates (when close to 0) and the primary magma network (when > 0)
+    // layer2 acts as the intersecting fissure and high-heat core
+    vec3 col = mix(u_crustDark, u_crustLight, layer1);
 
-    // 4. Macro Thermal Currents & Hotspots
-    float macroHeat = (snoise(warpedUV * 0.9 + vec2(time * 0.02, time * 0.01)) + 1.0) * 0.5;
-    float microPulse = sin(time * 2.5 + cellSeed * 6.28 + edgeDist * 12.0) * 0.18 + 0.82;
+    // Incandescent Fracture Lines & Ramping
+    float veinValue = max(layer1, layer2);
+    float coreVein = layer1 * layer2;
 
-    // 5. Stylized Stepping & Thermal Color Gradient (MinionsArt Multi-Ramp)
-    // Edge threshold determines how wide the incandescent cracks open
-    float crackOpening = 0.12 + (macroHeat * 0.08);
-    float crackIntensity = smoothstep(0.0, crackOpening, edgeDist);
-
-    // Basalt Crust Texture variation
-    float crustGrain = snoise(worldPos * 0.04) * 0.1;
-    vec3 crustColor = mix(u_crustDark, u_crustLight, clamp(cellDist * 1.2 + crustGrain, 0.0, 1.0));
-
-    // Active Magma Color in Cracks
-    float heatValue = (1.0 - crackIntensity) * u_heatIntensity * microPulse;
-    
-    vec3 lavaColor;
-    if (heatValue < 0.25) {
-      // Solidifying cooling crimson edge
-      float t = smoothstep(0.0, 0.25, heatValue);
-      lavaColor = mix(u_coolingCrimson, u_lavaOrange, t);
-    } else if (heatValue < 0.65) {
-      // Flowing bright orange magma
-      float t = smoothstep(0.25, 0.65, heatValue);
-      lavaColor = mix(u_lavaOrange, u_lavaGold, t);
-    } else if (heatValue < 0.90) {
-      // High heat yellow core
-      float t = smoothstep(0.65, 0.90, heatValue);
-      lavaColor = mix(u_lavaGold, u_coreHot, t);
-    } else {
-      // Incandescent white-hot peak
-      float t = smoothstep(0.90, 1.25, heatValue);
-      lavaColor = mix(u_coreHot, u_highlight, t);
+    // Step 1: Cooling Crimson Rim around basalt plates
+    if (veinValue > 0.05) {
+      float t = smoothstep(0.05, 0.35, veinValue);
+      col = mix(col, u_coolingCrimson, t);
     }
 
-    // Blend Basalt Plates with Incandescent Magma Fractures
-    vec3 finalColor;
-    if (crackIntensity > 0.92) {
-      finalColor = crustColor;
-    } else if (crackIntensity > 0.70) {
-      float t = smoothstep(0.70, 0.92, crackIntensity);
-      finalColor = mix(u_coolingCrimson, crustColor, t);
-    } else {
-      finalColor = lavaColor;
+    // Step 2: Flowing Molten Orange Magma
+    if (veinValue > 0.30) {
+      float t = smoothstep(0.30, 0.70, veinValue);
+      col = mix(col, u_lavaOrange, t);
     }
 
-    // Hot bubbling spots in high thermal regions
-    if (macroHeat > 0.72 && edgeDist < 0.15) {
-      float bubblePulse = sin(time * 4.5 + cellSeed * 20.0);
-      if (bubblePulse > 0.6) {
-        float bubbleIntensity = smoothstep(0.6, 1.0, bubblePulse);
-        finalColor = mix(finalColor, u_coreHot, bubbleIntensity * 0.75);
-      }
+    // Step 3: Bright Golden Flow & Heat Intensity
+    if (veinValue > 0.65) {
+      float t = smoothstep(0.65, 0.95, veinValue);
+      col = mix(col, u_lavaGold, t);
     }
 
-    // Emissive Bloom / Warmth Ambient Boost
-    vec3 emissiveGlow = u_lavaOrange * (1.0 - crackIntensity) * 0.22 * microPulse;
-    finalColor += emissiveGlow;
+    // Step 4: High-Temperature Core Line (from dual layer intersection)
+    if (coreVein > 0.18 || layer2 > 0.82) {
+      float t = smoothstep(0.18, 0.65, coreVein);
+      col = mix(col, u_coreHot, t * u_heatIntensity);
+    }
 
-    gl_FragColor = vec4(finalColor, 1.0);
+    // Step 5: White-Hot Glowing Peak Highlights with subtle thermal pulsation
+    float pulse = sin(iTime * 3.5 + (wuv.x + wuv.y) * 4.0) * 0.12 + 0.88;
+    if (coreVein > 0.55) {
+      float t = smoothstep(0.55, 0.90, coreVein);
+      col = mix(col, u_highlight, t * pulse);
+    }
+
+    // Stepped cel-shaded outline on the crack borders (MinionsArt signature look)
+    if (veinValue > 0.88) {
+      col = mix(col, u_coreHot, 0.4);
+    }
+
+    gl_FragColor = vec4(col, 1.0);
   }
 `;
 
@@ -325,7 +308,6 @@ export class WebGLMagmaShader {
       time: gl.getUniformLocation(prog, 'u_time'),
       flowSpeed: gl.getUniformLocation(prog, 'u_flowSpeed'),
       crustScale: gl.getUniformLocation(prog, 'u_crustScale'),
-      warpStrength: gl.getUniformLocation(prog, 'u_warpStrength'),
       heatIntensity: gl.getUniformLocation(prog, 'u_heatIntensity'),
       crustDark: gl.getUniformLocation(prog, 'u_crustDark'),
       crustLight: gl.getUniformLocation(prog, 'u_crustLight'),
@@ -376,10 +358,9 @@ export class WebGLMagmaShader {
     gl.uniform1f(this.locations.time, timeSec || 0.0);
 
     // MinionsArt Flow Parameters
-    gl.uniform1f(this.locations.flowSpeed, config.flowSpeed !== undefined ? config.flowSpeed : 1.2);
-    gl.uniform1f(this.locations.crustScale, config.crustScale !== undefined ? config.crustScale : 3.8);
-    gl.uniform1f(this.locations.warpStrength, config.warpStrength !== undefined ? config.warpStrength : 0.35);
-    gl.uniform1f(this.locations.heatIntensity, config.heatIntensity !== undefined ? config.heatIntensity : 1.15);
+    gl.uniform1f(this.locations.flowSpeed, config.flowSpeed !== undefined ? config.flowSpeed : 1.0);
+    gl.uniform1f(this.locations.crustScale, config.crustScale !== undefined ? config.crustScale : 1.0);
+    gl.uniform1f(this.locations.heatIntensity, config.heatIntensity !== undefined ? config.heatIntensity : 1.2);
 
     // Thermal Color Ramp Uniforms
     gl.uniform3fv(this.locations.crustDark, hexToRgbVec(pal.crustDark));

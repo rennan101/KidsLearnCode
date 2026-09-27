@@ -1377,11 +1377,7 @@ export class TileMap {
         }
         ctx.restore();
 
-        // Update and render Ember Sparks & Bubbles
-        if (this.magmaParticleEmitter) {
-          this.magmaParticleEmitter.update(dt || 0.016, magmaCells, camera);
-          this.magmaParticleEmitter.render(ctx);
-        }
+        // Particles and bubbles removed per MinionsArt clean stylized look
       }
 
       for (let i = 0; i < regularGroundCells.length; i++) {
