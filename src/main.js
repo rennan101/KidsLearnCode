@@ -127,6 +127,7 @@ class RPGApplication {
       safeCall(this.setupDrawerResizing, 'setupDrawerResizing');
       safeCall(this.setupColliderPanel, 'setupColliderPanel');
       safeCall(this.setupPlayCameraZoomPanel, 'setupPlayCameraZoomPanel');
+      safeCall(this.setupWaterSettingsModal, 'setupWaterSettingsModal');
       safeCall(this.setupTileInspector, 'setupTileInspector');
       safeCall(this.setupLayerManager, 'setupLayerManager');
       safeCall(this.setupChatSystem, 'setupChatSystem');
@@ -886,6 +887,169 @@ class RPGApplication {
 
     // Initialize UI with current tileMap setting
     this.updatePlayCameraZoomUI(this.tileMap.playCameraZoom || 1.0);
+  }
+
+  setupWaterSettingsModal() {
+    const modal = document.getElementById('modal-water-settings');
+    const btnOpen = document.getElementById('btn-water-settings');
+    const btnClose = document.getElementById('btn-close-water-settings');
+    const btnSave = document.getElementById('btn-save-water-settings');
+    const btnConvert = document.getElementById('btn-convert-all-water');
+    const previewCanvas = document.getElementById('water-preview-canvas');
+    const previewPaletteName = document.getElementById('water-preview-palette-name');
+
+    const sliderAperture = document.getElementById('slider-water-aperture');
+    const sliderAmplitude = document.getElementById('slider-water-amplitude');
+    const sliderSpeed = document.getElementById('slider-water-speed');
+    const sliderSpacing = document.getElementById('slider-water-spacing');
+
+    const labelAperture = document.getElementById('label-water-aperture');
+    const labelAmplitude = document.getElementById('label-water-amplitude');
+    const labelSpeed = document.getElementById('label-water-speed');
+    const labelSpacing = document.getElementById('label-water-spacing');
+
+    const paletteBtns = document.querySelectorAll('.water-palette-btn');
+
+    let previewAnimFrameId = null;
+
+    const updateUIFromConfig = () => {
+      if (!this.tileMap?.waterWaveRenderer) return;
+      const cfg = this.tileMap.waterWaveRenderer.getConfig();
+
+      if (sliderAperture) sliderAperture.value = cfg.aperture;
+      if (sliderAmplitude) sliderAmplitude.value = cfg.amplitude;
+      if (sliderSpeed) sliderSpeed.value = cfg.speed;
+      if (sliderSpacing) sliderSpacing.value = cfg.waveSpacing;
+
+      if (labelAperture) labelAperture.innerText = Number(cfg.aperture).toFixed(2);
+      if (labelAmplitude) labelAmplitude.innerText = `${Number(cfg.amplitude).toFixed(1)} px`;
+      if (labelSpeed) labelSpeed.innerText = `${Number(cfg.speed).toFixed(1)}x`;
+      if (labelSpacing) labelSpacing.innerText = `${Math.round(cfg.waveSpacing)} px`;
+
+      paletteBtns.forEach((btn) => {
+        const isMatch = btn.dataset.palette === cfg.paletteId;
+        btn.classList.toggle('active', isMatch);
+        if (isMatch) {
+          btn.style.background = '#e6f9f6';
+          btn.style.borderColor = '#19c8b9';
+          btn.style.color = '#0f8e83';
+          if (previewPaletteName) {
+            previewPaletteName.innerText = btn.querySelector('span:last-child')?.innerText || cfg.paletteId;
+          }
+        } else {
+          btn.style.background = '#fdfbf7';
+          btn.style.borderColor = '#c4b89e';
+          btn.style.color = '#794f27';
+        }
+      });
+    };
+
+    const drawPreview = () => {
+      if (!modal || modal.style.display === 'none' || !previewCanvas) return;
+      const ctx = previewCanvas.getContext('2d');
+      if (!ctx || !this.tileMap?.waterWaveRenderer) return;
+
+      const w = previewCanvas.width;
+      const h = previewCanvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const previewCells = [];
+      const tileSize = 64;
+      for (let y = 0; y < h; y += tileSize) {
+        for (let x = 0; x < w; x += tileSize) {
+          previewCells.push({ x, y, tileSize });
+        }
+      }
+
+      this.tileMap.waterWaveRenderer.renderBatch(ctx, previewCells, performance.now());
+
+      previewAnimFrameId = requestAnimationFrame(drawPreview);
+    };
+
+    const openModal = () => {
+      if (!modal) return;
+      updateUIFromConfig();
+      modal.style.display = 'flex';
+      if (previewAnimFrameId) cancelAnimationFrame(previewAnimFrameId);
+      drawPreview();
+    };
+
+    const closeModal = () => {
+      if (!modal) return;
+      modal.style.display = 'none';
+      if (previewAnimFrameId) {
+        cancelAnimationFrame(previewAnimFrameId);
+        previewAnimFrameId = null;
+      }
+      this.triggerAutoSave();
+    };
+
+    btnOpen?.addEventListener('click', openModal);
+    btnClose?.addEventListener('click', closeModal);
+    btnSave?.addEventListener('click', () => {
+      closeModal();
+      this.showToast('Configuração de ondas de água aplicada com sucesso!');
+    });
+
+    // Slider Listeners
+    sliderAperture?.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value) || 0.35;
+      if (labelAperture) labelAperture.innerText = val.toFixed(2);
+      this.tileMap.waterWaveRenderer.setAperture(val);
+    });
+
+    sliderAmplitude?.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value) || 3.5;
+      if (labelAmplitude) labelAmplitude.innerText = `${val.toFixed(1)} px`;
+      this.tileMap.waterWaveRenderer.setAmplitude(val);
+    });
+
+    sliderSpeed?.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value) || 1.0;
+      if (labelSpeed) labelSpeed.innerText = `${val.toFixed(1)}x`;
+      this.tileMap.waterWaveRenderer.setSpeed(val);
+    });
+
+    sliderSpacing?.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10) || 18;
+      if (labelSpacing) labelSpacing.innerText = `${val} px`;
+      this.tileMap.waterWaveRenderer.setWaveSpacing(val);
+    });
+
+    // Palette Selector
+    paletteBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const palId = btn.dataset.palette;
+        this.tileMap.waterWaveRenderer.setPalette(palId);
+        updateUIFromConfig();
+      });
+    });
+
+    // Bulk Convert All Water
+    btnConvert?.addEventListener('click', () => {
+      const ground = this.tileMap.layers.ground;
+      if (!ground) return;
+      let count = 0;
+      this.editorController.undoManager?.pushState?.();
+      for (const [key, cell] of ground.entries()) {
+        if (cell && cell.tileId === 'water-animated') {
+          cell.tileId = 'water-waves-procedural';
+          count++;
+        }
+      }
+      if (count > 0) {
+        this.showToast(`${count} blocos de água convertidos para Ondas Fantasia!`);
+        this.triggerAutoSave();
+      } else {
+        this.showToast('Nenhum bloco de água clássica encontrado para conversão.');
+      }
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
   }
 
   bindDOMEvents() {
@@ -1945,6 +2109,7 @@ class RPGApplication {
     // Só devem aparecer no modo de edição para a conta com o e-mail rennancr93@gmail.com
     const adminButtons = [
       'btn-toggle-colliders',
+      'btn-water-settings',
       'btn-save-json',
       'btn-load-json',
       'btn-clear-map'

@@ -1,6 +1,7 @@
 // Infinite/Expandable Sparse TileMap engine with exact grid unit scaling
 import { ModularAvatarRenderer } from './animation/ModularAvatarRenderer.js';
 import { getNPCData } from './CharacterRegistry.js';
+import { WaterWaveRenderer } from './WaterWaveRenderer.js';
 
 export const TILE_SIZE = 64;
 
@@ -8,6 +9,8 @@ export class TileMap {
   constructor() {
     this.tileSize = TILE_SIZE;
     this.avatarRenderer = new ModularAvatarRenderer();
+    this.waterWaveRenderer = new WaterWaveRenderer();
+    this.waterWaveTime = 0;
 
     // Layers stored as sparse Maps keyed by `${x},${y}`:
     // 0: ground (Base water, ocean void)
@@ -300,6 +303,7 @@ export class TileMap {
 
   update(deltaTime) {
     this.waterTimer += deltaTime;
+    this.waterWaveTime += deltaTime;
     if (this.waterTimer >= this.waterFrameDuration) {
       this.waterTimer = 0;
       this.waterAnimFrame = (this.waterAnimFrame + 1) % 8; // 8 water frames
@@ -824,34 +828,41 @@ export class TileMap {
       }
     }
 
-    let img = null;
-    if (tileMeta.isAnimated && tileMeta.frames) {
-      const framePath = tileMeta.frames[this.waterAnimFrame];
-      img = assetLoader.getImage(framePath);
-    } else if (tileMeta.src) {
-      img = assetLoader.getImage(tileMeta.src);
-    }
+    // Procedural Water Waves Renderer (Detective Fantasia Style)
+    if (tileMeta.isWaterWaves || cell.tileId === 'water-waves-procedural') {
+      if (this.waterWaveRenderer) {
+        this.waterWaveRenderer.renderPreview(ctx, destX, destY, this.tileSize, this.waterWaveTime || performance.now());
+      }
+    } else {
+      let img = null;
+      if (tileMeta.isAnimated && tileMeta.frames) {
+        const framePath = tileMeta.frames[this.waterAnimFrame];
+        img = assetLoader.getImage(framePath);
+      } else if (tileMeta.src) {
+        img = assetLoader.getImage(tileMeta.src);
+      }
 
-    if (img) {
-      const scaleMultiplier = tileMeta.scale || 1.0;
-      const drawW = rawW * scaleMultiplier;
-      const drawH = rawH * scaleMultiplier;
-      const isFlipped = !!cell.flipX;
+      if (img) {
+        const scaleMultiplier = tileMeta.scale || 1.0;
+        const drawW = rawW * scaleMultiplier;
+        const drawH = rawH * scaleMultiplier;
+        const isFlipped = !!cell.flipX;
 
-      if (rotation !== 0 || scaleMultiplier !== 1.0 || isFlipped) {
-        ctx.save();
-        // Translate to center of occupied bounding box
-        ctx.translate(destX + occW / 2, destY + occH / 2);
-        if (rotation !== 0) {
-          ctx.rotate((rotation * Math.PI) / 180);
+        if (rotation !== 0 || scaleMultiplier !== 1.0 || isFlipped) {
+          ctx.save();
+          // Translate to center of occupied bounding box
+          ctx.translate(destX + occW / 2, destY + occH / 2);
+          if (rotation !== 0) {
+            ctx.rotate((rotation * Math.PI) / 180);
+          }
+          if (isFlipped) {
+            ctx.scale(-1, 1);
+          }
+          ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+          ctx.restore();
+        } else {
+          ctx.drawImage(img, destX, destY, rawW, rawH);
         }
-        if (isFlipped) {
-          ctx.scale(-1, 1);
-        }
-        ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
-        ctx.restore();
-      } else {
-        ctx.drawImage(img, destX, destY, rawW, rawH);
       }
     }
 
@@ -948,6 +959,42 @@ export class TileMap {
     const startRow = Math.floor(camY / this.tileSize) - padding;
     const endRow = Math.ceil((camY + camH / camZ) / this.tileSize) + padding;
 
+    // Optimized batch rendering for procedural ocean waves
+    if (layerName === 'ground' && this.waterWaveRenderer) {
+      const proceduralWaveCells = [];
+      const regularGroundCells = [];
+
+      for (let y = startRow; y <= endRow; y++) {
+        for (let x = startCol; x <= endCol; x++) {
+          const cell = layer.get(this.getKey(x, y));
+          if (!cell || cell.isRoot === false) continue;
+          if (cell.tileId === 'water-waves-procedural') {
+            proceduralWaveCells.push({ x: x * this.tileSize, y: y * this.tileSize, tileSize: this.tileSize, cell, tx: x, ty: y });
+          } else {
+            regularGroundCells.push({ x, y, cell });
+          }
+        }
+      }
+
+      if (proceduralWaveCells.length > 0) {
+        this.waterWaveRenderer.renderBatch(ctx, proceduralWaveCells, this.waterWaveTime || performance.now());
+        // Render overlays (ice/puddle/colliders) for wave cells
+        for (let i = 0; i < proceduralWaveCells.length; i++) {
+          const w = proceduralWaveCells[i];
+          const cellKey = this.getKey(w.tx, w.ty);
+          if (this.temporaryIceTiles && this.temporaryIceTiles.has(cellKey)) {
+            this.drawTileCell(ctx, w.cell, w.tx, w.ty, assetLoader, isEditor, showColliders);
+          }
+        }
+      }
+
+      for (let i = 0; i < regularGroundCells.length; i++) {
+        const item = regularGroundCells[i];
+        this.drawTileCell(ctx, item.cell, item.x, item.y, assetLoader, isEditor, showColliders);
+      }
+      return;
+    }
+
     for (let y = startRow; y <= endRow; y++) {
       for (let x = startCol; x <= endCol; x++) {
         const cell = layer.get(this.getKey(x, y));
@@ -995,6 +1042,7 @@ export class TileMap {
       spawnPoint: this.spawnPoint,
       playCameraZoom: this.playCameraZoom || 1.0,
       layerOrder: this.layerOrder,
+      waterConfig: this.waterWaveRenderer ? this.waterWaveRenderer.getConfig() : null,
       layers: {
         ground: serializeLayer(this.layers.ground),
         decor: serializeLayer(this.layers.decor),
@@ -1020,6 +1068,9 @@ export class TileMap {
     }
     if (data.layerOrder && Array.isArray(data.layerOrder)) {
       this.setLayerOrder(data.layerOrder);
+    }
+    if (data.waterConfig && this.waterWaveRenderer) {
+      this.waterWaveRenderer.setConfig(data.waterConfig);
     }
 
     const deserializeLayer = (source) => {

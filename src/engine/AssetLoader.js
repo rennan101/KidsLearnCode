@@ -28,6 +28,11 @@ export function generateDummySVG() {
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
 
+export function generateWaterWaveSVG() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><rect width="64" height="64" fill="#1b4d49"/><path d="M 0 16 Q 16 10, 32 16 T 64 16" stroke="#3dd4a7" stroke-width="2.5" fill="none"/><path d="M 4 14 Q 16 9, 28 14" stroke="#a2fbe2" stroke-width="1.5" fill="none"/><path d="M 0 34 Q 16 28, 32 34 T 64 34" stroke="#3dd4a7" stroke-width="2.5" fill="none"/><path d="M 36 32 Q 48 27, 60 32" stroke="#a2fbe2" stroke-width="1.5" fill="none"/><path d="M 0 52 Q 16 46, 32 52 T 64 52" stroke="#3dd4a7" stroke-width="2.5" fill="none"/><path d="M 8 50 Q 20 45, 32 50" stroke="#a2fbe2" stroke-width="1.5" fill="none"/></svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
 // Asset manifest and loader for Geralt and complete RPG Tileset with all 170+ assets
 export class AssetLoader {
   constructor() {
@@ -36,6 +41,24 @@ export class AssetLoader {
 
     // Overworld individual tile assets with footprint dimensions and custom collider boxes
     this.overworldTiles = [
+      {
+            "id": "water-waves-procedural",
+            "name": "Ondas Fantasia (Aberturas)",
+            "category": "Water",
+            "layer": "ground",
+            "isWaterWaves": true,
+            "isAnimated": true,
+            "src": generateWaterWaveSVG(),
+            "gridW": 1,
+            "gridH": 1,
+            "collider": {
+                  "enabled": true,
+                  "x": 0,
+                  "y": 0,
+                  "w": 64,
+                  "h": 64
+            }
+      },
       {
             "id": "water-animated",
             "name": "Animated Water",

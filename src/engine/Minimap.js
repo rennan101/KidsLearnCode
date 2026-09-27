@@ -27,6 +27,7 @@ export class Minimap {
     // Tile color cache for fast map rendering
     this.tileColorMap = {
       'water-animated': '#2563eb',
+      'water-waves-procedural': '#1b4d49',
       'grass': '#15803d',
       'grass-detail-1': '#16a34a',
       'grass-detail-2': '#22c55e',
