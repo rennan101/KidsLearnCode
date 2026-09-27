@@ -936,7 +936,7 @@ export const SVG_TOPS = [
     "primaryColor": "#67A3FD",
     "secondaryColor": "#67A3FD",
     "fullPath": "assets/Tops/Sleeveless/top_sleeveless_01_full.svg",
-    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_01_torso.svg",
+    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_01_full.svg",
     "sleeveLPath": null,
     "sleeveRPath": null
   },
@@ -962,7 +962,7 @@ export const SVG_TOPS = [
     "primaryColor": "#FFE072",
     "secondaryColor": "#3B7D24",
     "fullPath": "assets/Tops/Sleeveless/top_sleeveless_02_full.svg",
-    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_02_torso.svg",
+    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_02_full.svg",
     "sleeveLPath": null,
     "sleeveRPath": null
   },
@@ -988,7 +988,7 @@ export const SVG_TOPS = [
     "primaryColor": "#F4FBFF",
     "secondaryColor": "#6DBEEC",
     "fullPath": "assets/Tops/Sleeveless/top_sleeveless_03_full.svg",
-    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_03_torso.svg",
+    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_03_full.svg",
     "sleeveLPath": null,
     "sleeveRPath": null
   },
@@ -1014,7 +1014,7 @@ export const SVG_TOPS = [
     "primaryColor": "#FFF2FF",
     "secondaryColor": "#C510C5",
     "fullPath": "assets/Tops/Sleeveless/top_sleeveless_04_full.svg",
-    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_04_torso.svg",
+    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_04_full.svg",
     "sleeveLPath": null,
     "sleeveRPath": null
   },
@@ -1040,7 +1040,7 @@ export const SVG_TOPS = [
     "primaryColor": "#4A4A4A",
     "secondaryColor": "#525252",
     "fullPath": "assets/Tops/Sleeveless/top_sleeveless_05_full.svg",
-    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_05_torso.svg",
+    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_05_full.svg",
     "sleeveLPath": null,
     "sleeveRPath": null
   },
@@ -1066,7 +1066,7 @@ export const SVG_TOPS = [
     "primaryColor": "#0E9152",
     "secondaryColor": "#066A46",
     "fullPath": "assets/Tops/Sleeveless/top_sleeveless_06_full.svg",
-    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_06_torso.svg",
+    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_06_full.svg",
     "sleeveLPath": null,
     "sleeveRPath": null
   },
@@ -1092,7 +1092,7 @@ export const SVG_TOPS = [
     "primaryColor": "#5B5B56",
     "secondaryColor": "#FDFDFD",
     "fullPath": "assets/Tops/Sleeveless/top_sleeveless_07_full.svg",
-    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_07_torso.svg",
+    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_07_full.svg",
     "sleeveLPath": null,
     "sleeveRPath": null
   },
@@ -1118,7 +1118,7 @@ export const SVG_TOPS = [
     "primaryColor": "#FFE68C",
     "secondaryColor": "#EEAC48",
     "fullPath": "assets/Tops/Sleeveless/top_sleeveless_08_full.svg",
-    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_08_torso.svg",
+    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_08_full.svg",
     "sleeveLPath": null,
     "sleeveRPath": null
   },
@@ -1144,7 +1144,7 @@ export const SVG_TOPS = [
     "primaryColor": "#FFFCEA",
     "secondaryColor": "#FF3636",
     "fullPath": "assets/Tops/Sleeveless/top_sleeveless_09_full.svg",
-    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_09_torso.svg",
+    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_09_full.svg",
     "sleeveLPath": null,
     "sleeveRPath": null
   },
@@ -1170,7 +1170,7 @@ export const SVG_TOPS = [
     "primaryColor": "#FFECEC",
     "secondaryColor": "#FFA7A7",
     "fullPath": "assets/Tops/Sleeveless/top_sleeveless_10_full.svg",
-    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_10_torso.svg",
+    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_10_full.svg",
     "sleeveLPath": null,
     "sleeveRPath": null
   },
@@ -1196,7 +1196,7 @@ export const SVG_TOPS = [
     "primaryColor": "#FFA7A7",
     "secondaryColor": "#FFCFCF",
     "fullPath": "assets/Tops/Sleeveless/top_sleeveless_11_full.svg",
-    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_11_torso.svg",
+    "torsoPath": "assets/Tops/Sleeveless/top_sleeveless_11_full.svg",
     "sleeveLPath": null,
     "sleeveRPath": null
   },

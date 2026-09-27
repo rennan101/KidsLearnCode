@@ -450,7 +450,7 @@ export class ModularAvatarRenderer {
 
   renderTopOnTorso(ctx, topStyle, primary, secondary, skin, dir) {
     const topDef = SVG_TOPS.find(t => t.id === topStyle || t.baseId === topStyle) || SVG_TOPS[0];
-    const topPath = topDef.torsoPath || `assets/Tops/${topDef.folder || 'Tee'}/${topDef.id}_torso.svg`;
+    const topPath = (topDef.sleeveType === 'none' ? topDef.fullPath : topDef.torsoPath) || topDef.torsoPath || topDef.fullPath || `assets/Tops/${topDef.folder || 'Tee'}/${topDef.id}_torso.svg`;
     const topSvg = topDef.torsoSvgContent || topDef.svgContent;
     const img = this.getAssetImage(topPath, topSvg);
 
@@ -477,7 +477,7 @@ export class ModularAvatarRenderer {
         ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
         ctx.closePath();
         ctx.fill();
-      } else if (topStyle === 'top_crop_top') {
+      } else if (topStyle === 'top_crop_top' || topDef.sleeveType === 'none') {
         ctx.beginPath();
         ctx.moveTo(-95, -280);
         ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
@@ -535,24 +535,19 @@ export class ModularAvatarRenderer {
     ctx.arc(-300, 405, 62, 0, Math.PI * 2);
     ctx.fill();
 
-    // Quando tem mangas, cobre o ombro e a parte de cima do braço completamente com a cor da camisa para disfarçar o encaixe
+    // Quando tem mangas, pinta a manga base anatômica acompanhando o braço
     if (hasSleeves) {
       ctx.fillStyle = primary;
-      ctx.beginPath();
-      ctx.ellipse(0, 15, 68, 68, 0, 0, Math.PI * 2);
-      ctx.fill();
-
       if (topDef.sleeveType === 'long') {
         const sleeveLongLPath = this.getPath2D('M0 0C35 10 50 50 30 85L-210 375C-230 395 -265 385 -280 360C-295 335 -285 305 -260 290L-28 10C-20 3 -10 0 0 0Z');
         ctx.fill(sleeveLongLPath);
       } else {
-        // Para mangas curtas / médias / bufantes: preenche a metade superior do braço com a cor da camisa
         const sleeveUpperLPath = this.getPath2D('M0 0C35 10 50 50 30 85L-135 230C-155 245 -180 235 -190 215C-200 195 -190 170 -170 155L-28 10C-20 3 -10 0 0 0Z');
         ctx.fill(sleeveUpperLPath);
       }
     }
 
-    // Manga da roupa esquerda (assets/Tops _sleeve_l.svg)
+    // Manga da roupa esquerda (assets/Tops _sleeve_l.svg) aumentada e posicionada para cobrir a pele
     this.renderArmSleeve(ctx, primary, secondary, topStyle, 'left');
 
     ctx.restore();
@@ -572,24 +567,19 @@ export class ModularAvatarRenderer {
     ctx.arc(300, 405, 62, 0, Math.PI * 2);
     ctx.fill();
 
-    // Quando tem mangas, cobre o ombro e a parte de cima do braço completamente com a cor da camisa para disfarçar o encaixe
+    // Quando tem mangas, pinta a manga base anatômica acompanhando o braço
     if (hasSleeves) {
       ctx.fillStyle = primary;
-      ctx.beginPath();
-      ctx.ellipse(0, 15, 68, 68, 0, 0, Math.PI * 2);
-      ctx.fill();
-
       if (topDef.sleeveType === 'long') {
         const sleeveLongRPath = this.getPath2D('M0 0C-35 10 -50 50 -30 85L210 375C230 395 265 385 280 360C295 335 285 305 260 290L28 10C20 3 10 0 0 0Z');
         ctx.fill(sleeveLongRPath);
       } else {
-        // Para mangas curtas / médias / bufantes: preenche a metade superior do braço com a cor da camisa
         const sleeveUpperRPath = this.getPath2D('M0 0C-35 10 -50 50 -30 85L135 230C155 245 180 235 190 215C200 195 190 170 170 155L28 10C20 3 10 0 0 0Z');
         ctx.fill(sleeveUpperRPath);
       }
     }
 
-    // Manga da roupa direita (assets/Tops _sleeve_r.svg)
+    // Manga da roupa direita (assets/Tops _sleeve_r.svg) aumentada e posicionada para cobrir a pele
     this.renderArmSleeve(ctx, primary, secondary, topStyle, 'right');
 
     ctx.restore();
@@ -600,11 +590,12 @@ export class ModularAvatarRenderer {
   renderArmSleeve(ctx, primary, secondary, topStyle, side) {
     const isLeft = side === 'left';
     const topDef = SVG_TOPS.find(t => t.id === topStyle || t.baseId === topStyle) || SVG_TOPS[0];
-    if (topDef.sleeveType === 'none') return;
+    if (!topDef || topDef.sleeveType === 'none') return;
 
     ctx.save();
 
-    const scale = 4.1;
+    // Proporção ampliada para cobrir totalmente o ombro e o braço
+    const scale = 4.42;
     const fullW = topDef.w * scale;
     const fullH = topDef.h * scale;
 
@@ -615,11 +606,11 @@ export class ModularAvatarRenderer {
       const img = this.getAssetImage(sleevePath || `top_sleeve_${side}_${topDef.id}`, sleeveSvg);
       if (img && img.complete && img.naturalWidth > 0) {
         if (isLeft) {
-          // Ombro esquerdo está em (-130, -255) relativo ao tronco -> offset local do top: (-fullW/2 + 130, -25)
-          ctx.drawImage(img, -fullW / 2 + 130, -25, fullW, fullH);
+          // Ombro esquerdo em (-130, -255) -> ajustado com y=-34 para encaixe perfeito
+          ctx.drawImage(img, -fullW / 2 + 130 * (scale / 4.1), -34, fullW, fullH);
         } else {
-          // Ombro direito está em (+130, -255) relativo ao tronco -> offset local do top: (-fullW/2 - 130, -25)
-          ctx.drawImage(img, -fullW / 2 - 130, -25, fullW, fullH);
+          // Ombro direito em (+130, -255) -> ajustado com y=-34 para encaixe perfeito
+          ctx.drawImage(img, -fullW / 2 - 130 * (scale / 4.1), -34, fullW, fullH);
         }
       }
     }
