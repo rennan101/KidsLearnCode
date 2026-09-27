@@ -8,16 +8,16 @@
 
 export const MOUNT_SOCKET_OFFSETS = {
   dragon_fly_storm: {
-    south: { x: 0, y: -16, scale: 0.90 },
-    north: { x: 0, y: 6, scale: 0.85 },
-    east:  { x: -10, y: -18, scale: 0.90 },
-    west:  { x: 10, y: -18, scale: 0.90 }
+    south: { x: 0, y: -16, scale: 0.88 },
+    north: { x: 0, y: 4, scale: 0.88 },
+    east:  { x: -8, y: -16, scale: 0.88 },
+    west:  { x: 8, y: -16, scale: 0.88 }
   },
   default: {
-    south: { x: 0, y: -14, scale: 0.90 },
-    north: { x: 0, y: 6, scale: 0.85 },
-    east:  { x: -8, y: -16, scale: 0.90 },
-    west:  { x: 8, y: -16, scale: 0.90 }
+    south: { x: 0, y: -14, scale: 0.88 },
+    north: { x: 0, y: 4, scale: 0.88 },
+    east:  { x: -8, y: -14, scale: 0.88 },
+    west:  { x: 8, y: -14, scale: 0.88 }
   }
 };
 
@@ -2035,7 +2035,11 @@ export class DragonManager {
       if (this.mode === 'mounted' && player) {
         this.renderMountedUnified(ctx, assetLoader, player);
       } else {
-        this.renderDragonEntityBody(ctx, dragon, player);
+        // No modo Follow: se o jogador estiver de costas (north), o dragão deve ficar na layer da frente (renderizado no Overlay)
+        const isPlayerFacingNorth = player && player.direction === 'north';
+        if (!isPlayerFacingNorth) {
+          this.renderDragonEntityBody(ctx, dragon, player);
+        }
       }
     }
 
@@ -2050,16 +2054,21 @@ export class DragonManager {
       this.renderWildDragonEntityOverlay(ctx, entity, player);
     }
 
-    // 2. Active Companion Overhead UI
+    // 2. Active Companion Body (quando em Follow e o jogador está andando para o norte/costas)
     const dragon = this.getActiveDragon();
+    if (dragon && this.mode === 'follow' && player && player.direction === 'north') {
+      this.renderDragonEntityBody(ctx, dragon, player);
+    }
+
+    // 3. Active Companion Overhead UI
     if (dragon && this.mode !== 'none') {
       this.renderDragonEntityOverlay(ctx, dragon, player);
     }
 
-    // 3. Render Combat Particles
+    // 4. Render Combat Particles
     this.renderParticles(ctx);
 
-    // 4. Render Floating Damage Numbers
+    // 5. Render Floating Damage Numbers
     this.renderDamageNumbers(ctx);
   }
 
@@ -2519,24 +2528,24 @@ export class DragonManager {
         const spriteSize = isFrontOrBack ? 104 : 88;
         const halfSize = spriteSize / 2;
 
-        if (dir === 'north') {
-          // North (voando de costas): O Dragão fica no layer À FRENTE do jogador (jogador atrás do dragão)
-          player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'north', riderScale);
-
-          ctx.save();
-          ctx.translate(dragonCenterX, dragonCenterY);
-          ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
-          ctx.restore();
-        } else if (dir === 'south') {
-          // South (voando de frente): O Jogador fica NA FRENTE do dragão
-          ctx.save();
-          ctx.translate(dragonCenterX, dragonCenterY);
-          ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
-          ctx.restore();
-
+        if (dir === 'south') {
+          // South (voando para o sul / de frente): O Dragão fica NA FRENTE do jogador (jogador atrás do dragão)
           player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'south', riderScale);
+
+          ctx.save();
+          ctx.translate(dragonCenterX, dragonCenterY);
+          ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
+          ctx.restore();
+        } else if (dir === 'north') {
+          // North (voando para o norte / de costas): O Jogador fica NA LAYER À FRENTE do dragão (dragão atrás)
+          ctx.save();
+          ctx.translate(dragonCenterX, dragonCenterY);
+          ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
+          ctx.restore();
+
+          player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'north', riderScale);
         } else {
-          // East / West (perfil lateral): O Jogador fica NA FRENTE do dragão
+          // East / West (perfil lateral): O Jogador fica NA FRENTE do dragão encaixado na sela
           ctx.save();
           ctx.translate(dragonCenterX, dragonCenterY);
           if (isWest) {
@@ -2560,44 +2569,10 @@ export class DragonManager {
     const flapAmp = alt > 10 ? 9 : 6;
     const wingFlap = Math.sin(this.floatTimer * flapFreq) * flapAmp;
 
-    if (dir === 'north') {
-      // North (de costas): Jogador atrás, Dragão na frente
-      player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'north', riderScale);
+    if (dir === 'south') {
+      // South (voando para o sul / de frente): Jogador atrás, Dragão na frente
+      player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'south', riderScale);
 
-      ctx.save();
-      ctx.fillStyle = accentColor;
-      ctx.beginPath();
-      ctx.ellipse(dragonCenterX - 16, dragonCenterY - 4 + wingFlap, 14, 9, -Math.PI / 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(dragonCenterX + 16, dragonCenterY - 4 - wingFlap, 14, 9, Math.PI / 4, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = bodyColor;
-      ctx.beginPath();
-      ctx.ellipse(dragonCenterX, dragonCenterY + 8, 18, 16, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.arc(dragonCenterX, dragonCenterY - 6, 14, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = accentColor;
-      ctx.beginPath();
-      ctx.moveTo(dragonCenterX - 8, dragonCenterY - 14);
-      ctx.lineTo(dragonCenterX - 12, dragonCenterY - 24);
-      ctx.lineTo(dragonCenterX - 4, dragonCenterY - 16);
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.moveTo(dragonCenterX + 8, dragonCenterY - 14);
-      ctx.lineTo(dragonCenterX + 12, dragonCenterY - 24);
-      ctx.lineTo(dragonCenterX + 4, dragonCenterY - 16);
-      ctx.fill();
-      ctx.restore();
-
-    } else if (dir === 'south') {
-      // South (de frente): Dragão atrás, Jogador na frente
       ctx.save();
       // Asas
       ctx.fillStyle = accentColor;
@@ -2653,8 +2628,42 @@ export class DragonManager {
       ctx.fill();
       ctx.restore();
 
-      // Jogador na Frente
-      player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'south', riderScale);
+    } else if (dir === 'north') {
+      // North (voando para o norte / de costas): Dragão atrás, Jogador na frente
+      ctx.save();
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX - 16, dragonCenterY - 4 + wingFlap, 14, 9, -Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX + 16, dragonCenterY - 4 - wingFlap, 14, 9, Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX, dragonCenterY + 8, 18, 16, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(dragonCenterX, dragonCenterY - 6, 14, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.moveTo(dragonCenterX - 8, dragonCenterY - 14);
+      ctx.lineTo(dragonCenterX - 12, dragonCenterY - 24);
+      ctx.lineTo(dragonCenterX - 4, dragonCenterY - 16);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(dragonCenterX + 8, dragonCenterY - 14);
+      ctx.lineTo(dragonCenterX + 12, dragonCenterY - 24);
+      ctx.lineTo(dragonCenterX + 4, dragonCenterY - 16);
+      ctx.fill();
+      ctx.restore();
+
+      // Jogador por cima (na frente)
+      player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'north', riderScale);
 
     } else {
       // East / West (Perfil): Dragão atrás, Jogador na frente
