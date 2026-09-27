@@ -2519,28 +2519,24 @@ export class DragonManager {
         const spriteSize = isFrontOrBack ? 104 : 88;
         const halfSize = spriteSize / 2;
 
-        if (dir === 'south') {
-          // South (voando de frente): O Cavaleiro fica no dorso ATRÁS da cabeça/corpo frontal do dragão
-          player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'south', riderScale);
-
-          // Dragão desenhado POR CIMA do jogador
-          ctx.save();
-          ctx.translate(dragonCenterX, dragonCenterY);
-          ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
-          ctx.restore();
-        } else if (dir === 'north') {
-          // North (voando de costas): O Cavaleiro fica ATRÁS do dragão (corpo/asas do dragão cobrem o cavaleiro)
+        if (dir === 'north') {
+          // North (voando de costas): O Dragão fica no layer À FRENTE do jogador (jogador atrás do dragão)
           player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'north', riderScale);
 
-          // Dragão de costas desenhado POR CIMA do jogador
           ctx.save();
           ctx.translate(dragonCenterX, dragonCenterY);
           ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
           ctx.restore();
-        } else {
-          // East / West (perfil lateral): Cavaleiro encaixado no socket da sela
-          player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, dir, riderScale);
+        } else if (dir === 'south') {
+          // South (voando de frente): O Jogador fica NA FRENTE do dragão
+          ctx.save();
+          ctx.translate(dragonCenterX, dragonCenterY);
+          ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
+          ctx.restore();
 
+          player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'south', riderScale);
+        } else {
+          // East / West (perfil lateral): O Jogador fica NA FRENTE do dragão
           ctx.save();
           ctx.translate(dragonCenterX, dragonCenterY);
           if (isWest) {
@@ -2548,6 +2544,8 @@ export class DragonManager {
           }
           ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
           ctx.restore();
+
+          player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, dir, riderScale);
         }
 
         ctx.restore();
@@ -2562,8 +2560,10 @@ export class DragonManager {
     const flapAmp = alt > 10 ? 9 : 6;
     const wingFlap = Math.sin(this.floatTimer * flapFreq) * flapAmp;
 
-    if (dir === 'south') {
-      // 1. Asas Traseiras do Dragão
+    if (dir === 'north') {
+      // North (de costas): Jogador atrás, Dragão na frente
+      player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'north', riderScale);
+
       ctx.save();
       ctx.fillStyle = accentColor;
       ctx.beginPath();
@@ -2572,13 +2572,43 @@ export class DragonManager {
       ctx.beginPath();
       ctx.ellipse(dragonCenterX + 16, dragonCenterY - 4 - wingFlap, 14, 9, Math.PI / 4, 0, Math.PI * 2);
       ctx.fill();
+
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX, dragonCenterY + 8, 18, 16, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(dragonCenterX, dragonCenterY - 6, 14, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.moveTo(dragonCenterX - 8, dragonCenterY - 14);
+      ctx.lineTo(dragonCenterX - 12, dragonCenterY - 24);
+      ctx.lineTo(dragonCenterX - 4, dragonCenterY - 16);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(dragonCenterX + 8, dragonCenterY - 14);
+      ctx.lineTo(dragonCenterX + 12, dragonCenterY - 24);
+      ctx.lineTo(dragonCenterX + 4, dragonCenterY - 16);
+      ctx.fill();
       ctx.restore();
 
-      // 2. Cavaleiro (atrás do peito e cabeça do dragão)
-      player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'south', riderScale);
-
-      // 3. Corpo Frontal, Peito, Cabeça, Chifres e Olhos do Dragão (Na Frente do Cavaleiro)
+    } else if (dir === 'south') {
+      // South (de frente): Dragão atrás, Jogador na frente
       ctx.save();
+      // Asas
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX - 16, dragonCenterY - 4 + wingFlap, 14, 9, -Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX + 16, dragonCenterY - 4 - wingFlap, 14, 9, Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Corpo
       ctx.fillStyle = bodyColor;
       ctx.beginPath();
       ctx.ellipse(dragonCenterX, dragonCenterY + 8, 18, 16, 0, 0, Math.PI * 2);
@@ -2589,7 +2619,7 @@ export class DragonManager {
       ctx.ellipse(dragonCenterX, dragonCenterY + 10, 11, 10, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Cabeça e Focinho
+      // Cabeça
       ctx.fillStyle = bodyColor;
       ctx.beginPath();
       ctx.arc(dragonCenterX, dragonCenterY - 6, 14, 0, Math.PI * 2);
@@ -2609,7 +2639,7 @@ export class DragonManager {
       ctx.lineTo(dragonCenterX + 4, dragonCenterY - 16);
       ctx.fill();
 
-      // Olhos Expressivos
+      // Olhos
       ctx.fillStyle = '#1e293b';
       ctx.beginPath();
       ctx.arc(dragonCenterX - 5, dragonCenterY - 7, 3.2, 0, Math.PI * 2);
@@ -2621,48 +2651,13 @@ export class DragonManager {
       ctx.arc(dragonCenterX - 6, dragonCenterY - 8, 1.2, 0, Math.PI * 2);
       ctx.arc(dragonCenterX + 4, dragonCenterY - 8, 1.2, 0, Math.PI * 2);
       ctx.fill();
-
       ctx.restore();
 
-    } else if (dir === 'north') {
-      // 1. Cavaleiro (atrás do dragão)
-      player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'north', riderScale);
-
-      // 2. Dragão de Costas (Corpo, Asas e Cabeça de Costas na Frente)
-      ctx.save();
-      ctx.fillStyle = accentColor;
-      ctx.beginPath();
-      ctx.ellipse(dragonCenterX - 16, dragonCenterY - 4 + wingFlap, 14, 9, -Math.PI / 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(dragonCenterX + 16, dragonCenterY - 4 - wingFlap, 14, 9, Math.PI / 4, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = bodyColor;
-      ctx.beginPath();
-      ctx.ellipse(dragonCenterX, dragonCenterY + 8, 18, 16, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.arc(dragonCenterX, dragonCenterY - 6, 14, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = accentColor;
-      ctx.beginPath();
-      ctx.moveTo(dragonCenterX - 8, dragonCenterY - 14);
-      ctx.lineTo(dragonCenterX - 12, dragonCenterY - 24);
-      ctx.lineTo(dragonCenterX - 4, dragonCenterY - 16);
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.moveTo(dragonCenterX + 8, dragonCenterY - 14);
-      ctx.lineTo(dragonCenterX + 12, dragonCenterY - 24);
-      ctx.lineTo(dragonCenterX + 4, dragonCenterY - 16);
-      ctx.fill();
-      ctx.restore();
+      // Jogador na Frente
+      player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'south', riderScale);
 
     } else {
-      // East / West (Perfil lateral com asas em sanduíche)
+      // East / West (Perfil): Dragão atrás, Jogador na frente
       ctx.save();
       if (isWest) {
         ctx.translate(dragonCenterX, dragonCenterY);
@@ -2670,24 +2665,13 @@ export class DragonManager {
         ctx.translate(-dragonCenterX, -dragonCenterY);
       }
 
-      // 1. Asa Traseira
+      // Asa Traseira
       ctx.fillStyle = accentColor;
       ctx.beginPath();
       ctx.ellipse(dragonCenterX - 16, dragonCenterY - 8 + wingFlap, 13, 8, -Math.PI / 4, 0, Math.PI * 2);
       ctx.fill();
 
-      // 2. Cavaleiro na Sela
-      ctx.restore();
-      player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, dir, riderScale);
-
-      // 3. Corpo, Cabeça e Asa Frontal
-      ctx.save();
-      if (isWest) {
-        ctx.translate(dragonCenterX, dragonCenterY);
-        ctx.scale(-1, 1);
-        ctx.translate(-dragonCenterX, -dragonCenterY);
-      }
-
+      // Corpo
       ctx.fillStyle = bodyColor;
       ctx.beginPath();
       ctx.ellipse(dragonCenterX, dragonCenterY + 6, 18, 15, 0, 0, Math.PI * 2);
@@ -2725,6 +2709,9 @@ export class DragonManager {
       ctx.fill();
 
       ctx.restore();
+
+      // Jogador na Frente
+      player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, dir, riderScale);
     }
 
     ctx.restore();
@@ -2971,49 +2958,8 @@ export class DragonManager {
     }
     ctx.restore();
 
-    // 8. Proximity Mount [Espaço] Keycap Balloon or Flight Altitude Indicator
-    if (this.mode === 'follow') {
-      const dist = player ? Math.hypot(player.x - this.x, player.y - this.y) : 999;
-      const isNearby = dist < 120;
-
-      if (isNearby) {
-        // Balão informativo com tecla [Espaço]
-        const badgeW = 44;
-        const badgeH = 18;
-        const badgeX = drawX + 24 - badgeW / 2;
-        const badgeY = inCombat ? (drawY - 54) : (drawY - 42);
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-        ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(badgeX - 1, badgeY - 1, badgeW + 2, badgeH + 2, 6);
-        else ctx.rect(badgeX - 1, badgeY - 1, badgeW + 2, badgeH + 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#f59e0b';
-        ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 5);
-        else ctx.rect(badgeX, badgeY, badgeW, badgeH);
-        ctx.fill();
-
-        ctx.strokeStyle = '#fef08a';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 9.5px "Nunito", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('Espaço', badgeX + badgeW / 2, badgeY + badgeH / 2 + 0.5);
-
-        ctx.fillStyle = '#f59e0b';
-        ctx.beginPath();
-        ctx.moveTo(drawX + 21, badgeY + badgeH);
-        ctx.lineTo(drawX + 24, badgeY + badgeH + 3);
-        ctx.lineTo(drawX + 27, badgeY + badgeH);
-        ctx.fill();
-      }
-    } else if (isMounted && this.canActiveDragonFly() && alt > 8) {
-      // Altitude Indicator & Controls Prompt (Animal Island UI 3D Pill)
+    // 8. Flight Altitude Indicator (Animal Island UI 3D Pill) when flying high
+    if (isMounted && this.canActiveDragonFly() && alt > 8) {
       const hudText = `Altitude: ${Math.round(alt)}m [Q ⬇ / E ⬆]`;
       ctx.font = 'bold 10px "Nunito", sans-serif';
       const tw = ctx.measureText(hudText).width;

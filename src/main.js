@@ -1979,6 +1979,8 @@ class RPGApplication {
       if (btnToggleDrawer) btnToggleDrawer.style.display = 'none';
       if (editorTools) editorTools.style.display = 'none';
       if (playHint) playHint.style.display = 'flex';
+      const quickMountHud = document.getElementById('quick-actions-hud');
+      if (quickMountHud) quickMountHud.style.display = 'flex';
       this.canvasWrapper?.classList.remove('editing');
     } else {
       if (assetDrawer) {
@@ -1988,6 +1990,8 @@ class RPGApplication {
       if (btnToggleDrawer) btnToggleDrawer.style.display = 'flex';
       if (editorTools) editorTools.style.display = 'flex';
       if (playHint) playHint.style.display = 'none';
+      const quickMountHud = document.getElementById('quick-actions-hud');
+      if (quickMountHud) quickMountHud.style.display = 'none';
       this.canvasWrapper?.classList.add('editing');
       if (this.updateCanvasDimensions) {
         this.updateCanvasDimensions();
