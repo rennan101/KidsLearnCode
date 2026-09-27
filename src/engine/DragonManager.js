@@ -10,14 +10,14 @@ export const MOUNT_SOCKET_OFFSETS = {
   dragon_fly_storm: {
     south: { x: 0, y: -16, scale: 0.88 },
     north: { x: 0, y: 4, scale: 0.88 },
-    east:  { x: -8, y: -16, scale: 0.88 },
-    west:  { x: 8, y: -16, scale: 0.88 }
+    east:  { x: -6, y: -14, scale: 0.86 },
+    west:  { x: 6, y: -14, scale: 0.86 }
   },
   default: {
     south: { x: 0, y: -14, scale: 0.88 },
     north: { x: 0, y: 4, scale: 0.88 },
-    east:  { x: -8, y: -14, scale: 0.88 },
-    west:  { x: 8, y: -14, scale: 0.88 }
+    east:  { x: -6, y: -12, scale: 0.86 },
+    west:  { x: 6, y: -12, scale: 0.86 }
   }
 };
 
@@ -2666,7 +2666,9 @@ export class DragonManager {
       player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'north', riderScale);
 
     } else {
-      // East / West (Perfil): Dragão atrás, Jogador na frente
+      // East / West (Perfil Lateral 2.5D): Asa Traseira e Dorso (Atrás) -> Cavaleiro (Meio) -> Cabeça, Corpo e Asa Dianteira (Frente)
+      
+      // CAMADA 1: Asa Traseira e Dorso Traseiro (Atrás do Jogador)
       ctx.save();
       if (isWest) {
         ctx.translate(dragonCenterX, dragonCenterY);
@@ -2674,53 +2676,72 @@ export class DragonManager {
         ctx.translate(-dragonCenterX, -dragonCenterY);
       }
 
-      // Asa Traseira
+      // Asa Traseira (Underlay)
       ctx.fillStyle = accentColor;
       ctx.beginPath();
       ctx.ellipse(dragonCenterX - 16, dragonCenterY - 8 + wingFlap, 13, 8, -Math.PI / 4, 0, Math.PI * 2);
       ctx.fill();
 
-      // Corpo
+      // Dorso Traseiro e Cauda
       ctx.fillStyle = bodyColor;
       ctx.beginPath();
-      ctx.ellipse(dragonCenterX, dragonCenterY + 6, 18, 15, 0, 0, Math.PI * 2);
+      ctx.ellipse(dragonCenterX - 4, dragonCenterY + 7, 14, 13, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // CAMADA 2: Cavaleiro Montado na Sela (Sentado no Lombo)
+      player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, dir, riderScale);
+
+      // CAMADA 3: Corpo Principal, Cabeça, Olho, Chifre e Asa Dianteira (Na Frente do Cavaleiro)
+      ctx.save();
+      if (isWest) {
+        ctx.translate(dragonCenterX, dragonCenterY);
+        ctx.scale(-1, 1);
+        ctx.translate(-dragonCenterX, -dragonCenterY);
+      }
+
+      // Corpo Central e Barriga
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.ellipse(dragonCenterX + 4, dragonCenterY + 6, 15, 14, 0, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = accentColor;
       ctx.beginPath();
-      ctx.ellipse(dragonCenterX + 4, dragonCenterY + 8, 10, 9, 0, 0, Math.PI * 2);
+      ctx.ellipse(dragonCenterX + 6, dragonCenterY + 8, 9, 8, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Cabeça
+      // Cabeça e Focinho
       ctx.fillStyle = bodyColor;
       ctx.beginPath();
-      ctx.arc(dragonCenterX + 12, dragonCenterY - 4, 13, 0, Math.PI * 2);
+      ctx.arc(dragonCenterX + 14, dragonCenterY - 4, 13, 0, Math.PI * 2);
       ctx.fill();
 
-      // Chifre
+      // Chifres
       ctx.fillStyle = accentColor;
       ctx.beginPath();
-      ctx.moveTo(dragonCenterX + 8, dragonCenterY - 12);
-      ctx.lineTo(dragonCenterX + 2, dragonCenterY - 22);
-      ctx.lineTo(dragonCenterX + 14, dragonCenterY - 14);
+      ctx.moveTo(dragonCenterX + 10, dragonCenterY - 12);
+      ctx.lineTo(dragonCenterX + 4, dragonCenterY - 22);
+      ctx.lineTo(dragonCenterX + 16, dragonCenterY - 14);
       ctx.fill();
 
-      // Olho
+      // Olho Expressivo com Brilho
       ctx.fillStyle = '#1e293b';
       ctx.beginPath();
-      ctx.arc(dragonCenterX + 15, dragonCenterY - 5, 3, 0, Math.PI * 2);
+      ctx.arc(dragonCenterX + 17, dragonCenterY - 5, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(dragonCenterX + 16, dragonCenterY - 6, 1.1, 0, Math.PI * 2);
       ctx.fill();
 
-      // Asa Dianteira
+      // Asa Dianteira (Overlay - bate e sobrepõe a sela e a perna dianteira do cavaleiro)
       ctx.fillStyle = accentColor;
       ctx.beginPath();
-      ctx.ellipse(dragonCenterX + 6, dragonCenterY - 6 - wingFlap, 13, 8, Math.PI / 4, 0, Math.PI * 2);
+      ctx.ellipse(dragonCenterX + 6, dragonCenterY - 6 - wingFlap, 14, 9, Math.PI / 4, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.restore();
-
-      // Jogador na Frente
-      player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, dir, riderScale);
     }
 
     ctx.restore();
