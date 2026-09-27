@@ -4,6 +4,7 @@ import { getNPCData } from './CharacterRegistry.js';
 import { WaterWaveRenderer } from './WaterWaveRenderer.js';
 import { WebGLWaterShader } from './WebGLWaterShader.js';
 import { ShorelineFoamRenderer } from './ShorelineFoamRenderer.js';
+import { WaterReflectionRenderer } from './WaterReflectionRenderer.js';
 
 export const TILE_SIZE = 64;
 
@@ -14,6 +15,7 @@ export class TileMap {
     this.waterWaveRenderer = new WaterWaveRenderer();
     this.webGLWaterShader = new WebGLWaterShader();
     this.shorelineFoamRenderer = new ShorelineFoamRenderer();
+    this.waterReflectionRenderer = new WaterReflectionRenderer();
     this.waterWaveTime = 0;
 
     // Layers stored as sparse Maps keyed by `${x},${y}`:
@@ -952,7 +954,7 @@ export class TileMap {
     return destY + occH;
   }
 
-  renderLayer(ctx, layerName, assetLoader, camera, isEditor = false, showColliders = true) {
+  renderLayer(ctx, layerName, assetLoader, camera, isEditor = false, showColliders = true, renderContext = {}) {
     const layer = this.layers[layerName];
     if (!layer || layer.size === 0) return;
 
@@ -1010,6 +1012,18 @@ export class TileMap {
 
         if (!renderedWithWebGL && this.waterWaveRenderer) {
           this.waterWaveRenderer.renderBatch(ctx, proceduralWaveCells, this.waterWaveTime || performance.now());
+        }
+
+        // Render Dynamic Water Reflections (Flying Player, Dragons, NPCs, Shoreline Trees/Rocks)
+        if (this.waterReflectionRenderer) {
+          this.waterReflectionRenderer.renderReflections(
+            ctx,
+            this,
+            assetLoader,
+            proceduralWaveCells,
+            { ...renderContext, camera, isEditor },
+            this.waterWaveTime || performance.now()
+          );
         }
 
         // Render Shoreline Lapping Waves & Beach Foam against neighboring land

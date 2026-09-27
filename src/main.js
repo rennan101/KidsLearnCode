@@ -2798,7 +2798,8 @@ class RPGApplication {
           } else {
             // Ground, Decor, Overhead layers render normally
             try {
-              this.tileMap.renderLayer(this.ctx, layerName, this.assetLoader, this.camera, isEditor, showColliders);
+              const renderCtx = { player: this.player, dragonManager: this.dragonManager, multiplayerClient: this.multiplayerClient, mode: this.mode };
+              this.tileMap.renderLayer(this.ctx, layerName, this.assetLoader, this.camera, isEditor, showColliders, renderCtx);
             } catch (layerErr) {
               console.error(`Error rendering layer "${layerName}":`, layerErr);
             }
@@ -2808,6 +2809,7 @@ class RPGApplication {
         // Fallback custom user stack order
         for (const layerName of rawLayerOrder) {
           try {
+            const renderCtx = { player: this.player, dragonManager: this.dragonManager, multiplayerClient: this.multiplayerClient, mode: this.mode };
             if (layerName === 'characters') {
               if (this.dragonManager && this.mode === 'play') {
                 try {
@@ -2821,9 +2823,9 @@ class RPGApplication {
                 this.player.render(this.ctx, this.assetLoader, showColliders);
               }
               playerRendered = true;
-              this.tileMap.renderLayer(this.ctx, 'characters', this.assetLoader, this.camera, isEditor, showColliders);
+              this.tileMap.renderLayer(this.ctx, 'characters', this.assetLoader, this.camera, isEditor, showColliders, renderCtx);
             } else {
-              this.tileMap.renderLayer(this.ctx, layerName, this.assetLoader, this.camera, isEditor, showColliders);
+              this.tileMap.renderLayer(this.ctx, layerName, this.assetLoader, this.camera, isEditor, showColliders, renderCtx);
             }
           } catch (layerErr) {
             console.error(`Error rendering layer "${layerName}":`, layerErr);
