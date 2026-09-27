@@ -281,12 +281,23 @@ export class NPCManager {
       const distToAnchor = Math.hypot(candX - npc.anchorX, candY - npc.anchorY);
       if (distToAnchor > npc.leashRadius) continue;
 
-      // Verifica colisão no caminho e no ponto de destino
-      const isBlocked = this.checkTerrainCollision(npc, candX, candY, tileMap) ||
-                        this.checkPlayerProximity(npc, candX, candY, playerCenters) ||
-                        this.checkOtherNpcProximity(npc, candX, candY);
+      // Verifica colisão em cada passo intermediário do caminho
+      let pathBlocked = false;
+      const steps = Math.max(Math.abs(offset.dx / tileSize), Math.abs(offset.dy / tileSize));
+      for (let s = 1; s <= steps; s++) {
+        const stepX = Math.round((npc.x + (offset.dx * s / steps)) / tileSize) * tileSize;
+        const stepY = Math.round((npc.y + (offset.dy * s / steps)) / tileSize) * tileSize;
+        if (
+          this.checkTerrainCollision(npc, stepX, stepY, tileMap) ||
+          this.checkPlayerProximity(npc, stepX, stepY, playerCenters) ||
+          this.checkOtherNpcProximity(npc, stepX, stepY)
+        ) {
+          pathBlocked = true;
+          break;
+        }
+      }
 
-      if (!isBlocked) {
+      if (!pathBlocked) {
         npc.targetX = candX;
         npc.targetY = candY;
         npc.direction = offset.dir;
@@ -304,34 +315,26 @@ export class NPCManager {
   /**
    * Checagem rigorosa de colisão contra terreno e camadas sólidas do TileMap.
    */
-  checkTerrainCollision(npc, px, py, tileMap) {
+  checkTerrainCollision(npc, px, py, tileMap, assetLoader = this.assetLoader) {
     if (!tileMap) return false;
 
     const feet = npc.getFeetBox(px, py);
 
     // 1. Verifica limites globais do mapa
     if (feet.x < 0 || feet.y < 0) return true;
-    if (tileMap.width && feet.x + feet.w > tileMap.width * 64) return true;
-    if (tileMap.height && feet.y + feet.h > tileMap.height * 64) return true;
+    if (tileMap.width && feet.x + feet.w > tileMap.width * (tileMap.tileSize || 64)) return true;
+    if (tileMap.height && feet.y + feet.h > tileMap.height * (tileMap.tileSize || 64)) return true;
 
-    // 2. Verifica se está em cima de água no Ground Layer (NPCs nunca entram na água funda)
+    // 2. Verifica se a posição central dos pés está na água (NPCs nunca entram em água ou mar)
     const centerFeetX = feet.x + feet.w / 2;
     const centerFeetY = feet.y + feet.h / 2;
-    const gx = Math.floor(centerFeetX / 64);
-    const gy = Math.floor(centerFeetY / 64);
-
-    const groundCell = tileMap.layers?.ground?.get(tileMap.getKey(gx, gy));
-    if (groundCell && groundCell.tileId) {
-      const gid = groundCell.tileId.toLowerCase();
-      const isIce = tileMap.temporaryIceTiles && tileMap.temporaryIceTiles.has(tileMap.getKey(gx, gy));
-      if (!isIce && (gid === 'water-animated' || gid.includes('water') || gid.includes('ocean') || gid.includes('river') || gid.includes('sea'))) {
-        return true; // Água profunda bloqueia passagem
-      }
+    if (tileMap.isWaterAt && tileMap.isWaterAt(centerFeetX, centerFeetY, assetLoader)) {
+      return true; // Água / mar bloqueia passagem
     }
 
-    // 3. Verifica colisores AABB das camadas sólidas e objetos
+    // 3. Verifica colisores AABB de todas as camadas sólidas, rochas, montanhas e objetos
     if (typeof tileMap.checkCollision === 'function') {
-      const isSolidBlocked = tileMap.checkCollision(feet.x, feet.y, feet.w, feet.h);
+      const isSolidBlocked = tileMap.checkCollision(feet.x, feet.y, feet.w, feet.h, assetLoader, false);
       if (isSolidBlocked) return true;
     }
 

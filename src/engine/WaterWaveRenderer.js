@@ -42,6 +42,36 @@ export const WATER_PALETTES = {
     foam: '#fed7aa',
     highlight: '#fff7ed'
   },
+  'dawn-golden': {
+    id: 'dawn-golden',
+    name: 'Amanhecer Dourado',
+    deep: '#155e75',
+    base: '#0891b2',
+    shallow: '#06b6d4',
+    crest: '#fde047',
+    foam: '#fef08a',
+    highlight: '#ffffff'
+  },
+  'twilight-indigo': {
+    id: 'twilight-indigo',
+    name: 'Crepúsculo Místico',
+    deep: '#1e1b4b',
+    base: '#312e81',
+    shallow: '#4338ca',
+    crest: '#818cf8',
+    foam: '#c7d2fe',
+    highlight: '#e0e7ff'
+  },
+  'midnight-deep': {
+    id: 'midnight-deep',
+    name: 'Noite Estrelada',
+    deep: '#030712',
+    base: '#0f172a',
+    shallow: '#1e293b',
+    crest: '#38bdf8',
+    foam: '#7dd3fc',
+    highlight: '#bae6fd'
+  },
   'crystal-lagoon': {
     id: 'crystal-lagoon',
     name: 'Lagoa Cristalina',

@@ -618,6 +618,109 @@ export class TileMap {
     return puddles;
   }
 
+  /**
+   * Universal AABB Collision checker against tile map colliders, solid layers, and water.
+   * Used by Player, NPCs, Dragons, and projectiles.
+   */
+  checkCollision(boxX, boxY, boxW, boxH, assetLoader = null, ignoreWater = false) {
+    const tileSize = this.tileSize || 64;
+    const padding = 2;
+    const startTileX = Math.floor(boxX / tileSize) - padding;
+    const endTileX = Math.ceil((boxX + boxW) / tileSize) + padding;
+    const startTileY = Math.floor(boxY / tileSize) - padding;
+    const endTileY = Math.ceil((boxY + boxH) / tileSize) + padding;
+
+    // Check water on ground layer if not explicitly ignored
+    if (!ignoreWater) {
+      const centerBoxX = boxX + boxW / 2;
+      const centerBoxY = boxY + boxH / 2;
+      if (this.isWaterAt(centerBoxX, centerBoxY, assetLoader)) {
+        return true; // Water blocks walking entities
+      }
+    }
+
+    const layersToCheck = ['colliders', 'solid', 'characters', 'decor', 'ground', 'overhead'];
+    for (const layerName of layersToCheck) {
+      const layer = this.layers[layerName];
+      if (!layer || layer.size === 0) continue;
+
+      for (let ty = startTileY; ty <= endTileY; ty++) {
+        for (let tx = startTileX; tx <= endTileX; tx++) {
+          const cell = layer.get(this.getKey(tx, ty));
+          if (!cell) continue;
+
+          const isInvisibleCollider = (cell.tileId && cell.tileId.startsWith('invisible-collider')) || (cell.tileId && cell.tileId.includes('invisible'));
+          if (cell.isRoot === false && !isInvisibleCollider) continue;
+
+          const meta = assetLoader ? assetLoader.getTileMetadata(cell.tileId) : null;
+          let col = cell.collider || meta?.collider;
+
+          // Fallback for invisible colliders
+          if (isInvisibleCollider && (!col || !col.enabled)) {
+            if (cell.tileId === 'invisible-collider-top') col = { enabled: true, x: 0, y: 0, w: 64, h: 20 };
+            else if (cell.tileId === 'invisible-collider-bottom') col = { enabled: true, x: 0, y: 44, w: 64, h: 20 };
+            else if (cell.tileId === 'invisible-collider-left') col = { enabled: true, x: 0, y: 0, w: 20, h: 64 };
+            else if (cell.tileId === 'invisible-collider-right') col = { enabled: true, x: 44, y: 0, w: 20, h: 64 };
+            else if (cell.tileId === 'invisible-collider-corner-tl') col = { enabled: true, x: 0, y: 0, w: 64, h: 20, boxes: [{ x: 0, y: 0, w: 64, h: 20 }, { x: 0, y: 20, w: 20, h: 44 }] };
+            else if (cell.tileId === 'invisible-collider-corner-tr') col = { enabled: true, x: 0, y: 0, w: 64, h: 20, boxes: [{ x: 0, y: 0, w: 64, h: 20 }, { x: 44, y: 20, w: 20, h: 44 }] };
+            else if (cell.tileId === 'invisible-collider-corner-bl') col = { enabled: true, x: 0, y: 44, w: 64, h: 20, boxes: [{ x: 0, y: 44, w: 64, h: 20 }, { x: 0, y: 0, w: 20, h: 44 }] };
+            else if (cell.tileId === 'invisible-collider-corner-br') col = { enabled: true, x: 0, y: 44, w: 64, h: 20, boxes: [{ x: 0, y: 44, w: 64, h: 20 }, { x: 44, y: 0, w: 20, h: 44 }] };
+            else if (cell.tileId === 'invisible-collider-2x2') col = { enabled: true, x: 0, y: 0, w: 128, h: 128 };
+            else col = { enabled: true, x: 0, y: 0, w: 64, h: 64 };
+          }
+
+          if (!col || !col.enabled) continue;
+
+          const rotation = cell.rotation || 0;
+          const isRotated90or270 = (rotation === 90 || rotation === 270);
+          const baseGridW = meta?.gridW || 1;
+          const baseGridH = meta?.gridH || 1;
+          const totalW = (isRotated90or270 ? baseGridH : baseGridW) * tileSize;
+          const totalH = (isRotated90or270 ? baseGridW : baseGridH) * tileSize;
+
+          const boxesToTest = (Array.isArray(col.boxes) && col.boxes.length > 0)
+            ? col.boxes
+            : [{ x: col.x || 0, y: col.y || 0, w: col.w || tileSize, h: col.h || tileSize }];
+
+          for (const b of boxesToTest) {
+            let relX = b.x || 0;
+            let relY = b.y || 0;
+            let bW = b.w || tileSize;
+            let bH = b.h || tileSize;
+
+            if (rotation === 90) {
+              relX = totalH - ((b.y || 0) + (b.h || tileSize));
+              relY = b.x || 0;
+              bW = b.h || tileSize;
+              bH = b.w || tileSize;
+            } else if (rotation === 180) {
+              relX = totalW - ((b.x || 0) + (b.w || tileSize));
+              relY = totalH - ((b.y || 0) + (b.h || tileSize));
+            } else if (rotation === 270) {
+              relX = b.y || 0;
+              relY = totalW - ((b.x || 0) + (b.w || tileSize));
+              bW = b.h || tileSize;
+              bH = b.w || tileSize;
+            }
+
+            const worldBoxX = tx * tileSize + relX;
+            const worldBoxY = ty * tileSize + relY;
+
+            if (
+              boxX < worldBoxX + bW &&
+              boxX + boxW > worldBoxX &&
+              boxY < worldBoxY + bH &&
+              boxY + boxH > worldBoxY
+            ) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
+
   drawTileCell(ctx, cell, x, y, assetLoader, isEditor = false, showColliders = true, isReflection = false) {
     if (!cell || !cell.tileId) return;
 
@@ -1095,6 +1198,14 @@ export class TileMap {
 
     // Optimized batch rendering for procedural ocean waves
     if (layerName === 'ground' && this.waterWaveRenderer) {
+      // Dynamically sync ocean water palette based on the time of day
+      if (renderContext?.dayNightSystem && typeof renderContext.dayNightSystem.getWaterPalette === 'function') {
+        const timePalette = renderContext.dayNightSystem.getWaterPalette();
+        if (timePalette && this.waterWaveRenderer.config.paletteId !== timePalette) {
+          this.waterWaveRenderer.setConfig({ paletteId: timePalette });
+        }
+      }
+
       const proceduralWaveCells = [];
       const regularGroundCells = [];
 

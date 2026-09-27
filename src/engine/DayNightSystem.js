@@ -201,6 +201,27 @@ export class DayNightSystem {
     }
   }
 
+  // Get dynamic ocean water palette based on the time of day
+  getWaterPalette() {
+    const { hours } = this.getCurrentTime();
+    if (hours >= 6 && hours < 8) {
+      // Dawn (warm golden aqua tones)
+      return 'dawn-golden';
+    } else if (hours >= 8 && hours < 16) {
+      // Broad Daylight (crystal clear tropical turquoise / Wind Waker style)
+      return 'wind-waker';
+    } else if (hours >= 16 && hours <= 17) {
+      // Golden Hour / Sunset (fiery warm amber-orange reflection)
+      return 'golden-sunset';
+    } else if (hours > 17 && hours < 20) {
+      // Dusk / Twilight (mystical indigo & lavender bioluminescent crests)
+      return 'twilight-indigo';
+    } else {
+      // Deep Night (dark midnight abyss with glowing cyan crests)
+      return 'midnight-deep';
+    }
+  }
+
   subscribe(listener) {
     this.listeners.push(listener);
     listener(this);

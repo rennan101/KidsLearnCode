@@ -2837,7 +2837,13 @@ class RPGApplication {
           } else {
             // Ground, Decor, Overhead layers render normally
             try {
-              const renderCtx = { player: this.player, dragonManager: this.dragonManager, multiplayerClient: this.multiplayerClient, mode: this.mode };
+              const renderCtx = { 
+                player: this.player, 
+                dragonManager: this.dragonManager, 
+                multiplayerClient: this.multiplayerClient, 
+                dayNightSystem: this.dayNightSystem,
+                mode: this.mode 
+              };
               this.tileMap.renderLayer(this.ctx, layerName, this.assetLoader, this.camera, isEditor, showColliders, renderCtx);
             } catch (layerErr) {
               console.error(`Error rendering layer "${layerName}":`, layerErr);
@@ -2848,7 +2854,13 @@ class RPGApplication {
         // Fallback custom user stack order
         for (const layerName of rawLayerOrder) {
           try {
-            const renderCtx = { player: this.player, dragonManager: this.dragonManager, multiplayerClient: this.multiplayerClient, mode: this.mode };
+            const renderCtx = { 
+              player: this.player, 
+              dragonManager: this.dragonManager, 
+              multiplayerClient: this.multiplayerClient, 
+              dayNightSystem: this.dayNightSystem,
+              mode: this.mode 
+            };
             if (layerName === 'characters') {
               if (this.dragonManager && this.mode === 'play') {
                 try {
