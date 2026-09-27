@@ -451,13 +451,56 @@ export class ModularAvatarRenderer {
   renderTopOnTorso(ctx, topStyle, primary, secondary, skin, dir) {
     const topDef = SVG_TOPS.find(t => t.id === topStyle || t.baseId === topStyle) || SVG_TOPS[0];
     const topPath = (topDef.sleeveType === 'none' ? topDef.fullPath : topDef.torsoPath) || topDef.torsoPath || topDef.fullPath || `assets/Tops/${topDef.folder || 'Tee'}/${topDef.id}_torso.svg`;
-    const img = this.getTintedTopImage(topPath, topDef, primary, secondary);
 
     ctx.save();
 
     const scale = 4.1;
     const fullW = topDef.w * scale;
     const fullH = topDef.h * scale;
+
+    // Quando o jogador estiver de costas (dir === 'north'), renderiza a camisa em cor sólida única
+    if (dir === 'north') {
+      ctx.fillStyle = primary || topDef.primaryColor || '#19c8b9';
+      if (topStyle === 'top_cupcake_dress') {
+        ctx.beginPath();
+        ctx.moveTo(-95, -280);
+        ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
+        ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
+        ctx.bezierCurveTo(218, 130, 250, 260, 260, 360);
+        ctx.lineTo(-260, 360);
+        ctx.bezierCurveTo(-250, 260, -218, 130, -208, 10);
+        ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
+        ctx.closePath();
+        ctx.fill();
+      } else if (topStyle === 'top_crop_top' || topDef.sleeveType === 'none') {
+        ctx.beginPath();
+        ctx.moveTo(-95, -280);
+        ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
+        ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
+        ctx.bezierCurveTo(210, 50, 208, 80, 204, 100);
+        ctx.lineTo(-204, 100);
+        ctx.bezierCurveTo(-208, 80, -210, 50, -208, 10);
+        ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(-95, -280);
+        ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
+        ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
+        ctx.bezierCurveTo(215, 130, 185, 210, 180, 215);
+        ctx.lineTo(-180, 215);
+        ctx.bezierCurveTo(-185, 210, -215, 130, -208, 10);
+        ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+      return;
+    }
+
+    // Frente e perfil: renderiza o SVG oficial da camisa
+    const img = this.getTintedTopImage(topPath, topDef, primary, secondary);
 
     if (img && img.complete && img.naturalWidth > 0) {
       // Proporção 100% fiel alinhada ao tronco e gola (centro x=0, gola y=-280)
@@ -509,7 +552,6 @@ export class ModularAvatarRenderer {
     const topStyle = cfg.topStyle || 'top_tee';
     const topDef = SVG_TOPS.find(t => t.id === topStyle || t.baseId === topStyle) || SVG_TOPS[0];
     const primary = cfg.topColorPrimary || topDef.primaryColor || '#19c8b9';
-    const secondary = cfg.topColorSecondary || topDef.secondaryColor || '#ffffff';
     const hasSleeves = topDef.sleeveType && topDef.sleeveType !== 'none';
     const rootRot = (pose.root && pose.root.rot) ? pose.root.rot : 0;
 
@@ -546,9 +588,6 @@ export class ModularAvatarRenderer {
       }
     }
 
-    // Manga da roupa esquerda (assets/Tops _sleeve_l.svg) aumentada e posicionada para cobrir a pele
-    this.renderArmSleeve(ctx, primary, secondary, topStyle, 'left');
-
     ctx.restore();
 
     // Braço Direito (_11_Braco_Direito e _12_Mao_Direita)
@@ -578,40 +617,7 @@ export class ModularAvatarRenderer {
       }
     }
 
-    // Manga da roupa direita (assets/Tops _sleeve_r.svg) aumentada e posicionada para cobrir a pele
-    this.renderArmSleeve(ctx, primary, secondary, topStyle, 'right');
-
     ctx.restore();
-
-    ctx.restore();
-  }
-
-  renderArmSleeve(ctx, primary, secondary, topStyle, side) {
-    const isLeft = side === 'left';
-    const topDef = SVG_TOPS.find(t => t.id === topStyle || t.baseId === topStyle) || SVG_TOPS[0];
-    if (!topDef || topDef.sleeveType === 'none') return;
-
-    ctx.save();
-
-    // Proporção ampliada para cobrir totalmente o ombro e o braço
-    const scale = 4.42;
-    const fullW = topDef.w * scale;
-    const fullH = topDef.h * scale;
-
-    const sleevePath = isLeft ? topDef.sleeveLPath : topDef.sleeveRPath;
-
-    if (sleevePath) {
-      const img = this.getTintedTopImage(sleevePath, topDef, primary, secondary);
-      if (img && img.complete && img.naturalWidth > 0) {
-        if (isLeft) {
-          // Ombro esquerdo em (-130, -255) -> ajustado com y=-34 para encaixe perfeito
-          ctx.drawImage(img, -fullW / 2 + 130 * (scale / 4.1), -34, fullW, fullH);
-        } else {
-          // Ombro direito em (+130, -255) -> ajustado com y=-34 para encaixe perfeito
-          ctx.drawImage(img, -fullW / 2 - 130 * (scale / 4.1), -34, fullW, fullH);
-        }
-      }
-    }
 
     ctx.restore();
   }
