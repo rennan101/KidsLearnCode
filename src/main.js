@@ -3824,6 +3824,15 @@ class RPGApplication {
 
   setupHeroSelectionUI() {
     const profileBtn = document.getElementById('btn-hero-profile');
+    const profileModal = document.getElementById('player-profile-modal');
+    const closeProfileModalBtn = document.getElementById('btn-close-profile-modal');
+    const profileCustomizeBtn = document.getElementById('btn-profile-customize');
+    const profileLogoutBtn = document.getElementById('btn-profile-logout');
+
+    const logoutConfirmModal = document.getElementById('logout-confirm-modal');
+    const closeLogoutModalBtn = document.getElementById('btn-close-logout-modal');
+    const cancelLogoutBtn = document.getElementById('btn-cancel-logout');
+    const confirmLogoutBtn = document.getElementById('btn-confirm-logout');
 
     this.updateHeroHeaderBadge = () => {
       const avatarEl = document.getElementById('header-hero-avatar');
@@ -3838,6 +3847,66 @@ class RPGApplication {
       if (nameEl) nameEl.innerText = userName;
       this.updateGlobalWalletPills();
     };
+
+    this.openPlayerProfileModal = () => {
+      if (!profileModal) return;
+      const cfg = this.player.customAvatarConfig || DEFAULT_AVATAR_CONFIG;
+      const user = this.supabaseClient?.user;
+      const userName = cfg.name || ((user && !user.isGuest && user.nickname) ? user.nickname : 'Aventureiro');
+
+      const modalAvatar = document.getElementById('profile-modal-avatar');
+      const modalName = document.getElementById('profile-modal-name');
+      const modalLevel = document.getElementById('profile-modal-level');
+      const modalXpFill = document.getElementById('profile-modal-xp-fill');
+      const modalXpText = document.getElementById('profile-modal-xp-text');
+
+      if (modalAvatar && this.player.modularAvatarRenderer) {
+        modalAvatar.src = this.player.modularAvatarRenderer.getAvatarHeadPortrait(cfg, 96);
+      }
+      if (modalName) modalName.innerText = userName;
+      if (modalLevel) modalLevel.innerText = 'Nv. 1';
+      if (modalXpFill) modalXpFill.style.width = '50%';
+      if (modalXpText) modalXpText.innerText = '100/200 XP';
+
+      profileModal.style.display = 'flex';
+    };
+
+    this.closePlayerProfileModal = () => {
+      if (profileModal) profileModal.style.display = 'none';
+    };
+
+    this.openLogoutConfirmModal = () => {
+      if (logoutConfirmModal) logoutConfirmModal.style.display = 'flex';
+    };
+
+    this.closeLogoutConfirmModal = () => {
+      if (logoutConfirmModal) logoutConfirmModal.style.display = 'none';
+    };
+
+    closeProfileModalBtn?.addEventListener('click', () => this.closePlayerProfileModal());
+    closeLogoutModalBtn?.addEventListener('click', () => this.closeLogoutConfirmModal());
+    cancelLogoutBtn?.addEventListener('click', () => this.closeLogoutConfirmModal());
+
+    profileCustomizeBtn?.addEventListener('click', () => {
+      this.closePlayerProfileModal();
+      this.openCharacterCreator(this.player.customAvatarConfig);
+    });
+
+    profileLogoutBtn?.addEventListener('click', () => {
+      this.closePlayerProfileModal();
+      this.openLogoutConfirmModal();
+    });
+
+    confirmLogoutBtn?.addEventListener('click', async () => {
+      this.closeLogoutConfirmModal();
+      if (this.supabaseClient) {
+        await this.supabaseClient.signOut();
+        this.updateAuthUI();
+        this.showToast('Você saiu com sucesso da sua conta.');
+      } else {
+        window.location.reload();
+      }
+    });
 
     this.handleCustomAvatarSave = (config) => {
       this.player.setCustomAvatar(config);
@@ -3856,14 +3925,14 @@ class RPGApplication {
     };
 
     profileBtn?.addEventListener('click', () => {
-      this.openCharacterCreator(this.player.customAvatarConfig);
+      this.openPlayerProfileModal();
     });
 
-    // Shortcut 'P' in Play Mode to open Character Creator
+    // Shortcut 'P' in Play Mode to open Player Profile Modal
     window.addEventListener('keydown', (e) => {
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
       if (this.mode === 'play' && (e.key === 'p' || e.key === 'P')) {
-        this.openCharacterCreator(this.player.customAvatarConfig);
+        this.openPlayerProfileModal();
       }
     });
 
@@ -5052,12 +5121,13 @@ class RPGApplication {
       const label = document.getElementById('quick-mount-label');
       const altitudeHud = document.getElementById('flight-altitude-hud');
 
+      const canFly = this.dragonManager?.canActiveDragonFly();
       if (btn) btn.classList.toggle('mounted', !!isMounted);
       if (label) {
-        label.innerText = isMounted ? 'Descer [Espaço]' : 'Voar [Espaço]';
+        label.innerText = isMounted ? 'Descer [Espaço]' : (canFly ? 'Voar [Espaço]' : 'Montar [Espaço]');
       }
       if (altitudeHud) {
-        altitudeHud.style.display = isMounted ? 'flex' : 'none';
+        altitudeHud.style.display = (isMounted && canFly) ? 'flex' : 'none';
       }
     };
 

@@ -827,17 +827,33 @@ canvas#game-canvas {
 .tile-inspector-panel {
   display: none;
   background: var(--animal-bg-content, #f7f3df);
-  border-bottom: 2px solid var(--animal-border, #c4b89e);
-  padding: 10px 12px;
+  border-top: 2.5px solid var(--animal-border-wood, #7a583e);
+  border-bottom: none;
+  padding: 12px 14px;
+  max-height: 280px;
+  min-height: 120px;
+  overflow-y: auto;
+  resize: vertical;
   animation: inspectorSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 -4px 12px rgba(121, 79, 39, 0.08);
+  box-sizing: border-box;
 }
 
 .tile-inspector-panel.active {
-  display: block;
+  display: flex;
+  flex-direction: column;
+}
+
+.tile-inspector-panel::-webkit-scrollbar {
+  width: 6px;
+}
+.tile-inspector-panel::-webkit-scrollbar-thumb {
+  background: var(--animal-border, #c4b89e);
+  border-radius: 4px;
 }
 
 @keyframes inspectorSlide {
-  0% { opacity: 0; transform: translateY(-8px); }
+  0% { opacity: 0; transform: translateY(8px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 

@@ -430,16 +430,48 @@ export class MultiplayerClient {
       }
     }
 
-    // 3. Name Tag and Online Badge (omitted in reflections)
+    // 3. Overhead Name Badge (Animal Island UI - Matches NPC layout and height)
     if (!isReflection) {
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-      ctx.roundRect(drawX + 4, drawY - 14, 56, 14, 4);
+      ctx.save();
+      const nameText = player.name || 'Aventureiro';
+      ctx.font = 'bold 10.5px "Nunito", sans-serif';
+      const textMetrics = ctx.measureText(nameText);
+      const badgeW = Math.max(44, textMetrics.width + 16);
+      const badgeH = 18;
+      const badgeX = drawX + 32 - badgeW / 2;
+      const badgeY = drawY - 58; // Posicionado confortavelmente acima da cabeça
+
+      // Badge shadow 3D
+      ctx.fillStyle = '#7a583e';
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(badgeX, badgeY + 2.5, badgeW, badgeH, 9);
+      } else {
+        ctx.rect(badgeX, badgeY + 2.5, badgeW, badgeH);
+      }
       ctx.fill();
 
-      ctx.fillStyle = '#f8fafc';
-      ctx.font = 'bold 8px Outfit, sans-serif';
+      // Badge body
+      ctx.fillStyle = '#fdfbf7';
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 9);
+      } else {
+        ctx.rect(badgeX, badgeY, badgeW, badgeH);
+      }
+      ctx.fill();
+
+      // Badge border mint
+      ctx.strokeStyle = '#19c8b9';
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+
+      // Badge text (marrom terra aconchegante)
+      ctx.fillStyle = '#794f27';
       ctx.textAlign = 'center';
-      ctx.fillText(player.name, drawX + 32, drawY - 4);
+      ctx.textBaseline = 'middle';
+      ctx.fillText(nameText, drawX + 32, badgeY + badgeH / 2);
+      ctx.restore();
     }
 
     ctx.restore();

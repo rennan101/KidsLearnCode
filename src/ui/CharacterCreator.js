@@ -153,7 +153,7 @@ export class CharacterCreator {
         <div class="cc-header">
           <div class="cc-title-group">
             <div>
-              <h2 class="cc-title">Criador de Personagem</h2>
+              <h2 class="cc-title">Personalizar Personagem</h2>
               <p class="cc-subtitle">Personalize seu avatar de corpo inteiro com animações automáticas por recorte 2D</p>
             </div>
           </div>
