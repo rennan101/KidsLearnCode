@@ -2298,6 +2298,8 @@ export class DragonManager {
   renderWildDragonEntityBody(ctx, entity, player = null) {
     ctx.save();
 
+    const dir = entity.direction || 'south';
+    const isWest = dir === 'west';
     const alt = entity.flightAltitude || 0;
     const bounce = (entity.fsmState === 'sleep') ? 0 : Math.sin(entity.animTimer * (alt > 10 ? 8 : 4)) * (alt > 10 ? 6 : 4);
     const drawX = Math.round(entity.x);
@@ -2321,8 +2323,6 @@ export class DragonManager {
     }
 
     // 2. Dragon Drawing (Animated SVG frames for dragons or vector canvas)
-    const dir = entity.direction || 'south';
-    const isWest = dir === 'west';
     const dragonId = entity.catalog?.id || entity.tileId;
     const spriteSet = this.dragonSpriteFrames[dragonId];
 
@@ -2662,6 +2662,9 @@ export class DragonManager {
 
     ctx.save();
 
+    const dir = player.direction || this.direction || 'south';
+    const isWest = dir === 'west';
+    const isFrontOrBack = (dir === 'north' || dir === 'south');
     const alt = this.flightAltitude || 0;
     const bounce = Math.sin(this.floatTimer * (alt > 10 ? 8 : 4)) * (alt > 10 ? 6 : 4);
     const drawX = Math.round(this.x);
@@ -2688,10 +2691,6 @@ export class DragonManager {
     if (this.isDodging && Math.floor(this.floatTimer * 20) % 2 === 0) {
       ctx.globalAlpha = 0.4;
     }
-
-    const dir = player.direction || this.direction || 'south';
-    const isWest = dir === 'west';
-    const isFrontOrBack = (dir === 'north' || dir === 'south');
 
     // Centro Real do Dragão no Mundo
     const dragonCenterX = drawX + 32;
@@ -2978,6 +2977,8 @@ export class DragonManager {
   renderDragonEntityBody(ctx, dragon, player = null) {
     ctx.save();
 
+    const dir = this.direction || 'south';
+    const isWest = dir === 'west';
     const isMounted = this.mode === 'mounted';
     const alt = isMounted ? (this.flightAltitude || 0) : 0;
     const bounce = Math.sin(this.floatTimer * (alt > 10 ? 8 : 4)) * (alt > 10 ? 6 : 4);
@@ -3009,8 +3010,6 @@ export class DragonManager {
     }
 
     // 2. Animated SVG Sprite for dragons (Volt, Zephyr, etc.)
-    const dir = this.direction || 'south';
-    const isWest = dir === 'west';
     const spriteSet = this.dragonSpriteFrames[dragon.id];
     if (spriteSet) {
       const stormSet = spriteSet;
