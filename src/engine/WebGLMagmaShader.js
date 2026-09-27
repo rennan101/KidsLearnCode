@@ -1,6 +1,6 @@
 // Hardware-Accelerated WebGL/GLSL Shader for MinionsArt Stylized Lava
 // Uses dual-layer procedural Voronoi caustic lines with harmonic wave distortion,
-// converted into incandescent glowing magma cracks on dark basalt rock crust.
+// converted into incandescent glowing magma cracks on dark basalt rock crust with animated neon pulsation.
 
 function hexToRgbVec(hex) {
   if (!hex) return [0.9, 0.2, 0.05];
@@ -18,9 +18,9 @@ export const MAGMA_PALETTES = {
     name: 'Magma Primordial (MinionsArt)',
     crustDark: '#121010',      // Deep basalt obsidian
     crustLight: '#262220',     // Volcanic rock surface
-    coolingCrimson: '#991b1b', // Solidifying fracture rim
-    lavaOrange: '#ea580c',     // Molten lava stream
-    lavaGold: '#f59e0b',       // High temperature flow
+    coolingCrimson: '#b91c1c', // Solidifying fracture rim
+    lavaOrange: '#f97316',     // Molten lava stream
+    lavaGold: '#facc15',       // High temperature flow
     coreHot: '#fef08a',        // Incandescent yellow core
     highlight: '#ffffff'       // White-hot heat peaks
   },
@@ -29,9 +29,9 @@ export const MAGMA_PALETTES = {
     name: 'Inferno Carmesim',
     crustDark: '#0f0505',
     crustLight: '#1f0d0d',
-    coolingCrimson: '#7f1d1d',
-    lavaOrange: '#dc2626',
-    lavaGold: '#f87171',
+    coolingCrimson: '#991b1b',
+    lavaOrange: '#ef4444',
+    lavaGold: '#fca5a5',
     coreHot: '#fee2e2',
     highlight: '#ffffff'
   },
@@ -40,10 +40,10 @@ export const MAGMA_PALETTES = {
     name: 'Magma Tóxico / Peste Verde',
     crustDark: '#051b0f',
     crustLight: '#0d2818',
-    coolingCrimson: '#047857',
+    coolingCrimson: '#059669',
     lavaOrange: '#10b981',
-    lavaGold: '#34d399',
-    coreHot: '#a7f3d0',
+    lavaGold: '#6ee7b7',
+    coreHot: '#d1fae5',
     highlight: '#ffffff'
   },
   'astral-void': {
@@ -51,10 +51,10 @@ export const MAGMA_PALETTES = {
     name: 'Plasma Astral / Chama Cósmica',
     crustDark: '#0f0c1b',
     crustLight: '#1e1938',
-    coolingCrimson: '#4338ca',
-    lavaOrange: '#6366f1',
-    lavaGold: '#a855f7',
-    coreHot: '#e9d5ff',
+    coolingCrimson: '#4f46e5',
+    lavaOrange: '#818cf8',
+    lavaGold: '#c084fc',
+    coreHot: '#f3e8ff',
     highlight: '#ffffff'
   }
 };
@@ -190,48 +190,54 @@ const FRAGMENT_SHADER_SRC = `
     float layer2 = lavalayer(vec2(1.0) - wuv - dist.yx);
 
     // 4. Basalt Rock vs Molten Lava Veins Composition
-    // layer1 forms the dark rock plates (when close to 0) and the primary magma network (when > 0)
-    // layer2 acts as the intersecting fissure and high-heat core
     vec3 col = mix(u_crustDark, u_crustLight, layer1);
 
     // Incandescent Fracture Lines & Ramping
     float veinValue = max(layer1, layer2);
     float coreVein = layer1 * layer2;
 
-    // Step 1: Cooling Crimson Rim around basalt plates
-    if (veinValue > 0.05) {
-      float t = smoothstep(0.05, 0.35, veinValue);
-      col = mix(col, u_coolingCrimson, t);
+    // Multi-frequency Neon Glow Pulse (Rhythmic breathing + Traveling wave)
+    float neonPulse = 0.75 + 0.25 * sin(iTime * 2.8) + 0.15 * sin(iTime * 5.2 + (wuv.x * 3.0 + wuv.y * 2.0));
+
+    // Step 1: Cooling Crimson Rim around basalt plates with neon breathing
+    if (veinValue > 0.04) {
+      float t = smoothstep(0.04, 0.32, veinValue);
+      col = mix(col, u_coolingCrimson * (0.8 + 0.3 * neonPulse), t);
     }
 
-    // Step 2: Flowing Molten Orange Magma
-    if (veinValue > 0.30) {
-      float t = smoothstep(0.30, 0.70, veinValue);
-      col = mix(col, u_lavaOrange, t);
+    // Step 2: Flowing Molten Orange Magma with vivid intensity
+    if (veinValue > 0.26) {
+      float t = smoothstep(0.26, 0.65, veinValue);
+      col = mix(col, u_lavaOrange * (0.9 + 0.4 * neonPulse), t);
     }
 
-    // Step 3: Bright Golden Flow & Heat Intensity
-    if (veinValue > 0.65) {
-      float t = smoothstep(0.65, 0.95, veinValue);
-      col = mix(col, u_lavaGold, t);
+    // Step 3: Bright Golden Flow & High Heat Intensity
+    if (veinValue > 0.58) {
+      float t = smoothstep(0.58, 0.90, veinValue);
+      col = mix(col, u_lavaGold * (1.0 + 0.5 * neonPulse), t);
     }
 
     // Step 4: High-Temperature Core Line (from dual layer intersection)
-    if (coreVein > 0.18 || layer2 > 0.82) {
-      float t = smoothstep(0.18, 0.65, coreVein);
-      col = mix(col, u_coreHot, t * u_heatIntensity);
+    if (coreVein > 0.14 || layer2 > 0.78) {
+      float t = smoothstep(0.14, 0.60, coreVein);
+      col = mix(col, u_coreHot * (1.1 + 0.5 * neonPulse), t * u_heatIntensity);
     }
 
-    // Step 5: White-Hot Glowing Peak Highlights with subtle thermal pulsation
-    float pulse = sin(iTime * 3.5 + (wuv.x + wuv.y) * 4.0) * 0.12 + 0.88;
-    if (coreVein > 0.55) {
-      float t = smoothstep(0.55, 0.90, coreVein);
-      col = mix(col, u_highlight, t * pulse);
+    // Step 5: White-Hot Glowing Peak Highlights & Incandescent Core
+    if (coreVein > 0.48) {
+      float t = smoothstep(0.48, 0.85, coreVein);
+      col = mix(col, u_highlight, t * clamp(neonPulse, 0.7, 1.3));
     }
 
-    // Stepped cel-shaded outline on the crack borders (MinionsArt signature look)
-    if (veinValue > 0.88) {
-      col = mix(col, u_coreHot, 0.4);
+    // Outer Emissive Neon Halo / Bloom on fractured lines
+    if (veinValue > 0.15) {
+      float haloIntensity = smoothstep(0.15, 0.85, veinValue) * neonPulse * 0.45;
+      col += u_lavaOrange * haloIntensity;
+    }
+
+    // Stepped cel-shaded crisp neon rim along the fissure edge
+    if (veinValue > 0.82) {
+      col = mix(col, u_highlight, 0.35 * neonPulse);
     }
 
     gl_FragColor = vec4(col, 1.0);
@@ -360,7 +366,7 @@ export class WebGLMagmaShader {
     // MinionsArt Flow Parameters
     gl.uniform1f(this.locations.flowSpeed, config.flowSpeed !== undefined ? config.flowSpeed : 1.0);
     gl.uniform1f(this.locations.crustScale, config.crustScale !== undefined ? config.crustScale : 1.0);
-    gl.uniform1f(this.locations.heatIntensity, config.heatIntensity !== undefined ? config.heatIntensity : 1.2);
+    gl.uniform1f(this.locations.heatIntensity, config.heatIntensity !== undefined ? config.heatIntensity : 1.25);
 
     // Thermal Color Ramp Uniforms
     gl.uniform3fv(this.locations.crustDark, hexToRgbVec(pal.crustDark));
