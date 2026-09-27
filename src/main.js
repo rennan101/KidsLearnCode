@@ -898,6 +898,18 @@ class RPGApplication {
     const previewCanvas = document.getElementById('water-preview-canvas');
     const previewPaletteName = document.getElementById('water-preview-palette-name');
 
+    const styleTabs = document.querySelectorAll('.water-style-tab');
+    const controlsWindWaker = document.getElementById('water-controls-wind-waker');
+    const controlsFantasia = document.getElementById('water-controls-detective-fantasia');
+
+    const sliderVoronoi = document.getElementById('slider-water-voronoi');
+    const sliderDistort = document.getElementById('slider-water-distort');
+    const sliderShoreReach = document.getElementById('slider-water-shore-reach');
+
+    const labelVoronoi = document.getElementById('label-water-voronoi');
+    const labelDistort = document.getElementById('label-water-distort');
+    const labelShoreReach = document.getElementById('label-water-shore-reach');
+
     const sliderAperture = document.getElementById('slider-water-aperture');
     const sliderAmplitude = document.getElementById('slider-water-amplitude');
     const sliderSpeed = document.getElementById('slider-water-speed');
@@ -916,6 +928,29 @@ class RPGApplication {
       if (!this.tileMap?.waterWaveRenderer) return;
       const cfg = this.tileMap.waterWaveRenderer.getConfig();
 
+      // Style Tabs
+      const isWindWaker = cfg.style === 'wind-waker';
+      styleTabs.forEach((tab) => {
+        const match = tab.dataset.style === (isWindWaker ? 'wind-waker' : 'detective-fantasia');
+        tab.classList.toggle('active', match);
+        tab.style.background = match ? '#e6f9f6' : '#fdfbf7';
+        tab.style.borderColor = match ? '#19c8b9' : '#c4b89e';
+        tab.style.color = match ? '#0f8e83' : '#794f27';
+      });
+
+      if (controlsWindWaker) controlsWindWaker.style.display = isWindWaker ? 'flex' : 'none';
+      if (controlsFantasia) controlsFantasia.style.display = isWindWaker ? 'none' : 'flex';
+
+      // Wind Waker Controls
+      if (sliderVoronoi) sliderVoronoi.value = cfg.voronoiScale || 1.5;
+      if (sliderDistort) sliderDistort.value = cfg.distortionSpeed || 1.6;
+      if (sliderShoreReach) sliderShoreReach.value = cfg.shoreLapReach !== undefined ? cfg.shoreLapReach : 14;
+
+      if (labelVoronoi) labelVoronoi.innerText = `${Number(cfg.voronoiScale || 1.5).toFixed(1)}x`;
+      if (labelDistort) labelDistort.innerText = `${Number(cfg.distortionSpeed || 1.6).toFixed(1)}x`;
+      if (labelShoreReach) labelShoreReach.innerText = `${Math.round(cfg.shoreLapReach !== undefined ? cfg.shoreLapReach : 14)} px`;
+
+      // Detective Fantasia Controls
       if (sliderAperture) sliderAperture.value = cfg.aperture;
       if (sliderAmplitude) sliderAmplitude.value = cfg.amplitude;
       if (sliderSpeed) sliderSpeed.value = cfg.speed;
@@ -1003,7 +1038,40 @@ class RPGApplication {
       this.showToast('Configuração de ondas de água aplicada com sucesso!');
     });
 
-    // Slider Listeners
+    // Style Switcher Tabs
+    styleTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const style = tab.dataset.style;
+        this.tileMap.waterWaveRenderer.setStyle(style);
+        if (style === 'wind-waker') {
+          this.tileMap.waterWaveRenderer.setPalette('wind-waker');
+        } else {
+          this.tileMap.waterWaveRenderer.setPalette('detective-fantasia');
+        }
+        updateUIFromConfig();
+      });
+    });
+
+    // Wind Waker Sliders
+    sliderVoronoi?.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value) || 1.5;
+      if (labelVoronoi) labelVoronoi.innerText = `${val.toFixed(1)}x`;
+      this.tileMap.waterWaveRenderer.setVoronoiScale(val);
+    });
+
+    sliderDistort?.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value) || 1.6;
+      if (labelDistort) labelDistort.innerText = `${val.toFixed(1)}x`;
+      this.tileMap.waterWaveRenderer.setDistortionSpeed(val);
+    });
+
+    sliderShoreReach?.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10) || 14;
+      if (labelShoreReach) labelShoreReach.innerText = `${val} px`;
+      this.tileMap.waterWaveRenderer.setShoreLapReach(val);
+    });
+
+    // Detective Fantasia Sliders
     sliderAperture?.addEventListener('input', (e) => {
       const val = parseFloat(e.target.value) || 0.35;
       if (labelAperture) labelAperture.innerText = val.toFixed(2);
@@ -1037,23 +1105,27 @@ class RPGApplication {
       });
     });
 
-    // Bulk Convert All Water
+    // Bulk Convert All Water to current style
     btnConvert?.addEventListener('click', () => {
       const ground = this.tileMap.layers.ground;
       if (!ground) return;
+      const isWindWaker = this.tileMap.waterWaveRenderer.getConfig().style === 'wind-waker';
+      const targetTileId = isWindWaker ? 'water-wind-waker' : 'water-waves-procedural';
+      const styleName = isWindWaker ? 'Zelda Wind Waker' : 'Detective Fantasia';
+
       let count = 0;
       this.editorController.undoManager?.pushState?.();
       for (const [key, cell] of ground.entries()) {
-        if (cell && cell.tileId === 'water-animated') {
-          cell.tileId = 'water-waves-procedural';
+        if (cell && (cell.tileId === 'water-animated' || cell.tileId === 'water-waves-procedural' || cell.tileId === 'water-wind-waker')) {
+          cell.tileId = targetTileId;
           count++;
         }
       }
       if (count > 0) {
-        this.showToast(`${count} blocos de água convertidos para Ondas Fantasia!`);
+        this.showToast(`${count} blocos de água convertidos para ${styleName}!`);
         this.triggerAutoSave();
       } else {
-        this.showToast('Nenhum bloco de água clássica encontrado para conversão.');
+        this.showToast('Nenhum bloco de água encontrado para conversão.');
       }
     });
 

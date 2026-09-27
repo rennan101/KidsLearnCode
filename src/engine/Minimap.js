@@ -28,6 +28,7 @@ export class Minimap {
     this.tileColorMap = {
       'water-animated': '#2563eb',
       'water-waves-procedural': '#1b4d49',
+      'water-wind-waker': '#0284c7',
       'grass': '#15803d',
       'grass-detail-1': '#16a34a',
       'grass-detail-2': '#22c55e',

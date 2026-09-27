@@ -51,6 +51,16 @@ export const WATER_PALETTES = {
     crest: '#60a5fa',
     foam: '#dbeafe',
     highlight: '#eff6ff'
+  },
+  'wind-waker': {
+    id: 'wind-waker',
+    name: 'Zelda Wind Waker',
+    deep: '#0369a1',
+    base: '#0284c7',
+    shallow: '#38bdf8',
+    crest: '#7dd3fc',
+    foam: '#ffffff',
+    highlight: '#ffffff'
   }
 };
 
@@ -58,7 +68,8 @@ export class WaterWaveRenderer {
   constructor(config = {}) {
     // Default Wave Configuration Parameters
     this.config = {
-      paletteId: 'detective-fantasia',
+      style: 'wind-waker', // 'wind-waker' | 'detective-fantasia'
+      paletteId: 'wind-waker',
       aperture: 0.35,      // Wave opening gap threshold (0.0 = continuous lines, 0.8 = tiny wave crests with huge openings)
       amplitude: 3.5,      // Wave oscillation height (pixels)
       frequency: 0.045,    // Wave density along X axis
@@ -67,10 +78,14 @@ export class WaterWaveRenderer {
       foamThickness: 2.2,  // Thickness of wave foam crest
       pixelStep: 2,        // Stepping resolution for crisp retro pixel art feel
       showCaustics: true,  // Draw subtle depth shadows below crests
+      voronoiScale: 1.5,   // Scale of Wind Waker voronoi caustic mesh
+      distortionSpeed: 1.6,// Speed of Wind Waker dual-harmonic distortion
+      shoreLapReach: 14,   // Max pixel reach of wave lapping onto shore
+      shoreLapSpeed: 1.8,  // Speed of shoreline wave lapping cycle
       ...config
     };
 
-    this.activePalette = WATER_PALETTES[this.config.paletteId] || WATER_PALETTES['detective-fantasia'];
+    this.activePalette = WATER_PALETTES[this.config.paletteId] || WATER_PALETTES['wind-waker'];
   }
 
   setConfig(newConfig) {
@@ -82,6 +97,26 @@ export class WaterWaveRenderer {
 
   getConfig() {
     return { ...this.config };
+  }
+
+  setStyle(style) {
+    this.config.style = style === 'detective-fantasia' ? 'detective-fantasia' : 'wind-waker';
+  }
+
+  setVoronoiScale(val) {
+    this.config.voronoiScale = Math.max(0.5, Math.min(6.0, Number(val)));
+  }
+
+  setDistortionSpeed(val) {
+    this.config.distortionSpeed = Math.max(0.2, Math.min(5.0, Number(val)));
+  }
+
+  setShoreLapReach(val) {
+    this.config.shoreLapReach = Math.max(0, Math.min(32, Number(val)));
+  }
+
+  setShoreLapSpeed(val) {
+    this.config.shoreLapSpeed = Math.max(0.2, Math.min(5.0, Number(val)));
   }
 
   setAperture(val) {

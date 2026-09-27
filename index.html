@@ -1415,47 +1415,105 @@
       </div>
 
       <!-- Modal Body -->
-      <div class="crafting-body" style="padding: 20px; display: flex; flex-direction: column; gap: 16px; color: #794f27;">
+      <div class="crafting-body" style="padding: 20px; display: flex; flex-direction: column; gap: 14px; color: #794f27;">
         
         <!-- Live Wave Preview Box -->
         <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
           <div style="display: flex; justify-content: space-between; width: 100%; font-size: 0.82rem; font-weight: 800; color: #7a583e;">
-            <span>Pré-visualização em Tempo Real</span>
-            <span id="water-preview-palette-name" style="color: #0f8e83;">Detective Fantasia (Retro)</span>
+            <span>Pré-visualização do Shader em GPU (60 FPS)</span>
+            <span id="water-preview-palette-name" style="color: #0f8e83;">Zelda Wind Waker</span>
           </div>
-          <div style="width: 100%; height: 110px; border-radius: 16px; border: 2px solid #c4b89e; overflow: hidden; background: #143836; box-shadow: inset 0 2px 8px rgba(0,0,0,0.25); position: relative;">
+          <div style="width: 100%; height: 110px; border-radius: 16px; border: 2px solid #c4b89e; overflow: hidden; background: #0369a1; box-shadow: inset 0 2px 8px rgba(0,0,0,0.25); position: relative;">
             <canvas id="water-preview-canvas" width="420" height="110" style="width: 100%; height: 100%; display: block;"></canvas>
+          </div>
+        </div>
+
+        <!-- Water Style Selector Tabs -->
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 0.85rem; font-weight: 800; color: #794f27;">Estilo Visual da Água:</label>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="water-style-tab active" data-style="wind-waker" style="flex: 1; background: #e6f9f6; border: 2px solid #19c8b9; border-radius: 50px; padding: 8px 12px; font-family: 'Nunito', sans-serif; font-size: 0.82rem; font-weight: 800; color: #0f8e83; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M12 3a9 9 0 0 1 9 9"></path>
+              </svg>
+              <span>Zelda Wind Waker</span>
+            </button>
+            <button type="button" class="water-style-tab" data-style="detective-fantasia" style="flex: 1; background: #fdfbf7; border: 2px solid #c4b89e; border-radius: 50px; padding: 8px 12px; font-family: 'Nunito', sans-serif; font-size: 0.82rem; font-weight: 800; color: #794f27; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 12c2.5-3 5-3 7.5 0s5 3 7.5 0 4.5-3 7-0.5"></path>
+              </svg>
+              <span>Detective Fantasia</span>
+            </button>
           </div>
         </div>
 
         <!-- Palette Selector -->
         <div style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-size: 0.85rem; font-weight: 800; color: #794f27;">Paleta de Cores do Bioma:</label>
-          <div id="water-palette-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
-            <button type="button" class="water-palette-btn active" data-palette="detective-fantasia" style="background: #e6f9f6; border: 2px solid #19c8b9; border-radius: 50px; padding: 8px 12px; font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 800; color: #0f8e83; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 6px;">
-              <span style="width: 14px; height: 14px; border-radius: 50%; background: #3dd4a7; display: inline-block; border: 1.5px solid #143836;"></span>
-              <span>Fantasia Retro</span>
+          <label style="font-size: 0.85rem; font-weight: 800; color: #794f27;">Paleta de Cores:</label>
+          <div id="water-palette-options" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+            <button type="button" class="water-palette-btn active" data-palette="wind-waker" style="background: #e6f9f6; border: 2px solid #19c8b9; border-radius: 50px; padding: 6px 8px; font-family: 'Nunito', sans-serif; font-size: 0.76rem; font-weight: 800; color: #0f8e83; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 5px;">
+              <span style="width: 12px; height: 12px; border-radius: 50%; background: #00a3cc; display: inline-block; border: 1.5px solid #0369a1;"></span>
+              <span>Wind Waker</span>
             </button>
-            <button type="button" class="water-palette-btn" data-palette="tropical-mint" style="background: #fdfbf7; border: 2px solid #c4b89e; border-radius: 50px; padding: 8px 12px; font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 800; color: #794f27; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 6px;">
-              <span style="width: 14px; height: 14px; border-radius: 50%; background: #2dd4bf; display: inline-block; border: 1.5px solid #0f766e;"></span>
-              <span>Menta Tropical</span>
+            <button type="button" class="water-palette-btn" data-palette="tropical-mint" style="background: #fdfbf7; border: 2px solid #c4b89e; border-radius: 50px; padding: 6px 8px; font-family: 'Nunito', sans-serif; font-size: 0.76rem; font-weight: 800; color: #794f27; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 5px;">
+              <span style="width: 12px; height: 12px; border-radius: 50%; background: #2dd4bf; display: inline-block; border: 1.5px solid #0f766e;"></span>
+              <span>Menta</span>
             </button>
-            <button type="button" class="water-palette-btn" data-palette="deep-ocean" style="background: #fdfbf7; border: 2px solid #c4b89e; border-radius: 50px; padding: 8px 12px; font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 800; color: #794f27; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 6px;">
-              <span style="width: 14px; height: 14px; border-radius: 50%; background: #38bdf8; display: inline-block; border: 1.5px solid #0c4a6e;"></span>
-              <span>Oceano Profundo</span>
+            <button type="button" class="water-palette-btn" data-palette="detective-fantasia" style="background: #fdfbf7; border: 2px solid #c4b89e; border-radius: 50px; padding: 6px 8px; font-family: 'Nunito', sans-serif; font-size: 0.76rem; font-weight: 800; color: #794f27; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 5px;">
+              <span style="width: 12px; height: 12px; border-radius: 50%; background: #3dd4a7; display: inline-block; border: 1.5px solid #143836;"></span>
+              <span>Retro GB</span>
             </button>
-            <button type="button" class="water-palette-btn" data-palette="golden-sunset" style="background: #fdfbf7; border: 2px solid #c4b89e; border-radius: 50px; padding: 8px 12px; font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 800; color: #794f27; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 6px;">
-              <span style="width: 14px; height: 14px; border-radius: 50%; background: #fb923c; display: inline-block; border: 1.5px solid #7c2d12;"></span>
+            <button type="button" class="water-palette-btn" data-palette="deep-ocean" style="background: #fdfbf7; border: 2px solid #c4b89e; border-radius: 50px; padding: 6px 8px; font-family: 'Nunito', sans-serif; font-size: 0.76rem; font-weight: 800; color: #794f27; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 5px;">
+              <span style="width: 12px; height: 12px; border-radius: 50%; background: #38bdf8; display: inline-block; border: 1.5px solid #0c4a6e;"></span>
+              <span>Oceano</span>
+            </button>
+            <button type="button" class="water-palette-btn" data-palette="golden-sunset" style="background: #fdfbf7; border: 2px solid #c4b89e; border-radius: 50px; padding: 6px 8px; font-family: 'Nunito', sans-serif; font-size: 0.76rem; font-weight: 800; color: #794f27; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 5px;">
+              <span style="width: 12px; height: 12px; border-radius: 50%; background: #fb923c; display: inline-block; border: 1.5px solid #7c2d12;"></span>
               <span>Pôr do Sol</span>
+            </button>
+            <button type="button" class="water-palette-btn" data-palette="crystal-lagoon" style="background: #fdfbf7; border: 2px solid #c4b89e; border-radius: 50px; padding: 6px 8px; font-family: 'Nunito', sans-serif; font-size: 0.76rem; font-weight: 800; color: #794f27; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 5px;">
+              <span style="width: 12px; height: 12px; border-radius: 50%; background: #60a5fa; display: inline-block; border: 1.5px solid #1e3a8a;"></span>
+              <span>Cristal</span>
             </button>
           </div>
         </div>
 
-        <!-- Sliders Controls -->
-        <div style="display: flex; flex-direction: column; gap: 12px; background: #f7f3df; border: 2px solid #e2d9be; border-radius: 18px; padding: 14px;">
+        <!-- Controls: Zelda Wind Waker Mode -->
+        <div id="water-controls-wind-waker" style="display: flex; flex-direction: column; gap: 10px; background: #f7f3df; border: 2px solid #e2d9be; border-radius: 18px; padding: 14px;">
+          <!-- Voronoi Scale -->
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 800;">
+              <span>Tamanho da Malha Cáustica (Voronoi):</span>
+              <span id="label-water-voronoi" style="color: #0f8e83;">1.5x</span>
+            </div>
+            <input type="range" id="slider-water-voronoi" min="0.5" max="4.0" step="0.1" value="1.5" style="width: 100%; accent-color: #19c8b9; cursor: pointer;">
+          </div>
+
+          <!-- Distortion Speed -->
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 800;">
+              <span>Velocidade de Deformação das Ondas:</span>
+              <span id="label-water-distort" style="color: #0f8e83;">1.6x</span>
+            </div>
+            <input type="range" id="slider-water-distort" min="0.5" max="4.0" step="0.1" value="1.6" style="width: 100%; accent-color: #19c8b9; cursor: pointer;">
+          </div>
+
+          <!-- Shoreline Wave Lap Reach -->
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 800;">
+              <span>Alcance da Espuma na Praia / Costa:</span>
+              <span id="label-water-shore-reach" style="color: #0f8e83;">14 px</span>
+            </div>
+            <input type="range" id="slider-water-shore-reach" min="0" max="24" step="2" value="14" style="width: 100%; accent-color: #19c8b9; cursor: pointer;">
+          </div>
+        </div>
+
+        <!-- Controls: Detective Fantasia Mode -->
+        <div id="water-controls-detective-fantasia" style="display: none; flex-direction: column; gap: 10px; background: #f7f3df; border: 2px solid #e2d9be; border-radius: 18px; padding: 14px;">
           <!-- Slider 1: Abertura / Gaps -->
-          <div style="display: flex; flex-direction: column; gap: 4px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.84rem; font-weight: 800;">
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 800;">
               <span>Abertura das Cristas (Gaps):</span>
               <span id="label-water-aperture" style="color: #0f8e83;">0.35</span>
             </div>
@@ -1463,8 +1521,8 @@
           </div>
 
           <!-- Slider 2: Altura / Amplitude -->
-          <div style="display: flex; flex-direction: column; gap: 4px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.84rem; font-weight: 800;">
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 800;">
               <span>Altura / Amplitude da Onda:</span>
               <span id="label-water-amplitude" style="color: #0f8e83;">3.5 px</span>
             </div>
@@ -1472,8 +1530,8 @@
           </div>
 
           <!-- Slider 3: Velocidade -->
-          <div style="display: flex; flex-direction: column; gap: 4px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.84rem; font-weight: 800;">
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 800;">
               <span>Velocidade de Deslocamento:</span>
               <span id="label-water-speed" style="color: #0f8e83;">1.0x</span>
             </div>
@@ -1481,8 +1539,8 @@
           </div>
 
           <!-- Slider 4: Espaçamento entre Ondas -->
-          <div style="display: flex; flex-direction: column; gap: 4px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.84rem; font-weight: 800;">
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 800;">
               <span>Espaçamento Vertical:</span>
               <span id="label-water-spacing" style="color: #0f8e83;">18 px</span>
             </div>
@@ -1491,12 +1549,12 @@
         </div>
 
         <!-- Bulk Tile Conversion & Modal Actions -->
-        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
-          <button type="button" id="btn-convert-all-water" class="codekit-btn-secondary" style="width: 100%; border-radius: 50px; font-weight: 800; padding: 9px 0; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 6px; background: #e6f9f6; color: #0f8e83; border: 2px solid #19c8b9;">
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 2px;">
+          <button type="button" id="btn-convert-all-water" class="codekit-btn-secondary" style="width: 100%; border-radius: 50px; font-weight: 800; padding: 9px 0; font-size: 0.84rem; display: flex; align-items: center; justify-content: center; gap: 6px; background: #e6f9f6; color: #0f8e83; border: 2px solid #19c8b9;">
             <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
             </svg>
-            <span>Converter Todas as Águas Clássicas do Mapa para Ondas</span>
+            <span>Converter Todas as Águas do Mapa para Este Estilo</span>
           </button>
           <div style="display: flex; gap: 10px;">
             <button type="button" id="btn-save-water-settings" class="btn-equip-tool" style="flex: 1; border-radius: 50px; font-weight: 800; padding: 11px 0; font-size: 0.92rem;">

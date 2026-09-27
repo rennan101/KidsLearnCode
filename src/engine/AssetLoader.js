@@ -33,6 +33,11 @@ export function generateWaterWaveSVG() {
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
 
+export function generateWindWakerSVG() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><rect width="64" height="64" fill="#0284c7"/><circle cx="20" cy="22" r="14" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="8 4"/><circle cx="46" cy="38" r="16" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="10 5"/><circle cx="16" cy="50" r="10" fill="none" stroke="#7dd3fc" stroke-width="2"/><circle cx="50" cy="14" r="9" fill="none" stroke="#7dd3fc" stroke-width="2"/><path d="M 0 32 Q 16 20, 32 32 T 64 32" stroke="#ffffff" stroke-width="1.5" fill="none" opacity="0.6"/></svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
 // Asset manifest and loader for Geralt and complete RPG Tileset with all 170+ assets
 export class AssetLoader {
   constructor() {
@@ -41,6 +46,25 @@ export class AssetLoader {
 
     // Overworld individual tile assets with footprint dimensions and custom collider boxes
     this.overworldTiles = [
+      {
+            "id": "water-wind-waker",
+            "name": "Água Zelda Wind Waker (Cel-Shaded)",
+            "category": "Water",
+            "layer": "ground",
+            "isWaterWaves": true,
+            "isWindWaker": true,
+            "isAnimated": true,
+            "src": generateWindWakerSVG(),
+            "gridW": 1,
+            "gridH": 1,
+            "collider": {
+                  "enabled": true,
+                  "x": 0,
+                  "y": 0,
+                  "w": 64,
+                  "h": 64
+            }
+      },
       {
             "id": "water-waves-procedural",
             "name": "Ondas Fantasia (Aberturas)",

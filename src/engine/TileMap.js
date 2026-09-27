@@ -3,6 +3,7 @@ import { ModularAvatarRenderer } from './animation/ModularAvatarRenderer.js';
 import { getNPCData } from './CharacterRegistry.js';
 import { WaterWaveRenderer } from './WaterWaveRenderer.js';
 import { WebGLWaterShader } from './WebGLWaterShader.js';
+import { ShorelineFoamRenderer } from './ShorelineFoamRenderer.js';
 
 export const TILE_SIZE = 64;
 
@@ -12,6 +13,7 @@ export class TileMap {
     this.avatarRenderer = new ModularAvatarRenderer();
     this.waterWaveRenderer = new WaterWaveRenderer();
     this.webGLWaterShader = new WebGLWaterShader();
+    this.shorelineFoamRenderer = new ShorelineFoamRenderer();
     this.waterWaveTime = 0;
 
     // Layers stored as sparse Maps keyed by `${x},${y}`:
@@ -970,7 +972,7 @@ export class TileMap {
         for (let x = startCol; x <= endCol; x++) {
           const cell = layer.get(this.getKey(x, y));
           if (!cell || cell.isRoot === false) continue;
-          if (cell.tileId === 'water-waves-procedural') {
+          if (cell.tileId === 'water-waves-procedural' || cell.tileId === 'water-wind-waker') {
             proceduralWaveCells.push({ x: x * this.tileSize, y: y * this.tileSize, tileSize: this.tileSize, cell, tx: x, ty: y });
           } else {
             regularGroundCells.push({ x, y, cell });
@@ -980,10 +982,15 @@ export class TileMap {
 
       if (proceduralWaveCells.length > 0) {
         let renderedWithWebGL = false;
+        const config = this.waterWaveRenderer ? this.waterWaveRenderer.getConfig() : {};
+
+        // If any cell is explicitly water-wind-waker, ensure shader renders Wind Waker mode
+        const hasWindWaker = proceduralWaveCells.some(w => w.cell.tileId === 'water-wind-waker');
+        const activeConfig = { ...config, style: hasWindWaker ? 'wind-waker' : config.style };
+
         if (this.webGLWaterShader && this.webGLWaterShader.isSupported) {
           const timeSec = (this.waterWaveTime || performance.now()) / 1000;
-          const config = this.waterWaveRenderer ? this.waterWaveRenderer.getConfig() : {};
-          const shaderCanvas = this.webGLWaterShader.render(camW, camH, camX, camY, camZ, timeSec, config);
+          const shaderCanvas = this.webGLWaterShader.render(camW, camH, camX, camY, camZ, timeSec, activeConfig);
 
           if (shaderCanvas) {
             ctx.save();
@@ -1001,6 +1008,11 @@ export class TileMap {
 
         if (!renderedWithWebGL && this.waterWaveRenderer) {
           this.waterWaveRenderer.renderBatch(ctx, proceduralWaveCells, this.waterWaveTime || performance.now());
+        }
+
+        // Render Shoreline Lapping Waves & Beach Foam against neighboring land
+        if (this.shorelineFoamRenderer) {
+          this.shorelineFoamRenderer.renderShorelines(ctx, this, proceduralWaveCells, this.waterWaveTime || performance.now(), activeConfig);
         }
 
         // Render overlays (ice/puddle/colliders) for wave cells
