@@ -222,3 +222,45 @@ img, canvas, svg, video, .character-preview, .tile-card, .asset-thumb, .hero-por
   border-color: #ec4899;
   box-shadow: 0 0 10px rgba(236, 72, 153, 0.4);
 }
+
+/* ==========================================================================
+   2.5D Miniature Tilt-Shift Gaussian Blur Overlay (Top & Bottom)
+   ========================================================================== */
+.tilt-shift-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 12;
+  overflow: hidden;
+}
+
+.tilt-shift-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.tilt-shift-top {
+  top: 0;
+  height: 15vh;
+  min-height: 60px;
+  max-height: 130px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.6) 40%, rgba(0, 0, 0, 0) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.6) 40%, rgba(0, 0, 0, 0) 100%);
+}
+
+.tilt-shift-bottom {
+  bottom: 0;
+  height: 15vh;
+  min-height: 60px;
+  max-height: 130px;
+  mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.6) 40%, rgba(0, 0, 0, 0) 100%);
+  -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.6) 40%, rgba(0, 0, 0, 0) 100%);
+}
+
