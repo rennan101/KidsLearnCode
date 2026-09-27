@@ -254,6 +254,25 @@ export class Minimap {
   }
 
   render(isEditor = false) {
+    if (this.container) {
+      this.container.style.display = isEditor ? 'none' : 'block';
+    }
+
+    if (isEditor) {
+      // In Editor Mode, compact minimap is hidden to not obstruct toolbars
+      if (this.isExpanded && this.expandedCtx && this.expandedCanvas) {
+        this.renderMinimapView(
+          this.expandedCtx,
+          this.expandedCanvas.width,
+          this.expandedCanvas.height,
+          0.2 * this.expandedZoom,
+          isEditor,
+          true
+        );
+      }
+      return;
+    }
+
     // 1. Render Compact Circular Minimap
     if (this.ctx && this.canvas) {
       this.renderMinimapView(this.ctx, this.canvas.width, this.canvas.height, 0.12, isEditor, false);

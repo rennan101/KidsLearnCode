@@ -1246,8 +1246,8 @@ export class TileMap {
 
     // Optimized batch rendering for procedural ocean waves
     if (layerName === 'ground' && this.waterWaveRenderer) {
-      // Dynamically sync ocean water palette based on the time of day
-      if (renderContext?.dayNightSystem && typeof renderContext.dayNightSystem.getWaterPalette === 'function') {
+      // Dynamically sync ocean water palette based on the time of day ONLY if explicitly configured
+      if (this.waterWaveRenderer.config.autoDayNightPalette && renderContext?.dayNightSystem && typeof renderContext.dayNightSystem.getWaterPalette === 'function' && !isEditor) {
         const timePalette = renderContext.dayNightSystem.getWaterPalette();
         if (timePalette && this.waterWaveRenderer.config.paletteId !== timePalette) {
           this.waterWaveRenderer.setConfig({ paletteId: timePalette });

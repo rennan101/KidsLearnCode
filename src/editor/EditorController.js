@@ -107,8 +107,11 @@ export class EditorController {
     if (!this.player) return;
     const targetX = this.player.x + 32;
     const targetY = this.player.y + 32;
-    this.camera.x = targetX - (this.camera.viewportWidth / this.camera.zoom) / 2;
-    this.camera.y = targetY - (this.camera.viewportHeight / this.camera.zoom) / 2;
+    const camW = (this.camera.viewportWidth && this.camera.viewportWidth > 0) ? this.camera.viewportWidth : 800;
+    const camH = (this.camera.viewportHeight && this.camera.viewportHeight > 0) ? this.camera.viewportHeight : 600;
+    const camZ = (this.camera.zoom && this.camera.zoom > 0.05) ? this.camera.zoom : 1.0;
+    this.camera.x = targetX - (camW / camZ) / 2;
+    this.camera.y = targetY - (camH / camZ) / 2;
   }
 
   resetKeys() {
@@ -142,6 +145,15 @@ export class EditorController {
     }
 
     const k = (key || '').toLowerCase();
+
+    // 1. Navigation keys (WASD / Arrows) - prioritized so camera navigation is never blocked
+    if (['w', 'a', 's', 'd'].includes(k) || key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight') {
+      if (k === 'w' || key === 'ArrowUp') { this.keys['w'] = true; this.keys['ArrowUp'] = true; }
+      if (k === 'a' || key === 'ArrowLeft') { this.keys['a'] = true; this.keys['ArrowLeft'] = true; }
+      if (k === 's' || key === 'ArrowDown') { this.keys['s'] = true; this.keys['ArrowDown'] = true; }
+      if (k === 'd' || key === 'ArrowRight') { this.keys['d'] = true; this.keys['ArrowRight'] = true; }
+      return;
+    }
 
     // Tool switching shortcuts
     if (k === 'v') {
@@ -212,25 +224,14 @@ export class EditorController {
       if (inspectorPanel) inspectorPanel.classList.remove('active');
       return;
     }
-
-    if (['w', 'a', 's', 'd'].includes(k)) {
-      this.keys[k] = true;
-    }
-    if (key === 'ArrowUp' || k === 'arrowup') { this.keys['ArrowUp'] = true; this.keys['w'] = true; }
-    if (key === 'ArrowLeft' || k === 'arrowleft') { this.keys['ArrowLeft'] = true; this.keys['a'] = true; }
-    if (key === 'ArrowDown' || k === 'arrowdown') { this.keys['ArrowDown'] = true; this.keys['s'] = true; }
-    if (key === 'ArrowRight' || k === 'arrowright') { this.keys['ArrowRight'] = true; this.keys['d'] = true; }
   }
 
   handleKeyUp(key) {
     const k = (typeof key === 'string' ? key : key?.key || '').toLowerCase();
-    if (['w', 'a', 's', 'd'].includes(k)) {
-      this.keys[k] = false;
-    }
-    if (key === 'ArrowUp' || k === 'arrowup') { this.keys['ArrowUp'] = false; this.keys['w'] = false; }
-    if (key === 'ArrowLeft' || k === 'arrowleft') { this.keys['ArrowLeft'] = false; this.keys['a'] = false; }
-    if (key === 'ArrowDown' || k === 'arrowdown') { this.keys['ArrowDown'] = false; this.keys['s'] = false; }
-    if (key === 'ArrowRight' || k === 'arrowright') { this.keys['ArrowRight'] = false; this.keys['d'] = false; }
+    if (k === 'w' || key === 'ArrowUp' || k === 'arrowup') { this.keys['w'] = false; this.keys['ArrowUp'] = false; }
+    if (k === 'a' || key === 'ArrowLeft' || k === 'arrowleft') { this.keys['a'] = false; this.keys['ArrowLeft'] = false; }
+    if (k === 's' || key === 'ArrowDown' || k === 'arrowdown') { this.keys['s'] = false; this.keys['ArrowDown'] = false; }
+    if (k === 'd' || key === 'ArrowRight' || k === 'arrowright') { this.keys['d'] = false; this.keys['ArrowRight'] = false; }
   }
 
   update(deltaTime) {
@@ -254,7 +255,8 @@ export class EditorController {
     }
 
     if (vx !== 0 || vy !== 0) {
-      const moveDist = (this.cameraNavSpeed / this.camera.zoom) * (deltaTime / 1000);
+      const dtSec = Math.min(0.1, (deltaTime || 16.6) / 1000);
+      const moveDist = (this.cameraNavSpeed / Math.max(0.2, this.camera.zoom)) * dtSec;
       this.camera.x += vx * moveDist;
       this.camera.y += vy * moveDist;
     }

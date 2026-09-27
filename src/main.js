@@ -1265,29 +1265,34 @@ class RPGApplication {
     // Mouse wheel zoom in Editor Mode only (disabled in Play Mode per user request)
     const handleViewportWheel = (e) => {
       if (this.mode !== 'edit') return;
-      // Do not zoom main editor viewport if expanded map modal or another modal is active
-      if (this.minimap?.isExpanded || document.querySelector('.modal.active, .expanded-map-modal.active')) {
-        return;
-      }
+      if (this.minimap?.isExpanded) return;
 
       e.preventDefault();
+      e.stopPropagation();
 
       const rect = this.canvas.getBoundingClientRect();
       const mouseScreenX = e.clientX - rect.left;
       const mouseScreenY = e.clientY - rect.top;
 
-      // World pos before zoom
-      const worldPosBefore = this.camera.screenToWorld(mouseScreenX, mouseScreenY);
+      const currentZoom = (typeof this.camera.zoom === 'number' && isFinite(this.camera.zoom) && this.camera.zoom > 0.05) 
+        ? this.camera.zoom 
+        : 1.0;
+      const camX = (typeof this.camera.x === 'number' && isFinite(this.camera.x)) ? this.camera.x : 0;
+      const camY = (typeof this.camera.y === 'number' && isFinite(this.camera.y)) ? this.camera.y : 0;
 
-      const zoomFactor = e.deltaY < 0 ? 1.12 : 0.89;
+      // World coordinate under mouse before zoom
+      const worldX = camX + (mouseScreenX / currentZoom);
+      const worldY = camY + (mouseScreenY / currentZoom);
+
+      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
       const minZoom = 0.3;
       const maxZoom = 3.5;
-      const newZoom = Math.max(minZoom, Math.min(maxZoom, this.camera.zoom * zoomFactor));
+      const newZoom = Math.max(minZoom, Math.min(maxZoom, currentZoom * zoomFactor));
       this.camera.zoom = newZoom;
 
       // Reposition camera so mouse points to the exact same world coordinate
-      this.camera.x = worldPosBefore.x - mouseScreenX / newZoom;
-      this.camera.y = worldPosBefore.y - mouseScreenY / newZoom;
+      this.camera.x = worldX - (mouseScreenX / newZoom);
+      this.camera.y = worldY - (mouseScreenY / newZoom);
     };
 
     this.canvas.addEventListener('wheel', handleViewportWheel, { passive: false });
@@ -2134,6 +2139,12 @@ class RPGApplication {
       saveStatus.style.display = isEdit ? 'flex' : 'none';
     }
 
+    // 1b. Minimap HUD: completamente oculto no Modo de Edição para não obstruir a barra de ferramentas
+    const minimapHud = document.getElementById('minimap-hud');
+    if (minimapHud) {
+      minimapHud.style.display = isEdit ? 'none' : 'block';
+    }
+
     // 2. Opções admin / desenvolvedor (Colliders, Save JSON, Load JSON, Clear Map)
     // Só devem aparecer no modo de edição para a conta com o e-mail rennancr93@gmail.com
     const adminButtons = [
@@ -2739,15 +2750,20 @@ class RPGApplication {
 
             // Collect visible solid tiles and characters entities for unified Y-sorting
             const ySortEntities = [];
+            const camW = (this.camera.viewportWidth && this.camera.viewportWidth > 0) ? this.camera.viewportWidth : (this.canvas.width || 800);
+            const camH = (this.camera.viewportHeight && this.camera.viewportHeight > 0) ? this.camera.viewportHeight : (this.canvas.height || 600);
+            const camZ = (this.camera.zoom && this.camera.zoom > 0.05) ? this.camera.zoom : 1.0;
+            const camX = isFinite(this.camera.x) ? this.camera.x : 0;
+            const camY = isFinite(this.camera.y) ? this.camera.y : 0;
 
             // 1. Solid layer root tiles within viewport (2 blocks padding)
             const solidLayer = this.tileMap.layers.solid;
             if (solidLayer && solidLayer.size > 0) {
               const padding = 2;
-              const startCol = Math.floor(this.camera.x / this.tileMap.tileSize) - padding;
-              const endCol = Math.ceil((this.camera.x + this.camera.viewportWidth / this.camera.zoom) / this.tileMap.tileSize) + padding;
-              const startRow = Math.floor(this.camera.y / this.tileMap.tileSize) - padding;
-              const endRow = Math.ceil((this.camera.y + this.camera.viewportHeight / this.camera.zoom) / this.tileMap.tileSize) + padding;
+              const startCol = Math.floor(camX / this.tileMap.tileSize) - padding;
+              const endCol = Math.ceil((camX + camW / camZ) / this.tileMap.tileSize) + padding;
+              const startRow = Math.floor(camY / this.tileMap.tileSize) - padding;
+              const endRow = Math.ceil((camY + camH / camZ) / this.tileMap.tileSize) + padding;
 
               for (let y = startRow; y <= endRow; y++) {
                 for (let x = startCol; x <= endCol; x++) {
@@ -2771,10 +2787,10 @@ class RPGApplication {
             const charLayer = this.tileMap.layers.characters;
             if (charLayer && charLayer.size > 0 && isEditor) {
               const padding = 2;
-              const startCol = Math.floor(this.camera.x / this.tileMap.tileSize) - padding;
-              const endCol = Math.ceil((this.camera.x + this.camera.viewportWidth / this.camera.zoom) / this.tileMap.tileSize) + padding;
-              const startRow = Math.floor(this.camera.y / this.tileMap.tileSize) - padding;
-              const endRow = Math.ceil((this.camera.y + this.camera.viewportHeight / this.camera.zoom) / this.tileMap.tileSize) + padding;
+              const startCol = Math.floor(camX / this.tileMap.tileSize) - padding;
+              const endCol = Math.ceil((camX + camW / camZ) / this.tileMap.tileSize) + padding;
+              const startRow = Math.floor(camY / this.tileMap.tileSize) - padding;
+              const endRow = Math.ceil((camY + camH / camZ) / this.tileMap.tileSize) + padding;
 
               for (let y = startRow; y <= endRow; y++) {
                 for (let x = startCol; x <= endCol; x++) {
