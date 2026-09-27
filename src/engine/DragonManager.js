@@ -8,16 +8,16 @@
 
 export const MOUNT_SOCKET_OFFSETS = {
   dragon_fly_storm: {
-    south: { x: 0, y: -24, scale: 0.92 },
-    north: { x: 0, y: -18, scale: 0.92 },
-    east:  { x: -10, y: -20, scale: 0.92 },
-    west:  { x: 10, y: -20, scale: 0.92 }
+    south: { x: 0, y: -16, scale: 0.90 },
+    north: { x: 0, y: 6, scale: 0.85 },
+    east:  { x: -10, y: -18, scale: 0.90 },
+    west:  { x: 10, y: -18, scale: 0.90 }
   },
   default: {
-    south: { x: 0, y: -20, scale: 0.92 },
-    north: { x: 0, y: -16, scale: 0.92 },
-    east:  { x: -8, y: -18, scale: 0.92 },
-    west:  { x: 8, y: -18, scale: 0.92 }
+    south: { x: 0, y: -14, scale: 0.90 },
+    north: { x: 0, y: 6, scale: 0.85 },
+    east:  { x: -8, y: -16, scale: 0.90 },
+    west:  { x: 8, y: -16, scale: 0.90 }
   }
 };
 
@@ -2888,42 +2888,41 @@ export class DragonManager {
     const drawX = Math.round(this.x);
     const drawY = Math.round(this.y + bounce - alt);
 
-    // 7. Overhead Dragon Name & Level Badge (Always visible in Play Mode)
-    // HP & Energy Bars ONLY appear when in combat per design requirement
+    // 7. Overhead Dragon Name & Level Badge & HP/Energy Bars (APENAS EM BATALHA)
     const inCombat = this.isInCombat();
-    ctx.save();
-    const lvlText = `Nv. ${dragon.level || 1} • ${dragon.name.split(',')[0]}`;
-    ctx.font = 'bold 9.5px "Nunito", sans-serif';
-    const textMetrics = ctx.measureText(lvlText);
-    const badgeW = Math.max(50, textMetrics.width + 12);
-    const badgeH = 15;
-    const badgeX = drawX + 24 - badgeW / 2;
-    const badgeY = inCombat ? (drawY - 30) : (drawY - 18);
-
-    // 3D Level Badge shadow & body
-    ctx.fillStyle = '#0f8e83';
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(badgeX, badgeY + 2, badgeW, badgeH, 50);
-    else ctx.rect(badgeX, badgeY + 2, badgeW, badgeH);
-    ctx.fill();
-
-    ctx.fillStyle = '#fffdf5';
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 50);
-    else ctx.rect(badgeX, badgeY, badgeW, badgeH);
-    ctx.fill();
-
-    ctx.strokeStyle = '#19c8b9';
-    ctx.lineWidth = 1.3;
-    ctx.stroke();
-
-    ctx.fillStyle = '#7a583e';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(lvlText, drawX + 24, badgeY + badgeH / 2);
-
-    // 7b. Overhead HP & Energy Bars (Rendered EXCLUSIVELY when in combat)
     if (inCombat) {
+      ctx.save();
+      const lvlText = `Nv. ${dragon.level || 1} • ${dragon.name.split(',')[0]}`;
+      ctx.font = 'bold 9.5px "Nunito", sans-serif';
+      const textMetrics = ctx.measureText(lvlText);
+      const badgeW = Math.max(50, textMetrics.width + 12);
+      const badgeH = 15;
+      const badgeX = drawX + 24 - badgeW / 2;
+      const badgeY = drawY - 30;
+
+      // 3D Level Badge shadow & body
+      ctx.fillStyle = '#0f8e83';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(badgeX, badgeY + 2, badgeW, badgeH, 50);
+      else ctx.rect(badgeX, badgeY + 2, badgeW, badgeH);
+      ctx.fill();
+
+      ctx.fillStyle = '#fffdf5';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 50);
+      else ctx.rect(badgeX, badgeY, badgeW, badgeH);
+      ctx.fill();
+
+      ctx.strokeStyle = '#19c8b9';
+      ctx.lineWidth = 1.3;
+      ctx.stroke();
+
+      ctx.fillStyle = '#7a583e';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(lvlText, drawX + 24, badgeY + badgeH / 2);
+
+      // 7b. Overhead HP Bar (58px wide)
       const barW = 58;
       const barX = drawX + 24 - barW / 2;
       const hpY = drawY - 13;
@@ -2967,6 +2966,8 @@ export class DragonManager {
       if (ctx.roundRect) ctx.roundRect(barX, energyY, barW * energyRatio, 4, 1.8);
       else ctx.rect(barX, energyY, barW * energyRatio, 4);
       ctx.fill();
+
+      ctx.restore();
     }
     ctx.restore();
 
