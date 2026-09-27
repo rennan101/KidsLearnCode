@@ -1230,6 +1230,25 @@ canvas#game-canvas {
   cursor: var(--animal-cursor-pointer), pointer !important;
 }
 
+.camera-control-subgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.camera-subgroup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.camera-subgroup-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--animal-text, #794f27);
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+}
+
 .camera-settings-desc {
   font-size: 0.65rem;
   color: var(--animal-text-body, #725d42);

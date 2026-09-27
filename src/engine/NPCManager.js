@@ -86,11 +86,16 @@ export class NPCManager {
 
   /**
    * Sincroniza e descobre todos os NPCs e Heróis posicionados nas camadas do TileMap.
-   * Cria instâncias vivas de NPCEntity respeitando suas posições âncora originais.
+   * Cria instâncias vivas de NPCEntity respeitando suas posições âncora originais e removendo água.
    */
   syncFromTileMap(tileMap = this.tileMap) {
     if (!tileMap || !tileMap.layers) return;
     this.tileMap = tileMap;
+
+    // 1. Remove automaticamente quaisquer NPCs ou Heróis que estejam em células de água
+    if (typeof tileMap.removeCharactersOnWater === 'function') {
+      tileMap.removeCharactersOnWater(this.assetLoader);
+    }
 
     const discoveredIds = new Set();
     const layersToCheck = ['characters', 'solid', 'decor'];
@@ -101,8 +106,25 @@ export class NPCManager {
 
       for (const [key, cell] of layer.entries()) {
         const tileId = (typeof cell === 'object' && cell !== null) ? cell.tileId : (typeof cell === 'string' ? cell : null);
-        if (tileId && typeof tileId === 'string' && (tileId.startsWith('npc_') || tileId.startsWith('char_'))) {
+        if (!tileId || typeof tileId !== 'string') continue;
+
+        const lower = tileId.toLowerCase();
+        const isChar = layerName === 'characters' || 
+          lower.startsWith('npc_') || lower.startsWith('char_') || 
+          lower.startsWith('npc-') || lower.startsWith('char-') || 
+          lower.startsWith('hero_') || lower.startsWith('hero-');
+
+        if (isChar) {
           const [tx, ty] = key.split(',').map(Number);
+          const worldCenterX = tx * (tileMap.tileSize || 64) + 32;
+          const worldCenterY = ty * (tileMap.tileSize || 64) + 32;
+
+          // Ignora se estiver na água
+          if (tileMap.isWaterAt && tileMap.isWaterAt(worldCenterX, worldCenterY, this.assetLoader)) {
+            layer.delete(key);
+            continue;
+          }
+
           const entityKey = `${tileId}_${tx}_${ty}`;
           discoveredIds.add(entityKey);
 
@@ -332,9 +354,9 @@ export class NPCManager {
       return true; // Água / mar bloqueia passagem
     }
 
-    // 3. Verifica colisores AABB de todas as camadas sólidas, rochas, montanhas e objetos
+    // 3. Verifica colisores AABB de camadas sólidas e colisores (ignora 'characters' para não colidir com o próprio tile de origem)
     if (typeof tileMap.checkCollision === 'function') {
-      const isSolidBlocked = tileMap.checkCollision(feet.x, feet.y, feet.w, feet.h, assetLoader, false);
+      const isSolidBlocked = tileMap.checkCollision(feet.x, feet.y, feet.w, feet.h, assetLoader, false, ['colliders', 'solid']);
       if (isSolidBlocked) return true;
     }
 

@@ -70,12 +70,59 @@ export class TileMap {
     // Player default spawn position (snapped to 64px grid)
     this.spawnPoint = { x: 320, y: 320 };
 
-    // Play Mode Global Camera Zoom (Configured by admin in World Editor)
+    // Play Mode Global Camera Zoom & Visual Lens Effects (Configured by admin in World Editor)
     this.playCameraZoom = 1.0;
+    this.tiltShiftBlur = 5; // Desfoque miniatura 2.5D (px)
+    this.cameraFisheye = 0; // Distorção de lente olho de peixe (0 a 50)
   }
 
   setPlayCameraZoom(zoom) {
     this.playCameraZoom = Math.max(0.4, Math.min(3.0, Math.round(zoom * 100) / 100));
+  }
+
+  setTiltShiftBlur(blur) {
+    this.tiltShiftBlur = Math.max(0, Math.min(20, Math.round(blur)));
+  }
+
+  setCameraFisheye(val) {
+    this.cameraFisheye = Math.max(0, Math.min(60, Math.round(val)));
+  }
+
+  /**
+   * Remove automaticamente quaisquer NPCs ou Heróis posicionados em células de água.
+   */
+  removeCharactersOnWater(assetLoader = null) {
+    const removed = [];
+    const charLayer = this.layers.characters;
+    if (charLayer) {
+      for (const [key, cell] of charLayer.entries()) {
+        const [tx, ty] = key.split(',').map(Number);
+        const worldX = tx * this.tileSize + this.tileSize / 2;
+        const worldY = ty * this.tileSize + this.tileSize / 2;
+        if (this.isWaterAt(worldX, worldY, assetLoader)) {
+          charLayer.delete(key);
+          removed.push({ layer: 'characters', key, tx, ty });
+        }
+      }
+    }
+
+    for (const layerName of ['solid', 'decor']) {
+      const layer = this.layers[layerName];
+      if (!layer) continue;
+      for (const [key, cell] of layer.entries()) {
+        const tileId = cell?.tileId || (typeof cell === 'string' ? cell : '');
+        if (tileId && (tileId.startsWith('npc_') || tileId.startsWith('char_') || tileId.startsWith('hero_'))) {
+          const [tx, ty] = key.split(',').map(Number);
+          const worldX = tx * this.tileSize + this.tileSize / 2;
+          const worldY = ty * this.tileSize + this.tileSize / 2;
+          if (this.isWaterAt(worldX, worldY, assetLoader)) {
+            layer.delete(key);
+            removed.push({ layer: layerName, key, tx, ty });
+          }
+        }
+      }
+    }
+    return removed;
   }
 
   setLayerOrder(newOrder) {
@@ -661,7 +708,7 @@ export class TileMap {
    * Universal AABB Collision checker against tile map colliders, solid layers, and water.
    * Used by Player, NPCs, Dragons, and projectiles.
    */
-  checkCollision(boxX, boxY, boxW, boxH, assetLoader = null, ignoreWater = false) {
+  checkCollision(boxX, boxY, boxW, boxH, assetLoader = null, ignoreWater = false, customLayers = null) {
     const tileSize = this.tileSize || 64;
     const padding = 2;
     const startTileX = Math.floor(boxX / tileSize) - padding;
@@ -678,7 +725,7 @@ export class TileMap {
       }
     }
 
-    const layersToCheck = ['colliders', 'solid', 'characters', 'decor', 'ground', 'overhead'];
+    const layersToCheck = customLayers || ['colliders', 'solid', 'characters', 'decor', 'ground', 'overhead'];
     for (const layerName of layersToCheck) {
       const layer = this.layers[layerName];
       if (!layer || layer.size === 0) continue;
@@ -1433,6 +1480,8 @@ export class TileMap {
       tileSize: this.tileSize,
       spawnPoint: this.spawnPoint,
       playCameraZoom: this.playCameraZoom || 1.0,
+      tiltShiftBlur: (this.tiltShiftBlur !== undefined) ? this.tiltShiftBlur : 5,
+      cameraFisheye: (this.cameraFisheye !== undefined) ? this.cameraFisheye : 0,
       layerOrder: this.layerOrder,
       waterConfig: this.waterWaveRenderer ? this.waterWaveRenderer.getConfig() : null,
       magmaConfig: this.magmaRenderer ? this.magmaRenderer.getConfig() : null,
@@ -1458,6 +1507,12 @@ export class TileMap {
     }
     if (data.playCameraZoom !== undefined) {
       this.setPlayCameraZoom(data.playCameraZoom);
+    }
+    if (data.tiltShiftBlur !== undefined) {
+      this.setTiltShiftBlur(data.tiltShiftBlur);
+    }
+    if (data.cameraFisheye !== undefined) {
+      this.setCameraFisheye(data.cameraFisheye);
     }
     if (data.layerOrder && Array.isArray(data.layerOrder)) {
       this.setLayerOrder(data.layerOrder);
