@@ -39,6 +39,9 @@ class RPGApplication {
     this.dragonManager = new DragonManager();
     this.inventorySystem = new InventorySystem();
     this.blocklySystem = new BlocklyLuaSystem();
+    if (typeof window !== 'undefined') {
+      window.gameBlocklySystem = this.blocklySystem;
+    }
     this.scratchEngine = new ScratchBlockEngine();
     this.multiplayerClient = new MultiplayerClient();
     this.tutorialManager = new TutorialManager(this);
@@ -2742,46 +2745,56 @@ class RPGApplication {
       this.dialogueSystem.render(this.ctx, this.camera);
     }
 
-    // 3. Floating Interaction Prompt for Nearby NPCs (Play Mode)
+    // 3. Floating Interaction Key Prompt for Nearby NPCs (Play Mode: Clean [E] Keycap)
     if (this.mode === 'play') {
       const nearbyNpc = this.findNearbyNPC(this.player.x, this.player.y, 110);
       if (nearbyNpc) {
-        const screenPos = this.camera.worldToScreen(nearbyNpc.worldX + 32, nearbyNpc.worldY - 14);
+        const bob = Math.sin(performance.now() / 160) * 3;
+        const screenPos = this.camera.worldToScreen(nearbyNpc.worldX + 32, nearbyNpc.worldY - 80 + bob);
         this.ctx.save();
-        this.ctx.font = 'bold 12px "Outfit", sans-serif';
-        const promptText = `[E] Conversar com ${nearbyNpc.name.split(',')[0]}`;
-        const metrics = this.ctx.measureText(promptText);
-        const w = metrics.width + 24;
-        const h = 26;
-        const x = screenPos.x - w / 2;
-        const y = screenPos.y - h;
+
+        const btnSize = 26;
+        const x = screenPos.x - btnSize / 2;
+        const y = screenPos.y - btnSize / 2;
 
         // Soft drop shadow
-        this.ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
-        this.ctx.shadowBlur = 8;
-        this.ctx.shadowOffsetY = 2;
-
-        // Background pill
-        this.ctx.fillStyle = '#090c12';
-        this.ctx.strokeStyle = '#38bdf8';
-        this.ctx.lineWidth = 1.6;
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
         this.ctx.beginPath();
-        this.ctx.roundRect(x, y, w, h, 13);
+        this.ctx.roundRect(x, y + 3, btnSize, btnSize, 13);
         this.ctx.fill();
+
+        // 3D Bottom edge
+        this.ctx.fillStyle = '#0f766e';
+        this.ctx.beginPath();
+        this.ctx.roundRect(x, y + 2, btnSize, btnSize, 13);
+        this.ctx.fill();
+
+        // Button face (Animal Island UI cozy parchment/white)
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.beginPath();
+        this.ctx.roundRect(x, y, btnSize, btnSize, 13);
+        this.ctx.fill();
+
+        // Mint-teal border
+        this.ctx.strokeStyle = '#19c8b9';
+        this.ctx.lineWidth = 2;
         this.ctx.stroke();
 
-        // Small indicator notch pointing down to NPC
-        this.ctx.fillStyle = '#090c12';
+        // Small indicator notch pointing down
+        this.ctx.fillStyle = '#19c8b9';
         this.ctx.beginPath();
-        this.ctx.moveTo(screenPos.x - 5, y + h);
-        this.ctx.lineTo(screenPos.x, y + h + 4);
-        this.ctx.lineTo(screenPos.x + 5, y + h);
+        this.ctx.moveTo(screenPos.x - 4, y + btnSize - 1);
+        this.ctx.lineTo(screenPos.x, y + btnSize + 4);
+        this.ctx.lineTo(screenPos.x + 4, y + btnSize - 1);
         this.ctx.fill();
 
-        this.ctx.fillStyle = '#f8fafc';
+        // Clean 'E' Key
+        this.ctx.fillStyle = '#0f766e';
+        this.ctx.font = '900 13px "JetBrains Mono", "Outfit", sans-serif';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
-        this.ctx.fillText(promptText, screenPos.x, y + h / 2);
+        this.ctx.fillText('E', screenPos.x, screenPos.y);
+
         this.ctx.restore();
       }
     }

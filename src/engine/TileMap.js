@@ -730,23 +730,23 @@ export class TileMap {
           avatarScale
         );
 
-        // Overhead NPC Name Badge (Animal Island UI 3D Pill - Posicionada acima da cabeça 1.5x)
+        // Overhead NPC Name Badge (Animal Island UI 3D Pill - Posicionada mais acima da cabeça)
         ctx.save();
         const nameText = npcData.name || 'NPC';
-        ctx.font = 'bold 10px "Nunito", sans-serif';
+        ctx.font = 'bold 10.5px "Nunito", sans-serif';
         const textMetrics = ctx.measureText(nameText);
-        const badgeW = Math.max(42, textMetrics.width + 14);
-        const badgeH = 17;
+        const badgeW = Math.max(44, textMetrics.width + 16);
+        const badgeH = 18;
         const badgeX = destX + 32 - badgeW / 2;
-        const badgeY = destY - 38;
+        const badgeY = destY - 58;
 
         // Badge shadow 3D
         ctx.fillStyle = '#7a583e';
         ctx.beginPath();
         if (ctx.roundRect) {
-          ctx.roundRect(badgeX, badgeY + 2, badgeW, badgeH, 8);
+          ctx.roundRect(badgeX, badgeY + 2.5, badgeW, badgeH, 9);
         } else {
-          ctx.rect(badgeX, badgeY + 2, badgeW, badgeH);
+          ctx.rect(badgeX, badgeY + 2.5, badgeW, badgeH);
         }
         ctx.fill();
 
@@ -754,14 +754,14 @@ export class TileMap {
         ctx.fillStyle = '#fffdf5';
         ctx.beginPath();
         if (ctx.roundRect) {
-          ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 8);
+          ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 9);
         } else {
           ctx.rect(badgeX, badgeY, badgeW, badgeH);
         }
         ctx.fill();
 
         ctx.strokeStyle = '#c4b89e';
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1.6;
         ctx.stroke();
 
         ctx.fillStyle = '#794f27';
@@ -769,6 +769,56 @@ export class TileMap {
         ctx.textBaseline = 'middle';
         ctx.fillText(nameText, destX + 32, badgeY + badgeH / 2);
         ctx.restore();
+
+        // Active Mission Indicator ("!" Animal Island UI Golden Quest Bubble)
+        let hasActiveQuest = false;
+        if (!isEditor && npcData?.questIds && npcData.questIds.length > 0) {
+          const blockly = (typeof window !== 'undefined') ? window.gameBlocklySystem : null;
+          if (blockly) {
+            const prog = blockly.getNpcProgress(cell.tileId);
+            hasActiveQuest = !prog || !prog.isFinished;
+          } else {
+            hasActiveQuest = true;
+          }
+        }
+
+        if (hasActiveQuest) {
+          ctx.save();
+          const qBob = Math.sin(animTime * 4.5 + (x * 2 + y)) * 3;
+          const qX = destX + 32;
+          const qY = badgeY - 15 + qBob;
+          const qR = 10;
+
+          // Quest shadow
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+          ctx.beginPath();
+          ctx.arc(qX, qY + 2.5, qR, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Quest 3D bottom edge
+          ctx.fillStyle = '#d97706';
+          ctx.beginPath();
+          ctx.arc(qX, qY + 1.5, qR, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Quest bubble body
+          ctx.fillStyle = '#f59e0b';
+          ctx.beginPath();
+          ctx.arc(qX, qY, qR, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Exclamation Mark "!"
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '900 13px "Outfit", "Nunito", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('!', qX, qY + 0.5);
+          ctx.restore();
+        }
 
         return;
       }
