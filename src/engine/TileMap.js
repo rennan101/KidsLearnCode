@@ -73,7 +73,6 @@ export class TileMap {
     // Play Mode Global Camera Zoom & Visual Lens Effects (Configured by admin in World Editor)
     this.playCameraZoom = 1.0;
     this.tiltShiftBlur = 5; // Desfoque miniatura 2.5D (px)
-    this.cameraFisheye = 0; // Distorção de lente olho de peixe (0 a 50)
   }
 
   setPlayCameraZoom(zoom) {
@@ -82,10 +81,6 @@ export class TileMap {
 
   setTiltShiftBlur(blur) {
     this.tiltShiftBlur = Math.max(0, Math.min(20, Math.round(blur)));
-  }
-
-  setCameraFisheye(val) {
-    this.cameraFisheye = Math.max(0, Math.min(60, Math.round(val)));
   }
 
   /**
@@ -1364,11 +1359,6 @@ export class TileMap {
           );
         }
 
-        // Render Shoreline Lapping Waves & Beach Foam against neighboring land
-        if (this.shorelineFoamRenderer) {
-          this.shorelineFoamRenderer.renderShorelines(ctx, this, proceduralWaveCells, this.waterWaveTime || performance.now(), config);
-        }
-
         // Render overlays (ice/puddle/colliders) for wave cells
         for (let i = 0; i < proceduralWaveCells.length; i++) {
           const w = proceduralWaveCells[i];
@@ -1408,34 +1398,6 @@ export class TileMap {
         if (!renderedMagmaWithWebGL && this.magmaRenderer) {
           this.magmaRenderer.renderBatch(ctx, magmaCells, nowMs);
         }
-
-        // Render Shoreline Lapping Waves & Orange Foam against neighboring terrain
-        if (this.shorelineFoamRenderer) {
-          this.shorelineFoamRenderer.renderShorelines(ctx, this, magmaCells, nowMs, { ...magmaConfig, isMagma: true });
-        }
-
-        // Contact burning edge against non-magma terrain
-        ctx.save();
-        ctx.strokeStyle = '#ff6600';
-        ctx.lineWidth = 3.5;
-        ctx.shadowColor = '#ff3300';
-        ctx.shadowBlur = 10;
-        for (let i = 0; i < magmaCells.length; i++) {
-          const m = magmaCells[i];
-          const tx = m.tx;
-          const ty = m.ty;
-          const isNonMagma = (nx, ny) => {
-            const ncell = layer.get(this.getKey(nx, ny));
-            return !ncell || (ncell.tileId !== 'magma-animated' && ncell.tileId !== 'magma-stylized');
-          };
-          if (isNonMagma(tx, ty - 1)) { ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x + m.tileSize, m.y); ctx.stroke(); }
-          if (isNonMagma(tx, ty + 1)) { ctx.beginPath(); ctx.moveTo(m.x, m.y + m.tileSize); ctx.lineTo(m.x + m.tileSize, m.y + m.tileSize); ctx.stroke(); }
-          if (isNonMagma(tx - 1, ty)) { ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x, m.y + m.tileSize); ctx.stroke(); }
-          if (isNonMagma(tx + 1, ty)) { ctx.beginPath(); ctx.moveTo(m.x + m.tileSize, m.y); ctx.lineTo(m.x + m.tileSize, m.y + m.tileSize); ctx.stroke(); }
-        }
-        ctx.restore();
-
-        // Particles and bubbles removed per MinionsArt clean stylized look
       }
 
       for (let i = 0; i < regularGroundCells.length; i++) {
@@ -1492,7 +1454,6 @@ export class TileMap {
       spawnPoint: this.spawnPoint,
       playCameraZoom: this.playCameraZoom || 1.0,
       tiltShiftBlur: (this.tiltShiftBlur !== undefined) ? this.tiltShiftBlur : 5,
-      cameraFisheye: (this.cameraFisheye !== undefined) ? this.cameraFisheye : 0,
       layerOrder: this.layerOrder,
       waterConfig: this.waterWaveRenderer ? this.waterWaveRenderer.getConfig() : null,
       magmaConfig: this.magmaRenderer ? this.magmaRenderer.getConfig() : null,
@@ -1521,9 +1482,6 @@ export class TileMap {
     }
     if (data.tiltShiftBlur !== undefined) {
       this.setTiltShiftBlur(data.tiltShiftBlur);
-    }
-    if (data.cameraFisheye !== undefined) {
-      this.setCameraFisheye(data.cameraFisheye);
     }
     if (data.layerOrder && Array.isArray(data.layerOrder)) {
       this.setLayerOrder(data.layerOrder);

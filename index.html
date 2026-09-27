@@ -639,25 +639,7 @@
             </div>
           </div>
 
-          <!-- Fisheye Distortion Section -->
-          <div class="camera-control-subgroup" style="margin-top: 6px; padding-top: 6px; border-top: 1.5px dashed var(--animal-border, #c4b89e);">
-            <div class="camera-subgroup-header">
-              <span class="camera-subgroup-label">Distorção Fisheye (Olho de Peixe):</span>
-              <span class="camera-zoom-val" id="camera-fisheye-val">0 (Off)</span>
-            </div>
-            <div class="camera-zoom-presets" id="fisheye-presets">
-              <button type="button" class="cam-preset-btn fish-preset-btn active" data-fisheye="0">Off</button>
-              <button type="button" class="cam-preset-btn fish-preset-btn" data-fisheye="10">10</button>
-              <button type="button" class="cam-preset-btn fish-preset-btn" data-fisheye="20">20</button>
-              <button type="button" class="cam-preset-btn fish-preset-btn" data-fisheye="35">35</button>
-              <button type="button" class="cam-preset-btn fish-preset-btn" data-fisheye="50">50</button>
-            </div>
-            <div class="camera-slider-row">
-              <input type="range" id="camera-fisheye-slider" min="0" max="50" step="1" value="0">
-            </div>
-          </div>
-
-          <span class="camera-settings-desc" style="margin-top: 4px;">Controles globais de proximidade, desfoque e lente da câmera no Modo Jogo</span>
+          <span class="camera-settings-desc" style="margin-top: 4px;">Controles globais de proximidade e desfoque da câmera no Modo Jogo</span>
         </div>
       </div>
 
@@ -1609,15 +1591,6 @@
         </div>
       </div>
     </div>
-  <!-- Fisheye Lens Barrel Distortion SVG Filter (Hardware-Accelerated) -->
-  <svg style="position: absolute; width: 0; height: 0; pointer-events: none; opacity: 0;" aria-hidden="true">
-    <defs>
-      <filter id="fisheye-filter" x="-20%" y="-20%" width="140%" height="140%">
-        <feImage id="fisheye-fe-image" href="" result="fisheyeMap" preserveAspectRatio="none"/>
-        <feDisplacementMap id="fisheye-fe-disp" in="SourceGraphic" in2="fisheyeMap" scale="0" xChannelSelector="R" yChannelSelector="G"/>
-      </filter>
-    </defs>
-  </svg>
 
   <!-- App Entrypoint Script -->
   <script type="module" src="src/main.js"></script>

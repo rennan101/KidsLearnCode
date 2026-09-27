@@ -857,35 +857,6 @@ class RPGApplication {
     });
   }
 
-  generateFisheyeDisplacementDataUri(size = 256) {
-    if (this._fisheyeDataUri) return this._fisheyeDataUri;
-    const c = document.createElement('canvas');
-    c.width = size;
-    c.height = size;
-    const ctx = c.getContext('2d');
-    const imgData = ctx.createImageData(size, size);
-    const data = imgData.data;
-    const half = size / 2;
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        const nx = (x - half) / half;
-        const ny = (y - half) / half;
-        const r = Math.sqrt(nx * nx + ny * ny);
-        const factor = r * r;
-        const dx = 128 + nx * factor * 127;
-        const dy = 128 + ny * factor * 127;
-        const idx = (y * size + x) * 4;
-        data[idx] = Math.max(0, Math.min(255, Math.round(dx)));
-        data[idx + 1] = Math.max(0, Math.min(255, Math.round(dy)));
-        data[idx + 2] = 128;
-        data[idx + 3] = 255;
-      }
-    }
-    ctx.putImageData(imgData, 0, 0);
-    this._fisheyeDataUri = c.toDataURL();
-    return this._fisheyeDataUri;
-  }
-
   setupPlayCameraZoomPanel() {
     // 1. Camera Zoom Controls
     const zoomValEl = document.getElementById('play-camera-zoom-val');
@@ -962,65 +933,9 @@ class RPGApplication {
         applyTiltShift(b);
         this.showToast(b === 0 ? 'Desfoque Tilt-Shift Desativado' : `Desfoque Tilt-Shift definido para ${b}px!`);
       });
-    });
-
-    // 3. Fisheye Lens Distortion Controls
-    const fishValEl = document.getElementById('camera-fisheye-val');
-    const fishSlider = document.getElementById('camera-fisheye-slider');
-    const fishPresetBtns = document.querySelectorAll('.fish-preset-btn');
-
-    this.updateCameraFisheyeUI = (val) => {
-      const v = Math.round(val || 0);
-      if (fishValEl) fishValEl.innerText = v === 0 ? '0 (Off)' : String(v);
-      if (fishSlider) fishSlider.value = v;
-      fishPresetBtns.forEach((btn) => {
-        const btnVal = parseInt(btn.dataset.fisheye, 10);
-        btn.classList.toggle('active', btnVal === v);
-      });
-    };
-
-    const applyFisheye = (val) => {
-      const clamped = Math.max(0, Math.min(50, Math.round(val)));
-      this.tileMap.setCameraFisheye(clamped);
-      this.updateCameraFisheyeUI(clamped);
-
-      const feDisp = document.getElementById('fisheye-fe-disp');
-      const feImg = document.getElementById('fisheye-fe-image');
-
-      if (clamped > 0) {
-        if (feImg && !feImg.getAttribute('href')) {
-          feImg.setAttribute('href', this.generateFisheyeDisplacementDataUri());
-        }
-        if (feDisp) {
-          feDisp.setAttribute('scale', String(clamped));
-        }
-        if (this.canvas) {
-          this.canvas.style.filter = 'url(#fisheye-filter)';
-        }
-      } else {
-        if (this.canvas) {
-          this.canvas.style.filter = 'none';
-        }
-      }
-      this.triggerAutoSave();
-    };
-
-    fishSlider?.addEventListener('input', (e) => {
-      applyFisheye(parseInt(e.target.value, 10) || 0);
-    });
-
-    fishPresetBtns.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const v = parseInt(btn.dataset.fisheye, 10) || 0;
-        applyFisheye(v);
-        this.showToast(v === 0 ? 'Distorção Fisheye Desativada' : `Distorção Fisheye definida para ${v}!`);
-      });
-    });
-
-    // Initialize all camera settings from tileMap state
+    // Initialize camera settings from tileMap state
     this.updatePlayCameraZoomUI(this.tileMap.playCameraZoom || 1.0);
     applyTiltShift(this.tileMap.tiltShiftBlur !== undefined ? this.tileMap.tiltShiftBlur : 5);
-    applyFisheye(this.tileMap.cameraFisheye || 0);
   }
 
   setupWaterSettingsModal() {
