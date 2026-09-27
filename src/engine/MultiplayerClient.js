@@ -353,6 +353,7 @@ export class MultiplayerClient {
     ctx.save();
     const drawX = Math.round(player.x);
     const drawY = Math.round(player.y);
+    const heroId = player.heroId || 'char_wolf_hunter_m';
 
     // 1. Shadow (omitted in reflections)
     if (!isReflection) {
