@@ -1,0 +1,683 @@
+/* App Header / Top Navbar (Animal Island Floating Pill Bar) */
+header.app-header {
+  height: 56px;
+  background: var(--animal-bg-card, #fdfbf7);
+  border-bottom: 3px solid var(--animal-border-wood, #7a583e);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 50;
+  box-shadow: 0 4px 16px rgba(80, 50, 20, 0.12);
+}
+
+.brand-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Auto-Save Indicator Badge */
+.save-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
+  padding: 5px 12px;
+  border-radius: var(--animal-radius-pill, 50px);
+  background: var(--animal-bg, #f8f8f0);
+  border: 2px solid var(--animal-border, #c4b89e);
+  color: var(--animal-text-body, #725d42);
+  box-shadow: 0 2px 0 0 var(--animal-border, #c4b89e);
+  transition: all 0.2s ease;
+}
+
+.save-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.save-dot.red {
+  background: #ef4444;
+}
+
+.save-status.saving .save-dot {
+  background: #f59e0b;
+  animation: pulse 1s infinite alternate;
+}
+
+.save-status.saved {
+  color: #0f8e83;
+  border-color: #3dd4c6;
+}
+
+.save-status.saving {
+  color: #d97706;
+  border-color: #f59e0b;
+}
+
+.save-status.error {
+  color: #ef4444;
+  border-color: #f87171;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.4; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Mode Switch Tabs (Animal Island 3D Pill Toggle) */
+.mode-toggle {
+  display: flex;
+  background: var(--animal-bg-content, #f7f3df);
+  padding: 4px;
+  border-radius: var(--animal-radius-pill, 50px);
+  border: 2px solid var(--animal-border, #c4b89e);
+  gap: 6px;
+  box-shadow: inset 0 2px 4px rgba(80, 50, 20, 0.1);
+}
+
+.mode-btn {
+  padding: 7px 18px;
+  border: none;
+  background: transparent;
+  color: var(--animal-text-body, #725d42);
+  border-radius: var(--animal-radius-pill, 50px);
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-size: 0.88rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.mode-btn:hover {
+  color: var(--animal-text, #794f27);
+}
+
+.mode-btn.active {
+  background: #ffffff !important;
+  color: var(--animal-text, #794f27) !important;
+  border: 2px solid var(--animal-border-wood, #7a583e) !important;
+  box-shadow: 0 3px 0 0 var(--animal-border-wood, #7a583e) !important;
+  transform: translateY(-1px);
+}
+
+.mode-btn.active:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 var(--animal-border-wood, #7a583e) !important;
+}
+
+/* Header Actions */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.action-btn {
+  background: var(--animal-bg, #f8f8f0);
+  color: var(--animal-text, #794f27);
+  border: 2px solid var(--animal-border, #c4b89e);
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: var(--animal-radius-pill, 50px);
+  font-size: 0.82rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 0 0 var(--animal-border, #c4b89e);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.action-btn .ui-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.action-btn:hover {
+  background: var(--animal-primary-bg, #e6f9f6);
+  border-color: var(--animal-primary, #19c8b9);
+  color: var(--animal-primary-dark, #0f8e83);
+  transform: translateY(-1px);
+}
+
+.action-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 var(--animal-border, #c4b89e);
+}
+
+.action-btn.active {
+  background: var(--animal-primary, #19c8b9);
+  border-color: var(--animal-primary-dark, #0f8e83);
+  color: #ffffff;
+  box-shadow: 0 3px 0 0 var(--animal-primary-dark, #0f8e83);
+}
+
+.action-btn.active:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 var(--animal-primary-dark, #0f8e83);
+}
+
+.action-btn.danger:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #b91c1c;
+}
+
+
+/* =========================================
+   GENSHIN IMPACT STYLE CIRCULAR MINIMAP WITH EDGE FADE
+   ========================================= */
+
+.minimap-hud {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 176px;
+  height: 176px;
+  z-index: 28;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.45));
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+}
+
+.minimap-hud:hover {
+  transform: scale(1.03);
+}
+
+/* Outer circular container without heavy opaque bezels */
+.minimap-bezel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  padding: 0;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+/* Cardinal Directions (N, E, S, W) positioned subtly over the fade */
+.compass-marker {
+  position: absolute;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 0.65rem;
+  color: rgba(254, 240, 138, 0.85);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 6px rgba(245, 158, 11, 0.6);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.marker-n {
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffffff;
+  font-size: 0.78rem;
+  text-shadow: 0 0 8px #f59e0b, 0 2px 4px #000;
+}
+
+.marker-s {
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.marker-e {
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.marker-w {
+  left: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Inner Circular Clipping Mask with Radial Gradient Fade on Edges */
+.minimap-inner-mask {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  background: transparent;
+  -webkit-mask-image: radial-gradient(circle at center, rgba(0,0,0,1) 68%, rgba(0,0,0,0.85) 82%, rgba(0,0,0,0) 100%);
+  mask-image: radial-gradient(circle at center, rgba(0,0,0,1) 68%, rgba(0,0,0,0.85) 82%, rgba(0,0,0,0) 100%);
+}
+
+#minimap-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+  background: transparent;
+}
+
+/* Expand Button (Animal Island UI Pill Style) */
+.minimap-btn-expand {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #2b1f14;
+  border: 1.5px solid #7a583e;
+  color: #fef08a;
+  border-radius: 50px;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 3px 0 0 #180f07, 0 4px 10px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 10;
+}
+
+.minimap-btn-expand:hover {
+  background: #3d2b1d;
+  color: #ffffff;
+  border-color: #f59e0b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 0 #180f07, 0 6px 12px rgba(245, 158, 11, 0.3);
+}
+
+.minimap-btn-expand:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 #180f07;
+}
+
+.minimap-key-hint {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+
+/* Quick Dragon Mount Action HUD Button */
+.quick-actions-hud {
+  position: absolute;
+  bottom: 60px;
+  right: 24px;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quick-mount-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border: 2px solid #34d399;
+  padding: 10px 18px;
+  border-radius: 30px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.45);
+  backdrop-filter: blur(8px);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quick-mount-btn:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 12px 28px rgba(16, 185, 129, 0.65);
+}
+
+.quick-mount-btn.mounted {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  border-color: #f87171;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.45);
+}
+
+.quick-mount-btn.mounted:hover {
+  box-shadow: 0 12px 28px rgba(239, 68, 68, 0.65);
+}
+
+.quick-mount-icon {
+  font-size: 1.25rem;
+}
+
+
+/* ==========================================================================
+   ANIMAL ISLAND UI - DRAGON COMBAT, 4-SKILL BAR & QUICK HUD (SPRINT 5+)
+   ========================================================================== */
+
+/* 1. Right-Center Dragon Quick Switch Formation HUD (4 Slots) */
+.dragon-quick-hud {
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 120;
+  pointer-events: auto;
+  background: rgba(253, 251, 247, 0.92);
+  border: 3px solid #7a583e;
+  border-radius: 24px;
+  padding: 12px 10px;
+  box-shadow: 0 8px 24px rgba(80, 50, 20, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+.dragon-hud-slot {
+  position: relative;
+  width: 62px;
+  height: 62px;
+  border-radius: 18px;
+  background: #f8f8f0;
+  border: 2.5px solid #d4c5a9;
+  box-shadow: 0 4px 0 0 #b3a082;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.dragon-hud-slot:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 0 #b3a082;
+  border-color: #19c8b9;
+}
+
+.dragon-hud-slot:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 #b3a082;
+}
+
+.dragon-hud-slot.active {
+  background: #e6f9f6;
+  border-color: #19c8b9;
+  box-shadow: 0 4px 0 0 #0f8e83, 0 0 12px rgba(25, 200, 185, 0.45);
+}
+
+.dragon-hud-slot.empty {
+  border-style: dashed;
+  border-color: #c4b89e;
+  background: rgba(248, 248, 240, 0.5);
+  box-shadow: none;
+  cursor: default;
+}
+
+.dragon-hud-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.dragon-hud-level-badge {
+  position: absolute;
+  bottom: -6px;
+  background: #fdfbf7;
+  border: 1.5px solid #f59e0b;
+  border-radius: 50px;
+  padding: 1px 6px;
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #794f27;
+  box-shadow: 0 2px 0 #d97706;
+}
+
+.dragon-hud-key-pill {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  background: #f59e0b;
+  border: 1.5px solid #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #0f172a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* 2. Bottom Dragon Combat & Field Skill Bar (Keys 1 to 4) */
+.dragon-skill-bar {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 120;
+  pointer-events: auto;
+  background: rgba(253, 251, 247, 0.95);
+  border: 3px solid #7a583e;
+  border-radius: 50px;
+  padding: 8px 18px;
+  box-shadow: 0 8px 24px rgba(80, 50, 20, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(6px);
+}
+
+.dragon-skill-btn {
+  position: relative;
+  width: 62px;
+  height: 62px;
+  border-radius: 18px;
+  background: #f8f8f0;
+  border: 2.5px solid #7a583e;
+  box-shadow: 0 4px 0 0 #5c3c26;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.15s ease;
+  user-select: none;
+  overflow: visible;
+  padding: 0;
+}
+
+.dragon-skill-btn:hover:not(.on-cooldown) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 0 #5c3c26;
+  border-color: #19c8b9;
+}
+
+.dragon-skill-btn:active:not(.on-cooldown) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 #5c3c26;
+}
+
+.dragon-skill-btn.dodge-skill {
+  border-color: #f59e0b;
+  box-shadow: 0 4px 0 0 #b45309;
+  background: #fffdf5;
+}
+
+.dragon-skill-btn.dodge-skill:hover:not(.on-cooldown) {
+  border-color: #fbbf24;
+  box-shadow: 0 6px 0 0 #b45309;
+}
+
+.dragon-skill-btn.on-cooldown {
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+.dragon-skill-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: #794f27;
+  transition: transform 0.15s ease;
+}
+
+.dragon-skill-btn.dodge-skill .dragon-skill-icon-wrap {
+  color: #d97706;
+}
+
+.dragon-skill-name-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #794f27;
+  margin-top: 2px;
+  line-height: 1;
+  max-width: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dragon-skill-key-badge {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  background: #f59e0b;
+  border: 2px solid #fffdf5;
+  border-radius: 50px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #0f172a;
+  box-shadow: 0 2px 0 #b45309;
+  z-index: 10;
+}
+
+.dragon-skill-btn.dodge-skill .dragon-skill-key-badge {
+  background: #ea580c;
+  box-shadow: 0 2px 0 #9a3412;
+  color: #ffffff;
+}
+
+/* Visual Square Cooldown Wipe & Progress Fill */
+.dragon-skill-cooldown-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 15px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dragon-skill-cooldown-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.78) 0%, rgba(15, 23, 42, 0.88) 100%);
+  border-top: 2px solid #38bdf8;
+  box-shadow: 0 -2px 6px rgba(56, 189, 248, 0.5);
+  transition: height 0.05s linear;
+}
+
+.dragon-skill-btn.dodge-skill .dragon-skill-cooldown-fill {
+  background: linear-gradient(180deg, rgba(120, 53, 15, 0.8) 0%, rgba(69, 26, 3, 0.9) 100%);
+  border-top: 2px solid #fbbf24;
+  box-shadow: 0 -2px 6px rgba(251, 191, 36, 0.5);
+}
+
+.dragon-skill-cd-text {
+  position: relative;
+  z-index: 6;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+.dragon-skill-btn.ready-flash {
+  animation: skillReadyPulse 0.45s ease-out;
+}
+
+@keyframes skillReadyPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(25, 200, 185, 0.9), 0 4px 0 0 #5c3c26;
+    border-color: #19c8b9;
+  }
+  50% {
+    box-shadow: 0 0 16px 4px rgba(25, 200, 185, 0.7), 0 4px 0 0 #5c3c26;
+    border-color: #3dd4c6;
+  }
+  100% {
+    box-shadow: 0 4px 0 0 #5c3c26;
+    border-color: #7a583e;
+  }
+}
+
+.dragon-skill-icon-svg {
+  width: 26px;
+  height: 26px;
+  color: #794f27;
+}
+
+.dragon-skill-keycap {
+  position: absolute;
+  bottom: -6px;
+  background: #f59e0b;
+  border: 1.5px solid #fffdf5;
+  border-radius: 50px;
+  padding: 1px 7px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #0f172a;
+  box-shadow: 0 2px 0 #b45309;
+}
+
+.dragon-skill-tooltip {
+  position: absolute;
+  bottom: 74px;
+  background: #fdfbf7;
+  border: 2px solid #7a583e;
+  border-radius: 14px;
+  padding: 8px 12px;
+  width: 170px;
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+  font-size: 0.75rem;
+  color: #794f27;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  display: none;
+  text-align: center;
+  z-index: 20;
+}
+
+.dragon-skill-slot:hover .dragon-skill-tooltip {
+  display: block;
+}

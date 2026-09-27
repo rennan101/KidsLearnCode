@@ -1,0 +1,467 @@
+/* Reset & Base Setup */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+:root {
+  /* ==========================================================================
+     Animal Island UI Design Tokens (Animal Crossing: New Horizons Inspired)
+     ========================================================================== */
+  --animal-font: 'Nunito', 'Outfit', 'Noto Sans SC', sans-serif;
+  --animal-font-title: 'Cinzel', 'Nunito', serif;
+  --animal-font-mono: 'JetBrains Mono', monospace;
+
+  /* Primary Mint-Teal Colors */
+  --animal-primary: #19c8b9;
+  --animal-primary-hover: #3dd4c6;
+  --animal-primary-active: #11a89b;
+  --animal-primary-bg: #e6f9f6;
+  --animal-primary-dark: #0f8e83;
+
+  /* Accent Colors */
+  --animal-accent-gold: #f59e0b;
+  --animal-accent-orange: #ea580c;
+  --animal-accent-wood: #7a583e;
+  --animal-accent-leaf: #34d399;
+
+  /* Text (Earth-Brown & Warm Neutral - Never Pure Black) */
+  --animal-text: #794f27;
+  --animal-text-body: #725d42;
+  --animal-text-secondary: #9f927d;
+  --animal-text-muted: #8a7b66;
+  --animal-text-disabled: #c4b89e;
+  --animal-text-white: #ffffff;
+
+  /* Backgrounds (Warm Parchment & Cozy Dark Slate) */
+  --animal-bg: #f8f8f0;
+  --animal-bg-card: #fdfbf7;
+  --animal-bg-content: #f7f3df;
+  --animal-bg-dark: #090c12;
+  --animal-bg-dark-card: #141f33;
+  --animal-bg-overlay: rgba(20, 15, 10, 0.72);
+
+  /* Borders */
+  --animal-border: #c4b89e;
+  --animal-border-hover: #a89878;
+  --animal-border-wood: #7a583e;
+  --animal-border-mint: #3dd4c6;
+
+  /* Radius */
+  --animal-radius-sm: 12px;
+  --animal-radius-md: 18px;
+  --animal-radius-lg: 24px;
+  --animal-radius-pill: 50px;
+  --animal-radius-circle: 50%;
+
+  /* 3D Shadows & Depth */
+  --animal-shadow-btn-primary: 0 4px 0 0 #0f8e83, 0 6px 14px rgba(17, 168, 155, 0.35);
+  --animal-shadow-btn-wood: 0 4px 0 0 #5c3c26, 0 6px 14px rgba(92, 60, 38, 0.35);
+  --animal-shadow-card: 0 12px 32px rgba(80, 55, 30, 0.18), 0 2px 6px rgba(80, 55, 30, 0.08);
+
+  /* Animal Island UI Clean Compact SVG Cursors (Brown Border & Warm Beige Fill) */
+  --animal-cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22' fill='none'%3E%3Cpath d='M2 2 L2 17 L6.5 12.5 L11 20 L13.5 18.5 L9 11 L15 11 Z' fill='%23fdfbf7' stroke='%237a583e' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E") 2 2;
+  --animal-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 2 C5.8 2 5 2.8 5 4 L5 11 C4.3 10.5 3.3 10.7 2.7 11.4 C2 12.2 2.1 13.4 2.8 14.2 L6.5 19 C7.8 20.8 10 22 12.5 22 L14.5 22 C18 22 20.5 19.5 20.5 16 L20.5 11.5 C20.5 10.5 19.5 9.8 18.5 9.8 C18.1 9.8 17.7 10 17.3 10.3 C17 9.5 16.2 9 15.3 9 C14.9 9 14.5 9.1 14.2 9.3 C13.8 8.6 13 8.2 12.2 8.2 C11.8 8.2 11.4 8.3 11 8.5 L11 4 C11 2.8 10.2 2 9 2 Z' fill='%23fdfbf7' stroke='%237a583e' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M9 20 L16 20 C16.5 20 17 21 16.5 21.8 C15.8 22.5 10 22.5 8.5 21.8 C8 21 8.5 20 9 20 Z' fill='%2319c8b9' stroke='%237a583e' stroke-width='1'/%3E%3C/svg%3E") 6 2;
+  --animal-cursor-grab: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22' fill='none'%3E%3Cpath d='M5 7 C4 7 3 8 3 9 L3 13 C2.5 12.5 1.5 12.7 1 13.5 C0.5 14.5 0.8 15.5 1.5 16.2 L5 20 C6.5 21.5 8.5 22 11 22 L13 22 C16.5 22 19 19.5 19 16 L19 10.5 C19 9.5 18 8.8 17 8.8 C16.6 8.8 16.2 9 15.8 9.3 C15.5 8.5 14.7 8 13.8 8 C13.4 8 13 8.1 12.7 8.3 C12.3 7.6 11.5 7.2 10.7 7.2 C10.3 7.2 9.9 7.3 9.5 7.5 L9.5 7 C9.5 5.8 8.7 5 7.5 5 C6.3 5 5.5 5.8 5.5 7 Z' fill='%23fdfbf7' stroke='%237a583e' stroke-width='1.8' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E") 10 10;
+  --animal-cursor-grabbing: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22' fill='none'%3E%3Cpath d='M5 9 C4 9 3 10 3 11 L3 15 C3 18.5 5.5 21 9 21 L13 21 C16.5 21 19 18.5 19 15 L19 12 C19 10.8 18 10 17 10 C16.5 10 16 10.2 15.5 10.5 C15 9.8 14.2 9.5 13.5 9.5 C13 9.5 12.5 9.7 12 10 C11.5 9.3 10.7 9 10 9 C9.5 9 9 9.2 8.5 9.5 L8.5 9 C8.5 7.8 7.5 7 6.5 7 C5.5 7 5 7.8 5 9 Z' fill='%23fdfbf7' stroke='%237a583e' stroke-width='1.8' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E") 10 10;
+
+  /* Legacy Token Fallbacks for Full Compatibility */
+  --bg-dark: #f8f8f0;
+  --bg-panel: #fdfbf7;
+  --bg-panel-hover: #f7f3df;
+  --border-color: #c4b89e;
+  --accent-gold: #f59e0b;
+  --accent-blue: #19c8b9;
+  --accent-emerald: #10b981;
+  --accent-danger: #ea580c;
+  --text-main: #794f27;
+  --text-muted: #725d42;
+  --font-sans: 'Nunito', 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+html, body {
+  cursor: var(--animal-cursor-default), auto !important;
+}
+
+button, a, input[type="button"], input[type="submit"], input[type="checkbox"], select, textarea, label, [role="button"], [tabindex], .clickable, .pointer,
+.backpack-tab, .modal-close-btn, .ac-pocket-slot, .quick-tool-btn, .hero-select-btn,
+.btn-equip-tool, .cloud-account-btn, .header-logout-btn, .hud-action-btn, .chat-send-btn,
+.ac-choice-btn, .mode-btn, .tile-card, .btn-primary, .btn-secondary, .layer-move-btn,
+.recipe-card, .ac-recipe-card, .btn-action, .auth-tab, .scale-btn, .cam-preset-btn,
+.layer-action-btn, .inspector-close-btn, .animal-checkbox-label, [data-tooltip] {
+  cursor: var(--animal-cursor-pointer), pointer !important;
+}
+
+.codekit-block, .draggable, .scratch-block, .grab {
+  cursor: var(--animal-cursor-grab), grab !important;
+}
+
+.codekit-block:active, .draggable:active, .scratch-block:active, .dragging, .grabbing {
+  cursor: var(--animal-cursor-grabbing), grabbing !important;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Inline SVG Icon Utility */
+.ui-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* Loading Overlay (Animal Island UI Animated Background - https://guokaigdg.github.io/animal-island-ui/#/loading) */
+#loading-screen {
+  position: fixed;
+  inset: 0;
+  background-color: #19c8b9;
+  background-image: linear-gradient(
+    45deg,
+    #10b3a5 25%,
+    transparent 25%,
+    transparent 50%,
+    #10b3a5 50%,
+    #10b3a5 75%,
+    transparent 75%,
+    transparent 100%
+  );
+  background-size: 80px 80px;
+  animation: animalIslandLoadingStripe 4s linear infinite;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.4s ease, visibility 0.4s;
+  overflow: hidden;
+}
+
+@keyframes animalIslandLoadingStripe {
+  0% { background-position: 0 0; }
+  100% { background-position: 80px 0; }
+}
+
+/* Floating Decorative Island Clouds in Loading Screen */
+.loading-cloud {
+  position: absolute;
+  opacity: 0.35;
+  pointer-events: none;
+  animation: animalFloatCloud 18s linear infinite;
+}
+
+.loading-cloud-1 {
+  top: 15%;
+  left: -150px;
+  width: 180px;
+  animation-duration: 22s;
+}
+
+.loading-cloud-2 {
+  bottom: 20%;
+  left: -200px;
+  width: 240px;
+  animation-duration: 18s;
+  animation-delay: 4s;
+}
+
+.loading-cloud-3 {
+  top: 65%;
+  left: -120px;
+  width: 140px;
+  animation-duration: 26s;
+  animation-delay: 8s;
+}
+
+@keyframes animalFloatCloud {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(100vw + 300px)); }
+}
+
+#auth-modal {
+  background-color: #19c8b9 !important;
+  background-image: linear-gradient(
+    45deg,
+    #10b3a5 25%,
+    transparent 25%,
+    transparent 50%,
+    #10b3a5 50%,
+    #10b3a5 75%,
+    transparent 75%,
+    transparent 100%
+  ) !important;
+  background-size: 80px 80px !important;
+  animation: animalIslandLoadingStripe 3s linear infinite !important;
+  z-index: 1001 !important;
+}
+
+.loader-card {
+  text-align: center;
+  max-width: 440px;
+  width: 90%;
+  padding: 34px 28px;
+  background: var(--animal-bg-card, #fdfbf7);
+  border: 3.5px solid var(--animal-border-wood, #7a583e);
+  border-radius: 28px;
+  box-shadow: 0 20px 50px rgba(60, 45, 30, 0.25), inset 0 2px 0 rgba(255, 255, 255, 0.9);
+  position: relative;
+  z-index: 2;
+}
+
+.loader-card h1 {
+  font-family: var(--animal-font-title, 'Cinzel', serif);
+  font-size: 1.95rem;
+  letter-spacing: 2px;
+  color: var(--animal-text, #794f27);
+  margin-bottom: 8px;
+  font-weight: 800;
+}
+
+.loader-card p {
+  color: var(--animal-text-body, #725d42);
+  font-size: 0.92rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+  font-family: var(--animal-font, 'Nunito', sans-serif);
+}
+
+/* Animal Island UI Progress Bar */
+.animal-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.animal-progress-track {
+  flex: 1;
+  height: 22px;
+  background: #f0e6ce;
+  border: 2.5px solid var(--animal-border-wood, #7a583e);
+  border-radius: var(--animal-radius-pill, 50px);
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(60, 45, 30, 0.18);
+}
+
+.animal-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--animal-primary, #19c8b9),
+    var(--animal-primary, #19c8b9) 12px,
+    var(--animal-primary-hover, #3dd4c6) 12px,
+    var(--animal-primary-hover, #3dd4c6) 24px
+  );
+  border-radius: var(--animal-radius-pill, 50px);
+  transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.4);
+}
+
+.animal-progress-badge {
+  min-width: 54px;
+  padding: 4px 10px;
+  background: var(--animal-primary, #19c8b9);
+  color: #ffffff;
+  border: 2px solid var(--animal-primary-dark, #0f8e83);
+  border-radius: var(--animal-radius-pill, 50px);
+  font-family: var(--animal-font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 2px 0 0 var(--animal-primary-dark, #0f8e83);
+  flex-shrink: 0;
+}
+
+
+/* ==========================================================================
+   COMPREHENSIVE RESPONSIVE WINDOW ADAPTATION (Dynamic Screen Fitting)
+   ========================================================================== */
+
+/* Universal Responsive Canvas & Viewport Fitting */
+html, body {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-width: 100vw;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.app-body {
+  width: 100vw;
+  max-width: 100vw;
+  height: calc(100vh - 56px);
+  height: calc(100dvh - 56px);
+  overflow: hidden;
+}
+
+.canvas-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+canvas#game-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* All Modals Fit Player Window */
+.modal-card,
+.crafting-card,
+.dragon-card,
+.backpack-card,
+.ac-dialogue-box,
+.character-creator-container,
+.hero-select-card,
+.auth-card,
+.coding-card {
+  max-width: 95vw !important;
+  max-height: 88vh !important;
+  max-height: 88dvh !important;
+}
+
+/* Header & HUD Scaling for Medium Screens (1200px and below) */
+@media (max-width: 1200px) {
+  header.app-header {
+    padding: 0 10px;
+  }
+  .header-left-bar,
+  .header-right-bar {
+    gap: 6px;
+  }
+  .hero-header-name {
+    max-width: 95px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .header-xp-track {
+    width: 75px;
+  }
+  .header-xp-text {
+    font-size: 0.65rem;
+  }
+  .mode-btn {
+    padding: 6px 12px;
+    font-size: 0.82rem;
+  }
+}
+
+/* Header & HUD Scaling for Small Laptops / Tablets (992px and below) */
+@media (max-width: 992px) {
+  .hero-header-info {
+    max-width: 90px;
+  }
+  .header-xp-track {
+    display: none;
+  }
+  .header-btn-label {
+    display: none;
+  }
+  .mode-btn span {
+    font-size: 0.80rem;
+  }
+  .toggle-drawer-btn {
+    right: 170px;
+    top: 10px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+  }
+  .minimap-hud {
+    width: 140px;
+    height: 140px;
+    top: 10px;
+    right: 10px;
+  }
+  .dragon-quick-hud {
+    right: 10px;
+    transform: translateY(-50%) scale(0.9);
+  }
+  .dragon-skill-bar {
+    bottom: 14px;
+    transform: translateX(-50%) scale(0.9);
+  }
+}
+
+/* Ultra Compact Scaling for Mobile / Narrow Windows (768px and below) */
+@media (max-width: 768px) {
+  header.app-header {
+    height: 48px;
+    min-height: 48px;
+    padding: 0 6px;
+  }
+  .app-body {
+    height: calc(100vh - 48px);
+    height: calc(100dvh - 48px);
+  }
+  .hero-profile-btn {
+    padding: 2px 6px;
+  }
+  .hero-avatar-mini {
+    width: 28px;
+    height: 28px;
+  }
+  .hero-header-name {
+    display: none;
+  }
+  .mode-toggle {
+    padding: 2px;
+    gap: 3px;
+  }
+  .mode-btn {
+    padding: 5px 8px;
+    font-size: 0.75rem;
+  }
+  .minimap-hud {
+    width: 110px;
+    height: 110px;
+    top: 8px;
+    right: 8px;
+  }
+  .toggle-drawer-btn {
+    right: 125px;
+    top: 8px;
+    padding: 5px 8px;
+    font-size: 0.72rem;
+  }
+  .toggle-drawer-btn span {
+    display: none;
+  }
+  .dragon-quick-hud {
+    right: 6px;
+    transform: translateY(-50%) scale(0.8);
+  }
+  .dragon-skill-bar {
+    bottom: 8px;
+    transform: translateX(-50%) scale(0.82);
+  }
+  .ac-time-widget {
+    bottom: 20px;
+    left: 8px;
+    transform: scale(0.78);
+    transform-origin: bottom left;
+  }
+  .canvas-controls-overlay.vertical-toolbar {
+    top: 8px;
+    left: 8px;
+  }
+}
+
+
+
+
