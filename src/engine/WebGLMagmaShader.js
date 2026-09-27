@@ -1,6 +1,6 @@
 // Hardware-Accelerated WebGL/GLSL Shader for MinionsArt Stylized Lava
-// Uses dual-layer procedural Voronoi caustic lines with harmonic wave distortion,
-// converted into incandescent glowing magma cracks on dark basalt rock crust with animated neon pulsation.
+// Faithful to MinionsArt's Unity Shader Graph tutorial & Cel-Shaded Wind Waker aesthetic.
+// Deep obsidian/basalt base with stepped incandescent lava streams and high-contrast glowing neon veins.
 
 function hexToRgbVec(hex) {
   if (!hex) return [0.9, 0.2, 0.05];
@@ -16,45 +16,45 @@ export const MAGMA_PALETTES = {
   'classic-magma': {
     id: 'classic-magma',
     name: 'Magma Primordial (MinionsArt)',
-    crustDark: '#121010',      // Deep basalt obsidian
-    crustLight: '#262220',     // Volcanic rock surface
-    coolingCrimson: '#b91c1c', // Solidifying fracture rim
-    lavaOrange: '#f97316',     // Molten lava stream
-    lavaGold: '#facc15',       // High temperature flow
-    coreHot: '#fef08a',        // Incandescent yellow core
+    crustDark: '#120704',      // Deep Obsidian Basalt (near black with warm undertone)
+    crustLight: '#2c1208',     // Heated volcanic rock crust
+    coolingCrimson: '#9a1a08', // Solidifying fracture rim (vivid ruby crimson)
+    lavaOrange: '#ff5500',     // Vibrant neon lava orange (MinionsArt main stream)
+    lavaGold: '#ffaa00',       // High temperature molten gold
+    coreHot: '#fff066',        // Incandescent core yellow
     highlight: '#ffffff'       // White-hot heat peaks
   },
   'infernal-blood': {
     id: 'infernal-blood',
     name: 'Inferno Carmesim',
-    crustDark: '#0f0505',
-    crustLight: '#1f0d0d',
-    coolingCrimson: '#991b1b',
-    lavaOrange: '#ef4444',
-    lavaGold: '#fca5a5',
-    coreHot: '#fee2e2',
+    crustDark: '#0d0205',
+    crustLight: '#250810',
+    coolingCrimson: '#88001b',
+    lavaOrange: '#ee1133',
+    lavaGold: '#ff4d6d',
+    coreHot: '#ffccd5',
     highlight: '#ffffff'
   },
   'toxic-acid': {
     id: 'toxic-acid',
     name: 'Magma Tóxico / Peste Verde',
-    crustDark: '#051b0f',
-    crustLight: '#0d2818',
-    coolingCrimson: '#059669',
-    lavaOrange: '#10b981',
-    lavaGold: '#6ee7b7',
-    coreHot: '#d1fae5',
+    crustDark: '#020f06',
+    crustLight: '#072611',
+    coolingCrimson: '#05662a',
+    lavaOrange: '#00cc44',
+    lavaGold: '#55ff77',
+    coreHot: '#ccffdd',
     highlight: '#ffffff'
   },
   'astral-void': {
     id: 'astral-void',
     name: 'Plasma Astral / Chama Cósmica',
-    crustDark: '#0f0c1b',
-    crustLight: '#1e1938',
-    coolingCrimson: '#4f46e5',
-    lavaOrange: '#818cf8',
-    lavaGold: '#c084fc',
-    coreHot: '#f3e8ff',
+    crustDark: '#090514',
+    crustLight: '#180e30',
+    coolingCrimson: '#43197f',
+    lavaOrange: '#7b2cbf',
+    lavaGold: '#c77dff',
+    coreHot: '#e0aaff',
     highlight: '#ffffff'
   }
 };
@@ -95,12 +95,12 @@ const FRAGMENT_SHADER_SRC = `
   const float TWOPI = 6.283185307;
   const float SIXPI = 18.84955592;
 
-  // Optimized Voronoi Circle Distance Function
+  // Optimized Voronoi Circle Distance Function (3tKBDz / MinionsArt cellular mesh)
   float circ(vec2 pos, vec2 c, float s) {
     c = abs(pos - c);
     c = min(c, 1.0 - c);
     float d2 = dot(c, c);
-    return (d2 < s) ? smoothstep(s, s * 0.94, d2) * -1.0 : 0.0;
+    return (d2 < s) ? smoothstep(s, s * 0.92, d2) * -1.0 : 0.0;
   }
 
   // Procedural Caustic / Cellular Network Layer
@@ -168,76 +168,78 @@ const FRAGMENT_SHADER_SRC = `
     vec2 worldOffset = vec2(v_uv.x * u_viewportSize.x, (1.0 - v_uv.y) * u_viewportSize.y) / u_zoom;
     vec2 worldPos = u_camera + worldOffset;
 
-    // 2. Fluid Time & Scale Calculation (MinionsArt Dual Panning & Distortion)
+    // 2. Fluid Time & Scale Calculation (MinionsArt Dual Panning & Harmonic Distortion)
     float iTime = u_time * u_flowSpeed;
     vec2 wuv = worldPos * (0.0035 * u_crustScale);
 
     // Parallax Height Distortion
-    float h1 = sin(wuv.x + iTime * 0.7);
-    float h2 = sin(0.841471 * wuv.x - 0.540302 * wuv.y + iTime * 0.7);
+    float h1 = sin(wuv.x + iTime * 0.75);
+    float h2 = sin(0.841471 * wuv.x - 0.540302 * wuv.y + iTime * 0.75);
     wuv += vec2(h1, h2) * 0.022;
 
     // Dual-Layer Harmonic Texture Distortion
-    float d1 = mod(wuv.x + wuv.y, TWOPI) + iTime * 0.12;
-    float d2 = mod((wuv.x + wuv.y + 0.25) * 1.3, SIXPI) + iTime * 0.50;
+    float d1 = mod(wuv.x + wuv.y, TWOPI) + iTime * 0.15;
+    float d2 = mod((wuv.x + wuv.y + 0.25) * 1.3, SIXPI) + iTime * 0.55;
     vec2 dist = vec2(
       sin(d1) * 0.16 + sin(d2) * 0.05,
       cos(d1) * 0.16 + cos(d2) * 0.05
     );
 
-    // 3. Dual Cellular Voronoi Caustic Layers
+    // 3. Dual Cellular Voronoi Layers (MinionsArt Dual Panning Motion)
     float layer1 = lavalayer(wuv + dist.xy);
     float layer2 = lavalayer(vec2(1.0) - wuv - dist.yx);
 
-    // 4. Basalt Rock vs Molten Lava Veins Composition
-    vec3 col = mix(u_crustDark, u_crustLight, layer1);
+    // 4. Base Basalt Rock Plates (Solid Obsidian & Warm Crust)
+    vec3 col = mix(u_crustDark, u_crustLight, layer1 * 0.4);
 
-    // Incandescent Fracture Lines & Ramping
+    // 5. Dynamic Neon Pulse (Highly visible rhythmic breathing + spatial traveling waves)
+    float pulseA = sin(iTime * 3.2) * 0.5 + 0.5; // 0.0 to 1.0
+    float pulseB = sin(iTime * 1.6 + (wuv.x + wuv.y) * 3.5) * 0.5 + 0.5;
+    float neonGlow = 0.65 + 0.45 * pulseA + 0.25 * pulseB; // 0.65 to 1.35x brightness pulse
+
+    // Crack Vein and Core Detection (MinionsArt Multi-Step Ramp)
     float veinValue = max(layer1, layer2);
     float coreVein = layer1 * layer2;
 
-    // Multi-frequency Neon Glow Pulse (Rhythmic breathing + Traveling wave)
-    float neonPulse = 0.75 + 0.25 * sin(iTime * 2.8) + 0.15 * sin(iTime * 5.2 + (wuv.x * 3.0 + wuv.y * 2.0));
-
-    // Step 1: Cooling Crimson Rim around basalt plates with neon breathing
-    if (veinValue > 0.04) {
-      float t = smoothstep(0.04, 0.32, veinValue);
-      col = mix(col, u_coolingCrimson * (0.8 + 0.3 * neonPulse), t);
+    // Step 1: Cooling Crimson Fracture Rim around Basalt Plates
+    if (layer1 > 0.02 || layer2 > 0.02) {
+      float t = smoothstep(0.02, 0.28, veinValue);
+      col = mix(col, u_coolingCrimson, t);
     }
 
-    // Step 2: Flowing Molten Orange Magma with vivid intensity
-    if (veinValue > 0.26) {
-      float t = smoothstep(0.26, 0.65, veinValue);
-      col = mix(col, u_lavaOrange * (0.9 + 0.4 * neonPulse), t);
+    // Step 2: Main Flowing Lava Stream (MinionsArt Neon Orange)
+    if (layer1 > 0.22 || layer2 > 0.22) {
+      float t = smoothstep(0.22, 0.55, veinValue);
+      vec3 activeOrange = u_lavaOrange * (0.9 + 0.3 * neonGlow);
+      col = mix(col, activeOrange, t);
     }
 
-    // Step 3: Bright Golden Flow & High Heat Intensity
-    if (veinValue > 0.58) {
-      float t = smoothstep(0.58, 0.90, veinValue);
-      col = mix(col, u_lavaGold * (1.0 + 0.5 * neonPulse), t);
+    // Step 3: Bright High-Heat Golden Stream
+    if (layer1 > 0.50 || layer2 > 0.50) {
+      float t = smoothstep(0.50, 0.82, veinValue);
+      vec3 activeGold = u_lavaGold * (1.0 + 0.4 * neonGlow);
+      col = mix(col, activeGold, t);
     }
 
-    // Step 4: High-Temperature Core Line (from dual layer intersection)
-    if (coreVein > 0.14 || layer2 > 0.78) {
-      float t = smoothstep(0.14, 0.60, coreVein);
-      col = mix(col, u_coreHot * (1.1 + 0.5 * neonPulse), t * u_heatIntensity);
+    // Step 4: Incandescent Core Line (Dual-layer intersecting fissures)
+    if (layer2 > 0.70 || coreVein > 0.10) {
+      float t = smoothstep(0.70, 0.95, layer2);
+      float tc = smoothstep(0.10, 0.45, coreVein);
+      float coreMix = max(t, tc);
+      vec3 activeCore = u_coreHot * (1.1 + 0.5 * neonGlow) * u_heatIntensity;
+      col = mix(col, activeCore, coreMix);
     }
 
-    // Step 5: White-Hot Glowing Peak Highlights & Incandescent Core
-    if (coreVein > 0.48) {
-      float t = smoothstep(0.48, 0.85, coreVein);
-      col = mix(col, u_highlight, t * clamp(neonPulse, 0.7, 1.3));
+    // Step 5: White-Hot Glowing Peak Line with intense neon pulsation (MinionsArt Cel Highlight)
+    if (layer2 > 0.88 || coreVein > 0.40) {
+      float t = max(smoothstep(0.88, 1.0, layer2), smoothstep(0.40, 0.75, coreVein));
+      col = mix(col, u_highlight, t * clamp(neonGlow, 0.8, 1.4));
     }
 
-    // Outer Emissive Neon Halo / Bloom on fractured lines
-    if (veinValue > 0.15) {
-      float haloIntensity = smoothstep(0.15, 0.85, veinValue) * neonPulse * 0.45;
-      col += u_lavaOrange * haloIntensity;
-    }
-
-    // Stepped cel-shaded crisp neon rim along the fissure edge
-    if (veinValue > 0.82) {
-      col = mix(col, u_highlight, 0.35 * neonPulse);
+    // Step 6: Emissive Neon Bloom / Halo on basalt borders
+    if (veinValue > 0.12) {
+      float halo = smoothstep(0.12, 0.75, veinValue) * (0.35 * neonGlow);
+      col += u_lavaOrange * halo;
     }
 
     gl_FragColor = vec4(col, 1.0);
@@ -366,7 +368,7 @@ export class WebGLMagmaShader {
     // MinionsArt Flow Parameters
     gl.uniform1f(this.locations.flowSpeed, config.flowSpeed !== undefined ? config.flowSpeed : 1.0);
     gl.uniform1f(this.locations.crustScale, config.crustScale !== undefined ? config.crustScale : 1.0);
-    gl.uniform1f(this.locations.heatIntensity, config.heatIntensity !== undefined ? config.heatIntensity : 1.25);
+    gl.uniform1f(this.locations.heatIntensity, config.heatIntensity !== undefined ? config.heatIntensity : 1.3);
 
     // Thermal Color Ramp Uniforms
     gl.uniform3fv(this.locations.crustDark, hexToRgbVec(pal.crustDark));
