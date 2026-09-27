@@ -174,12 +174,22 @@ export class Minimap {
 
   setExpanded(expanded) {
     this.isExpanded = expanded;
+    const skillBar = document.getElementById('dragon-skill-bar');
+    const quickHud = document.getElementById('quick-actions-hud');
+    const dragonQuickHud = document.getElementById('dragon-quick-hud');
+
     if (this.expandedModal) {
       if (this.isExpanded) {
         this.expandedModal.classList.add('active');
         this.expandedPan = { x: 0, y: 0 };
+        if (skillBar) skillBar.style.display = 'none';
+        if (quickHud) quickHud.style.display = 'none';
+        if (dragonQuickHud) dragonQuickHud.style.display = 'none';
       } else {
         this.expandedModal.classList.remove('active');
+        if (skillBar) skillBar.style.display = 'flex';
+        if (quickHud) quickHud.style.display = 'flex';
+        if (dragonQuickHud) dragonQuickHud.style.display = 'flex';
       }
     }
   }
@@ -479,9 +489,9 @@ export class Minimap {
           ctx.fill();
         } else if (cell.tileId.startsWith('house-')) {
           // Clean solid roof structure block without grid lines
-          ctx.fillRect(mapX, mapY, mapW, mapH);
+          ctx.fillRect(mapX - 0.25, mapY - 0.25, mapW + 0.5, mapH + 0.5);
         } else {
-          ctx.fillRect(mapX, mapY, Math.max(1, mapW), Math.max(1, mapH));
+          ctx.fillRect(mapX - 0.25, mapY - 0.25, Math.max(1, mapW + 0.5), Math.max(1, mapH + 0.5));
         }
       }
     }

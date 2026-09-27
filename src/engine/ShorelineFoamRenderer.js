@@ -26,23 +26,24 @@ export class ShorelineFoamRenderer {
   }
 
   /**
-   * Render dynamic lapping waves and foam contours along all visible water-land boundaries
+   * Render dynamic lapping waves and foam contours along all visible water/magma-land boundaries
    */
-  renderShorelines(ctx, tileMap, visibleWaterCells, timeMs = 0, config = {}) {
-    if (!visibleWaterCells || visibleWaterCells.length === 0) return;
+  renderShorelines(ctx, tileMap, visibleCells, timeMs = 0, config = {}) {
+    if (!visibleCells || visibleCells.length === 0) return;
 
-    const edges = tileMap.getShorelineEdges ? tileMap.getShorelineEdges() : null;
+    const isMagma = !!config.isMagma;
+    const edges = tileMap.getShorelineEdges ? tileMap.getShorelineEdges(isMagma) : null;
     if (!edges || edges.length === 0) return;
 
-    const reach = config.shoreLapReach !== undefined ? config.shoreLapReach : 12; // Max pixel reach onto land
-    const speed = config.shoreLapSpeed !== undefined ? config.shoreLapSpeed : 1.8;
+    const reach = config.shoreLapReach !== undefined ? config.shoreLapReach : (isMagma ? 10 : 12);
+    const speed = config.shoreLapSpeed !== undefined ? config.shoreLapSpeed : (isMagma ? 1.4 : 1.8);
     const t = (timeMs / 1000) * speed;
     const tileSize = tileMap.tileSize || 64;
 
-    // Viewport bounds from visible water cells
+    // Viewport bounds from visible liquid cells
     let minTx = Infinity, maxTx = -Infinity, minTy = Infinity, maxTy = -Infinity;
-    for (let i = 0; i < visibleWaterCells.length; i++) {
-      const c = visibleWaterCells[i];
+    for (let i = 0; i < visibleCells.length; i++) {
+      const c = visibleCells[i];
       if (c.tx < minTx) minTx = c.tx;
       if (c.tx > maxTx) maxTx = c.tx;
       if (c.ty < minTy) minTy = c.ty;
@@ -64,28 +65,28 @@ export class ShorelineFoamRenderer {
       const lapOffset = waveCycle * reach;
       const foamAlpha = 0.35 + waveCycle * 0.55;
 
-      // 1. North Shoreline Lap (Water below, Land above)
+      // 1. North Shoreline Lap
       if (e.north) {
         const edgeY = cy - lapOffset;
-        this.drawWaveLapBand(ctx, cx, edgeY, cx + tileSize, edgeY, 0, -1, waveCycle, foamAlpha);
+        this.drawWaveLapBand(ctx, cx, edgeY, cx + tileSize, edgeY, 0, -1, waveCycle, foamAlpha, isMagma);
       }
 
-      // 2. South Shoreline Lap (Water above, Land below)
+      // 2. South Shoreline Lap
       if (e.south) {
         const edgeY = cy + tileSize + lapOffset;
-        this.drawWaveLapBand(ctx, cx, edgeY, cx + tileSize, edgeY, 0, 1, waveCycle, foamAlpha);
+        this.drawWaveLapBand(ctx, cx, edgeY, cx + tileSize, edgeY, 0, 1, waveCycle, foamAlpha, isMagma);
       }
 
-      // 3. West Shoreline Lap (Water right, Land left)
+      // 3. West Shoreline Lap
       if (e.west) {
         const edgeX = cx - lapOffset;
-        this.drawWaveLapBand(ctx, edgeX, cy, edgeX, cy + tileSize, -1, 0, waveCycle, foamAlpha);
+        this.drawWaveLapBand(ctx, edgeX, cy, edgeX, cy + tileSize, -1, 0, waveCycle, foamAlpha, isMagma);
       }
 
-      // 4. East Shoreline Lap (Water left, Land right)
+      // 4. East Shoreline Lap
       if (e.east) {
         const edgeX = cx + tileSize + lapOffset;
-        this.drawWaveLapBand(ctx, edgeX, cy, edgeX, cy + tileSize, 1, 0, waveCycle, foamAlpha);
+        this.drawWaveLapBand(ctx, edgeX, cy, edgeX, cy + tileSize, 1, 0, waveCycle, foamAlpha, isMagma);
       }
     }
 
@@ -95,14 +96,18 @@ export class ShorelineFoamRenderer {
   /**
    * Draw a stylized cel-shaded foam band that advances and undulates
    */
-  drawWaveLapBand(ctx, x1, y1, x2, y2, normalX, normalY, cycle, alpha) {
+  drawWaveLapBand(ctx, x1, y1, x2, y2, normalX, normalY, cycle, alpha, isMagma = false) {
     const isHorizontal = normalY !== 0;
     const length = isHorizontal ? Math.abs(x2 - x1) : Math.abs(y2 - y1);
     const startPos = isHorizontal ? Math.min(x1, x2) : Math.min(y1, y2);
     const perpBase = isHorizontal ? y1 : x1;
 
-    // 1. Shallow Water Submersion tint under the lapping wave
-    ctx.fillStyle = `rgba(204, 251, 241, ${0.15 + cycle * 0.2})`;
+    // 1. Shallow Submersion tint under the lapping wave
+    if (isMagma) {
+      ctx.fillStyle = `rgba(255, 90, 0, ${0.18 + cycle * 0.22})`;
+    } else {
+      ctx.fillStyle = `rgba(204, 251, 241, ${0.15 + cycle * 0.2})`;
+    }
     if (isHorizontal) {
       const topY = normalY > 0 ? perpBase - 14 : perpBase;
       ctx.fillRect(startPos, topY, length, 14);
@@ -132,21 +137,33 @@ export class ShorelineFoamRenderer {
       }
     }
 
-    // Primary Foam Outline (Cel-Shaded Crisp White)
-    ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+    // Primary Foam Outline
+    if (isMagma) {
+      ctx.strokeStyle = `rgba(255, 110, 0, ${alpha})`;
+      ctx.shadowColor = '#ea580c';
+      ctx.shadowBlur = 6;
+    } else {
+      ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.shadowBlur = 0;
+    }
     ctx.lineWidth = 3.5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke();
 
     // Inner Secondary Foam Bubbles / Highlight
-    ctx.strokeStyle = `rgba(186, 230, 253, ${alpha * 0.75})`;
+    if (isMagma) {
+      ctx.strokeStyle = `rgba(255, 215, 0, ${alpha * 0.9})`;
+    } else {
+      ctx.strokeStyle = `rgba(186, 230, 253, ${alpha * 0.75})`;
+    }
     ctx.lineWidth = 1.5;
     ctx.stroke();
+    ctx.shadowBlur = 0;
 
     // 3. Tiny Dissipating Foam Bubbles (Cel-Shaded Dots)
     if (cycle > 0.4) {
-      ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.85})`;
+      ctx.fillStyle = isMagma ? `rgba(255, 140, 0, ${alpha * 0.9})` : `rgba(255, 255, 255, ${alpha * 0.85})`;
       for (let p = 6; p < length; p += 14) {
         const worldP = startPos + p;
         const bOffset = (normalY !== 0) ? (normalY * (cycle * 4)) : (normalX * (cycle * 4));

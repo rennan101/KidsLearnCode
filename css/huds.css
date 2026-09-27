@@ -534,12 +534,12 @@ header.app-header {
   gap: 14px;
   z-index: 120;
   pointer-events: auto;
-  background: rgba(253, 251, 247, 0.95);
-  border: 3px solid #7a583e;
-  border-radius: 50px;
-  padding: 8px 18px;
-  box-shadow: 0 8px 24px rgba(80, 50, 20, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(6px);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .dragon-skill-btn {

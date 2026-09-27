@@ -177,7 +177,11 @@ export class NPCManager {
     }
 
     for (const [, npc] of this.entities) {
-      npc.animTimer += dt;
+      if (npc.state === 'wander' || npc.state === 'evade') {
+        npc.animTimer += dt * (npc.speed / 110);
+      } else {
+        npc.animTimer += dt;
+      }
 
       // 1. Tratamento de Diálogo Ativo
       if (npc.state === 'talking') {
@@ -484,7 +488,17 @@ export class NPCManager {
     const avatarScale = 0.33;
     const targetX = npc.x + 32;
     const targetY = npc.y + 60 - (265 * avatarScale);
-    const animState = npc.state === 'wander' ? 'walk' : 'idle';
+    const animState = (npc.state === 'wander' || npc.state === 'evade') ? 'walk' : 'idle';
+
+    // 0. Sombra suave nos pés (omitida em reflexos)
+    if (!isReflection) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.beginPath();
+      ctx.ellipse(Math.round(npc.x + 32), Math.round(npc.y + 60), 16, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
 
     // 1. Renderiza o Avatar Modular com animações e piscar de olhos
     this.avatarRenderer.render(

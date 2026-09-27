@@ -213,38 +213,44 @@ export class TileMap {
   invalidateSpatialCaches() {
     this.spatialCacheDirty = true;
     this.shorelineEdgeCache = null;
+    this.magmaShorelineEdgeCache = null;
     this.reflectiveObjectsCache = null;
   }
 
   // Pre-calculate and cache shoreline boundary cells for high performance foam rendering
-  getShorelineEdges() {
-    if (this.shorelineEdgeCache && !this.spatialCacheDirty) {
-      return this.shorelineEdgeCache;
+  getShorelineEdges(forMagma = false) {
+    const cacheKey = forMagma ? 'magmaShorelineEdgeCache' : 'shorelineEdgeCache';
+    if (this[cacheKey] && !this.spatialCacheDirty) {
+      return this[cacheKey];
     }
 
     const ground = this.layers.ground;
     if (!ground) return [];
 
     const edges = [];
-    const isLand = (tx, ty) => {
+    const isTargetLiquid = (tx, ty) => {
       const cell = ground.get(this.getKey(tx, ty));
       if (!cell || !cell.tileId) return false;
       const gid = cell.tileId.toLowerCase();
-      const isWater = gid === 'water-animated' || gid === 'water-wind-waker' || gid.includes('water') || gid.includes('ocean');
-      return !isWater;
+      if (forMagma) {
+        return gid === 'magma-animated' || gid === 'magma-stylized' || gid.includes('magma') || gid.includes('lava');
+      }
+      return gid === 'water-animated' || gid === 'water-wind-waker' || gid.includes('water') || gid.includes('ocean');
+    };
+
+    const isDifferentLand = (tx, ty) => {
+      return !isTargetLiquid(tx, ty);
     };
 
     for (const [key, cell] of ground.entries()) {
       if (!cell || !cell.tileId) continue;
-      const gid = cell.tileId.toLowerCase();
-      const isWater = gid === 'water-animated' || gid === 'water-wind-waker' || gid.includes('water') || gid.includes('ocean');
-      if (!isWater) continue;
-
       const [tx, ty] = key.split(',').map(Number);
-      const north = isLand(tx, ty - 1);
-      const south = isLand(tx, ty + 1);
-      const west = isLand(tx - 1, ty);
-      const east = isLand(tx + 1, ty);
+      if (!isTargetLiquid(tx, ty)) continue;
+
+      const north = isDifferentLand(tx, ty - 1);
+      const south = isDifferentLand(tx, ty + 1);
+      const west = isDifferentLand(tx - 1, ty);
+      const east = isDifferentLand(tx + 1, ty);
 
       if (north || south || west || east) {
         edges.push({
@@ -256,7 +262,7 @@ export class TileMap {
       }
     }
 
-    this.shorelineEdgeCache = edges;
+    this[cacheKey] = edges;
     return edges;
   }
 
@@ -1403,12 +1409,17 @@ export class TileMap {
           this.magmaRenderer.renderBatch(ctx, magmaCells, nowMs);
         }
 
+        // Render Shoreline Lapping Waves & Orange Foam against neighboring terrain
+        if (this.shorelineFoamRenderer) {
+          this.shorelineFoamRenderer.renderShorelines(ctx, this, magmaCells, nowMs, { ...magmaConfig, isMagma: true });
+        }
+
         // Contact burning edge against non-magma terrain
         ctx.save();
-        ctx.strokeStyle = 'rgba(234, 88, 12, 0.75)';
-        ctx.lineWidth = 3.0;
-        ctx.shadowColor = '#ea580c';
-        ctx.shadowBlur = 8;
+        ctx.strokeStyle = '#ff6600';
+        ctx.lineWidth = 3.5;
+        ctx.shadowColor = '#ff3300';
+        ctx.shadowBlur = 10;
         for (let i = 0; i < magmaCells.length; i++) {
           const m = magmaCells[i];
           const tx = m.tx;

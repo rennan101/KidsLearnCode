@@ -2123,19 +2123,25 @@ class RPGApplication {
         }
       }
 
-      if (!data) {
-        // Se nenhum save local ou nuvem existir, restaura o mapa oficial padrão construído pelo usuário
+      const isMapEmpty = !data || !data.map || !data.map.layers || !data.map.layers.ground || (data.map.layers.ground instanceof Map ? data.map.layers.ground.size === 0 : (typeof data.map.layers.ground === 'object' && Object.keys(data.map.layers.ground).length === 0));
+
+      if (isMapEmpty) {
+        // Se nenhum save local ou nuvem existir ou o mapa estiver vazio, restaura o mapa oficial padrão construído pelo usuário
         try {
           const resp = await fetch('src/data/defaultWorldMap.json');
           if (resp.ok) {
             const defaultMap = await resp.json();
-            data = {
-              id: 'active_save',
-              map: defaultMap,
-              player: defaultMap.spawnPoint ? { x: defaultMap.spawnPoint.x, y: defaultMap.spawnPoint.y, scale: 1.0 } : { x: 2048, y: 0, scale: 1.0 },
-              activeHero: 'char_wolf_hunter_m',
-              savedAt: Date.now()
-            };
+            if (!data) {
+              data = {
+                id: 'active_save',
+                map: defaultMap,
+                player: defaultMap.spawnPoint ? { x: defaultMap.spawnPoint.x, y: defaultMap.spawnPoint.y, scale: 1.0 } : { x: 2048, y: 0, scale: 1.0 },
+                activeHero: 'char_wolf_hunter_m',
+                savedAt: Date.now()
+              };
+            } else {
+              data.map = defaultMap;
+            }
             await this.storageManager.saveGame(data);
             console.log('[Game] Mapa original base defaultWorldMap.json restaurado com sucesso no IndexedDB.');
           }
@@ -4000,13 +4006,19 @@ class RPGApplication {
       const modalXpFill = document.getElementById('profile-modal-xp-fill');
       const modalXpText = document.getElementById('profile-modal-xp-text');
 
+      const xpCount = this.blocklySystem?.playerXP || 0;
+      const xpPerLevel = 200;
+      const playerLevel = Math.max(1, Math.floor(xpCount / xpPerLevel) + 1);
+      const currentLevelXP = xpCount % xpPerLevel;
+      const xpPercent = Math.min(100, Math.round((currentLevelXP / xpPerLevel) * 100));
+
       if (modalAvatar && this.player.modularAvatarRenderer) {
         modalAvatar.src = this.player.modularAvatarRenderer.getAvatarHeadPortrait(cfg, 96);
       }
       if (modalName) modalName.innerText = userName;
-      if (modalLevel) modalLevel.innerText = 'Nv. 1';
-      if (modalXpFill) modalXpFill.style.width = '50%';
-      if (modalXpText) modalXpText.innerText = '100/200 XP';
+      if (modalLevel) modalLevel.innerText = `Nv. ${playerLevel}`;
+      if (modalXpFill) modalXpFill.style.width = `${xpPercent}%`;
+      if (modalXpText) modalXpText.innerText = `${currentLevelXP}/${xpPerLevel} XP`;
 
       profileModal.style.display = 'flex';
     };
@@ -4039,6 +4051,7 @@ class RPGApplication {
 
     confirmLogoutBtn?.addEventListener('click', async () => {
       this.closeLogoutConfirmModal();
+      await this.saveGameToStorage(true);
       if (this.supabaseClient) {
         await this.supabaseClient.signOut();
         this.updateAuthUI();
