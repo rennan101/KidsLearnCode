@@ -5,7 +5,7 @@ import { ModularAvatarRenderer } from './animation/ModularAvatarRenderer.js';
 import { DEFAULT_AVATAR_CONFIG } from './animation/AvatarConfig.js';
 
 export class Player {
-  constructor(x = 320, y = 320, heroId = 'char_wolf_hunter_m') {
+  constructor(x = 320, y = 320, heroId = 'custom_avatar') {
     this.x = x;
     this.y = y;
     this.baseSpeed = 200; // Normal walk speed in px/s
@@ -21,7 +21,13 @@ export class Player {
 
     // Character identity
     this.heroId = heroId;
-    this.heroData = PLAYABLE_HEROES.find(h => h.id === heroId) || PLAYABLE_HEROES[0];
+    this.heroData = {
+      id: 'custom_avatar',
+      name: 'Aventureiro',
+      species: 'human',
+      gender: 'neutral',
+      archetype: 'adventurer'
+    };
     this.dragonManager = null;
 
     // Movement & Animation States

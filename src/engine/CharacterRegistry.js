@@ -5,78 +5,90 @@
 
 import { MASTER_NPC_CONFIGS, generateNPCAppearance } from './animation/NPCAppearanceGenerator.js';
 
-export const PLAYABLE_HEROES = [
+// Personagens jogáveis: o jogador utiliza exclusivamente seu Avatar Customizável modular.
+export const PLAYABLE_HEROES = [];
+
+// Heróis da ilha convertidos em NPCs Secundários (com horários de aparição: vampiros e bruxos à noite, caçadores e arqueiros de dia)
+export const SECONDARY_HERO_NPCS = [
   {
     id: "char_wolf_hunter_m",
-    name: "Lobo Caçador (Ragnar)",
-    species: "wolf",
-    gender: "male",
-    archetype: "hunter",
-    passive: { id: "wild_scent", name: "Faro Selvagem", desc: "Revela pegadas para ovos de dragão e minérios a 15 tiles." },
-    metadataPath: "assets/characters/char_wolf_hunter_m/metadata.json"
+    name: "Ragnar, o Caçador",
+    role: "Guardião da Floresta & Rastreador",
+    category: "hunter",
+    timeOfDay: "day", // Aparece de dia / manhã
+    avatarConfig: MASTER_NPC_CONFIGS.char_wolf_hunter_m,
+    portrait: "assets/characters/char_wolf_hunter_m/portrait.jpg",
+    greeting: "Saudações, jovem aventureiro! Os ventos da manhã trazem o rastro de feras e minérios raros. Mantenha os olhos abertos na vegetação!"
   },
   {
     id: "char_wolf_hunter_f",
-    name: "Lobo Caçadora (Lyra)",
-    species: "wolf",
-    gender: "female",
-    archetype: "hunter",
-    passive: { id: "wild_scent", name: "Faro Selvagem", desc: "Revela pegadas para ovos de dragão e minérios a 15 tiles." },
-    metadataPath: "assets/characters/char_wolf_hunter_f/metadata.json"
+    name: "Lyra, a Rastreadora",
+    role: "Exploradora de Trilhas Selvagens",
+    category: "hunter",
+    timeOfDay: "day", // Aparece de dia / manhã
+    avatarConfig: MASTER_NPC_CONFIGS.char_wolf_hunter_f,
+    portrait: "assets/characters/char_wolf_hunter_f/portrait.jpg",
+    greeting: "Olá! A floresta desperta com a luz do sol. Cada pegada na terra conta uma história para quem sabe observar!"
   },
   {
     id: "char_bat_vampire_m",
-    name: "Morcego Vampiro (Vlad)",
-    species: "bat",
-    gender: "male",
-    archetype: "vampire",
-    passive: { id: "night_echo", name: "Eco Noturno", desc: "+5 Ações Noturnas exclusivas (após 17h) e visão no escuro." },
-    metadataPath: "assets/characters/char_bat_vampire_m/metadata.json"
+    name: "Vlad, o Andarilho Noturno",
+    role: "Guardião das Sombras & Noite",
+    category: "vampire",
+    timeOfDay: "night", // Aparece apenas à noite
+    avatarConfig: MASTER_NPC_CONFIGS.char_bat_vampire_m,
+    portrait: "assets/characters/char_bat_vampire_m/portrait.jpg",
+    greeting: "A noite é calma e cheia de mistérios... Quando a lua sobe aos céus, as energias secretas da ilha se revelam."
   },
   {
     id: "char_bat_vampire_f",
-    name: "Morcego Vampira (Carmilla)",
-    species: "bat",
-    gender: "female",
-    archetype: "vampire",
-    passive: { id: "night_echo", name: "Eco Noturno", desc: "+5 Ações Noturnas exclusivas (após 17h) e visão no escuro." },
-    metadataPath: "assets/characters/char_bat_vampire_f/metadata.json"
+    name: "Carmilla, a Dama das Sombras",
+    role: "Erudita da Meia-Noite",
+    category: "vampire",
+    timeOfDay: "night", // Aparece apenas à noite
+    avatarConfig: MASTER_NPC_CONFIGS.char_bat_vampire_f,
+    portrait: "assets/characters/char_bat_vampire_f/portrait.jpg",
+    greeting: "Boa noite, viajante. O silêncio da escuridão guarda os melhores pensamentos para criar e contemplar o luar."
   },
   {
     id: "char_eagle_archer_m",
-    name: "Águia Arqueiro (Zephyr)",
-    species: "eagle",
-    gender: "male",
-    archetype: "archer",
-    passive: { id: "perfect_aim", name: "Mira Perfeita", desc: "+30% velocidade de coleta e -1s no cooldown da Esquiva." },
-    metadataPath: "assets/characters/char_eagle_archer_m/metadata.json"
+    name: "Zephyr, o Vigia dos Ventos",
+    role: "Sentinela Celeste & Arqueiro",
+    category: "archer",
+    timeOfDay: "day", // Aparece de dia / manhã
+    avatarConfig: MASTER_NPC_CONFIGS.char_eagle_archer_m,
+    portrait: "assets/characters/char_eagle_archer_m/portrait.jpg",
+    greeting: "O ar matutino é perfeito para mirar longe! As montanhas e falésias da ilha guardam vistas espetaculares."
   },
   {
     id: "char_eagle_archer_f",
-    name: "Águia Arqueira (Astra)",
-    species: "eagle",
-    gender: "female",
-    archetype: "archer",
-    passive: { id: "perfect_aim", name: "Mira Perfeita", desc: "+30% velocidade de coleta e -1s no cooldown da Esquiva." },
-    metadataPath: "assets/characters/char_eagle_archer_f/metadata.json"
+    name: "Astra, a Franco-Atiradora",
+    role: "Vigia das Alturas",
+    category: "archer",
+    timeOfDay: "day", // Aparece de dia / manhã
+    avatarConfig: MASTER_NPC_CONFIGS.char_eagle_archer_f,
+    portrait: "assets/characters/char_eagle_archer_f/portrait.jpg",
+    greeting: "Bom dia! Com precisão e calma, nenhuma distância é grande demais para alcançar seus objetivos!"
   },
   {
     id: "char_cat_mage_m",
-    name: "Gato Bruxo (Merlin)",
-    species: "cat",
-    gender: "male",
-    archetype: "mage",
-    passive: { id: "arcane_affinity", name: "Afinidade Arcana", desc: "+10% ganho de XP aos dragões e dicas nos quebra-cabeças Lua." },
-    metadataPath: "assets/characters/char_cat_mage_m/metadata.json"
+    name: "Merlin, o Arcanista",
+    role: "Estudioso dos Astros Noturnos",
+    category: "mage",
+    timeOfDay: "night", // Aparece apenas à noite
+    avatarConfig: MASTER_NPC_CONFIGS.char_cat_mage_m,
+    portrait: "assets/characters/char_cat_mage_m/portrait.jpg",
+    greeting: "As constelações noturnas revelam fórmulas fascinantes de código e lógica... Observe as estrelas com atenção!"
   },
   {
     id: "char_cat_witch_f",
-    name: "Gato Bruxa (Luna)",
-    species: "cat",
-    gender: "female",
-    archetype: "witch",
-    passive: { id: "arcane_affinity", name: "Afinidade Arcana", desc: "+10% ganho de XP aos dragões e dicas nos quebra-cabeças Lua." },
-    metadataPath: "assets/characters/char_cat_witch_f/metadata.json"
+    name: "Luna, a Mística Lunar",
+    role: "Tecelã de Feitiços Lunares",
+    category: "witch",
+    timeOfDay: "night", // Aparece apenas à noite
+    avatarConfig: MASTER_NPC_CONFIGS.char_cat_witch_f,
+    portrait: "assets/characters/char_cat_witch_f/portrait.jpg",
+    greeting: "Hihi! A lua cheia é a melhor conselheira para quem busca inspiração nos feitiços da ilha!"
   }
 ];
 
@@ -233,7 +245,7 @@ export const VILLAGE_NPCS = [
 ];
 
 export function getNPCData(npcId) {
-  const found = VILLAGE_NPCS.find(n => n.id === npcId);
+  const found = VILLAGE_NPCS.find(n => n.id === npcId) || SECONDARY_HERO_NPCS.find(n => n.id === npcId);
   if (found) return found;
   return {
     id: npcId,
@@ -247,6 +259,7 @@ export function getNPCData(npcId) {
 export const CharacterRegistry = {
   PLAYABLE_HEROES,
   VILLAGE_NPCS,
+  SECONDARY_HERO_NPCS,
   getNPCData
 };
 

@@ -1,5 +1,5 @@
 import { DRAGON_CATALOG } from './DragonManager.js';
-import { PLAYABLE_HEROES, VILLAGE_NPCS } from './CharacterRegistry.js';
+import { PLAYABLE_HEROES, VILLAGE_NPCS, SECONDARY_HERO_NPCS } from './CharacterRegistry.js';
 
 export function generateDragonSVG(dragon) {
   const body = dragon.color || '#38bdf8';
@@ -2361,18 +2361,20 @@ export class AssetLoader {
       });
     }
 
-    // Register Playable Heroes in Overworld Tiles (Category: 'Characters')
-    if (Array.isArray(PLAYABLE_HEROES)) {
-      for (const hero of PLAYABLE_HEROES) {
+    // Register Secondary Hero NPCs in Overworld Tiles (Category: 'Characters')
+    if (Array.isArray(SECONDARY_HERO_NPCS)) {
+      for (const npc of SECONDARY_HERO_NPCS) {
         this.overworldTiles.push({
-          id: hero.id,
-          name: hero.name,
+          id: npc.id,
+          name: npc.name,
           category: 'Characters',
           layer: 'characters',
           isCharacter: true,
-          characterType: 'hero',
-          heroData: hero,
-          src: `assets/characters/${hero.id}/frames/wolf_hunter_r0_c0.png`,
+          isNPC: true,
+          characterType: 'npc',
+          npcData: npc,
+          timeOfDay: npc.timeOfDay,
+          src: `assets/characters/${npc.id}/frames/wolf_hunter_r0_c0.png`,
           gridW: 1,
           gridH: 1,
           collider: {

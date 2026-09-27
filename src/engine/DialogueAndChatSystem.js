@@ -618,9 +618,21 @@ export class DialogueAndChatSystem {
 
       this.startNPCDialogue(speakerMeta, pages, choices, null, npcData);
     } else {
-      // Active pending mission in the sequence
+      // Active pending mission in the sequence (or secondary NPC greeting)
       const lesson = progress.nextLesson;
-      if (!lesson) return;
+      if (!lesson) {
+        const pages = [
+          fullNpcData.greeting || 'Olá, nobre aventureiro! Que bom ver você explorando a Ilha Lua!'
+        ];
+        const choices = [
+          {
+            label: 'Até mais!',
+            action: () => this.closeNPCDialogue()
+          }
+        ];
+        this.startNPCDialogue(speakerMeta, pages, choices, null, npcData);
+        return;
+      }
 
       const pages = [
         npcData.greeting || 'Olá, nobre aventureiro! Que bom ver você por aqui!',

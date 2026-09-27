@@ -685,8 +685,32 @@ export class TileMap {
     }
 
     // Modular NPC Entity Cutout Renderer (Human/Anime Stylized with AvatarConfig)
-    if (cell.tileId.startsWith('npc_') || tileMeta.isNPC) {
+    if (cell.tileId.startsWith('npc_') || cell.tileId.startsWith('char_') || tileMeta.isNPC || tileMeta.isCharacter) {
       const npcData = getNPCData(cell.tileId);
+
+      // Play Mode: Check time of day appearance schedule
+      if (!isEditor && npcData?.timeOfDay) {
+        const isNight = (typeof window !== 'undefined' && window.gameDayNightSystem) ? window.gameDayNightSystem.isNight() : false;
+        if (npcData.timeOfDay === 'night' && !isNight) {
+          return; // Vampiros e Bruxos só aparecem à noite
+        }
+        if (npcData.timeOfDay === 'day' && isNight) {
+          return; // Caçadores e Arqueiros só aparecem de dia / manhã
+        }
+      }
+
+      // Play Mode: Check water placement (Ensure NPCs only stand on land/terra, never in water)
+      if (!isEditor) {
+        const groundCell = this.layers.ground?.get(this.getKey(x, y));
+        if (groundCell && groundCell.tileId) {
+          const gid = groundCell.tileId.toLowerCase();
+          const isIce = this.temporaryIceTiles && this.temporaryIceTiles.has(this.getKey(x, y));
+          if (!isIce && (gid === 'water-animated' || gid.includes('water') || gid.includes('ocean') || gid.includes('river') || gid.includes('sea'))) {
+            return; // NPCs não aparecem na água
+          }
+        }
+      }
+
       const avatarConfig = npcData?.avatarConfig;
       if (avatarConfig && this.avatarRenderer) {
         const avatarScale = 0.33;

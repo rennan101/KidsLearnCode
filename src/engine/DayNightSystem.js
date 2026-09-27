@@ -14,9 +14,8 @@ export class DayNightSystem {
     this.currentMaxAP = options.currentMaxAP || 5;
     this.currentAP = options.currentAP !== undefined ? options.currentAP : 5;
 
-    // Hero Perks (e.g., Vampire Bat "Eco Noturno" bonus)
-    this.activeHeroId = options.activeHeroId || 'char_wolf_hunter_m';
-    this.nightAPBonus = 0; // Granted to Vampire Bat
+    // Active character context
+    this.activeHeroId = options.activeHeroId || 'custom_avatar';
 
     // Event listeners
     this.listeners = [];
@@ -24,18 +23,7 @@ export class DayNightSystem {
 
   setHero(heroId) {
     this.activeHeroId = heroId;
-    this.updateVampireBonus();
     this.notify();
-  }
-
-  updateVampireBonus() {
-    const isVampire = this.activeHeroId === 'char_bat_vampire_m' || this.activeHeroId === 'char_bat_vampire_f';
-    const isNight = this.isNight();
-    if (isVampire && isNight) {
-      this.nightAPBonus = 5;
-    } else {
-      this.nightAPBonus = 0;
-    }
   }
 
   // Get current Brasília time (or simulated)
@@ -153,22 +141,13 @@ export class DayNightSystem {
 
   // Action Points Management
   getTotalAvailableAP() {
-    return this.currentAP + this.nightAPBonus;
+    return this.currentAP;
   }
 
   canPerformAction() {
-    const isVampire = this.activeHeroId === 'char_bat_vampire_m' || this.activeHeroId === 'char_bat_vampire_f';
-    const isNight = this.isNight();
-
-    // At night, only Vampire bats can act, unless special lantern buff is active
-    if (isNight && !isVampire) {
-      return { allowed: false, reason: 'É noite! Apenas Morcegos Vampiros possuem a habilidade Eco Noturno para agir no escuro. Descanse ou use uma tocha/dragão luminoso.' };
-    }
-
     if (this.getTotalAvailableAP() <= 0) {
       return { allowed: false, reason: 'Pontos de Ação (AP) esgotados! Suas ações diárias se renovam no próximo ciclo às 06h de Brasília.' };
     }
-
     return { allowed: true };
   }
 
@@ -176,12 +155,7 @@ export class DayNightSystem {
     const check = this.canPerformAction();
     if (!check.allowed) return check;
 
-    if (this.nightAPBonus > 0) {
-      this.nightAPBonus = Math.max(0, this.nightAPBonus - amount);
-    } else {
-      this.currentAP = Math.max(0, this.currentAP - amount);
-    }
-
+    this.currentAP = Math.max(0, this.currentAP - amount);
     this.notify();
     return { allowed: true, remainingAP: this.getTotalAvailableAP() };
   }
@@ -193,7 +167,6 @@ export class DayNightSystem {
 
   resetDailyAP() {
     this.currentAP = this.currentMaxAP;
-    this.updateVampireBonus();
     this.notify();
   }
 

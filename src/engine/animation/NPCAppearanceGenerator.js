@@ -266,6 +266,221 @@ export const MASTER_NPC_CONFIGS = {
     shoesStyle: 'sandals_beach',
     shoesColor: '#78350f',
     glassesStyle: 'none'
+  },
+
+  // === HERÓIS DA ILHA (CONVERTIDOS EM NPCS SECUNDÁRIOS) ===
+
+  // 10. Ragnar, o Caçador Alfa (Aparece de Dia / Manhã)
+  char_wolf_hunter_m: {
+    ...DEFAULT_AVATAR_CONFIG,
+    name: 'Ragnar',
+    gender: 'male',
+    timeOfDay: 'day',
+    skinTone: '#e59e6d', // Bronzeada
+    skinShadow: '#be7847',
+    headStyle: 'head_08', // Arrepiado aventureiro
+    hairColor: '#3d2314', // Castanho Escuro
+    hairShadow: '#241208',
+    eyeShape: 'olhos_3',
+    eyeColor: '#d97706', // Âmbar
+    noseShape: 'nariz_2',
+    mouthShape: 'boca_4', // Confiante
+    cheeksShape: 'none',
+    topStyle: 'top_sleeveless',
+    topColorPrimary: '#78350f', // Couro & Terra
+    topColorSecondary: '#fed7aa',
+    bottomStyle: 'pants_cargo',
+    bottomColor: '#451a03',
+    shoesStyle: 'boots_hunter',
+    shoesColor: '#3d2314',
+    glassesStyle: 'none'
+  },
+
+  // 11. Lyra, a Rastreadora (Aparece de Dia / Manhã)
+  char_wolf_hunter_f: {
+    ...DEFAULT_AVATAR_CONFIG,
+    name: 'Lyra',
+    gender: 'female',
+    timeOfDay: 'day',
+    skinTone: '#f8b88b', // Pêssego
+    skinShadow: '#d69668',
+    headStyle: 'head_05', // Penteado com trança
+    hairColor: '#684022', // Castanho Médio
+    hairShadow: '#452611',
+    eyeShape: 'olhos_4',
+    eyeColor: '#16a34a', // Verde Esmeralda
+    noseShape: 'nariz_1',
+    mouthShape: 'boca_1', // Sorriso vivo
+    cheeksShape: 'blush_3', // Sardinhas
+    cheeksColor: 'rgba(255, 126, 54, 0.6)',
+    topStyle: 'top_long_sleeve',
+    topColorPrimary: '#78350f', // Couro & Areia
+    topColorSecondary: '#fed7aa',
+    bottomStyle: 'shorts_denim',
+    bottomColor: '#334155',
+    shoesStyle: 'boots_hunter',
+    shoesColor: '#451a03',
+    glassesStyle: 'none'
+  },
+
+  // 12. Vlad, o Andarilho Noturno (Aparece Apenas à Noite)
+  char_bat_vampire_m: {
+    ...DEFAULT_AVATAR_CONFIG,
+    name: 'Vlad',
+    gender: 'male',
+    timeOfDay: 'night',
+    skinTone: '#ffdfc4', // Muito Clara / Pálida
+    skinShadow: '#e5be9e',
+    headStyle: 'head_10', // Penteado elegante
+    hairColor: '#1f242b', // Preto Ônix
+    hairShadow: '#101317',
+    eyeShape: 'olhos_14',
+    eyeColor: '#dc2626', // Olhos Rubi Vampíricos
+    noseShape: 'nariz_3',
+    mouthShape: 'boca_6', // Misterioso
+    cheeksShape: 'none',
+    topStyle: 'top_sweater',
+    topColorPrimary: '#b91c1c', // Escarlate Noturno
+    topColorSecondary: '#1e293b', // Carvão
+    bottomStyle: 'pants_cargo',
+    bottomColor: '#0f172a',
+    shoesStyle: 'boots_hunter',
+    shoesColor: '#0f172a',
+    glassesStyle: 'none'
+  },
+
+  // 13. Carmilla, a Dama das Sombras (Aparece Apenas à Noite)
+  char_bat_vampire_f: {
+    ...DEFAULT_AVATAR_CONFIG,
+    name: 'Carmilla',
+    gender: 'female',
+    timeOfDay: 'night',
+    skinTone: '#ffdfc4', // Muito Clara / Pálida
+    skinShadow: '#e5be9e',
+    headStyle: 'head_15', // Cachos góticos elegantes
+    hairColor: '#1f242b', // Preto Natural
+    hairShadow: '#101317',
+    eyeShape: 'olhos_15', // Olhar penetrante
+    eyeColor: '#9333ea', // Ametista
+    noseShape: 'nariz_1',
+    mouthShape: 'boca_3', // Sorriso enigmático
+    cheeksShape: 'blush_1',
+    cheeksColor: 'rgba(168, 85, 247, 0.35)',
+    topStyle: 'top_puffy_sleeve',
+    topColorPrimary: '#7c3aed', // Violeta Noturno
+    topColorSecondary: '#1e293b',
+    bottomStyle: 'skirt_pleated',
+    bottomColor: '#4c1d95',
+    shoesStyle: 'boots_hunter',
+    shoesColor: '#1e1b4b',
+    glassesStyle: 'none'
+  },
+
+  // 14. Zephyr, o Vigia dos Ventos (Aparece de Dia / Manhã)
+  char_eagle_archer_m: {
+    ...DEFAULT_AVATAR_CONFIG,
+    name: 'Zephyr',
+    gender: 'male',
+    timeOfDay: 'day',
+    skinTone: '#ffd0a8', // Clara Quente
+    skinShadow: '#e0ae82',
+    headStyle: 'head_04', // Loiro Dourado despojado
+    hairColor: '#f3c457', // Loiro Dourado
+    hairShadow: '#c49429',
+    eyeShape: 'olhos_8', // Olhar perspicaz
+    eyeColor: '#2563eb', // Azul Safira
+    noseShape: 'nariz_2',
+    mouthShape: 'boca_2',
+    cheeksShape: 'none',
+    topStyle: 'top_tee',
+    topColorPrimary: '#1e3a8a', // Azul Marinho
+    topColorSecondary: '#93c5fd', // Celeste
+    bottomStyle: 'pants_cargo',
+    bottomColor: '#172554',
+    shoesStyle: 'sneakers_classic',
+    shoesColor: '#1e3a8a',
+    glassesStyle: 'none'
+  },
+
+  // 15. Astra, a Franco-Atiradora (Aparece de Dia / Manhã)
+  char_eagle_archer_f: {
+    ...DEFAULT_AVATAR_CONFIG,
+    name: 'Astra',
+    gender: 'female',
+    timeOfDay: 'day',
+    skinTone: '#ffd0a8', // Clara Quente
+    skinShadow: '#e0ae82',
+    headStyle: 'head_12', // Cabelo longo esvoaçante
+    hairColor: '#faeed1', // Platinado
+    hairShadow: '#c9ba9b',
+    eyeShape: 'olhos_18',
+    eyeColor: '#0d9488', // Turquesa
+    noseShape: 'nariz_1',
+    mouthShape: 'boca_1',
+    cheeksShape: 'blush_1',
+    cheeksColor: 'rgba(255, 126, 54, 0.4)',
+    topStyle: 'top_long_sleeve',
+    topColorPrimary: '#0891b2', // Turquesa & Dourado
+    topColorSecondary: '#fef08a',
+    bottomStyle: 'skirt_pleated',
+    bottomColor: '#164e63',
+    shoesStyle: 'boots_hunter',
+    shoesColor: '#164e63',
+    glassesStyle: 'none'
+  },
+
+  // 16. Merlin, o Arcanista (Aparece Apenas à Noite)
+  char_cat_mage_m: {
+    ...DEFAULT_AVATAR_CONFIG,
+    name: 'Merlin',
+    gender: 'male',
+    timeOfDay: 'night',
+    skinTone: '#f8b88b', // Pêssego
+    skinShadow: '#d69668',
+    headStyle: 'head_09', // Sábio com mechas
+    hairColor: '#94a3b8', // Cinza Prata
+    hairShadow: '#64748b',
+    eyeShape: 'olhos_13', // Místico / Focado
+    eyeColor: '#9333ea', // Ametista
+    noseShape: 'nariz_3',
+    mouthShape: 'boca_6',
+    cheeksShape: 'none',
+    topStyle: 'top_long_sleeve',
+    topColorPrimary: '#312e81', // Índigo Noturno
+    topColorSecondary: '#38bdf8', // Ciano
+    bottomStyle: 'pants_cargo',
+    bottomColor: '#1e1b4b',
+    shoesStyle: 'boots_hunter',
+    shoesColor: '#0f172a',
+    glassesStyle: 'round_wire',
+    glassesColor: '#d97706'
+  },
+
+  // 17. Luna, a Mística Lunar (Aparece Apenas à Noite)
+  char_cat_witch_f: {
+    ...DEFAULT_AVATAR_CONFIG,
+    name: 'Luna',
+    gender: 'female',
+    timeOfDay: 'night',
+    skinTone: '#ffdfc4', // Muito Clara
+    skinShadow: '#e5be9e',
+    headStyle: 'head_16', // Espetado Mágico
+    hairColor: '#a855f7', // Lavanda
+    hairShadow: '#7e22ce',
+    eyeShape: 'olhos_7', // Olhos cintilantes
+    eyeColor: '#9333ea', // Ametista
+    noseShape: 'nariz_1',
+    mouthShape: 'boca_5', // Sorriso místico
+    cheeksShape: 'blush_1',
+    cheeksColor: 'rgba(168, 85, 247, 0.5)',
+    topStyle: 'top_puffy_sleeve',
+    topColorPrimary: '#7c3aed', // Violeta & Rosa
+    topColorSecondary: '#fbcfe8',
+    bottomStyle: 'skirt_pleated',
+    bottomColor: '#4c1d95',
+    shoesStyle: 'sneakers_classic',
+    shoesColor: '#a855f7',
+    glassesStyle: 'none'
   }
 };
 
