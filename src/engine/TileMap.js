@@ -972,6 +972,7 @@ export class TileMap {
         return;
       }
 
+      const npcData = getNPCData(cell.tileId);
       const avatarConfig = npcData?.avatarConfig;
       if (avatarConfig && this.avatarRenderer) {
         const avatarScale = 0.33;
