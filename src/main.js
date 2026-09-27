@@ -4513,14 +4513,14 @@ class RPGApplication {
         const mentorAvatarEl = document.getElementById('lesson-mentor-avatar');
         if (mentorAvatarEl) {
           const npcId = lesson.npcId || 'npc_monkey_builder';
-          const npcPortrait = CharacterRegistry.VILLAGE_NPCS.find(n => n.id === npcId)?.portrait || 'assets/characters/char_wolf_hunter_m/portrait.jpg';
+          const npcPortrait = this.getNpcPortrait(npcId);
           mentorAvatarEl.innerHTML = `<img src="${npcPortrait}" alt="Mentor" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
         }
 
         const tutAvatarEl = document.getElementById('coding-tutorial-img');
         if (tutAvatarEl) {
           const npcId = lesson.npcId || 'npc_monkey_builder';
-          const npcPortrait = CharacterRegistry.VILLAGE_NPCS.find(n => n.id === npcId)?.portrait || 'assets/characters/char_wolf_hunter_m/portrait.jpg';
+          const npcPortrait = this.getNpcPortrait(npcId);
           tutAvatarEl.src = npcPortrait;
         }
 
@@ -4542,6 +4542,18 @@ class RPGApplication {
     setTimeout(() => {
       this.scratchEngine?.updateGhostAnimationCoordinates();
     }, 120);
+  }
+
+  getNpcPortrait(npcId) {
+    const npcData = CharacterRegistry.getNPCData(npcId);
+    if (npcData?.avatarConfig && this.player?.modularAvatarRenderer) {
+      try {
+        return this.player.modularAvatarRenderer.getAvatarHeadPortrait(npcData.avatarConfig, 128);
+      } catch (e) {
+        console.warn('Erro ao gerar retrato modular do NPC:', e);
+      }
+    }
+    return npcData?.portrait || 'assets/characters/char_wolf_hunter_m/portrait.jpg';
   }
 
   setupCodingStudioUI() {
@@ -4592,7 +4604,7 @@ class RPGApplication {
 
       if (helpAvatar) {
         const npcId = lesson.npcId || 'npc_monkey_builder';
-        const npcPortrait = CharacterRegistry.VILLAGE_NPCS.find(n => n.id === npcId)?.portrait || 'assets/characters/char_wolf_hunter_m/portrait.jpg';
+        const npcPortrait = this.getNpcPortrait(npcId);
         helpAvatar.innerHTML = `<img src="${npcPortrait}" onerror="this.src='assets/characters/char_wolf_hunter_m/portrait.jpg'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Mentor">`;
       }
 

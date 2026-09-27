@@ -1,5 +1,6 @@
 // Animal Crossing Style Dialogue & In-Game Chat Bubble Queue System (Max 2 Bubbles Stack)
-import { VILLAGE_NPCS } from './CharacterRegistry.js';
+import { VILLAGE_NPCS, getNPCData } from './CharacterRegistry.js';
+import { ModularAvatarRenderer } from './animation/ModularAvatarRenderer.js';
 import { soundFX } from './SoundFX.js';
 
 export class DialogueAndChatSystem {
@@ -7,6 +8,7 @@ export class DialogueAndChatSystem {
     this.speechBubbles = new Map(); // entityId -> [{ id, text, createdAt, expiresAt, element }]
     this.maxStackedBubbles = 2;
     this.bubbleDurationMs = 5000;
+    this.avatarRenderer = new ModularAvatarRenderer();
     
     // Active NPC dialogue pagination state
     this.activeDialogue = null; // { speaker, fullText, displayedText, isFinished }
@@ -520,9 +522,21 @@ export class DialogueAndChatSystem {
       nextLesson: null
     };
 
-    const resolvedPortrait = npcData.portrait || VILLAGE_NPCS.find(n => n.id === npcData.id)?.portrait || 'assets/characters/char_wolf_hunter_m/portrait.jpg';
+    const fullNpcData = getNPCData(npcData.id) || npcData;
+    let resolvedPortrait = fullNpcData.portrait;
+    if (fullNpcData.avatarConfig && this.avatarRenderer) {
+      try {
+        resolvedPortrait = this.avatarRenderer.getAvatarHeadPortrait(fullNpcData.avatarConfig, 128);
+      } catch (e) {
+        console.warn('Erro ao gerar retrato modular do NPC:', e);
+      }
+    }
+    if (!resolvedPortrait) {
+      resolvedPortrait = 'assets/characters/char_wolf_hunter_m/portrait.jpg';
+    }
+
     const speakerMeta = {
-      name: `${npcData.name} - ${npcData.role}`,
+      name: `${fullNpcData.name} - ${fullNpcData.role}`,
       portraitUrl: resolvedPortrait,
       pitch: 500
     };

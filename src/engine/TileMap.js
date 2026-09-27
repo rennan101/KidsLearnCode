@@ -1,10 +1,13 @@
 // Infinite/Expandable Sparse TileMap engine with exact grid unit scaling
+import { ModularAvatarRenderer } from './animation/ModularAvatarRenderer.js';
+import { getNPCData } from './CharacterRegistry.js';
 
 export const TILE_SIZE = 64;
 
 export class TileMap {
   constructor() {
     this.tileSize = TILE_SIZE;
+    this.avatarRenderer = new ModularAvatarRenderer();
 
     // Layers stored as sparse Maps keyed by `${x},${y}`:
     // 0: ground (Base water, ocean void)
@@ -679,6 +682,72 @@ export class TileMap {
       ctx.restore();
 
       return;
+    }
+
+    // Modular NPC Entity Cutout Renderer (Human/Anime Stylized with AvatarConfig)
+    if (cell.tileId.startsWith('npc_') || tileMeta.isNPC) {
+      const npcData = getNPCData(cell.tileId);
+      const avatarConfig = npcData?.avatarConfig;
+      if (avatarConfig && this.avatarRenderer) {
+        const avatarScale = 0.22;
+        const targetX = destX + 32;
+        const targetY = destY + 60 - (265 * avatarScale);
+        const animTime = performance.now() / 1000;
+
+        // Render modular animated avatar (idle state)
+        this.avatarRenderer.render(
+          ctx,
+          targetX,
+          targetY,
+          'south',
+          'idle',
+          animTime,
+          avatarConfig,
+          avatarScale
+        );
+
+        // Overhead NPC Name Badge (Animal Island UI 3D Pill)
+        ctx.save();
+        const nameText = npcData.name || 'NPC';
+        ctx.font = 'bold 10px "Nunito", sans-serif';
+        const textMetrics = ctx.measureText(nameText);
+        const badgeW = Math.max(42, textMetrics.width + 14);
+        const badgeH = 17;
+        const badgeX = destX + 32 - badgeW / 2;
+        const badgeY = destY - 8;
+
+        // Badge shadow 3D
+        ctx.fillStyle = '#7a583e';
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(badgeX, badgeY + 2, badgeW, badgeH, 8);
+        } else {
+          ctx.rect(badgeX, badgeY + 2, badgeW, badgeH);
+        }
+        ctx.fill();
+
+        // Badge body
+        ctx.fillStyle = '#fffdf5';
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 8);
+        } else {
+          ctx.rect(badgeX, badgeY, badgeW, badgeH);
+        }
+        ctx.fill();
+
+        ctx.strokeStyle = '#c4b89e';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = '#794f27';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(nameText, destX + 32, badgeY + badgeH / 2);
+        ctx.restore();
+
+        return;
+      }
     }
 
     let img = null;

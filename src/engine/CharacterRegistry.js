@@ -3,6 +3,8 @@
  * Gerencia os 8 heróis jogáveis e os 9 NPCs mestres de construção e desafios de código.
  */
 
+import { MASTER_NPC_CONFIGS, generateNPCAppearance } from './animation/NPCAppearanceGenerator.js';
+
 export const PLAYABLE_HEROES = [
   {
     id: "char_wolf_hunter_m",
@@ -84,6 +86,7 @@ export const VILLAGE_NPCS = [
     name: "Bambu, o Engenheiro",
     role: "Mestre Construtor, Mobília & Casas",
     category: "furniture",
+    avatarConfig: MASTER_NPC_CONFIGS.npc_monkey_builder,
     portrait: "assets/characters/char_wolf_hunter_m/portrait.jpg",
     questIds: [
       'bambu_01_chair',
@@ -101,6 +104,7 @@ export const VILLAGE_NPCS = [
     name: "Brutus da Bigorna",
     role: "Ferreiro Real, Ferramentas & Minérios",
     category: "tools",
+    avatarConfig: MASTER_NPC_CONFIGS.npc_bull_blacksmith,
     portrait: "assets/characters/char_wolf_hunter_f/portrait.jpg",
     questIds: [
       'brutus_01_shovel',
@@ -116,6 +120,7 @@ export const VILLAGE_NPCS = [
     name: "Flora dos Brotos",
     role: "Herbalista, Sementes & Flora da Ilha",
     category: "nature",
+    avatarConfig: MASTER_NPC_CONFIGS.npc_rabbit_farmer,
     portrait: "assets/characters/char_eagle_archer_f/portrait.jpg",
     questIds: [
       'flora_01_watering_can',
@@ -132,6 +137,7 @@ export const VILLAGE_NPCS = [
     name: "Barnabé, o Barqueiro",
     role: "Cercados, Portões & Pontes de Travessia",
     category: "structures",
+    avatarConfig: MASTER_NPC_CONFIGS.npc_alligator_ferryman,
     portrait: "assets/characters/char_bat_vampire_m/portrait.jpg",
     questIds: [
       'barnabe_01_fence',
@@ -147,6 +153,7 @@ export const VILLAGE_NPCS = [
     name: "Pingo dos Icebergs",
     role: "Pesca, Redes & Elementos Aquáticos",
     category: "animated",
+    avatarConfig: MASTER_NPC_CONFIGS.npc_penguin_angler,
     portrait: "assets/characters/char_bat_vampire_f/portrait.jpg",
     questIds: [
       'pingo_01_fishing_rod',
@@ -162,6 +169,7 @@ export const VILLAGE_NPCS = [
     name: "Cromos, o Tecelão de Cores",
     role: "Pisos, Pavimentações & Terrenos",
     category: "ground",
+    avatarConfig: MASTER_NPC_CONFIGS.npc_chameleon_magician,
     portrait: "assets/characters/char_cat_mage_m/portrait.jpg",
     questIds: [
       'cromos_01_dirt_track',
@@ -179,6 +187,7 @@ export const VILLAGE_NPCS = [
     name: "Kai, o Tubarão das Ondas",
     role: "Infraestrutura da Vila, Desníveis & Poços",
     category: "structures",
+    avatarConfig: MASTER_NPC_CONFIGS.npc_shark_surfer,
     portrait: "assets/characters/char_eagle_archer_m/portrait.jpg",
     questIds: [
       'kai_01_lantern_post',
@@ -194,6 +203,7 @@ export const VILLAGE_NPCS = [
     name: "Dr. Arquimedes",
     role: "Grão-Mestre da Academia, Fogo & Terminal",
     category: "tools",
+    avatarConfig: MASTER_NPC_CONFIGS.npc_owl_professor,
     portrait: "assets/characters/char_cat_witch_f/portrait.jpg",
     questIds: [
       'arquimedes_01_terminal',
@@ -208,6 +218,7 @@ export const VILLAGE_NPCS = [
     name: "Mestre Casco",
     role: "Guardião Ancestral, Ovos & Ninhos de Dragão",
     category: "dragons",
+    avatarConfig: MASTER_NPC_CONFIGS.npc_turtle_elder,
     portrait: "assets/characters/char_wolf_hunter_m/portrait.jpg",
     questIds: [
       'casco_01_incubator',
@@ -221,9 +232,22 @@ export const VILLAGE_NPCS = [
   }
 ];
 
+export function getNPCData(npcId) {
+  const found = VILLAGE_NPCS.find(n => n.id === npcId);
+  if (found) return found;
+  return {
+    id: npcId,
+    name: npcId,
+    role: 'Morador da Ilha',
+    category: 'villager',
+    avatarConfig: generateNPCAppearance(npcId, 'villager')
+  };
+}
+
 export const CharacterRegistry = {
   PLAYABLE_HEROES,
-  VILLAGE_NPCS
+  VILLAGE_NPCS,
+  getNPCData
 };
 
 export default CharacterRegistry;
