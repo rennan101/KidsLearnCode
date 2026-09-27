@@ -745,6 +745,8 @@ export class DragonManager {
   loadDragonSpriteFrames() {
     this.dragonSpriteFrames = {};
     const stormSideFrames = [];
+    const stormSideBackFrames = [];
+    const stormSideFrontFrames = [];
     const stormSouthFrames = [];
     const stormNorthFrames = [];
 
@@ -752,6 +754,14 @@ export class DragonManager {
       const sideImg = new Image();
       sideImg.src = `assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_${i}.svg`;
       stormSideFrames.push(sideImg);
+
+      const sideBackImg = new Image();
+      sideBackImg.src = `assets/Dragon/dragon_fly_storm/flying_side_layers/back_${i}.svg`;
+      stormSideBackFrames.push(sideBackImg);
+
+      const sideFrontImg = new Image();
+      sideFrontImg.src = `assets/Dragon/dragon_fly_storm/flying_side_layers/front_${i}.svg`;
+      stormSideFrontFrames.push(sideFrontImg);
 
       const southImg = new Image();
       southImg.src = `assets/Dragon/dragon_fly_storm/flying_south_front/dragon_flying_south_frame_${i}.svg`;
@@ -765,6 +775,8 @@ export class DragonManager {
     this.dragonSpriteFrames['dragon_fly_storm'] = {
       flying: stormSideFrames,
       flying_side: stormSideFrames,
+      flying_side_back: stormSideBackFrames,
+      flying_side_front: stormSideFrontFrames,
       flying_south: stormSouthFrames,
       flying_north: stormNorthFrames
     };
@@ -2545,16 +2557,46 @@ export class DragonManager {
 
           player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, 'north', riderScale);
         } else {
-          // East / West (perfil lateral): O Jogador fica NA FRENTE do dragão encaixado na sela
-          ctx.save();
-          ctx.translate(dragonCenterX, dragonCenterY);
-          if (isWest) {
-            ctx.scale(-1, 1);
-          }
-          ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
-          ctx.restore();
+          // East / West (Perfil Lateral 2.5D Real):
+          // Camada 1: Asa Traseira, Cauda e Dorso (Atrás do Cavaleiro)
+          const backFrames = stormSet.flying_side_back;
+          const frontFrames = stormSet.flying_side_front;
+          const backImg = (backFrames && backFrames[frameIdx]?.complete && backFrames[frameIdx].naturalWidth > 0) ? backFrames[frameIdx] : null;
+          const frontImg = (frontFrames && frontFrames[frameIdx]?.complete && frontFrames[frameIdx].naturalWidth > 0) ? frontFrames[frameIdx] : null;
 
-          player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, dir, riderScale);
+          if (backImg && frontImg) {
+            // 1. Asa Traseira e Dorso (Atrás)
+            ctx.save();
+            ctx.translate(dragonCenterX, dragonCenterY);
+            if (isWest) {
+              ctx.scale(-1, 1);
+            }
+            ctx.drawImage(backImg, -halfSize, -halfSize, spriteSize, spriteSize);
+            ctx.restore();
+
+            // 2. Cavaleiro Montado na Sela (Meio)
+            player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, dir, riderScale);
+
+            // 3. Cabeça, Asa Dianteira e Perna Dianteira (Frente)
+            ctx.save();
+            ctx.translate(dragonCenterX, dragonCenterY);
+            if (isWest) {
+              ctx.scale(-1, 1);
+            }
+            ctx.drawImage(frontImg, -halfSize, -halfSize, spriteSize, spriteSize);
+            ctx.restore();
+          } else {
+            // Fallback se as imagens de camada ainda estiverem carregando
+            ctx.save();
+            ctx.translate(dragonCenterX, dragonCenterY);
+            if (isWest) {
+              ctx.scale(-1, 1);
+            }
+            ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
+            ctx.restore();
+
+            player.renderAsRider(ctx, assetLoader, riderCenterX, riderCenterY, dir, riderScale);
+          }
         }
 
         ctx.restore();
