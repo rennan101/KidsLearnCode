@@ -41,8 +41,9 @@ export class InventorySystem {
     return this.items;
   }
 
-  getPocketSlots(totalSlots = 20) {
+  getPocketSlots(minSlots = 20) {
     const slots = [];
+    const totalSlots = Math.max(minSlots, Math.ceil(Math.max(1, this.items.length + 1) / 5) * 5);
     for (let i = 0; i < totalSlots; i++) {
       slots.push(this.items[i] || null);
     }

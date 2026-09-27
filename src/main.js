@@ -3491,7 +3491,7 @@ class RPGApplication {
       hatchBody.innerHTML = `
         <div style="text-align: center; padding: 12px 0;">
           <div style="font-size: 3.5rem; margin-bottom: 8px; animation: pulse 1s infinite;">${speciesData.icon}</div>
-          <h3 style="color: #fef08a; font-family: 'Cinzel', serif; font-size: 1.2rem; margin-bottom: 4px;">${speciesData.name}</h3>
+          <h3 style="color: #fef08a; font-family: var(--animal-font-title, 'Nunito', sans-serif); font-weight: 800; font-size: 1.2rem; margin-bottom: 4px;">${speciesData.name}</h3>
           <span style="display: inline-block; background: #1e293b; color: #38bdf8; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-bottom: 12px;">${speciesData.element} • Categoria: ${speciesData.category.toUpperCase()}</span>
           <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 16px; line-height: 1.4;">${speciesData.desc}</p>
           <div style="display: flex; gap: 10px; justify-content: center;">
@@ -4016,7 +4016,7 @@ class RPGApplication {
 
       const tools = this.inventorySystem.getTools();
       const equipped = this.inventorySystem.getEquippedTool();
-      const slotsCount = 20;
+      const slotsCount = Math.max(20, Math.ceil(Math.max(1, tools.length + 1) / 5) * 5);
 
       for (let i = 0; i < slotsCount; i++) {
         const tool = tools[i] || null;
@@ -4126,7 +4126,7 @@ class RPGApplication {
       eggsGrid.innerHTML = '';
 
       const eggs = this.inventorySystem.getEggs();
-      const slotsCount = 20;
+      const slotsCount = Math.max(20, Math.ceil(Math.max(1, eggs.length + 1) / 5) * 5);
 
       for (let i = 0; i < slotsCount; i++) {
         const egg = eggs[i] || null;
@@ -4227,33 +4227,25 @@ class RPGApplication {
       dragonDetailIcon.style.borderColor = drag.color || '#38bdf8';
       dragonDetailIcon.style.boxShadow = `0 6px 18px ${drag.color || '#38bdf8'}45, inset 0 2px 6px rgba(255, 255, 255, 0.85)`;
 
-      if (drag.id === 'dragon_fly_storm') {
+      if (drag.id === 'dragon_fly_storm' || drag.id === 'dragon_fly_zephyr') {
+        const isStorm = drag.id === 'dragon_fly_storm';
         let frame = 1;
-        const renderFrame = () => {
-          dragonDetailIcon.innerHTML = `
-            <div class="dragon-highlight-stage">
-              <img src="assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_${frame}.svg" alt="${drag.name}" style="width: 84px; height: 84px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.22));" />
-            </div>
-          `;
-        };
-        renderFrame();
+        
+        dragonDetailIcon.innerHTML = `
+          <div class="dragon-highlight-stage">
+            <img id="dragon-detail-animated-img" src="${isStorm ? 'assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_1.svg' : 'assets/Dragon/dragon_fly_zephyr/flying_south_front/zephyr_flying_south_frame_1.svg'}" alt="${drag.name}" style="width: 84px; height: 84px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.22));" />
+          </div>
+        `;
+        
+        const animatedImg = document.getElementById('dragon-detail-animated-img');
+        
         dragonDetailAnimInterval = setInterval(() => {
           frame = (frame % 8) + 1;
-          renderFrame();
-        }, 120);
-      } else if (drag.id === 'dragon_fly_zephyr') {
-        let frame = 1;
-        const renderFrame = () => {
-          dragonDetailIcon.innerHTML = `
-            <div class="dragon-highlight-stage">
-              <img src="assets/Dragon/dragon_fly_zephyr/flying_south_front/zephyr_flying_south_frame_${frame}.svg" alt="${drag.name}" style="width: 84px; height: 84px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.22));" />
-            </div>
-          `;
-        };
-        renderFrame();
-        dragonDetailAnimInterval = setInterval(() => {
-          frame = (frame % 8) + 1;
-          renderFrame();
+          if (animatedImg) {
+            animatedImg.src = isStorm 
+              ? `assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_${frame}.svg`
+              : `assets/Dragon/dragon_fly_zephyr/flying_south_front/zephyr_flying_south_frame_${frame}.svg`;
+          }
         }, 120);
       } else {
         const canvas = document.createElement('canvas');
@@ -4514,7 +4506,7 @@ class RPGApplication {
         const party = this.dragonManager.getParty();
         const activeDragon = this.dragonManager.getActiveDragon();
         const isMounted = this.dragonManager.isMounted();
-        const slotsCount = 20;
+        const slotsCount = Math.max(20, Math.ceil(Math.max(1, party.length + 1) / 5) * 5);
 
         for (let i = 0; i < slotsCount; i++) {
           const drag = party[i] || null;

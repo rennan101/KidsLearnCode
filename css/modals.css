@@ -705,10 +705,11 @@
 }
 
 .disconnection-card h2 {
-  font-family: 'Cinzel', serif;
+  font-family: var(--animal-font-title, 'Nunito', sans-serif);
   font-size: 1.6rem;
+  font-weight: 800;
   color: #f87171;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
 .disconnection-card p {
@@ -1272,19 +1273,37 @@
   border-radius: 20px;
   padding: 16px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   box-shadow: inset 0 2px 8px rgba(120, 90, 60, 0.12);
+  overflow-y: auto;
+  max-height: 100%;
 }
 
-/* 20 Circular Pockets Grid (4 rows x 5 columns) */
+.ac-pocket-grid-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ac-pocket-grid-wrapper::-webkit-scrollbar-track {
+  background: #f0e6ce;
+  border-radius: 4px;
+}
+
+.ac-pocket-grid-wrapper::-webkit-scrollbar-thumb {
+  background: #7a583e;
+  border-radius: 4px;
+}
+
+/* 20+ Circular Pockets Grid (Dynamic rows x 5 columns) */
 .ac-pocket-grid {
   display: grid;
   grid-template-columns: repeat(5, 62px);
-  grid-template-rows: repeat(4, 62px);
+  grid-auto-rows: 62px;
   gap: 12px;
   justify-content: center;
-  align-content: center;
+  align-content: start;
+  width: 100%;
 }
 
 /* Individual Circular Pocket Slot */
@@ -4219,17 +4238,18 @@
   justify-content: flex-start;
   align-items: center;
   overflow-y: auto;
+  max-height: 100%;
 }
 
 .ac-dragon-pocket-layout .ac-pocket-grid {
-  grid-template-columns: repeat(5, 54px);
-  grid-template-rows: repeat(4, 54px);
-  gap: 8px;
+  grid-template-columns: repeat(5, 62px);
+  grid-auto-rows: 62px;
+  gap: 10px;
 }
 
 .ac-dragon-pocket-layout .ac-pocket-slot {
-  width: 54px;
-  height: 54px;
+  width: 62px;
+  height: 62px;
 }
 
 #pocket-dragons-detail-card {
@@ -4320,56 +4340,65 @@
 }
 
 .pocket-skills-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   width: 100%;
 }
 
 .pocket-skill-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   background: #fdfbf7;
   border: 1.5px solid #d4c5a9;
-  border-radius: 10px;
-  padding: 3px 6px;
-  font-size: 0.70rem;
-  min-width: 0;
+  border-radius: 12px;
+  padding: 6px 10px;
+  font-size: 0.74rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.pocket-skill-row:hover {
+  background: #ffffff;
+  border-color: var(--animal-primary, #19c8b9);
+  box-shadow: 0 2px 6px rgba(25, 200, 185, 0.15);
 }
 
 .pocket-skill-key {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   background: #f59e0b;
   border-radius: 50%;
   color: #0f172a;
   font-family: 'JetBrains Mono', monospace;
   font-weight: 800;
-  font-size: 0.60rem;
+  font-size: 0.68rem;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .pocket-skill-name {
   font-weight: 800;
   color: #794f27;
   flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 0.68rem;
+  white-space: normal;
+  line-height: 1.25;
+  font-size: 0.74rem;
+  word-break: break-word;
 }
 
 .pocket-skill-tag {
-  font-size: 0.58rem;
+  font-size: 0.64rem;
   background: #e0f2fe;
   color: #0369a1;
-  padding: 1px 4px;
+  padding: 2px 8px;
   border-radius: 50px;
-  font-weight: 700;
+  font-weight: 800;
   flex-shrink: 0;
 }
 
