@@ -107,7 +107,14 @@ export class TileMap {
   }
 
   setTile(layerName, x, y, tileId, isRoot = true, rootX = x, rootY = y, rotation = 0, flipX = false, collider = null, depthOffset = null, extraProps = null) {
-    const layer = this.layers[layerName];
+    let actualLayerName = layerName;
+    if (tileId === 'water-wind-waker' || tileId === 'water-animated') {
+      actualLayerName = 'ground';
+      if (layerName !== 'ground' && this.layers[layerName]) {
+        this.layers[layerName].delete(this.getKey(x, y));
+      }
+    }
+    const layer = this.layers[actualLayerName];
     if (!layer) return;
 
     const key = this.getKey(x, y);
@@ -836,15 +843,13 @@ export class TileMap {
 
     // Wind Waker Water Tile
     if (tileMeta.isWaterWaves || cell.tileId === 'water-wind-waker') {
-      let img = null;
-      if (tileMeta.src) {
-        img = assetLoader.getImage(tileMeta.src);
-      }
-      if (img) {
-        ctx.drawImage(img, destX, destY, rawW, rawH);
-      } else if (this.waterWaveRenderer) {
+      if (this.waterWaveRenderer) {
         this.waterWaveRenderer.renderPreview(ctx, destX, destY, this.tileSize, this.waterWaveTime || performance.now());
+      } else if (tileMeta.src) {
+        const img = assetLoader.getImage(tileMeta.src);
+        if (img) ctx.drawImage(img, destX, destY, rawW, rawH);
       }
+      return;
     } else {
       let img = null;
       if (tileMeta.isAnimated && tileMeta.frames) {
@@ -970,6 +975,22 @@ export class TileMap {
     const endCol = Math.ceil((camX + camW / camZ) / this.tileSize) + padding;
     const startRow = Math.floor(camY / this.tileSize) - padding;
     const endRow = Math.ceil((camY + camH / camZ) / this.tileSize) + padding;
+
+    // Auto-migrate any stray water tiles on non-ground layers to ground
+    if (layerName !== 'ground') {
+      for (let y = startRow; y <= endRow; y++) {
+        for (let x = startCol; x <= endCol; x++) {
+          const key = this.getKey(x, y);
+          const cell = layer.get(key);
+          if (cell && (cell.tileId === 'water-wind-waker' || cell.tileId === 'water-animated')) {
+            layer.delete(key);
+            if (this.layers.ground) {
+              this.layers.ground.set(key, cell);
+            }
+          }
+        }
+      }
+    }
 
     // Optimized batch rendering for procedural ocean waves
     if (layerName === 'ground' && this.waterWaveRenderer) {

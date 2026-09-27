@@ -1,10 +1,59 @@
 // Water Reflection System (Zelda Wind Waker & Cel-Shaded RPG Style)
-// Renders dynamic, wave-distorted reflections of flying players, dragons, NPCs, and shoreline objects (trees, rocks, houses) onto water.
+// Renders dynamic, wave-distorted reflections of flying players, dragons, NPCs, and shoreline upright objects (trees, rocks, houses) onto water.
 
 export class WaterReflectionRenderer {
   constructor() {
     this.reflectionAlpha = 0.42;
     this.reflectionScaleY = -0.65; // Inverted Y perspective squish
+  }
+
+  /**
+   * Determine if a tile represents an upright physical object (e.g. Trees, Rocks, Houses, Bushes, Buildings)
+   * Flat ground-level surfaces (Grass, Sand, Dirt paths, Farmland, Puddles, Soil) must NEVER be reflected.
+   */
+  isReflectiveUprightObject(tileId, tileMeta) {
+    if (!tileId) return false;
+    const id = tileId.toLowerCase();
+
+    // 1. Explicitly ignore flat terrain & ground surfaces
+    if (
+      id.startsWith('grass') || id.startsWith('sand') || id.startsWith('dirt') ||
+      id.startsWith('soil') || id.startsWith('path') || id.startsWith('road') ||
+      id.startsWith('water') || id.startsWith('floor') || id.startsWith('puddle') ||
+      id.startsWith('ground') || id.startsWith('tile-') || id.startsWith('cliff-flat') ||
+      id.includes('pavement') || id.includes('pebble') || id.includes('farmland') ||
+      id.includes('field') || id.includes('mud') || id.includes('carpet') || id.includes('rug')
+    ) {
+      return false;
+    }
+
+    if (tileMeta) {
+      // Ground layer tiles are never upright
+      if (tileMeta.layer === 'ground') return false;
+      if (tileMeta.isFloor || tileMeta.isPath || tileMeta.isTerrain) return false;
+
+      // Multi-tile height or custom colliders indicate physical objects
+      if (tileMeta.gridH && tileMeta.gridH > 1) return true;
+      if (tileMeta.isTree || tileMeta.isHouse || tileMeta.isBuilding || tileMeta.isRock || tileMeta.isNPC || tileMeta.isCharacter) return true;
+    }
+
+    // 2. Allow upright objects (Trees, Rocks, Bushes, Buildings, Props, Statues, Fences)
+    if (
+      id.includes('tree') || id.includes('pine') || id.includes('palm') || id.includes('stump') || id.includes('trunk') ||
+      id.includes('rock') || id.includes('boulder') || id.includes('stone') || id.includes('crystal') || id.includes('ore') ||
+      id.includes('house') || id.includes('building') || id.includes('roof') || id.includes('wall') || id.includes('castle') ||
+      id.includes('tower') || id.includes('arch') || id.includes('chimney') || id.includes('barn') || id.includes('tent') || id.includes('well') ||
+      id.includes('fence') || id.includes('gate') || id.includes('pillar') || id.includes('column') || id.includes('statue') ||
+      id.includes('monument') || id.includes('lamp') || id.includes('torch') || id.includes('sign') || id.includes('pole') ||
+      id.includes('barrel') || id.includes('crate') || id.includes('chest') || id.includes('table') || id.includes('bench') ||
+      id.includes('wagon') || id.includes('cart') || id.includes('pot') || id.includes('urn') || id.includes('bush') ||
+      id.includes('plant') || id.includes('flower') || id.includes('shrub') || id.includes('cactus') || id.includes('bamboo') ||
+      id.includes('reed')
+    ) {
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -61,7 +110,7 @@ export class WaterReflectionRenderer {
     }
     ctx.clip();
 
-    // 2. Render Shoreline Solid & Decor Tiles Reflections (Trees, Rocks, Buildings, Bushes)
+    // 2. Render Shoreline Solid & Decor Upright Objects Reflections (Trees, Rocks, Buildings, Bushes)
     this.renderShorelineObjectReflections(ctx, tileMap, assetLoader, camera, isEditor, timeSec);
 
     // 3. Render Characters & NPCs Reflections near water
@@ -89,7 +138,7 @@ export class WaterReflectionRenderer {
   }
 
   /**
-   * Render inverted reflections of solid and decor objects standing on shore
+   * Render inverted reflections of solid and decor upright objects standing on shore (never flat ground)
    */
   renderShorelineObjectReflections(ctx, tileMap, assetLoader, camera, isEditor, timeSec) {
     const layersToReflect = ['solid', 'decor'];
@@ -116,7 +165,12 @@ export class WaterReflectionRenderer {
           const cell = layer.get(tileMap.getKey(tx, ty));
           if (!cell || cell.isRoot === false) continue;
 
-          // Check if this object is near water
+          const tileMeta = assetLoader.getTileMetadata(cell.tileId);
+
+          // Strictly filter out flat ground (grass, sand, soil, dirt, floor)
+          if (!this.isReflectiveUprightObject(cell.tileId, tileMeta)) continue;
+
+          // Check if this upright object is near water
           if (!this.hasNeighborWater(tileMap, tx, ty)) continue;
 
           const baseY = tileMap.getCellBaseY(cell, tx, ty, assetLoader);
