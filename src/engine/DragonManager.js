@@ -741,6 +741,11 @@ export class DragonManager {
     // Autonomous Wild Dragons FSM Map (placed by ADM in Edit Mode)
     this.wildDragons = new Map();
 
+    // Zelda Wind Waker Aquatic Wake & Wave Trails
+    this.waterWakeNodes = [];
+    this.waterWakeSplashes = [];
+    this.wakeSpawnTimer = 0;
+
     // Out of Combat Timer for Gradual HP Regeneration
     this.outOfCombatTimer = 0; // When > 0, dragon is in battle
 
@@ -1692,6 +1697,159 @@ export class DragonManager {
         this.damageNumbers.splice(i, 1);
       }
     }
+
+    // 5. Update Zelda Wind Waker Aquatic Wake & Wave Trails
+    this.updateWaterWake(dt, player, tileMap);
+  }
+
+  // Update Zelda Wind Waker Water Wake & Wave Trails
+  updateWaterWake(dt, player, tileMap) {
+    if (!this.waterWakeNodes) this.waterWakeNodes = [];
+    if (!this.waterWakeSplashes) this.waterWakeSplashes = [];
+
+    this.wakeSpawnTimer = (this.wakeSpawnTimer || 0) + dt;
+
+    // 1. Process Active Companion / Mounted Dragon
+    const activeDragon = this.getActiveDragon();
+    if (activeDragon && (this.mode === 'mounted' || this.mode === 'follow')) {
+      const isMounted = this.mode === 'mounted';
+      const isWaterType = activeDragon.category === 'water';
+      const alt = isMounted ? this.flightAltitude : 0;
+      
+      const currentX = isMounted ? (player ? player.x : this.x) : this.x;
+      const currentY = isMounted ? (player ? player.y : this.y) : this.y;
+      const centerX = currentX + (isMounted ? 32 : 24);
+      const centerY = currentY + (isMounted ? 46 : 38);
+
+      const isOnWater = tileMap ? tileMap.isWaterAt(centerX, centerY) : true;
+      const isSwimming = (isWaterType || isOnWater) && alt <= 6;
+
+      if (isSwimming) {
+        let vx = 0;
+        let vy = 0;
+        let isMoving = false;
+
+        if (isMounted && player) {
+          isMoving = player.isMoving || (player.vx !== undefined && (player.vx !== 0 || player.vy !== 0));
+          if (isMoving) {
+            vx = player.vx || 0;
+            vy = player.vy || 0;
+            if (vx === 0 && vy === 0) {
+              if (player.direction === 'east') vx = 1;
+              else if (player.direction === 'west') vx = -1;
+              else if (player.direction === 'south') vy = 1;
+              else if (player.direction === 'north') vy = -1;
+            }
+          }
+        } else {
+          isMoving = this.state === 'follow';
+          if (isMoving) {
+            vx = (this.targetX - this.x);
+            vy = (this.targetY - this.y);
+          }
+        }
+
+        const vLen = Math.hypot(vx, vy);
+        const normVx = vLen > 0.001 ? vx / vLen : (player && player.direction === 'east' ? 1 : player && player.direction === 'west' ? -1 : player && player.direction === 'north' ? 0 : 0);
+        const normVy = vLen > 0.001 ? vy / vLen : (player && player.direction === 'south' ? 1 : player && player.direction === 'north' ? -1 : 1);
+        const headingAngle = Math.atan2(normVy, normVx);
+
+        // Spawn wake node periodically
+        const spawnInterval = isMoving ? 0.08 : 0.65;
+        if (this.wakeSpawnTimer >= spawnInterval) {
+          this.wakeSpawnTimer = 0;
+          this.waterWakeNodes.push({
+            x: centerX,
+            y: centerY,
+            vx: normVx,
+            vy: normVy,
+            angle: headingAngle,
+            isMoving: isMoving,
+            speed: isMoving ? (player?.isSprinting ? 2.0 : 1.2) : 0.4,
+            life: 0,
+            maxLife: isMoving ? 1.4 : 1.0,
+            initialRadius: isMoving ? 10 : 8,
+            maxRadius: isMoving ? 38 : 26,
+            flankSpread: isMoving ? 24 : 10
+          });
+
+          // Spawn splash froth beads when moving fast
+          if (isMoving && Math.random() < 0.6) {
+            const sideAngle = headingAngle + (Math.random() < 0.5 ? Math.PI * 0.5 : -Math.PI * 0.5);
+            const pSpeed = 16 + Math.random() * 24;
+            this.waterWakeSplashes.push({
+              x: centerX + Math.cos(sideAngle) * (8 + Math.random() * 10),
+              y: centerY + Math.sin(sideAngle) * (4 + Math.random() * 6),
+              vx: Math.cos(sideAngle) * pSpeed * 0.5,
+              vy: Math.sin(sideAngle) * pSpeed * 0.3 - 8,
+              size: 2.2 + Math.random() * 2.2,
+              life: 0,
+              maxLife: 0.45 + Math.random() * 0.25,
+              color: Math.random() < 0.7 ? '#ffffff' : '#a5f3fc'
+            });
+          }
+        }
+      }
+    }
+
+    // 2. Process Autonomous Wild Water Dragons
+    for (const entity of this.wildDragons.values()) {
+      const centerX = entity.x + 32;
+      const centerY = entity.y + 46;
+      const isOnWater = tileMap ? tileMap.isWaterAt(centerX, centerY) : true;
+      const isWaterType = entity.category === 'water';
+      const isSwimming = (isWaterType || isOnWater) && (entity.flightAltitude <= 6);
+
+      if (isSwimming) {
+        const isMoving = entity.fsmState === 'roam' || (entity.targetX !== undefined && Math.hypot(entity.targetX - entity.x, entity.targetY - entity.y) > 6);
+        if (isMoving && Math.random() < 0.25) {
+          let dirAngle = 0;
+          if (entity.direction === 'east') dirAngle = 0;
+          else if (entity.direction === 'south') dirAngle = Math.PI * 0.5;
+          else if (entity.direction === 'west') dirAngle = Math.PI;
+          else if (entity.direction === 'north') dirAngle = -Math.PI * 0.5;
+
+          this.waterWakeNodes.push({
+            x: centerX,
+            y: centerY,
+            vx: Math.cos(dirAngle),
+            vy: Math.sin(dirAngle),
+            angle: dirAngle,
+            isMoving: true,
+            speed: 1.0,
+            life: 0,
+            maxLife: 1.3,
+            initialRadius: 8,
+            maxRadius: 32,
+            flankSpread: 18
+          });
+        }
+      }
+    }
+
+    // 3. Update Wake Nodes
+    for (let i = this.waterWakeNodes.length - 1; i >= 0; i--) {
+      const node = this.waterWakeNodes[i];
+      node.life += dt;
+      if (node.life >= node.maxLife) {
+        this.waterWakeNodes.splice(i, 1);
+      }
+    }
+
+    // 4. Update Wake Splash Froth
+    for (let i = this.waterWakeSplashes.length - 1; i >= 0; i--) {
+      const s = this.waterWakeSplashes[i];
+      s.life += dt;
+      s.x += s.vx * dt;
+      s.y += s.vy * dt;
+      if (s.life >= s.maxLife) {
+        this.waterWakeSplashes.splice(i, 1);
+      }
+    }
+
+    // Cap maximum arrays to maintain steady 60fps
+    if (this.waterWakeNodes.length > 80) this.waterWakeNodes.splice(0, this.waterWakeNodes.length - 80);
+    if (this.waterWakeSplashes.length > 60) this.waterWakeSplashes.splice(0, this.waterWakeSplashes.length - 60);
   }
 
   // Synchronize Placed Wild Dragons from TileMap
@@ -2064,6 +2222,9 @@ export class DragonManager {
 
   // Render Dragon Underlay (Nests, Targets, Wild Dragons Body/Wings, Companion Body/Wings) - Below Player
   renderUnderlay(ctx, assetLoader, player = null) {
+    // 0. Render Zelda Wind Waker Aquatic Wake & Wave Trails (Under dragons & shadows on water)
+    this.renderWaterWake(ctx);
+
     // 1. Render Wild Dragon Nests
     this.renderWildNests(ctx);
 
@@ -2153,16 +2314,10 @@ export class DragonManager {
     ctx.fill();
     ctx.restore();
 
-    // 1b. Water Ripple Waves for Aquatic Dragons
-    if (entity.category === 'water') {
-      ctx.save();
-      const wavePhase = (entity.animTimer * 3.5) % (Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
-      ctx.lineWidth = 1.6;
-      ctx.beginPath();
-      ctx.ellipse(drawX + 32, entity.y + 52, 22 + Math.sin(wavePhase) * 4, 9 + Math.cos(wavePhase) * 2, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
+    // 1b. Zelda Wind Waker Water Bow Wave & Ripples for Aquatic Dragons
+    if (entity.category === 'water' && alt <= 6) {
+      const isMoving = entity.fsmState === 'roam';
+      this.renderSwimmingBowWave(ctx, drawX + 32, entity.y + 52, dir, isMoving, entity.animTimer, 1.0);
     }
 
     // 2. Dragon Drawing (Animated SVG frames for dragons or vector canvas)
@@ -2523,16 +2678,10 @@ export class DragonManager {
     ctx.fill();
     ctx.restore();
 
-    // 1b. Ondas Aquáticas para Dragões de Água
-    if (dragon.category === 'water') {
-      ctx.save();
-      const wavePhase = (this.floatTimer * 3.5) % (Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
-      ctx.lineWidth = 1.6;
-      ctx.beginPath();
-      ctx.ellipse(drawX + 32, this.y + 54, 24 + Math.sin(wavePhase) * 4, 10 + Math.cos(wavePhase) * 2, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
+    // 1b. Ondas Aquáticas para Dragões de Água (Zelda Wind Waker Bow Wave & Ripples)
+    if ((dragon.category === 'water' || (player && player.isMoving)) && alt <= 6) {
+      const isMoving = player && (player.isMoving || (player.vx !== undefined && (player.vx !== 0 || player.vy !== 0)));
+      this.renderSwimmingBowWave(ctx, drawX + 32, this.y + 54, dir, isMoving, this.floatTimer, 1.1);
     }
 
     // Piscar de Invulnerabilidade em Esquiva Tática
@@ -2849,15 +2998,9 @@ export class DragonManager {
     ctx.restore();
 
     // 1b. Aquatic Swimming Wave Ripples for Water Dragons
-    if (dragon.category === 'water' && isMounted) {
-      ctx.save();
-      const wavePhase = (this.floatTimer * 3.5) % (Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
-      ctx.lineWidth = 1.6;
-      ctx.beginPath();
-      ctx.ellipse(drawX + 24, this.y + 44, 22 + Math.sin(wavePhase) * 4, 9 + Math.cos(wavePhase) * 2, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
+    if (dragon.category === 'water' && alt <= 6) {
+      const isMoving = this.state === 'follow';
+      this.renderSwimmingBowWave(ctx, drawX + 24, this.y + 44, dir, isMoving, this.floatTimer, 0.95);
     }
 
     // Invulnerability flashing when dodging
@@ -3214,6 +3357,192 @@ export class DragonManager {
       ctx.fillText(d.text, d.x || 0, d.y || 0);
       ctx.restore();
     }
+  }
+
+  // Render Zelda Wind Waker Front Bow Wave on active swimming dragon
+  renderSwimmingBowWave(ctx, x, y, direction, isMoving, timer, scale = 1.0) {
+    ctx.save();
+    let angle = Math.PI * 0.5; // default south
+    if (direction === 'east') angle = 0;
+    else if (direction === 'west') angle = Math.PI;
+    else if (direction === 'north') angle = -Math.PI * 0.5;
+
+    const wavePulse = Math.sin(timer * 4.5) * 2.5;
+    const baseRadius = (isMoving ? 22 : 18) * scale + wavePulse;
+
+    // 1. Foam crescent bow wave in front of swimming dragon
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+
+    // Outer crisp white bow crest
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.4 * scale;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(0, 0, baseRadius, -Math.PI * 0.45, Math.PI * 0.45);
+    ctx.stroke();
+
+    // Inner bright cyan water outline
+    ctx.strokeStyle = '#a5f3fc';
+    ctx.lineWidth = 1.4 * scale;
+    ctx.beginPath();
+    ctx.arc(0, 0, baseRadius - 3.5 * scale, -Math.PI * 0.38, Math.PI * 0.38);
+    ctx.stroke();
+
+    // Trailing flank whiskers (V-shaped bow foam)
+    if (isMoving) {
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.8 * scale;
+      // Top flank
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(-Math.PI * 0.45) * baseRadius, Math.sin(-Math.PI * 0.45) * baseRadius);
+      ctx.lineTo(-baseRadius * 0.6, -baseRadius * 0.95);
+      ctx.stroke();
+      // Bottom flank
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(Math.PI * 0.45) * baseRadius, Math.sin(Math.PI * 0.45) * baseRadius);
+      ctx.lineTo(-baseRadius * 0.6, baseRadius * 0.95);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // 2. Base concentric water surface ripple
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(x, y, (20 + wavePulse) * scale, (9 + wavePulse * 0.4) * scale, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // Render Zelda Wind Waker Water Wake & Wave Trails
+  renderWaterWake(ctx) {
+    if ((!this.waterWakeNodes || this.waterWakeNodes.length === 0) &&
+        (!this.waterWakeSplashes || this.waterWakeSplashes.length === 0)) {
+      return;
+    }
+
+    ctx.save();
+
+    // 1. Render Trailing V-Wake Foam Lines (Kelvin Wake Arms)
+    if (this.waterWakeNodes && this.waterWakeNodes.length >= 2) {
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      for (let i = 0; i < this.waterWakeNodes.length; i++) {
+        const node = this.waterWakeNodes[i];
+        if (!node.isMoving) continue;
+
+        const progress = Math.min(1.0, node.life / node.maxLife);
+        const alpha = Math.max(0, 1.0 - progress);
+        if (alpha <= 0.01) continue;
+
+        const spread = node.initialRadius + (node.maxRadius - node.initialRadius) * progress * 1.25;
+        const perpX = -node.vy;
+        const perpY = node.vx;
+
+        const leftX = node.x + perpX * spread;
+        const leftY = node.y + perpY * spread * 0.55;
+        const rightX = node.x - perpX * spread;
+        const rightY = node.y - perpY * spread * 0.55;
+
+        // Draw left flank curved foam stroke
+        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.9})`;
+        ctx.lineWidth = Math.max(1.2, (2.8 * (1.0 - progress * 0.6)));
+        ctx.beginPath();
+        ctx.arc(leftX, leftY, 2.5 * (1.0 - progress * 0.4), 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Draw right flank curved foam stroke
+        ctx.beginPath();
+        ctx.arc(rightX, rightY, 2.5 * (1.0 - progress * 0.4), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Draw connecting soft cyan & white V-wake ribbons between adjacent moving nodes
+      for (let i = 0; i < this.waterWakeNodes.length - 1; i++) {
+        const n1 = this.waterWakeNodes[i];
+        const n2 = this.waterWakeNodes[i + 1];
+        if (!n1.isMoving || !n2.isMoving) continue;
+        const dist = Math.hypot(n1.x - n2.x, n1.y - n2.y);
+        if (dist > 55) continue;
+
+        const p1 = Math.min(1.0, n1.life / n1.maxLife);
+        const p2 = Math.min(1.0, n2.life / n2.maxLife);
+        const alpha = Math.max(0, (1.0 - (p1 + p2) * 0.5) * 0.85);
+        if (alpha <= 0.02) continue;
+
+        const s1 = n1.initialRadius + (n1.maxRadius - n1.initialRadius) * p1 * 1.25;
+        const s2 = n2.initialRadius + (n2.maxRadius - n2.initialRadius) * p2 * 1.25;
+
+        const l1x = n1.x - n1.vy * s1, l1y = n1.y + n1.vx * s1 * 0.55;
+        const l2x = n2.x - n2.vy * s2, l2y = n2.y + n2.vx * s2 * 0.55;
+
+        const r1x = n1.x + n1.vy * s1, r1y = n1.y - n1.vx * s1 * 0.55;
+        const r2x = n2.x + n2.vy * s2, r2y = n2.y - n2.vx * s2 * 0.55;
+
+        // Cyan inner glow line
+        ctx.strokeStyle = `rgba(165, 243, 252, ${alpha * 0.6})`;
+        ctx.lineWidth = 3.2 * (1.0 - p1 * 0.5);
+        ctx.beginPath();
+        ctx.moveTo(l1x, l1y); ctx.lineTo(l2x, l2y);
+        ctx.moveTo(r1x, r1y); ctx.lineTo(r2x, r2y);
+        ctx.stroke();
+
+        // White outer crisp line
+        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.95})`;
+        ctx.lineWidth = 2.0 * (1.0 - p1 * 0.5);
+        ctx.beginPath();
+        ctx.moveTo(l1x, l1y); ctx.lineTo(l2x, l2y);
+        ctx.moveTo(r1x, r1y); ctx.lineTo(r2x, r2y);
+        ctx.stroke();
+      }
+    }
+
+    // 2. Render Expanding Foam Wake Rings
+    if (this.waterWakeNodes) {
+      for (const node of this.waterWakeNodes) {
+        const progress = Math.min(1.0, node.life / node.maxLife);
+        const alpha = Math.max(0, 1.0 - progress);
+        if (alpha <= 0.01) continue;
+
+        const currentRadius = node.initialRadius + (node.maxRadius - node.initialRadius) * Math.sqrt(progress);
+        const rx = currentRadius * 1.15;
+        const ry = currentRadius * 0.52;
+
+        // Inner cyan ring
+        ctx.strokeStyle = `rgba(165, 243, 252, ${alpha * 0.65})`;
+        ctx.lineWidth = 2.4 * (1.0 - progress * 0.5);
+        ctx.beginPath();
+        ctx.ellipse(node.x, node.y, rx * 0.88, ry * 0.88, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Outer crisp white ring
+        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.95})`;
+        ctx.lineWidth = 2.0 * (1.0 - progress * 0.5);
+        ctx.beginPath();
+        ctx.ellipse(node.x, node.y, rx, ry, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    // 3. Render Wake Splash Froth Droplets
+    if (this.waterWakeSplashes) {
+      for (const s of this.waterWakeSplashes) {
+        const alpha = Math.max(0, 1.0 - (s.life / s.maxLife));
+        if (alpha <= 0.01) continue;
+
+        ctx.fillStyle = s.color || '#ffffff';
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size * (1.0 - (s.life / s.maxLife) * 0.4), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    ctx.restore();
   }
 
   // Render Reverse Hatching / Egg Crystallization Animation when Player's Dragon is Defeated
