@@ -13,6 +13,12 @@ export const MOUNT_SOCKET_OFFSETS = {
     east:  { x: -6, y: -14, scale: 0.86 },
     west:  { x: 6, y: -14, scale: 0.86 }
   },
+  dragon_fly_zephyr: {
+    south: { x: 0, y: -16, scale: 0.88 },
+    north: { x: 0, y: 4, scale: 0.88 },
+    east:  { x: -6, y: -14, scale: 0.86 },
+    west:  { x: 6, y: -14, scale: 0.86 }
+  },
   default: {
     south: { x: 0, y: -14, scale: 0.88 },
     north: { x: 0, y: 4, scale: 0.88 },
@@ -30,6 +36,8 @@ export const DRAGON_CATALOG = [
     color: '#38bdf8',
     secondaryColor: '#fef08a',
     icon: 'Ar',
+    iconPath: 'assets/Dragon/dragon_fly_zephyr/flying_south_front/zephyr_flying_south_frame_1.svg',
+    image: 'assets/Dragon/dragon_fly_zephyr/flying_south_front/zephyr_flying_south_frame_1.svg',
     fieldMove: 'Voo Livre sobre Penhascos e Rios',
     mountSpeedMultiplier: 1.8,
     socketOffset: { x: 0, y: -18 },
@@ -779,6 +787,32 @@ export class DragonManager {
       flying_side_front: stormSideFrontFrames,
       flying_south: stormSouthFrames,
       flying_north: stormNorthFrames
+    };
+
+    // Load Zephyr Sprite Frames (South / Front 8-frame animation)
+    const zephyrSouthFrames = [];
+    const zephyrFileNames = [
+      'zephyr_flying_south_frame_1.svg',
+      'zephyr_flying_south_frame_2.svg',
+      'zephyr_flying_south_frame_3.svg',
+      'zephyr_flying_south_frame_4.svg',
+      'zephyr_flying_south_frame_5.svg',
+      'zephyr_flying_south_frame_6.svg',
+      'zephyr_flying_south_frame_7.svg',
+      'zephyr_flying_south_frame_8.svg'
+    ];
+
+    for (const fileName of zephyrFileNames) {
+      const southImg = new Image();
+      southImg.src = `assets/Dragon/dragon_fly_zephyr/flying_south_front/${fileName}`;
+      zephyrSouthFrames.push(southImg);
+    }
+
+    this.dragonSpriteFrames['dragon_fly_zephyr'] = {
+      flying: zephyrSouthFrames,
+      flying_side: zephyrSouthFrames,
+      flying_south: zephyrSouthFrames,
+      flying_north: zephyrSouthFrames
     };
   }
 
@@ -2133,19 +2167,19 @@ export class DragonManager {
       ctx.restore();
     }
 
-    // 2. Dragon Drawing (Animated SVG frames for dragon_fly_storm or vector canvas)
+    // 2. Dragon Drawing (Animated SVG frames for dragons or vector canvas)
     const dir = entity.direction || 'south';
     const isWest = dir === 'west';
-    const isStorm = (entity.catalog?.id === 'dragon_fly_storm' || entity.tileId === 'dragon_fly_storm');
+    const dragonId = entity.catalog?.id || entity.tileId;
+    const spriteSet = this.dragonSpriteFrames[dragonId];
 
-    if (isStorm && this.dragonSpriteFrames['dragon_fly_storm']) {
-      const stormSet = this.dragonSpriteFrames['dragon_fly_storm'];
-      let frames = stormSet.flying_side || stormSet.flying;
+    if (spriteSet) {
+      let frames = spriteSet.flying_side || spriteSet.flying;
       const isFrontOrBack = dir === 'north' || dir === 'south';
-      if (dir === 'north' && stormSet.flying_north?.length) {
-        frames = stormSet.flying_north;
-      } else if (dir === 'south' && stormSet.flying_south?.length) {
-        frames = stormSet.flying_south;
+      if (dir === 'north' && spriteSet.flying_north?.length) {
+        frames = spriteSet.flying_north;
+      } else if (dir === 'south' && spriteSet.flying_south?.length) {
+        frames = spriteSet.flying_south;
       }
 
       const frameIdx = Math.floor((entity.animTimer * 10) % frames.length);
@@ -2511,7 +2545,6 @@ export class DragonManager {
     const dir = player.direction || this.direction || 'south';
     const isWest = dir === 'west';
     const isFrontOrBack = (dir === 'north' || dir === 'south');
-    const isStorm = (dragon.id === 'dragon_fly_storm');
 
     // Centro Real do Dragão no Mundo
     const dragonCenterX = drawX + 32;
@@ -2523,9 +2556,10 @@ export class DragonManager {
     const riderCenterY = dragonCenterY + (socketOffsets.y || 0);
     const riderScale = socketOffsets.scale || 0.92;
 
-    // Renderização para dragon_fly_storm com Frames Animados em SVG
-    if (isStorm && this.dragonSpriteFrames['dragon_fly_storm']) {
-      const stormSet = this.dragonSpriteFrames['dragon_fly_storm'];
+    // Renderização com Frames Animados em SVG (dragon_fly_storm, dragon_fly_zephyr, etc.)
+    const spriteSet = this.dragonSpriteFrames[dragon.id];
+    if (spriteSet) {
+      const stormSet = spriteSet;
       let frames = stormSet.flying_side || stormSet.flying;
       if (dir === 'north' && stormSet.flying_north?.length) {
         frames = stormSet.flying_north;
@@ -2833,11 +2867,12 @@ export class DragonManager {
       ctx.globalAlpha = 0.4;
     }
 
-    // 2. Animated SVG Sprite for dragon_fly_storm (Volt)
+    // 2. Animated SVG Sprite for dragons (Volt, Zephyr, etc.)
     const dir = this.direction || 'south';
     const isWest = dir === 'west';
-    if (dragon.id === 'dragon_fly_storm' && this.dragonSpriteFrames['dragon_fly_storm']) {
-      const stormSet = this.dragonSpriteFrames['dragon_fly_storm'];
+    const spriteSet = this.dragonSpriteFrames[dragon.id];
+    if (spriteSet) {
+      const stormSet = spriteSet;
       let frames = stormSet.flying_side || stormSet.flying;
       const isFrontOrBack = dir === 'north' || dir === 'south';
       if (dir === 'north' && stormSet.flying_north?.length) {
@@ -3360,6 +3395,9 @@ export function getDragonAvatarSvg(dragon, size = 32) {
   if (!dragon) return '';
   if (dragon.id === 'dragon_fly_storm') {
     return `<img src="assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_1.svg" alt="${dragon.name}" style="width: ${size}px; height: ${size}px; object-fit: contain;" />`;
+  }
+  if (dragon.id === 'dragon_fly_zephyr') {
+    return `<img src="assets/Dragon/dragon_fly_zephyr/flying_south_front/zephyr_flying_south_frame_1.svg" alt="${dragon.name}" style="width: ${size}px; height: ${size}px; object-fit: contain;" />`;
   }
   const body = dragon.color || '#38bdf8';
   const accent = dragon.secondaryColor || '#fef08a';
