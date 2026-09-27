@@ -127,7 +127,7 @@ export class WaterWaveRenderer {
       grad.addColorStop(0, pal.base);
       grad.addColorStop(1, pal.deep);
       ctx.fillStyle = grad;
-      ctx.fillRect(cx, cy, size, size);
+      ctx.fillRect(cx, cy, size + 0.5, size + 0.5);
 
       // Cel-shaded rings & wave outlines
       ctx.save();

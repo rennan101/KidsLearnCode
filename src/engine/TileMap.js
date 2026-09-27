@@ -871,7 +871,9 @@ export class TileMap {
           ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
           ctx.restore();
         } else {
-          ctx.drawImage(img, destX, destY, rawW, rawH);
+          // Add micro 0.5px overlap to guarantee zero sub-pixel seam lines between adjacent tiles
+          const seamPad = (rawW === 64 && rawH === 64) ? 0.5 : 0;
+          ctx.drawImage(img, destX, destY, rawW + seamPad, rawH + seamPad);
         }
       }
     }
@@ -1015,7 +1017,7 @@ export class TileMap {
             ctx.beginPath();
             for (let i = 0; i < proceduralWaveCells.length; i++) {
               const w = proceduralWaveCells[i];
-              ctx.rect(w.x, w.y, w.tileSize, w.tileSize);
+              ctx.rect(w.x, w.y, w.tileSize + 0.5, w.tileSize + 0.5);
             }
             ctx.clip();
             ctx.drawImage(shaderCanvas, camX, camY, camW / camZ, camH / camZ);
