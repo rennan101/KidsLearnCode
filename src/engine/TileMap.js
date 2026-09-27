@@ -832,9 +832,15 @@ export class TileMap {
       }
     }
 
-    // Procedural Water Waves Renderer (Detective Fantasia Style)
-    if (tileMeta.isWaterWaves || cell.tileId === 'water-waves-procedural') {
-      if (this.waterWaveRenderer) {
+    // Wind Waker Water Tile
+    if (tileMeta.isWaterWaves || cell.tileId === 'water-wind-waker') {
+      let img = null;
+      if (tileMeta.src) {
+        img = assetLoader.getImage(tileMeta.src);
+      }
+      if (img) {
+        ctx.drawImage(img, destX, destY, rawW, rawH);
+      } else if (this.waterWaveRenderer) {
         this.waterWaveRenderer.renderPreview(ctx, destX, destY, this.tileSize, this.waterWaveTime || performance.now());
       }
     } else {
@@ -972,7 +978,7 @@ export class TileMap {
         for (let x = startCol; x <= endCol; x++) {
           const cell = layer.get(this.getKey(x, y));
           if (!cell || cell.isRoot === false) continue;
-          if (cell.tileId === 'water-waves-procedural' || cell.tileId === 'water-wind-waker') {
+          if (cell.tileId === 'water-wind-waker') {
             proceduralWaveCells.push({ x: x * this.tileSize, y: y * this.tileSize, tileSize: this.tileSize, cell, tx: x, ty: y });
           } else {
             regularGroundCells.push({ x, y, cell });
@@ -984,13 +990,9 @@ export class TileMap {
         let renderedWithWebGL = false;
         const config = this.waterWaveRenderer ? this.waterWaveRenderer.getConfig() : {};
 
-        // If any cell is explicitly water-wind-waker, ensure shader renders Wind Waker mode
-        const hasWindWaker = proceduralWaveCells.some(w => w.cell.tileId === 'water-wind-waker');
-        const activeConfig = { ...config, style: hasWindWaker ? 'wind-waker' : config.style };
-
         if (this.webGLWaterShader && this.webGLWaterShader.isSupported) {
           const timeSec = (this.waterWaveTime || performance.now()) / 1000;
-          const shaderCanvas = this.webGLWaterShader.render(camW, camH, camX, camY, camZ, timeSec, activeConfig);
+          const shaderCanvas = this.webGLWaterShader.render(camW, camH, camX, camY, camZ, timeSec, config);
 
           if (shaderCanvas) {
             ctx.save();
@@ -1012,7 +1014,7 @@ export class TileMap {
 
         // Render Shoreline Lapping Waves & Beach Foam against neighboring land
         if (this.shorelineFoamRenderer) {
-          this.shorelineFoamRenderer.renderShorelines(ctx, this, proceduralWaveCells, this.waterWaveTime || performance.now(), activeConfig);
+          this.shorelineFoamRenderer.renderShorelines(ctx, this, proceduralWaveCells, this.waterWaveTime || performance.now(), config);
         }
 
         // Render overlays (ice/puddle/colliders) for wave cells

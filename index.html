@@ -1428,29 +1428,9 @@
           </div>
         </div>
 
-        <!-- Water Style Selector Tabs -->
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-size: 0.85rem; font-weight: 800; color: #794f27;">Estilo Visual da Água:</label>
-          <div style="display: flex; gap: 8px;">
-            <button type="button" class="water-style-tab active" data-style="wind-waker" style="flex: 1; background: #e6f9f6; border: 2px solid #19c8b9; border-radius: 50px; padding: 8px 12px; font-family: 'Nunito', sans-serif; font-size: 0.82rem; font-weight: 800; color: #0f8e83; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-              <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="9"></circle>
-                <path d="M12 3a9 9 0 0 1 9 9"></path>
-              </svg>
-              <span>Zelda Wind Waker</span>
-            </button>
-            <button type="button" class="water-style-tab" data-style="detective-fantasia" style="flex: 1; background: #fdfbf7; border: 2px solid #c4b89e; border-radius: 50px; padding: 8px 12px; font-family: 'Nunito', sans-serif; font-size: 0.82rem; font-weight: 800; color: #794f27; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-              <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M2 12c2.5-3 5-3 7.5 0s5 3 7.5 0 4.5-3 7-0.5"></path>
-              </svg>
-              <span>Detective Fantasia</span>
-            </button>
-          </div>
-        </div>
-
         <!-- Palette Selector -->
         <div style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-size: 0.85rem; font-weight: 800; color: #794f27;">Paleta de Cores:</label>
+          <label style="font-size: 0.85rem; font-weight: 800; color: #794f27;">Paleta de Cores (Zelda Cel-Shaded):</label>
           <div id="water-palette-options" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
             <button type="button" class="water-palette-btn active" data-palette="wind-waker" style="background: #e6f9f6; border: 2px solid #19c8b9; border-radius: 50px; padding: 6px 8px; font-family: 'Nunito', sans-serif; font-size: 0.76rem; font-weight: 800; color: #0f8e83; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 5px;">
               <span style="width: 12px; height: 12px; border-radius: 50%; background: #00a3cc; display: inline-block; border: 1.5px solid #0369a1;"></span>
@@ -1459,10 +1439,6 @@
             <button type="button" class="water-palette-btn" data-palette="tropical-mint" style="background: #fdfbf7; border: 2px solid #c4b89e; border-radius: 50px; padding: 6px 8px; font-family: 'Nunito', sans-serif; font-size: 0.76rem; font-weight: 800; color: #794f27; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 5px;">
               <span style="width: 12px; height: 12px; border-radius: 50%; background: #2dd4bf; display: inline-block; border: 1.5px solid #0f766e;"></span>
               <span>Menta</span>
-            </button>
-            <button type="button" class="water-palette-btn" data-palette="detective-fantasia" style="background: #fdfbf7; border: 2px solid #c4b89e; border-radius: 50px; padding: 6px 8px; font-family: 'Nunito', sans-serif; font-size: 0.76rem; font-weight: 800; color: #794f27; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 5px;">
-              <span style="width: 12px; height: 12px; border-radius: 50%; background: #3dd4a7; display: inline-block; border: 1.5px solid #143836;"></span>
-              <span>Retro GB</span>
             </button>
             <button type="button" class="water-palette-btn" data-palette="deep-ocean" style="background: #fdfbf7; border: 2px solid #c4b89e; border-radius: 50px; padding: 6px 8px; font-family: 'Nunito', sans-serif; font-size: 0.76rem; font-weight: 800; color: #794f27; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 5px;">
               <span style="width: 12px; height: 12px; border-radius: 50%; background: #38bdf8; display: inline-block; border: 1.5px solid #0c4a6e;"></span>
@@ -1479,7 +1455,7 @@
           </div>
         </div>
 
-        <!-- Controls: Zelda Wind Waker Mode -->
+        <!-- Controls: Zelda Wind Waker Parameters -->
         <div id="water-controls-wind-waker" style="display: flex; flex-direction: column; gap: 10px; background: #f7f3df; border: 2px solid #e2d9be; border-radius: 18px; padding: 14px;">
           <!-- Voronoi Scale -->
           <div style="display: flex; flex-direction: column; gap: 3px;">
@@ -1506,45 +1482,6 @@
               <span id="label-water-shore-reach" style="color: #0f8e83;">14 px</span>
             </div>
             <input type="range" id="slider-water-shore-reach" min="0" max="24" step="2" value="14" style="width: 100%; accent-color: #19c8b9; cursor: pointer;">
-          </div>
-        </div>
-
-        <!-- Controls: Detective Fantasia Mode -->
-        <div id="water-controls-detective-fantasia" style="display: none; flex-direction: column; gap: 10px; background: #f7f3df; border: 2px solid #e2d9be; border-radius: 18px; padding: 14px;">
-          <!-- Slider 1: Abertura / Gaps -->
-          <div style="display: flex; flex-direction: column; gap: 3px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 800;">
-              <span>Abertura das Cristas (Gaps):</span>
-              <span id="label-water-aperture" style="color: #0f8e83;">0.35</span>
-            </div>
-            <input type="range" id="slider-water-aperture" min="0.0" max="0.8" step="0.05" value="0.35" style="width: 100%; accent-color: #19c8b9; cursor: pointer;">
-          </div>
-
-          <!-- Slider 2: Altura / Amplitude -->
-          <div style="display: flex; flex-direction: column; gap: 3px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 800;">
-              <span>Altura / Amplitude da Onda:</span>
-              <span id="label-water-amplitude" style="color: #0f8e83;">3.5 px</span>
-            </div>
-            <input type="range" id="slider-water-amplitude" min="1.0" max="10.0" step="0.5" value="3.5" style="width: 100%; accent-color: #19c8b9; cursor: pointer;">
-          </div>
-
-          <!-- Slider 3: Velocidade -->
-          <div style="display: flex; flex-direction: column; gap: 3px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 800;">
-              <span>Velocidade de Deslocamento:</span>
-              <span id="label-water-speed" style="color: #0f8e83;">1.0x</span>
-            </div>
-            <input type="range" id="slider-water-speed" min="0.2" max="3.0" step="0.1" value="1.0" style="width: 100%; accent-color: #19c8b9; cursor: pointer;">
-          </div>
-
-          <!-- Slider 4: Espaçamento entre Ondas -->
-          <div style="display: flex; flex-direction: column; gap: 3px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 800;">
-              <span>Espaçamento Vertical:</span>
-              <span id="label-water-spacing" style="color: #0f8e83;">18 px</span>
-            </div>
-            <input type="range" id="slider-water-spacing" min="10" max="36" step="2" value="18" style="width: 100%; accent-color: #19c8b9; cursor: pointer;">
           </div>
         </div>
 

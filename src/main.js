@@ -898,10 +898,6 @@ class RPGApplication {
     const previewCanvas = document.getElementById('water-preview-canvas');
     const previewPaletteName = document.getElementById('water-preview-palette-name');
 
-    const styleTabs = document.querySelectorAll('.water-style-tab');
-    const controlsWindWaker = document.getElementById('water-controls-wind-waker');
-    const controlsFantasia = document.getElementById('water-controls-detective-fantasia');
-
     const sliderVoronoi = document.getElementById('slider-water-voronoi');
     const sliderDistort = document.getElementById('slider-water-distort');
     const sliderShoreReach = document.getElementById('slider-water-shore-reach');
@@ -909,16 +905,6 @@ class RPGApplication {
     const labelVoronoi = document.getElementById('label-water-voronoi');
     const labelDistort = document.getElementById('label-water-distort');
     const labelShoreReach = document.getElementById('label-water-shore-reach');
-
-    const sliderAperture = document.getElementById('slider-water-aperture');
-    const sliderAmplitude = document.getElementById('slider-water-amplitude');
-    const sliderSpeed = document.getElementById('slider-water-speed');
-    const sliderSpacing = document.getElementById('slider-water-spacing');
-
-    const labelAperture = document.getElementById('label-water-aperture');
-    const labelAmplitude = document.getElementById('label-water-amplitude');
-    const labelSpeed = document.getElementById('label-water-speed');
-    const labelSpacing = document.getElementById('label-water-spacing');
 
     const paletteBtns = document.querySelectorAll('.water-palette-btn');
 
@@ -928,19 +914,6 @@ class RPGApplication {
       if (!this.tileMap?.waterWaveRenderer) return;
       const cfg = this.tileMap.waterWaveRenderer.getConfig();
 
-      // Style Tabs
-      const isWindWaker = cfg.style === 'wind-waker';
-      styleTabs.forEach((tab) => {
-        const match = tab.dataset.style === (isWindWaker ? 'wind-waker' : 'detective-fantasia');
-        tab.classList.toggle('active', match);
-        tab.style.background = match ? '#e6f9f6' : '#fdfbf7';
-        tab.style.borderColor = match ? '#19c8b9' : '#c4b89e';
-        tab.style.color = match ? '#0f8e83' : '#794f27';
-      });
-
-      if (controlsWindWaker) controlsWindWaker.style.display = isWindWaker ? 'flex' : 'none';
-      if (controlsFantasia) controlsFantasia.style.display = isWindWaker ? 'none' : 'flex';
-
       // Wind Waker Controls
       if (sliderVoronoi) sliderVoronoi.value = cfg.voronoiScale || 1.5;
       if (sliderDistort) sliderDistort.value = cfg.distortionSpeed || 1.6;
@@ -949,17 +922,6 @@ class RPGApplication {
       if (labelVoronoi) labelVoronoi.innerText = `${Number(cfg.voronoiScale || 1.5).toFixed(1)}x`;
       if (labelDistort) labelDistort.innerText = `${Number(cfg.distortionSpeed || 1.6).toFixed(1)}x`;
       if (labelShoreReach) labelShoreReach.innerText = `${Math.round(cfg.shoreLapReach !== undefined ? cfg.shoreLapReach : 14)} px`;
-
-      // Detective Fantasia Controls
-      if (sliderAperture) sliderAperture.value = cfg.aperture;
-      if (sliderAmplitude) sliderAmplitude.value = cfg.amplitude;
-      if (sliderSpeed) sliderSpeed.value = cfg.speed;
-      if (sliderSpacing) sliderSpacing.value = cfg.waveSpacing;
-
-      if (labelAperture) labelAperture.innerText = Number(cfg.aperture).toFixed(2);
-      if (labelAmplitude) labelAmplitude.innerText = `${Number(cfg.amplitude).toFixed(1)} px`;
-      if (labelSpeed) labelSpeed.innerText = `${Number(cfg.speed).toFixed(1)}x`;
-      if (labelSpacing) labelSpacing.innerText = `${Math.round(cfg.waveSpacing)} px`;
 
       paletteBtns.forEach((btn) => {
         const isMatch = btn.dataset.palette === cfg.paletteId;
@@ -1035,21 +997,7 @@ class RPGApplication {
     btnClose?.addEventListener('click', closeModal);
     btnSave?.addEventListener('click', () => {
       closeModal();
-      this.showToast('Configuração de ondas de água aplicada com sucesso!');
-    });
-
-    // Style Switcher Tabs
-    styleTabs.forEach((tab) => {
-      tab.addEventListener('click', () => {
-        const style = tab.dataset.style;
-        this.tileMap.waterWaveRenderer.setStyle(style);
-        if (style === 'wind-waker') {
-          this.tileMap.waterWaveRenderer.setPalette('wind-waker');
-        } else {
-          this.tileMap.waterWaveRenderer.setPalette('detective-fantasia');
-        }
-        updateUIFromConfig();
-      });
+      this.showToast('Configurações de água Zelda Wind Waker aplicadas!');
     });
 
     // Wind Waker Sliders
@@ -1071,31 +1019,6 @@ class RPGApplication {
       this.tileMap.waterWaveRenderer.setShoreLapReach(val);
     });
 
-    // Detective Fantasia Sliders
-    sliderAperture?.addEventListener('input', (e) => {
-      const val = parseFloat(e.target.value) || 0.35;
-      if (labelAperture) labelAperture.innerText = val.toFixed(2);
-      this.tileMap.waterWaveRenderer.setAperture(val);
-    });
-
-    sliderAmplitude?.addEventListener('input', (e) => {
-      const val = parseFloat(e.target.value) || 3.5;
-      if (labelAmplitude) labelAmplitude.innerText = `${val.toFixed(1)} px`;
-      this.tileMap.waterWaveRenderer.setAmplitude(val);
-    });
-
-    sliderSpeed?.addEventListener('input', (e) => {
-      const val = parseFloat(e.target.value) || 1.0;
-      if (labelSpeed) labelSpeed.innerText = `${val.toFixed(1)}x`;
-      this.tileMap.waterWaveRenderer.setSpeed(val);
-    });
-
-    sliderSpacing?.addEventListener('input', (e) => {
-      const val = parseInt(e.target.value, 10) || 18;
-      if (labelSpacing) labelSpacing.innerText = `${val} px`;
-      this.tileMap.waterWaveRenderer.setWaveSpacing(val);
-    });
-
     // Palette Selector
     paletteBtns.forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -1105,24 +1028,21 @@ class RPGApplication {
       });
     });
 
-    // Bulk Convert All Water to current style
+    // Bulk Convert All Water to Zelda Wind Waker
     btnConvert?.addEventListener('click', () => {
       const ground = this.tileMap.layers.ground;
       if (!ground) return;
-      const isWindWaker = this.tileMap.waterWaveRenderer.getConfig().style === 'wind-waker';
-      const targetTileId = isWindWaker ? 'water-wind-waker' : 'water-waves-procedural';
-      const styleName = isWindWaker ? 'Zelda Wind Waker' : 'Detective Fantasia';
 
       let count = 0;
       this.editorController.undoManager?.pushState?.();
       for (const [key, cell] of ground.entries()) {
-        if (cell && (cell.tileId === 'water-animated' || cell.tileId === 'water-waves-procedural' || cell.tileId === 'water-wind-waker')) {
-          cell.tileId = targetTileId;
+        if (cell && (cell.tileId === 'water-animated' || cell.tileId === 'water-wind-waker')) {
+          cell.tileId = 'water-wind-waker';
           count++;
         }
       }
       if (count > 0) {
-        this.showToast(`${count} blocos de água convertidos para ${styleName}!`);
+        this.showToast(`${count} blocos de água convertidos para Zelda Wind Waker!`);
         this.triggerAutoSave();
       } else {
         this.showToast('Nenhum bloco de água encontrado para conversão.');

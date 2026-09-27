@@ -17,7 +17,7 @@ export class ShorelineFoamRenderer {
     if (!groundCell || !groundCell.tileId) return false;
 
     const gid = groundCell.tileId.toLowerCase();
-    const isWater = gid === 'water-animated' || gid === 'water-waves-procedural' || gid === 'water-wind-waker' || gid.includes('water') || gid.includes('ocean');
+    const isWater = gid === 'water-animated' || gid === 'water-wind-waker' || gid.includes('water') || gid.includes('ocean');
 
     // If ground is not water (e.g. sand, soil, grass, stone), it is land
     if (!isWater) return true;

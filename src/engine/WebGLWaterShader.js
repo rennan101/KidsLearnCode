@@ -1,5 +1,5 @@
-// Hardware-Accelerated WebGL/GLSL Shader for Detective Fantasia & Zelda Wind Waker (3tKBDz)
-// Compiles and executes real GPU shaders with procedural voronoi caustic mesh and wave apertures.
+// Hardware-Accelerated WebGL/GLSL Shader for Zelda Wind Waker (3tKBDz Cel-Shaded Ocean)
+// Compiles and executes real GPU shaders with procedural voronoi caustic mesh and wave distortion.
 
 import { WATER_PALETTES } from './WaterWaveRenderer.js';
 
@@ -30,15 +30,6 @@ const FRAGMENT_SHADER_SRC = `
   uniform vec2 u_camera;
   uniform float u_zoom;
   uniform float u_time;
-  uniform int u_shaderMode; // 0 = Detective Fantasia, 1 = Zelda Wind Waker
-
-  // Detective Fantasia Parameters
-  uniform float u_aperture;     // Opening gap threshold (0.0 to 0.8)
-  uniform float u_amplitude;    // Wave oscillation height (pixels)
-  uniform float u_frequency;    // Spatial frequency along X
-  uniform float u_speed;        // Movement speed
-  uniform float u_spacing;      // Vertical distance between wave crest rows
-  uniform float u_pixel_size;   // Retro pixel art resolution step (e.g. 2.0 or 3.0)
 
   // Zelda Wind Waker Parameters
   uniform float u_voronoiScale;    // Scale of the voronoi caustic cell network
@@ -123,85 +114,43 @@ const FRAGMENT_SHADER_SRC = `
   }
 
   void main() {
-    // 1. Pixelated Screen Space & World Space Projection
-    vec2 screenCoord = v_uv * u_resolution;
-    vec2 pixelatedScreen = floor(screenCoord / u_pixel_size) * u_pixel_size;
-    vec2 worldPos = (pixelatedScreen / u_zoom) + u_camera;
+    // 1. Correct WebGL to 2D Canvas World Coordinate Projection
+    // In WebGL, v_uv.y is 0 at the bottom and 1 at the top.
+    // In 2D Canvas, Y is 0 at the top and increases downwards.
+    // Therefore screen Y from top is (1.0 - v_uv.y) * u_resolution.y.
+    vec2 screenCoord = vec2(v_uv.x * u_resolution.x, (1.0 - v_uv.y) * u_resolution.y);
+    vec2 worldPos = u_camera + (screenCoord / u_zoom);
 
-    // --- MODE 1: ZELDA WIND WAKER (3tKBDz Cel-Shaded Voronoi Ocean) ---
-    if (u_shaderMode == 1) {
-      float iTime = u_time * u_distortionSpeed;
-      vec2 wuv = worldPos * (0.0035 * u_voronoiScale);
+    // 2. Zelda Wind Waker Shader Calculation
+    float iTime = u_time * u_distortionSpeed;
+    vec2 wuv = worldPos * (0.0035 * u_voronoiScale);
 
-      // Parallax Height Distortion
-      float h1 = sin(wuv.x + iTime * 0.8);
-      float h2 = sin(0.841471 * wuv.x - 0.540302 * wuv.y + iTime * 0.8);
-      wuv += vec2(h1, h2) * 0.022;
+    // Parallax Height Distortion
+    float h1 = sin(wuv.x + iTime * 0.8);
+    float h2 = sin(0.841471 * wuv.x - 0.540302 * wuv.y + iTime * 0.8);
+    wuv += vec2(h1, h2) * 0.022;
 
-      // Dual-Layer Harmonic Texture Distortion
-      float d1 = mod(wuv.x + wuv.y, TWOPI) + iTime * 0.12;
-      float d2 = mod((wuv.x + wuv.y + 0.25) * 1.3, SIXPI) + iTime * 0.55;
-      vec2 dist = vec2(
-        sin(d1) * 0.16 + sin(d2) * 0.05,
-        cos(d1) * 0.16 + cos(d2) * 0.05
-      );
+    // Dual-Layer Harmonic Texture Distortion
+    float d1 = mod(wuv.x + wuv.y, TWOPI) + iTime * 0.12;
+    float d2 = mod((wuv.x + wuv.y + 0.25) * 1.3, SIXPI) + iTime * 0.55;
+    vec2 dist = vec2(
+      sin(d1) * 0.16 + sin(d2) * 0.05,
+      cos(d1) * 0.16 + cos(d2) * 0.05
+    );
 
-      // Cel-Shaded Dual Water Layer Mix
-      float layer1 = waterlayer(wuv + dist.xy);
-      float layer2 = waterlayer(vec2(1.0) - wuv - dist.yx);
+    // Cel-Shaded Dual Water Layer Mix
+    float layer1 = waterlayer(wuv + dist.xy);
+    float layer2 = waterlayer(vec2(1.0) - wuv - dist.yx);
 
-      vec3 col = mix(u_colorDeep, u_colorBase, layer1);
-      col = mix(col, u_colorFoam, layer2 * 0.95);
+    vec3 col = mix(u_colorDeep, u_colorBase, layer1);
+    col = mix(col, u_colorFoam, layer2 * 0.95);
 
-      // Cel-Shaded Stepped Highlights
-      if (layer2 > 0.65) {
-        col = u_colorHighlight;
-      }
-
-      gl_FragColor = vec4(col, 1.0);
-      return;
+    // Cel-Shaded Stepped Highlights
+    if (layer2 > 0.65) {
+      col = u_colorHighlight;
     }
 
-    // --- MODE 0: DETECTIVE FANTASIA (Retro Wave Openings) ---
-    float t = u_time * u_speed;
-    float depthGrad = clamp(sin(worldPos.y * 0.02 + t * 0.6) * 0.5 + 0.5, 0.0, 1.0);
-    vec3 color = mix(u_colorDeep, u_colorBase, depthGrad);
-
-    float gridLine = mod(worldPos.y, 64.0);
-    if (gridLine < 3.0) {
-      color = mix(color, u_colorShallow, 0.4);
-    }
-
-    float waveRow = floor(worldPos.y / u_spacing);
-    float rowBaseY = waveRow * u_spacing;
-    float rowPhase = waveRow * 1.732;
-
-    float sineVal = sin(worldPos.x * u_frequency + t * 2.4 + rowPhase);
-    float waveCrestY = rowBaseY + sineVal * u_amplitude;
-    float distToCrest = abs(worldPos.y - waveCrestY);
-
-    float gapMask = cos(worldPos.x * (u_frequency * 0.58) - t * 1.45 + waveRow * 2.35);
-    bool isClosed = gapMask >= (u_aperture * 1.6 - 0.3);
-
-    if (isClosed) {
-      if (worldPos.y > waveCrestY && distToCrest <= (u_amplitude * 0.65 + 3.0)) {
-        color = mix(color, u_colorDeep, 0.75);
-      }
-
-      if (distToCrest <= 2.2) {
-        color = u_colorCrest;
-
-        if (worldPos.y <= waveCrestY || distToCrest <= 1.1) {
-          color = u_colorFoam;
-        }
-
-        if (sineVal > 0.82 && mod(floor(worldPos.x / 6.0) + waveRow, 4.0) < 1.0) {
-          color = u_colorHighlight;
-        }
-      }
-    }
-
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(col, 1.0);
   }
 `;
 
@@ -282,13 +231,6 @@ export class WebGLWaterShader {
       camera: gl.getUniformLocation(program, 'u_camera'),
       zoom: gl.getUniformLocation(program, 'u_zoom'),
       time: gl.getUniformLocation(program, 'u_time'),
-      shaderMode: gl.getUniformLocation(program, 'u_shaderMode'),
-      aperture: gl.getUniformLocation(program, 'u_aperture'),
-      amplitude: gl.getUniformLocation(program, 'u_amplitude'),
-      frequency: gl.getUniformLocation(program, 'u_frequency'),
-      speed: gl.getUniformLocation(program, 'u_speed'),
-      spacing: gl.getUniformLocation(program, 'u_spacing'),
-      pixelSize: gl.getUniformLocation(program, 'u_pixel_size'),
       voronoiScale: gl.getUniformLocation(program, 'u_voronoiScale'),
       distortionSpeed: gl.getUniformLocation(program, 'u_distortionSpeed'),
       colorDeep: gl.getUniformLocation(program, 'u_colorDeep'),
@@ -318,29 +260,19 @@ export class WebGLWaterShader {
 
     gl.useProgram(this.program);
 
-    const isWindWaker = config.style === 'wind-waker';
-    const pal = WATER_PALETTES[config.paletteId] || (isWindWaker ? {
+    const pal = WATER_PALETTES[config.paletteId] || WATER_PALETTES['wind-waker'] || {
       deep: '#0369a1',
       base: '#0284c7',
       shallow: '#38bdf8',
       crest: '#7dd3fc',
       foam: '#ffffff',
       highlight: '#ffffff'
-    } : WATER_PALETTES['detective-fantasia']);
+    };
 
     gl.uniform2f(this.locations.resolution, w, h);
     gl.uniform2f(this.locations.camera, camX, camY);
     gl.uniform1f(this.locations.zoom, zoom || 1.0);
     gl.uniform1f(this.locations.time, timeSec || 0.0);
-    gl.uniform1i(this.locations.shaderMode, isWindWaker ? 1 : 0);
-
-    // Detective Fantasia Uniforms
-    gl.uniform1f(this.locations.aperture, config.aperture !== undefined ? config.aperture : 0.35);
-    gl.uniform1f(this.locations.amplitude, config.amplitude !== undefined ? config.amplitude : 3.5);
-    gl.uniform1f(this.locations.frequency, config.frequency !== undefined ? config.frequency : 0.045);
-    gl.uniform1f(this.locations.speed, config.speed !== undefined ? config.speed : 1.0);
-    gl.uniform1f(this.locations.spacing, config.waveSpacing !== undefined ? config.waveSpacing : 18.0);
-    gl.uniform1f(this.locations.pixelSize, config.pixelStep !== undefined ? config.pixelStep : 2.0);
 
     // Wind Waker Uniforms
     gl.uniform1f(this.locations.voronoiScale, config.voronoiScale !== undefined ? config.voronoiScale : 1.5);

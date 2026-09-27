@@ -1,16 +1,16 @@
-// Procedural Water Wave Engine (Detective Fantasia style & Animal Island aesthetics)
-// Renders dynamic, multi-layered pixelated and stylized ocean waves with customizable openings (aperture), amplitude, speed, and biomes.
+// Water Wave Engine (Zelda Wind Waker style & Animal Island aesthetics)
+// Provides configuration and fallback 2D canvas rendering for Zelda Wind Waker water and shore foam.
 
 export const WATER_PALETTES = {
-  'detective-fantasia': {
-    id: 'detective-fantasia',
-    name: 'Detective Fantasia (Retro)',
-    deep: '#143836',
-    base: '#1b4d49',
-    shallow: '#2a726c',
-    crest: '#3dd4a7',
-    foam: '#a2fbe2',
-    highlight: '#e6fff8'
+  'wind-waker': {
+    id: 'wind-waker',
+    name: 'Zelda Wind Waker',
+    deep: '#0369a1',
+    base: '#0284c7',
+    shallow: '#38bdf8',
+    crest: '#7dd3fc',
+    foam: '#ffffff',
+    highlight: '#ffffff'
   },
   'tropical-mint': {
     id: 'tropical-mint',
@@ -51,33 +51,14 @@ export const WATER_PALETTES = {
     crest: '#60a5fa',
     foam: '#dbeafe',
     highlight: '#eff6ff'
-  },
-  'wind-waker': {
-    id: 'wind-waker',
-    name: 'Zelda Wind Waker',
-    deep: '#0369a1',
-    base: '#0284c7',
-    shallow: '#38bdf8',
-    crest: '#7dd3fc',
-    foam: '#ffffff',
-    highlight: '#ffffff'
   }
 };
 
 export class WaterWaveRenderer {
   constructor(config = {}) {
-    // Default Wave Configuration Parameters
     this.config = {
-      style: 'wind-waker', // 'wind-waker' | 'detective-fantasia'
+      style: 'wind-waker',
       paletteId: 'wind-waker',
-      aperture: 0.35,      // Wave opening gap threshold (0.0 = continuous lines, 0.8 = tiny wave crests with huge openings)
-      amplitude: 3.5,      // Wave oscillation height (pixels)
-      frequency: 0.045,    // Wave density along X axis
-      speed: 1.0,          // Speed of wave movement and aperture phase drift
-      waveSpacing: 18,     // Vertical distance between wave rows
-      foamThickness: 2.2,  // Thickness of wave foam crest
-      pixelStep: 2,        // Stepping resolution for crisp retro pixel art feel
-      showCaustics: true,  // Draw subtle depth shadows below crests
       voronoiScale: 1.5,   // Scale of Wind Waker voronoi caustic mesh
       distortionSpeed: 1.6,// Speed of Wind Waker dual-harmonic distortion
       shoreLapReach: 14,   // Max pixel reach of wave lapping onto shore
@@ -99,10 +80,6 @@ export class WaterWaveRenderer {
     return { ...this.config };
   }
 
-  setStyle(style) {
-    this.config.style = style === 'detective-fantasia' ? 'detective-fantasia' : 'wind-waker';
-  }
-
   setVoronoiScale(val) {
     this.config.voronoiScale = Math.max(0.5, Math.min(6.0, Number(val)));
   }
@@ -119,26 +96,6 @@ export class WaterWaveRenderer {
     this.config.shoreLapSpeed = Math.max(0.2, Math.min(5.0, Number(val)));
   }
 
-  setAperture(val) {
-    this.config.aperture = Math.max(0.0, Math.min(0.9, Number(val)));
-  }
-
-  setAmplitude(val) {
-    this.config.amplitude = Math.max(0.5, Math.min(12.0, Number(val)));
-  }
-
-  setSpeed(val) {
-    this.config.speed = Math.max(0.1, Math.min(4.0, Number(val)));
-  }
-
-  setFrequency(val) {
-    this.config.frequency = Math.max(0.01, Math.min(0.2, Number(val)));
-  }
-
-  setWaveSpacing(val) {
-    this.config.waveSpacing = Math.max(8, Math.min(40, Number(val)));
-  }
-
   setPalette(paletteId) {
     if (WATER_PALETTES[paletteId]) {
       this.config.paletteId = paletteId;
@@ -147,7 +104,7 @@ export class WaterWaveRenderer {
   }
 
   /**
-   * Batch render visible water cells across the viewport
+   * Fallback 2D canvas batch render visible water cells across the viewport
    * @param {CanvasRenderingContext2D} ctx 
    * @param {Array<{x: number, y: number, tileSize: number}>} waterCells 
    * @param {number} timeMs Current game timestamp in milliseconds
@@ -155,16 +112,10 @@ export class WaterWaveRenderer {
   renderBatch(ctx, waterCells, timeMs = 0) {
     if (!waterCells || waterCells.length === 0) return;
 
-    const t = (timeMs / 1000) * this.config.speed;
+    const t = (timeMs / 1000) * this.config.distortionSpeed;
     const pal = this.activePalette;
-    const amp = this.config.amplitude;
-    const freq = this.config.frequency;
-    const spacing = this.config.waveSpacing;
-    const aperture = this.config.aperture;
-    const foamThick = this.config.foamThickness;
-    const step = Math.max(1, this.config.pixelStep);
 
-    // 1. Pass: Base Water Fill & Deep Shading
+    // Base Water Fill & Deep Shading
     for (let i = 0; i < waterCells.length; i++) {
       const cell = waterCells[i];
       const cx = cell.x;
@@ -178,86 +129,31 @@ export class WaterWaveRenderer {
       ctx.fillStyle = grad;
       ctx.fillRect(cx, cy, size, size);
 
-      // Subtle water texture grid detail
-      ctx.fillStyle = pal.shallow;
-      ctx.fillRect(cx + 2, cy + 2, size - 4, 3);
-    }
-
-    // 2. Pass: Continuous Wave Crests with Dynamic Openings (Detective Fantasia effect)
-    ctx.save();
-    for (let i = 0; i < waterCells.length; i++) {
-      const cell = waterCells[i];
-      const cx = cell.x;
-      const cy = cell.y;
-      const size = cell.tileSize;
-
-      // Clip strictly to water cell bounds to maintain clean tile boundaries
+      // Cel-shaded rings & wave outlines
       ctx.save();
       ctx.beginPath();
       ctx.rect(cx, cy, size, size);
       ctx.clip();
 
-      const numWaves = Math.ceil(size / spacing) + 1;
-      const startWaveY = Math.floor(cy / spacing) * spacing;
+      const pulse = Math.sin(t * 1.5 + (cx + cy) * 0.02) * 3;
+      ctx.strokeStyle = pal.crest;
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.arc(cx + 20, cy + 22, Math.max(2, 14 + pulse), 0, Math.PI * 2);
+      ctx.arc(cx + 46, cy + 38, Math.max(2, 16 - pulse), 0, Math.PI * 2);
+      ctx.stroke();
 
-      for (let w = -1; w <= numWaves; w++) {
-        const waveBaseY = startWaveY + w * spacing;
-        const waveIndex = Math.floor(waveBaseY / spacing);
-        const wavePhaseOffset = waveIndex * 1.73;
-
-        let isDrawingSegment = false;
-        let segmentStartX = 0;
-        let segmentStartY = 0;
-
-        for (let x = cx - 2; x <= cx + size + 2; x += step) {
-          const worldX = x;
-          // Primary wave vertical offset
-          const sineVal = Math.sin(worldX * freq + t * 2.2 + wavePhaseOffset);
-          const waveY = waveBaseY + sineVal * amp;
-
-          // Aperture gap mask (cosine modulation determines where wave crest is open or closed)
-          const gapMask = Math.cos(worldX * (freq * 0.55) - t * 1.35 + waveIndex * 2.4);
-
-          // Threshold check: if gapMask is greater than aperture, we render the foam crest
-          const isOpen = gapMask < (aperture * 1.6 - 0.3);
-
-          if (!isOpen) {
-            if (!isDrawingSegment) {
-              isDrawingSegment = true;
-              segmentStartX = x;
-              segmentStartY = waveY;
-            }
-
-            // Draw Caustic Shadow underneath crest
-            if (this.config.showCaustics) {
-              ctx.fillStyle = pal.deep;
-              ctx.fillRect(x, waveY + foamThick + 1, step, 1.5);
-            }
-
-            // Draw Crest Base Color
-            ctx.fillStyle = pal.crest;
-            ctx.fillRect(x, waveY + 0.5, step, foamThick);
-
-            // Draw Top Foam Highlight (Pixelated tip)
-            if (sineVal > 0.1 || gapMask > 0.2) {
-              ctx.fillStyle = pal.foam;
-              ctx.fillRect(x, waveY - 0.5, step, 1.2);
-            }
-
-            // Sparkle Highlight at crest peaks
-            if (sineVal > 0.85 && ((Math.floor(worldX / 8) + waveIndex) % 4 === 0)) {
-              ctx.fillStyle = pal.highlight;
-              ctx.fillRect(x, waveY - 1.5, step, 1.5);
-            }
-          } else {
-            isDrawingSegment = false;
-          }
-        }
-      }
+      ctx.strokeStyle = pal.foam;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.arc(cx + 20, cy + 22, Math.max(1, 10 + pulse), 0, Math.PI * 2);
+      ctx.arc(cx + 46, cy + 38, Math.max(1, 12 - pulse), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
 
       ctx.restore();
     }
-    ctx.restore();
   }
 
   /**
