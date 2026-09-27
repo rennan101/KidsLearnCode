@@ -4027,11 +4027,159 @@ class RPGApplication {
     const btnFollowDragon = document.getElementById('btn-pocket-follow-dragon');
     const btnFollowLabel = document.getElementById('btn-pocket-follow-label');
 
+    let dragonDetailAnimInterval = null;
+
+    const stopDragonDetailAnimation = () => {
+      if (dragonDetailAnimInterval) {
+        clearInterval(dragonDetailAnimInterval);
+        dragonDetailAnimInterval = null;
+      }
+    };
+
+    const startDragonDetailAnimation = (drag) => {
+      stopDragonDetailAnimation();
+      if (!dragonDetailIcon || !drag) return;
+
+      dragonDetailIcon.style.borderColor = drag.color || '#38bdf8';
+      dragonDetailIcon.style.boxShadow = `0 6px 18px ${drag.color || '#38bdf8'}45, inset 0 2px 6px rgba(255, 255, 255, 0.85)`;
+
+      if (drag.id === 'dragon_fly_storm') {
+        let frame = 1;
+        const renderFrame = () => {
+          dragonDetailIcon.innerHTML = `
+            <div class="dragon-highlight-stage">
+              <img src="assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_${frame}.svg" alt="${drag.name}" style="width: 84px; height: 84px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.22));" />
+            </div>
+          `;
+        };
+        renderFrame();
+        dragonDetailAnimInterval = setInterval(() => {
+          frame = (frame % 8) + 1;
+          renderFrame();
+        }, 120);
+      } else if (drag.id === 'dragon_fly_zephyr') {
+        let frame = 1;
+        const renderFrame = () => {
+          dragonDetailIcon.innerHTML = `
+            <div class="dragon-highlight-stage">
+              <img src="assets/Dragon/dragon_fly_zephyr/flying_south_front/zephyr_flying_south_frame_${frame}.svg" alt="${drag.name}" style="width: 84px; height: 84px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.22));" />
+            </div>
+          `;
+        };
+        renderFrame();
+        dragonDetailAnimInterval = setInterval(() => {
+          frame = (frame % 8) + 1;
+          renderFrame();
+        }, 120);
+      } else {
+        const canvas = document.createElement('canvas');
+        canvas.width = 96;
+        canvas.height = 96;
+        canvas.style.width = '84px';
+        canvas.style.height = '84px';
+        const ctx = canvas.getContext('2d');
+
+        dragonDetailIcon.innerHTML = '';
+        const stage = document.createElement('div');
+        stage.className = 'dragon-highlight-stage';
+        stage.appendChild(canvas);
+        dragonDetailIcon.appendChild(stage);
+
+        const bodyColor = drag.color || '#38bdf8';
+        const accentColor = drag.secondaryColor || '#fef08a';
+
+        let t = 0;
+        const renderCanvasFrame = () => {
+          t += 0.15;
+          ctx.clearRect(0, 0, 96, 96);
+
+          ctx.save();
+          ctx.translate(48, 48);
+
+          // 1. Soft Shadow
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+          ctx.beginPath();
+          ctx.ellipse(0, 36, 26, 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 2. Wings Flapping
+          const wingFlap = Math.sin(t * 3) * 8;
+          ctx.fillStyle = accentColor;
+          ctx.beginPath();
+          ctx.ellipse(-24, -4 + wingFlap, 16, 9, -Math.PI / 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(24, -4 - wingFlap, 16, 9, Math.PI / 4, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 3. Body & Belly
+          ctx.fillStyle = bodyColor;
+          ctx.beginPath();
+          ctx.ellipse(0, 8, 22, 18, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = accentColor;
+          ctx.beginPath();
+          ctx.ellipse(0, 10, 13, 11, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 4. Head & Horns
+          ctx.fillStyle = bodyColor;
+          ctx.beginPath();
+          ctx.arc(0, -12, 16, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = accentColor;
+          ctx.beginPath();
+          ctx.moveTo(-9, -22);
+          ctx.lineTo(-15, -34);
+          ctx.lineTo(-3, -24);
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.moveTo(9, -22);
+          ctx.lineTo(15, -34);
+          ctx.lineTo(3, -24);
+          ctx.fill();
+
+          // 5. Cute Eyes & Sparkles
+          ctx.fillStyle = '#1e293b';
+          ctx.beginPath();
+          ctx.arc(-6, -13, 3.6, 0, Math.PI * 2);
+          ctx.arc(6, -13, 3.6, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(-7, -14, 1.3, 0, Math.PI * 2);
+          ctx.arc(5, -14, 1.3, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 6. Rosy Cheeks
+          ctx.fillStyle = 'rgba(244, 114, 182, 0.7)';
+          ctx.beginPath();
+          ctx.arc(-11, -8, 3, 0, Math.PI * 2);
+          ctx.arc(11, -8, 3, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+        };
+
+        renderCanvasFrame();
+        dragonDetailAnimInterval = setInterval(renderCanvasFrame, 60);
+      }
+    };
+
     const updateDragonDetailPanel = (drag) => {
       if (!drag) {
+        stopDragonDetailAnimation();
         if (dragonDetailName) dragonDetailName.innerText = 'Selecione um dragão';
         if (dragonDetailDesc) dragonDetailDesc.innerText = 'Escolha um dragão do seu grupo para montar ou acompanhar sua exploração.';
-        if (dragonDetailIcon) dragonDetailIcon.innerHTML = `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+        if (dragonDetailIcon) {
+          dragonDetailIcon.style.borderColor = '#c4b89e';
+          dragonDetailIcon.style.boxShadow = 'none';
+          dragonDetailIcon.innerHTML = `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+        }
         if (dragonDetailSkillsList) dragonDetailSkillsList.innerHTML = '';
         if (dragonDetailStats) dragonDetailStats.style.display = 'none';
         if (dragonDetailActions) dragonDetailActions.style.display = 'none';
@@ -4042,11 +4190,8 @@ class RPGApplication {
       const isMounted = this.dragonManager.isMounted();
       const isActive = activeDragon?.id === drag.id;
 
-      if (dragonDetailIcon) {
-        dragonDetailIcon.style.borderColor = drag.color || '#38bdf8';
-        dragonDetailIcon.style.color = drag.color || '#38bdf8';
-        dragonDetailIcon.innerHTML = getDragonAvatarSvg(drag, 44);
-      }
+      startDragonDetailAnimation(drag);
+
       if (dragonDetailName) {
         dragonDetailName.innerText = `${drag.name} (Nv. ${drag.level || 1})`;
       }
@@ -4278,6 +4423,9 @@ class RPGApplication {
     // ==========================================
     const switchTab = (tabName) => {
       currentTab = tabName;
+      if (tabName !== 'dragons') {
+        stopDragonDetailAnimation();
+      }
       document.querySelectorAll('.backpack-tab').forEach(t => {
         t.classList.toggle('active', t.dataset.tab === tabName);
       });
@@ -4317,6 +4465,7 @@ class RPGApplication {
     };
 
     closeBtn?.addEventListener('click', () => {
+      stopDragonDetailAnimation();
       modal.style.display = 'none';
     });
 
