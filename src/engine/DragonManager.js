@@ -729,14 +729,29 @@ export class DragonManager {
   // Load and cache SVG frame animation assets for dragons
   loadDragonSpriteFrames() {
     this.dragonSpriteFrames = {};
-    const stormFrames = [];
+    const stormSideFrames = [];
+    const stormSouthFrames = [];
+    const stormNorthFrames = [];
+
     for (let i = 1; i <= 8; i++) {
-      const img = new Image();
-      img.src = `assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_${i}.svg`;
-      stormFrames.push(img);
+      const sideImg = new Image();
+      sideImg.src = `assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_${i}.svg`;
+      stormSideFrames.push(sideImg);
+
+      const southImg = new Image();
+      southImg.src = `assets/Dragon/dragon_fly_storm/flying_south_front/dragon_flying_south_frame_${i}.svg`;
+      stormSouthFrames.push(southImg);
+
+      const northImg = new Image();
+      northImg.src = `assets/Dragon/dragon_fly_storm/flying_north_back/dragon_flying_north_back_frame_${i}.svg`;
+      stormNorthFrames.push(northImg);
     }
+
     this.dragonSpriteFrames['dragon_fly_storm'] = {
-      flying: stormFrames
+      flying: stormSideFrames,
+      flying_side: stormSideFrames,
+      flying_south: stormSouthFrames,
+      flying_north: stormNorthFrames
     };
   }
 
@@ -2050,11 +2065,19 @@ export class DragonManager {
     }
 
     // 2. Dragon Drawing (Animated SVG frames for dragon_fly_storm or vector canvas)
-    const isWest = entity.direction === 'west';
+    const dir = entity.direction || 'south';
+    const isWest = dir === 'west';
     const isStorm = (entity.catalog?.id === 'dragon_fly_storm' || entity.tileId === 'dragon_fly_storm');
 
-    if (isStorm && this.dragonSpriteFrames['dragon_fly_storm']?.flying) {
-      const frames = this.dragonSpriteFrames['dragon_fly_storm'].flying;
+    if (isStorm && this.dragonSpriteFrames['dragon_fly_storm']) {
+      const stormSet = this.dragonSpriteFrames['dragon_fly_storm'];
+      let frames = stormSet.flying_side || stormSet.flying;
+      if (dir === 'north' && stormSet.flying_north?.length) {
+        frames = stormSet.flying_north;
+      } else if (dir === 'south' && stormSet.flying_south?.length) {
+        frames = stormSet.flying_south;
+      }
+
       const frameIdx = Math.floor((entity.animTimer * 10) % frames.length);
       const frameImg = frames[frameIdx];
 
@@ -2412,9 +2435,17 @@ export class DragonManager {
     }
 
     // 2. Animated SVG Sprite for dragon_fly_storm (Volt)
-    const isWest = this.direction === 'west';
-    if (dragon.id === 'dragon_fly_storm' && this.dragonSpriteFrames['dragon_fly_storm']?.flying) {
-      const frames = this.dragonSpriteFrames['dragon_fly_storm'].flying;
+    const dir = this.direction || 'south';
+    const isWest = dir === 'west';
+    if (dragon.id === 'dragon_fly_storm' && this.dragonSpriteFrames['dragon_fly_storm']) {
+      const stormSet = this.dragonSpriteFrames['dragon_fly_storm'];
+      let frames = stormSet.flying_side || stormSet.flying;
+      if (dir === 'north' && stormSet.flying_north?.length) {
+        frames = stormSet.flying_north;
+      } else if (dir === 'south' && stormSet.flying_south?.length) {
+        frames = stormSet.flying_south;
+      }
+
       const frameIdx = Math.floor((this.floatTimer * 10) % frames.length);
       const frameImg = frames[frameIdx];
 
