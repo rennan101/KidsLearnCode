@@ -1284,6 +1284,35 @@ class RPGApplication {
           }
         }
 
+        // Key R: Interact with nearby Wild/Companion Dragon or NPC or Nest
+        if (e.key === 'r' || e.key === 'R' || e.code === 'KeyR') {
+          const activeTag = document.activeElement?.tagName?.toLowerCase();
+          if (activeTag === 'input' || activeTag === 'textarea' || document.activeElement?.isContentEditable) {
+            return;
+          }
+
+          // 1. Check proximity to placed or companion dragons
+          const nearbyDragon = this.findNearbyDragon(this.player.x, this.player.y, 110);
+          if (nearbyDragon) {
+            this.interactWithDragon(nearbyDragon);
+            return;
+          }
+
+          // 2. Check proximity to placed NPCs on TileMap ('characters' layer)
+          const nearbyNpc = this.findNearbyNPC(this.player.x, this.player.y, 90);
+          if (nearbyNpc) {
+            this.interactWithNPC(nearbyNpc);
+            return;
+          }
+
+          // 3. Check proximity to placed dragon nests, incubators or eggs on TileMap
+          const nearbyNest = this.findNearbyPlacedNest(this.player.x, this.player.y, 90);
+          if (nearbyNest) {
+            this.interactWithPlacedNest(nearbyNest);
+            return;
+          }
+        }
+
         // Key E: Flight Ascend (when mounted on flying dragon) OR Interact with NPC / Wild Nest / Field Move
         if (e.key === 'e' || e.key === 'E') {
           if (this.dragonManager && this.dragonManager.isMounted() && this.dragonManager.canActiveDragonFly()) {
@@ -3289,6 +3318,25 @@ class RPGApplication {
         }
       }
       if (nearest) return nearest;
+    }
+
+    // Check active companion dragon following the player if not mounted
+    if (this.dragonManager && this.dragonManager.mode === 'follow') {
+      const activeCompanion = this.dragonManager.getActiveDragon();
+      if (activeCompanion) {
+        const compX = (this.dragonManager.x !== undefined ? this.dragonManager.x : worldX) + 32;
+        const compY = (this.dragonManager.y !== undefined ? this.dragonManager.y : worldY) + 32;
+        const dist = Math.hypot(compX - (worldX + 32), compY - (worldY + 32));
+        if (dist <= radius) {
+          return {
+            ...activeCompanion,
+            worldX: this.dragonManager.x ?? worldX,
+            worldY: this.dragonManager.y ?? worldY,
+            tx: Math.floor((this.dragonManager.x ?? worldX) / 64),
+            ty: Math.floor((this.dragonManager.y ?? worldY) / 64)
+          };
+        }
+      }
     }
 
     if (!this.tileMap || !this.tileMap.layers) return null;

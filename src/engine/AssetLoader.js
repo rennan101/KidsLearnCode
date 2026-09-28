@@ -33,8 +33,8 @@ export function generateWindWakerSVG() {
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
 
-export function generateMagmaSVG() {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><rect width="64" height="64" fill="#18181b"/><path d="M 0 24 Q 20 12, 38 34 T 64 28" stroke="#991b1b" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M 0 24 Q 20 12, 38 34 T 64 28" stroke="#ea580c" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M 0 24 Q 20 12, 38 34 T 64 28" stroke="#fef08a" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M 12 0 Q 32 30, 48 64" stroke="#991b1b" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M 12 0 Q 32 30, 48 64" stroke="#ea580c" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M 12 0 Q 32 30, 48 64" stroke="#fef08a" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="16" cy="48" rx="10" ry="8" fill="#292524" stroke="#1c1917" stroke-width="1.5"/><ellipse cx="50" cy="14" rx="9" ry="7" fill="#292524" stroke="#1c1917" stroke-width="1.5"/><ellipse cx="52" cy="50" rx="8" ry="6" fill="#292524" stroke="#1c1917" stroke-width="1.5"/><circle cx="38" cy="34" r="2.5" fill="#ffffff"/><circle cx="20" cy="22" r="1.5" fill="#fef08a"/></svg>`;
+export function generateSpawnPointSVG() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><ellipse cx="32" cy="54" rx="22" ry="7" fill="rgba(0,0,0,0.22)"/><ellipse cx="32" cy="38" rx="20" ry="14" fill="#fdfbf7" stroke="#7a583e" stroke-width="2"/><ellipse cx="32" cy="38" rx="16" ry="11" fill="#e6f9f6" stroke="#19c8b9" stroke-width="2"/><circle cx="32" cy="38" r="7" fill="#19c8b9" stroke="#0f8e83" stroke-width="1.5"/><path d="M 32 26 L 35 34 L 43 35 L 37 40 L 39 48 L 32 43 L 25 48 L 27 40 L 21 35 L 29 34 Z" fill="#fbbf24" stroke="#d97706" stroke-width="1"/><circle cx="32" cy="38" r="2.5" fill="#ffffff"/></svg>`;
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
 
@@ -2414,6 +2414,26 @@ export class AssetLoader {
         }
       }
     }
+
+    // Register Player Spawn Point in Overworld Tiles (Category: 'Characters')
+    this.overworldTiles.push({
+      id: 'character-spawn',
+      name: 'Ponto de Spawn do Jogador',
+      category: 'Characters',
+      layer: 'characters',
+      isCharacter: true,
+      characterType: 'player',
+      src: generateSpawnPointSVG(),
+      gridW: 1,
+      gridH: 1,
+      collider: {
+        enabled: false,
+        x: 16,
+        y: 16,
+        w: 32,
+        h: 32
+      }
+    });
 
     // Register Training Targets in Overworld Tiles (Category: 'Characters')
     this.overworldTiles.push({
