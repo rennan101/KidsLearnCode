@@ -107,6 +107,7 @@ class RPGApplication {
     // Auto-save debouncing & persistence
     this.STORAGE_KEY = 'kidslean_rpg_world_map_v3';
     this.saveTimeout = null;
+    this.isGameLoaded = false;
   }
 
   async init() {
@@ -233,11 +234,32 @@ class RPGApplication {
     // Auto-save on page unload/close/hide
     window.addEventListener('beforeunload', () => this.saveGameToStorage(true));
     window.addEventListener('pagehide', () => this.saveGameToStorage(true));
+    
+    // Tab visibility & focus handling: Previne teletransporte e acúmulo de física quando a aba fica em segundo plano
+    const handleTabResume = () => {
+      this.lastTime = performance.now();
+      if (this.player) {
+        this.player.resetKeys();
+        this.player.vx = 0;
+        this.player.vy = 0;
+      }
+    };
+
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) this.saveGameToStorage(true);
+      if (document.hidden) {
+        this.saveGameToStorage(true);
+      } else {
+        handleTabResume();
+      }
+    });
+
+    window.addEventListener('focus', handleTabResume);
+    window.addEventListener('blur', () => {
+      if (this.player) this.player.resetKeys();
     });
 
     // Start game loop
+    this.lastTime = performance.now();
     requestAnimationFrame((t) => this.gameLoop(t));
 
     // Start Interactive Kid-Friendly Tutorial
@@ -1942,6 +1964,7 @@ class RPGApplication {
   }
 
   async saveGameToStorage(instant = false) {
+    if (!this.isGameLoaded) return;
     try {
       const mapData = this.tileMap.toJSON();
       const payload = {
@@ -2038,15 +2061,25 @@ class RPGApplication {
       }
 
       // Se conectado ao Supabase, verifica se há um mapa global online compartilhado mais recente
+      // IMPORTANTE: Atualiza APENAS o mapData (data.map), NUNCA sobrescreve player, dragons, inventário do jogador
       if (this.supabaseClient) {
         const globalOnlineMap = await this.supabaseClient.loadGlobalWorldMap();
         if (globalOnlineMap && globalOnlineMap.map) {
-          if (!data || (globalOnlineMap.updatedAt && globalOnlineMap.updatedAt >= (data.savedAt || 0))) {
-            if (!data) data = { id: 'active_save', player: { x: 320, y: 320 }, activeHero: 'char_wolf_hunter_m' };
+          if (!data) {
+            data = {
+              id: 'active_save',
+              map: globalOnlineMap.map,
+              player: { x: 320, y: 320 },
+              activeHero: 'char_wolf_hunter_m',
+              savedAt: globalOnlineMap.updatedAt || Date.now()
+            };
+          } else {
             data.map = globalOnlineMap.map;
-            data.savedAt = globalOnlineMap.updatedAt;
-            await this.storageManager.saveGame(data);
+            if (globalOnlineMap.updatedAt && globalOnlineMap.updatedAt > (data.savedAt || 0)) {
+              data.savedAt = globalOnlineMap.updatedAt;
+            }
           }
+          await this.storageManager.saveGame(data);
         }
       }
 
@@ -2194,6 +2227,8 @@ class RPGApplication {
       }
     } catch (err) {
       console.warn('Failed to load game from StorageManager:', err);
+    } finally {
+      this.isGameLoaded = true;
     }
   }
 
@@ -2657,7 +2692,8 @@ class RPGApplication {
   }
 
   gameLoop(currentTime) {
-    const deltaTime = Math.min(currentTime - this.lastTime, 100);
+    // Clamping estrito para evitar saltos temporais de física quando a aba fica em segundo plano (máx ~30 FPS step)
+    const deltaTime = Math.min(Math.max(0, currentTime - this.lastTime), 33.34);
     this.lastTime = currentTime;
 
     // Update FPS

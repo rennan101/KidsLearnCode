@@ -75,6 +75,7 @@ export class StorageManager {
       dragons: payload.dragons || null,
       codingProgress: payload.codingProgress || null,
       activeHero: payload.activeHero || 'char_wolf_hunter_m',
+      customAvatar: payload.customAvatar || null,
       savedAt: Date.now()
     };
 
