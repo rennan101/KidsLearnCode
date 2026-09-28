@@ -358,13 +358,32 @@ export class SupabaseClient {
   }
 
   async loadGlobalWorldMap() {
-    if (!this.client || !this.user || this.user.isGuest || !this.isValidUUID(this.user.id)) return null;
+    if (!this.client) return null;
 
     try {
+      // 1. Se autenticado, verifica primeiro se há save próprio mais recente
+      if (this.user && !this.user.isGuest && this.isValidUUID(this.user.id)) {
+        const { data: userSave } = await this.client
+          .from('game_saves')
+          .select('map_data, updated_at')
+          .eq('user_id', this.user.id)
+          .maybeSingle();
+
+        if (userSave && userSave.map_data) {
+          return {
+            map: userSave.map_data,
+            updatedAt: new Date(userSave.updated_at).getTime()
+          };
+        }
+      }
+
+      // 2. Fallback: busca o mapa mais recente salvo globalmente no banco por qualquer admin
       const { data, error } = await this.client
         .from('game_saves')
         .select('map_data, updated_at')
-        .eq('user_id', this.user.id)
+        .not('map_data', 'is', null)
+        .order('updated_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (error || !data || !data.map_data) return null;

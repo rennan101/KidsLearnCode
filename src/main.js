@@ -1041,14 +1041,14 @@ class RPGApplication {
         cancelAnimationFrame(previewAnimFrameId);
         previewAnimFrameId = null;
       }
-      this.triggerAutoSave();
+      this.saveGameToStorage(true);
     };
 
     btnOpen?.addEventListener('click', openModal);
     btnClose?.addEventListener('click', closeModal);
     btnSave?.addEventListener('click', () => {
       closeModal();
-      this.showToast('Configurações de água Cel-Shade aplicadas!');
+      this.showToast('Configurações de água Cel-Shade salvas e sincronizadas na nuvem!');
     });
 
     // Wind Waker Sliders
@@ -1974,13 +1974,13 @@ class RPGApplication {
         this.updateSaveIndicator('error');
       }
 
-      // Sincroniza em segundo plano com a Nuvem Supabase quando o usuário está autenticado
+      // Sincroniza com a Nuvem Supabase e transmite para todos os jogadores em tempo real
       if (this.supabaseClient) {
         if (!this.supabaseClient.user?.isGuest && this.supabaseClient.isValidUUID?.(this.supabaseClient.user?.id)) {
           this.supabaseClient.saveCloudGame(payload);
         }
-        // Salva o mapa online compartilhado e transmite via broadcast apenas em saves intencionais / modo edição
-        if (instant && this.mode === 'edit') {
+        // Salva e transmite o mapa mundial online se estiver no modo de edição OU em salvamento explícito
+        if (this.mode === 'edit' || instant) {
           this.supabaseClient.saveGlobalWorldMap(mapData);
         }
       }
@@ -2028,14 +2028,15 @@ class RPGApplication {
         }
       }
 
-      // Se conectado ao Supabase, verifica se há um mapa global online compartilhado
+      // Se conectado ao Supabase, verifica se há um mapa global online compartilhado mais recente
       if (this.supabaseClient) {
         const globalOnlineMap = await this.supabaseClient.loadGlobalWorldMap();
         if (globalOnlineMap && globalOnlineMap.map) {
-          if (!data || (globalOnlineMap.updatedAt && globalOnlineMap.updatedAt > (data.savedAt || 0))) {
+          if (!data || (globalOnlineMap.updatedAt && globalOnlineMap.updatedAt >= (data.savedAt || 0))) {
             if (!data) data = { id: 'active_save', player: { x: 320, y: 320 }, activeHero: 'char_wolf_hunter_m' };
             data.map = globalOnlineMap.map;
             data.savedAt = globalOnlineMap.updatedAt;
+            await this.storageManager.saveGame(data);
           }
         }
       }
@@ -2071,7 +2072,6 @@ class RPGApplication {
         // 1. Restaurar TileMap
         const mapPayload = data.map ? data.map : data;
         if (this.tileMap.fromJSON(mapPayload)) {
-          this.tileMap.clearAllCharacters();
           if (this.updatePlayCameraZoomUI) {
             this.updatePlayCameraZoomUI(this.tileMap.playCameraZoom || 1.0);
           }

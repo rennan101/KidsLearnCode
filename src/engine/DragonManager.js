@@ -2357,7 +2357,7 @@ export class DragonManager {
         if (isWest) {
           ctx.scale(-1, 1);
         }
-        const spriteSize = isFrontOrBack ? 104 : 84;
+        const spriteSize = isFrontOrBack ? 104 : 88;
         const halfSize = spriteSize / 2;
         ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
         ctx.restore();
@@ -3045,7 +3045,7 @@ export class DragonManager {
         if (isWest) {
           ctx.scale(-1, 1);
         }
-        const spriteSize = isFrontOrBack ? 104 : 84;
+        const spriteSize = isFrontOrBack ? 104 : 88;
         const halfSize = spriteSize / 2;
         ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
         ctx.restore();
