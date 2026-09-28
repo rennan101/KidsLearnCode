@@ -2434,17 +2434,24 @@ class RPGApplication {
       }
     };
 
-    refreshAuthUI();
+    this.refreshAuthUI = refreshAuthUI;
 
-    const resetToLoginModal = () => {
+    this.openAuthModal = (targetMode = 'login') => {
       if (confirmationNotice) confirmationNotice.style.display = 'none';
       if (resetContainer) resetContainer.style.display = 'none';
       if (newPasswordContainer) newPasswordContainer.style.display = 'none';
       if (formContainer) formContainer.style.display = 'flex';
-      tabLogin?.click();
+      if (targetMode === 'signup') {
+        tabSignup?.click();
+      } else {
+        tabLogin?.click();
+      }
       if (passwordInput) passwordInput.value = '';
-      modal.style.display = 'flex';
+      if (modal) modal.style.display = 'flex';
+      refreshAuthUI();
     };
+
+    this.resetToLoginModal = () => this.openAuthModal('login');
 
     // Ouvinte automático para ativação de conta via confirmação de e-mail ou redefinição de senha
     this.supabaseClient.onAuthChange(async (user, profile, event) => {
@@ -2479,24 +2486,21 @@ class RPGApplication {
         }
       } else {
         refreshAuthUI();
+        this.openAuthModal('login');
       }
     });
 
     triggerBtn?.addEventListener('click', () => {
-      refreshAuthUI();
-      if (confirmationNotice) confirmationNotice.style.display = 'none';
-      if (resetContainer) resetContainer.style.display = 'none';
-      if (newPasswordContainer) newPasswordContainer.style.display = 'none';
-      if (formContainer) formContainer.style.display = 'flex';
-      modal.style.display = 'flex';
+      this.openAuthModal('login');
     });
 
     headerLogoutBtn?.addEventListener('click', async () => {
       await this.saveGameToStorage(true);
-      await this.supabaseClient.signOut();
-      refreshAuthUI();
+      if (this.supabaseClient) {
+        await this.supabaseClient.signOut();
+      }
       this.showToast('Você saiu da conta.');
-      resetToLoginModal();
+      this.openAuthModal('login');
     });
 
     const submitBtnLabel = document.getElementById('btn-submit-auth-label');
@@ -2667,10 +2671,11 @@ class RPGApplication {
 
     signoutBtn?.addEventListener('click', async () => {
       await this.saveGameToStorage(true);
-      await this.supabaseClient.signOut();
-      refreshAuthUI();
+      if (this.supabaseClient) {
+        await this.supabaseClient.signOut();
+      }
       this.showToast('Desconectado da conta.');
-      resetToLoginModal();
+      this.openAuthModal('login');
     });
   }
 
@@ -4124,11 +4129,9 @@ class RPGApplication {
       await this.saveGameToStorage(true);
       if (this.supabaseClient) {
         await this.supabaseClient.signOut();
-        this.updateAuthUI();
-        this.showToast('Você saiu com sucesso da sua conta.');
-      } else {
-        window.location.reload();
       }
+      this.showToast('Você saiu com sucesso da sua conta.');
+      this.openAuthModal?.('login');
     });
 
     this.handleCustomAvatarSave = (config) => {
