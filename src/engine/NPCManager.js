@@ -109,7 +109,12 @@ export class NPCManager {
         if (!tileId || typeof tileId !== 'string') continue;
 
         const lower = tileId.toLowerCase();
-        const isChar = layerName === 'characters' || 
+        // Ignora totalmente dragões (gerenciados exclusivamente pelo DragonManager)
+        if (lower.startsWith('dragon_') || lower.startsWith('dragon-') || lower.includes('dragon')) {
+          continue;
+        }
+
+        const isChar = (layerName === 'characters') || 
           lower.startsWith('npc_') || lower.startsWith('char_') || 
           lower.startsWith('npc-') || lower.startsWith('char-') || 
           lower.startsWith('hero_') || lower.startsWith('hero-');

@@ -2306,16 +2306,24 @@ export class AssetLoader {
     // Register 10 Dragons in Overworld Tiles (Category: 'Dragons')
     for (const dragon of DRAGON_CATALOG) {
       const isStorm = dragon.id === 'dragon_fly_storm';
+      const isZephyr = dragon.id === 'dragon_fly_zephyr';
+      let dragonSrc = generateDragonSVG(dragon);
+      if (isStorm) {
+        dragonSrc = 'assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_1.svg';
+      } else if (isZephyr) {
+        dragonSrc = 'assets/Dragon/dragon_fly_zephyr/flying/zephyr_flying_right_frame_1.svg';
+      }
+
       this.overworldTiles.push({
         id: dragon.id,
         name: dragon.name,
         category: 'Dragons',
         layer: 'characters',
-        isCharacter: true,
+        isCharacter: false,
         isDragon: true,
         characterType: 'dragon',
         dragonData: dragon,
-        src: isStorm ? 'assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_1.svg' : generateDragonSVG(dragon),
+        src: dragonSrc,
         gridW: 1,
         gridH: 1,
         collider: {
