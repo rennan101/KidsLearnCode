@@ -1632,14 +1632,15 @@ export class DragonManager {
       this.direction = player.direction;
       this.state = 'mounted';
     } else if (this.mode === 'follow') {
-      // Follow target anchor point exactly 1 sqm (tile) behind player (Pokemon follower style)
-      const sqm = (tileMap && tileMap.tileSize) ? tileMap.tileSize : 32;
+      // Follow target anchor point spaced comfortably behind player
+      const tileSize = (tileMap && tileMap.tileSize) ? tileMap.tileSize : 64;
+      const followDist = Math.max(88, tileSize * 1.45); // ~92px distance behind player for generous breathing room
       let offsetX = 0;
       let offsetY = 0;
-      if (player.direction === 'east') { offsetX = -sqm; offsetY = 0; }
-      else if (player.direction === 'west') { offsetX = sqm; offsetY = 0; }
-      else if (player.direction === 'north') { offsetX = 0; offsetY = sqm; }
-      else if (player.direction === 'south') { offsetX = 0; offsetY = -sqm; }
+      if (player.direction === 'east') { offsetX = -followDist; offsetY = 4; }
+      else if (player.direction === 'west') { offsetX = followDist; offsetY = 4; }
+      else if (player.direction === 'north') { offsetX = 0; offsetY = followDist; }
+      else if (player.direction === 'south') { offsetX = 0; offsetY = -followDist; }
 
       this.targetX = player.x + offsetX;
       this.targetY = player.y + offsetY;
@@ -1649,8 +1650,8 @@ export class DragonManager {
       this.x += (this.targetX - this.x) * Math.min(1.0, lerpSpeed * dt);
       this.y += (this.targetY - this.y) * Math.min(1.0, lerpSpeed * dt);
 
-      const dist = Math.hypot(player.x - this.x, player.y - this.y);
-      this.state = dist > 14 ? 'follow' : 'idle';
+      const dist = Math.hypot(this.targetX - this.x, this.targetY - this.y);
+      this.state = dist > 8 ? 'follow' : 'idle';
       this.direction = player.direction;
     }
 
