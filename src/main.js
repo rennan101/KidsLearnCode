@@ -168,6 +168,17 @@ class RPGApplication {
             this.tileMap.fromJSON(payload.map);
             this.minimap.tileMap = this.tileMap;
             this.editorController.tileMap = this.tileMap;
+            if (this.npcManager) {
+              this.npcManager.syncFromTileMap(this.tileMap);
+            }
+            // Atualiza o IndexedDB local com a versão mais recente recebida em tempo real
+            this.storageManager.loadGame().then(saved => {
+              if (saved) {
+                saved.map = payload.map;
+                saved.savedAt = payload.timestamp || Date.now();
+                this.storageManager.saveGame(saved);
+              }
+            }).catch(e => console.warn('Falha ao armazenar atualização de mapa recebida:', e));
             this.showToast(`Mapa atualizado online por ${payload.updatedBy || 'outro jogador'}!`, 4000);
           }
         };
@@ -1979,10 +1990,8 @@ class RPGApplication {
         if (!this.supabaseClient.user?.isGuest && this.supabaseClient.isValidUUID?.(this.supabaseClient.user?.id)) {
           this.supabaseClient.saveCloudGame(payload);
         }
-        // Salva e transmite o mapa mundial online se estiver no modo de edição OU em salvamento explícito
-        if (this.mode === 'edit' || instant) {
-          this.supabaseClient.saveGlobalWorldMap(mapData);
-        }
+        // Salva e transmite o mapa mundial moldável online para todos os jogadores visualizarem
+        this.supabaseClient.saveGlobalWorldMap(mapData);
       }
     } catch (err) {
       console.warn('Failed to auto-save to StorageManager:', err);
