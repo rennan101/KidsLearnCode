@@ -10,20 +10,20 @@ export const MOUNT_SOCKET_OFFSETS = {
   dragon_fly_storm: {
     south: { x: 0, y: -16, scale: 0.88 },
     north: { x: 0, y: 4, scale: 0.88 },
-    east:  { x: -6, y: -14, scale: 0.86 },
-    west:  { x: 6, y: -14, scale: 0.86 }
+    east:  { x: -8, y: -16, scale: 0.88 },
+    west:  { x: 8, y: -16, scale: 0.88 }
   },
   dragon_fly_zephyr: {
     south: { x: 0, y: -16, scale: 0.88 },
     north: { x: 0, y: 4, scale: 0.88 },
-    east:  { x: -6, y: -14, scale: 0.86 },
-    west:  { x: 6, y: -14, scale: 0.86 }
+    east:  { x: -8, y: -16, scale: 0.88 },
+    west:  { x: 8, y: -16, scale: 0.88 }
   },
   default: {
     south: { x: 0, y: -14, scale: 0.88 },
     north: { x: 0, y: 4, scale: 0.88 },
-    east:  { x: -6, y: -12, scale: 0.86 },
-    west:  { x: 6, y: -12, scale: 0.86 }
+    east:  { x: -8, y: -14, scale: 0.88 },
+    west:  { x: 8, y: -14, scale: 0.88 }
   }
 };
 
@@ -2357,7 +2357,7 @@ export class DragonManager {
         if (isWest) {
           ctx.scale(-1, 1);
         }
-        const spriteSize = isFrontOrBack ? 104 : 88;
+        const spriteSize = isFrontOrBack ? 104 : 112;
         const halfSize = spriteSize / 2;
         ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
         ctx.restore();
@@ -2731,7 +2731,7 @@ export class DragonManager {
       const frameImg = frames[frameIdx];
 
       if (frameImg && frameImg.complete && frameImg.naturalWidth > 0) {
-        const spriteSize = isFrontOrBack ? 104 : 88;
+        const spriteSize = isFrontOrBack ? 104 : 118;
         const halfSize = spriteSize / 2;
 
         if (dir === 'south') {
@@ -3045,7 +3045,7 @@ export class DragonManager {
         if (isWest) {
           ctx.scale(-1, 1);
         }
-        const spriteSize = isFrontOrBack ? 104 : 88;
+        const spriteSize = isFrontOrBack ? 104 : 112;
         const halfSize = spriteSize / 2;
         ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
         ctx.restore();
