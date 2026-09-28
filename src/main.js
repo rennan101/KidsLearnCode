@@ -2976,6 +2976,31 @@ class RPGApplication {
               }
             }
 
+            // 2c. Autonomous Wild Dragons in Play Mode
+            if (!isEditor && this.dragonManager && this.dragonManager.wildDragons) {
+              for (const wildEntity of this.dragonManager.wildDragons.values()) {
+                const baseY = wildEntity.y + 52;
+                ySortEntities.push({
+                  type: 'wild_dragon',
+                  wildEntity,
+                  baseY
+                });
+              }
+            }
+
+            // 2d. Active Companion Dragon (when walking/following beside player)
+            if (!isEditor && this.dragonManager && this.dragonManager.mode === 'follow') {
+              const activeDragon = this.dragonManager.getActiveDragon();
+              if (activeDragon) {
+                const baseY = this.dragonManager.y + 44;
+                ySortEntities.push({
+                  type: 'companion_dragon',
+                  dragon: activeDragon,
+                  baseY
+                });
+              }
+            }
+
             // 3. Player entity (Geralt) Y-Sort Base Position (Feet center)
             const playerFeet = this.player.getFeetBox();
             const playerBaseY = playerFeet.y + playerFeet.h;
@@ -2993,7 +3018,7 @@ class RPGApplication {
                 if (item.type === 'player') {
                   const isMounted = this.player.isMounted && this.dragonManager?.isMounted();
                   if (isMounted) {
-                    // Unified mount rendering was already executed in dragonManager.renderUnderlay
+                    // Unified mount rendering is executed above overhead layers in renderOverlay
                     playerRendered = true;
                   } else {
                     this.player.render(this.ctx, this.assetLoader, showColliders);
@@ -3001,6 +3026,10 @@ class RPGApplication {
                   }
                 } else if (item.type === 'npc') {
                   this.npcManager.renderNPCEntity(this.ctx, item.npc);
+                } else if (item.type === 'wild_dragon') {
+                  this.dragonManager.renderWildDragonEntityBody(this.ctx, item.wildEntity, this.player);
+                } else if (item.type === 'companion_dragon') {
+                  this.dragonManager.renderDragonEntityBody(this.ctx, item.dragon, this.player);
                 } else if (item.type === 'tile') {
                   this.tileMap.drawTileCell(this.ctx, item.cell, item.x, item.y, this.assetLoader, isEditor, showColliders);
                 }
@@ -3048,6 +3077,12 @@ class RPGApplication {
               }
               const isMounted = this.player.isMounted && this.dragonManager?.isMounted();
               if (!isMounted) {
+                if (this.dragonManager && this.dragonManager.mode === 'follow') {
+                  const activeDragon = this.dragonManager.getActiveDragon();
+                  if (activeDragon) {
+                    this.dragonManager.renderDragonEntityBody(this.ctx, activeDragon, this.player);
+                  }
+                }
                 this.player.render(this.ctx, this.assetLoader, showColliders);
               }
               playerRendered = true;

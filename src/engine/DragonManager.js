@@ -2267,6 +2267,7 @@ export class DragonManager {
   }
 
   // Render Dragon Underlay (Nests, Targets, Wild Dragons Body/Wings, Companion Body/Wings) - Below Player
+  // Render Dragon Underlay (Nests, Targets, Cel-Shade Wakes) - Below Entities
   renderUnderlay(ctx, assetLoader, player = null) {
     // 0. Render Cel-Shade Aquatic Wake & Wave Trails (Under dragons & shadows on water)
     this.renderWaterWake(ctx);
@@ -2277,21 +2278,7 @@ export class DragonManager {
     // 2. Render Training Targets
     this.renderTrainingTargets(ctx);
 
-    // 3. Render Autonomous Wild Dragons Body & Shadows
-    for (const entity of this.wildDragons.values()) {
-      this.renderWildDragonEntityBody(ctx, entity, player);
-    }
-
-    // 4. Render Active Dragon (Apenas no modo Follow quando o jogador NÃO estiver virado para o norte)
-    const dragon = this.getActiveDragon();
-    if (dragon && this.mode === 'follow' && player) {
-      const isPlayerFacingNorth = player.direction === 'north';
-      if (!isPlayerFacingNorth) {
-        this.renderDragonEntityBody(ctx, dragon, player);
-      }
-    }
-
-    // 5. Render Defeat & Reverse Hatch Egg Transformation Animations
+    // 3. Render Defeat & Reverse Hatch Egg Transformation Animations
     this.renderDefeatEggAnimations(ctx);
   }
 
@@ -2302,13 +2289,11 @@ export class DragonManager {
       this.renderWildDragonEntityOverlay(ctx, entity, player);
     }
 
-    // 2. Active Mount (Foreground acima de solid e overhead) ou Companion Body (quando em Follow e virado para o norte)
+    // 2. Active Mount (Foreground acima de solid e overhead se montado)
     const dragon = this.getActiveDragon();
     if (dragon && this.mode === 'mounted' && player) {
       // Voo Montado em Primeiro Plano Absoluto (acima de árvores, telhados, casas, pontes e overhead)
       this.renderMountedUnified(ctx, assetLoader, player);
-    } else if (dragon && this.mode === 'follow' && player && player.direction === 'north') {
-      this.renderDragonEntityBody(ctx, dragon, player);
     }
 
     // 3. Active Companion Overhead UI
