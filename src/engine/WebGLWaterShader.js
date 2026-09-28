@@ -1,4 +1,4 @@
-// Hardware-Accelerated WebGL/GLSL Shader for Zelda Wind Waker (3tKBDz Cel-Shaded Ocean)
+// Hardware-Accelerated WebGL/GLSL Shader for Cel-Shaded Water (Cel-Shaded Ocean)
 // Compiles and executes real GPU shaders with procedural voronoi caustic mesh and wave distortion.
 
 import { WATER_PALETTES } from './WaterWaveRenderer.js';
@@ -32,7 +32,7 @@ const FRAGMENT_SHADER_SRC = `
   uniform float u_zoom;
   uniform float u_time;
 
-  // Zelda Wind Waker Parameters
+  // Cel-Shaded Ocean Parameters
   uniform float u_voronoiScale;    // Scale of the voronoi caustic cell network
   uniform float u_distortionSpeed; // Speed of dual-layer wave distortion
 
@@ -123,7 +123,7 @@ const FRAGMENT_SHADER_SRC = `
     vec2 worldOffset = vec2(v_uv.x * u_viewportSize.x, (1.0 - v_uv.y) * u_viewportSize.y) / u_zoom;
     vec2 worldPos = u_camera + worldOffset;
 
-    // 2. Zelda Wind Waker Shader Calculation
+    // 2. Cel-Shaded Ocean Shader Calculation
     float iTime = u_time * u_distortionSpeed;
     vec2 wuv = worldPos * (0.0035 * u_voronoiScale);
 

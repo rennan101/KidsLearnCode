@@ -1,6 +1,7 @@
-// Infinite/Expandable Sparse TileMap engine with exact grid unit scaling
 import { ModularAvatarRenderer } from './animation/ModularAvatarRenderer.js';
 import { getNPCData, hasAvailableQuestForNpc } from './CharacterRegistry.js';
+import { MASTER_NPC_CONFIGS } from './animation/NPCAppearanceGenerator.js';
+import { DEFAULT_AVATAR_CONFIG } from './animation/AvatarConfig.js';
 import { WaterWaveRenderer } from './WaterWaveRenderer.js';
 import { WebGLWaterShader } from './WebGLWaterShader.js';
 import { ShorelineFoamRenderer } from './ShorelineFoamRenderer.js';
@@ -118,6 +119,26 @@ export class TileMap {
       }
     }
     return removed;
+  }
+
+  /**
+   * Remove todos os NPCs e Heróis de todas as camadas do mapa para inserção limpa pelo Admin.
+   */
+  clearAllCharacters() {
+    let count = 0;
+    for (const layerName of ['characters', 'solid', 'decor']) {
+      const layer = this.layers[layerName];
+      if (!layer) continue;
+      for (const [key, cell] of layer.entries()) {
+        const tileId = cell?.tileId || (typeof cell === 'string' ? cell : '');
+        if (tileId && (tileId.startsWith('npc_') || tileId.startsWith('char_') || tileId.startsWith('hero_') || tileId.startsWith('character-'))) {
+          layer.delete(key);
+          count++;
+        }
+      }
+    }
+    this.invalidateSpatialCaches();
+    return count;
   }
 
   setLayerOrder(newOrder) {
@@ -1021,7 +1042,7 @@ export class TileMap {
       }
 
       const npcData = getNPCData(cell.tileId);
-      const avatarConfig = npcData?.avatarConfig;
+      const avatarConfig = npcData?.avatarConfig || MASTER_NPC_CONFIGS[cell.tileId] || (cell.tileId.startsWith('npc_') || cell.tileId.startsWith('char_') ? DEFAULT_AVATAR_CONFIG : null);
       if (avatarConfig && this.avatarRenderer) {
         const avatarScale = 0.33;
         const targetX = destX + 32;

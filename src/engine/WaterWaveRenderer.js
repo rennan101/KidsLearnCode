@@ -1,10 +1,10 @@
-// Water Wave Engine (Zelda Wind Waker style & Animal Island aesthetics)
-// Provides configuration and fallback 2D canvas rendering for Zelda Wind Waker water and shore foam.
+// Water Wave Engine (Cel-Shaded style & Animal Island aesthetics)
+// Provides configuration and fallback 2D canvas rendering for Cel-Shaded water.
 
 export const WATER_PALETTES = {
   'wind-waker': {
     id: 'wind-waker',
-    name: 'Zelda Wind Waker',
+    name: 'Cel-Shade Estilizado',
     deep: '#0369a1',
     base: '#0284c7',
     shallow: '#38bdf8',

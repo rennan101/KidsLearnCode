@@ -741,7 +741,7 @@ export class DragonManager {
     // Autonomous Wild Dragons FSM Map (placed by ADM in Edit Mode)
     this.wildDragons = new Map();
 
-    // Zelda Wind Waker Aquatic Wake & Wave Trails
+    // Cel-Shade Aquatic Wake & Wave Trails
     this.waterWakeNodes = [];
     this.waterWakeSplashes = [];
     this.wakeSpawnTimer = 0;
@@ -1699,11 +1699,11 @@ export class DragonManager {
       }
     }
 
-    // 5. Update Zelda Wind Waker Aquatic Wake & Wave Trails
+    // 5. Update Cel-Shade Aquatic Wake & Wave Trails
     this.updateWaterWake(dt, player, tileMap);
   }
 
-  // Update Zelda Wind Waker Water Wake & Wave Trails
+  // Update Cel-Shade Water Wake & Wave Trails
   updateWaterWake(dt, player, tileMap) {
     if (!this.waterWakeNodes) this.waterWakeNodes = [];
     if (!this.waterWakeSplashes) this.waterWakeSplashes = [];
@@ -2222,7 +2222,7 @@ export class DragonManager {
 
   // Render Dragon Underlay (Nests, Targets, Wild Dragons Body/Wings, Companion Body/Wings) - Below Player
   renderUnderlay(ctx, assetLoader, player = null) {
-    // 0. Render Zelda Wind Waker Aquatic Wake & Wave Trails (Under dragons & shadows on water)
+    // 0. Render Cel-Shade Aquatic Wake & Wave Trails (Under dragons & shadows on water)
     this.renderWaterWake(ctx);
 
     // 1. Render Wild Dragon Nests
@@ -2316,7 +2316,7 @@ export class DragonManager {
     ctx.fill();
     ctx.restore();
 
-    // 1b. Zelda Wind Waker Water Bow Wave & Ripples for Aquatic Dragons
+    // 1b. Cel-Shade Water Bow Wave & Ripples for Aquatic Dragons
     const isOnWater = this.currentTileMap ? this.currentTileMap.isWaterAt(drawX + 32, entity.y + 52) : false;
     if (isOnWater && alt <= 6) {
       const isMoving = entity.fsmState === 'roam';
@@ -2682,7 +2682,7 @@ export class DragonManager {
     ctx.fill();
     ctx.restore();
 
-    // 1b. Ondas Aquáticas para Dragões de Água (Zelda Wind Waker Bow Wave & Ripples)
+    // 1b. Ondas Aquáticas para Dragões de Água (Cel-Shade Bow Wave & Ripples)
     const isOnWater = this.currentTileMap ? this.currentTileMap.isWaterAt(drawX + 32, this.y + 54) : false;
     if (isOnWater && alt <= 6) {
       const isMoving = player && (player.isMoving || (player.vx !== undefined && (player.vx !== 0 || player.vy !== 0)));
@@ -3361,7 +3361,7 @@ export class DragonManager {
     }
   }
 
-  // Render Zelda Wind Waker Front Bow Wave on active swimming dragon
+  // Render Cel-Shade Front Bow Wave on active swimming dragon
   renderSwimmingBowWave(ctx, x, y, direction, isMoving, timer, scale = 1.0) {
     ctx.save();
     let angle = Math.PI * 0.5; // default south
@@ -3419,7 +3419,7 @@ export class DragonManager {
     ctx.restore();
   }
 
-  // Render Zelda Wind Waker Water Wake & Wave Trails
+  // Render Cel-Shade Water Wake & Wave Trails
   renderWaterWake(ctx) {
     if ((!this.waterWakeNodes || this.waterWakeNodes.length === 0) &&
         (!this.waterWakeSplashes || this.waterWakeSplashes.length === 0)) {

@@ -66,7 +66,7 @@ export class AssetLoader {
       },
       {
             "id": "water-wind-waker",
-            "name": "Água Zelda Wind Waker (Cel-Shaded)",
+            "name": "Água Cel-Shaded (Cel-Shade)",
             "category": "Water",
             "layer": "ground",
             "isWaterWaves": true,

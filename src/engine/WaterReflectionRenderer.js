@@ -1,4 +1,4 @@
-// Water Reflection System (Zelda Wind Waker & Cel-Shaded RPG Style)
+// Water Reflection System (Cel-Shaded RPG Style)
 // Renders dynamic, wave-distorted reflections of flying players, dragons, NPCs, and shoreline upright objects (trees, rocks, houses) onto water.
 // Excludes flat ground surfaces, dialogue boxes, overhead name pills, level badges, and interaction prompts.
 

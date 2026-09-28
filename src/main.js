@@ -1046,7 +1046,7 @@ class RPGApplication {
     btnClose?.addEventListener('click', closeModal);
     btnSave?.addEventListener('click', () => {
       closeModal();
-      this.showToast('Configurações de água Zelda Wind Waker aplicadas!');
+      this.showToast('Configurações de água Cel-Shade aplicadas!');
     });
 
     // Wind Waker Sliders
@@ -1077,7 +1077,7 @@ class RPGApplication {
       });
     });
 
-    // Bulk Convert All Water to Zelda Wind Waker
+    // Bulk Convert All Water to Cel-Shade
     btnConvert?.addEventListener('click', () => {
       const ground = this.tileMap.layers.ground;
       if (!ground) return;
@@ -1091,7 +1091,7 @@ class RPGApplication {
         }
       }
       if (count > 0) {
-        this.showToast(`${count} blocos de água convertidos para Zelda Wind Waker!`);
+        this.showToast(`${count} blocos de água convertidos para Cel-Shade!`);
         this.triggerAutoSave();
       } else {
         this.showToast('Nenhum bloco de água encontrado para conversão.');
@@ -2069,6 +2069,7 @@ class RPGApplication {
         // 1. Restaurar TileMap
         const mapPayload = data.map ? data.map : data;
         if (this.tileMap.fromJSON(mapPayload)) {
+          this.tileMap.clearAllCharacters();
           if (this.updatePlayCameraZoomUI) {
             this.updatePlayCameraZoomUI(this.tileMap.playCameraZoom || 1.0);
           }

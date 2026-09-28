@@ -1,6 +1,6 @@
-// Editor Controller handling multi-tile placement, infinite grid navigation, and collider editing mode
 import { UndoRedoManager } from '../engine/UndoRedoManager.js';
 import { getNPCData } from '../engine/CharacterRegistry.js';
+import { MASTER_NPC_CONFIGS, DEFAULT_AVATAR_CONFIG } from '../engine/NPCManager.js';
 
 export class EditorController {
   constructor(tileMap, assetLoader, camera, onMapChange = () => {}, player = null) {
@@ -47,6 +47,10 @@ export class EditorController {
     this.colliderDragHandle = null; // 'move', 'nw', 'ne', 'se', 'sw'
     this.colliderDragTile = null; // { tileId, isPlayer, rootX, rootY, initialCollider }
     this.colliderDragStartWorld = { x: 0, y: 0 };
+
+    // Interactive Drag & Drop Repositioning State (Select Tool)
+    this.isDraggingTile = false;
+    this.dragTileData = null; // { isPlayer, layerName, tileId, sourceTileX, sourceTileY, currentTileX, currentTileY, deltaTileX, deltaTileY, cell, meta, gridW, gridH }
 
     // Keyboard navigation in Editor Mode
     this.keys = {
@@ -325,6 +329,13 @@ export class EditorController {
     this.hoverTileX = tileX;
     this.hoverTileY = tileY;
 
+    if (this.activeTool === 'select' && e.button === 0) {
+      // Handle interactive drag & drop repositioning of placed tiles/NPCs/Player
+      if (this.startTileDragInteraction(worldX, worldY, tileX, tileY)) {
+        return;
+      }
+    }
+
     if (this.activeTool === 'collider' && e.button === 0) {
       // Handle interactive collider dragging & resizing on the map
       if (this.startColliderInteraction(worldX, worldY)) {
@@ -425,6 +436,78 @@ export class EditorController {
     return false;
   }
 
+  startTileDragInteraction(worldX, worldY, tileX, tileY) {
+    const tileSize = this.tileMap.tileSize;
+
+    // 1. Check if clicking on Player / Spawn
+    if (this.player || this.tileMap.spawnPoint) {
+      const spX = this.tileMap.spawnPoint ? Math.floor(this.tileMap.spawnPoint.x / tileSize) : (this.player ? Math.floor(this.player.x / tileSize) : null);
+      const spY = this.tileMap.spawnPoint ? Math.floor(this.tileMap.spawnPoint.y / tileSize) : (this.player ? Math.floor(this.player.y / tileSize) : null);
+
+      if (spX !== null && spY !== null && tileX === spX && tileY === spY) {
+        this.isDraggingTile = true;
+        this.dragTileData = {
+          isPlayer: true,
+          tileId: 'character-geralt',
+          sourceTileX: spX,
+          sourceTileY: spY,
+          currentTileX: spX,
+          currentTileY: spY,
+          deltaTileX: 0,
+          deltaTileY: 0,
+          gridW: 1,
+          gridH: 1
+        };
+        this.inspectTileAt(tileX, tileY);
+        return true;
+      }
+    }
+
+    // 2. Check world layers in top-to-bottom order (characters, solid, decor, ground)
+    const layers = this.tileMap.layerOrder ? [...this.tileMap.layerOrder].reverse() : ['characters', 'solid', 'decor', 'ground'];
+    for (const layerName of layers) {
+      const layer = this.tileMap.layers[layerName];
+      if (!layer) continue;
+
+      const cell = layer.get(this.tileMap.getKey(tileX, tileY));
+      if (!cell || !cell.tileId) continue;
+
+      const rootX = cell.rootX !== undefined ? cell.rootX : tileX;
+      const rootY = cell.rootY !== undefined ? cell.rootY : tileY;
+      const rootCell = layer.get(this.tileMap.getKey(rootX, rootY)) || cell;
+      const meta = this.assetLoader.getTileMetadata(cell.tileId);
+
+      const gridW = meta?.gridW || 1;
+      const gridH = meta?.gridH || 1;
+      const deltaTileX = tileX - rootX;
+      const deltaTileY = tileY - rootY;
+
+      this.isDraggingTile = true;
+      this.dragTileData = {
+        isPlayer: false,
+        layerName,
+        tileId: rootCell.tileId || cell.tileId,
+        sourceTileX: rootX,
+        sourceTileY: rootY,
+        currentTileX: rootX,
+        currentTileY: rootY,
+        deltaTileX,
+        deltaTileY,
+        cell: { ...rootCell },
+        meta,
+        gridW,
+        gridH,
+        rotation: rootCell.rotation || 0,
+        flipX: !!rootCell.flipX
+      };
+
+      this.inspectTileAt(tileX, tileY);
+      return true;
+    }
+
+    return false;
+  }
+
   handleMouseMove(e, canvas) {
     if (!canvas) return;
     const coords = this.getTileCoordsFromEvent(e, canvas);
@@ -442,6 +525,16 @@ export class EditorController {
       }
       this.panStartX = clientX;
       this.panStartY = clientY;
+      return;
+    }
+
+    if (this.isDraggingTile && this.dragTileData) {
+      const newDestX = tileX - (this.dragTileData.deltaTileX || 0);
+      const newDestY = tileY - (this.dragTileData.deltaTileY || 0);
+      this.dragTileData.currentTileX = newDestX;
+      this.dragTileData.currentTileY = newDestY;
+      this.hoverTileX = tileX;
+      this.hoverTileY = tileY;
       return;
     }
 
@@ -527,6 +620,43 @@ export class EditorController {
   }
 
   handleMouseUp() {
+    if (this.isDraggingTile && this.dragTileData) {
+      const { isPlayer, layerName, tileId, sourceTileX, sourceTileY, currentTileX, currentTileY, cell, meta } = this.dragTileData;
+      if (currentTileX !== sourceTileX || currentTileY !== sourceTileY) {
+        this.recordState();
+        if (isPlayer) {
+          const spawnX = currentTileX * this.tileMap.tileSize;
+          const spawnY = currentTileY * this.tileMap.tileSize;
+          this.tileMap.setSpawn(spawnX, spawnY);
+          if (this.player) {
+            this.player.setSpawn(spawnX, spawnY);
+            this.player.x = spawnX;
+            this.player.y = spawnY;
+          }
+          this.onMapChange();
+        } else {
+          // Delete tile from source position
+          this.tileMap.deleteTile(sourceTileX, sourceTileY, layerName, this.assetLoader);
+          // Place tile at new destination position with all metadata and properties preserved
+          const rot = cell.rotation || 0;
+          const flip = !!cell.flipX;
+          const colorOverride = cell.colorOverride || null;
+          const col = cell.collider || null;
+          const extraProps = cell.extraProps || null;
+
+          if (meta && ((meta.gridW && meta.gridW > 1) || (meta.gridH && meta.gridH > 1))) {
+            this.tileMap.placeMultiTile(layerName, currentTileX, currentTileY, meta, rot, flip, colorOverride, col, extraProps);
+          } else {
+            this.tileMap.setTile(layerName, currentTileX, currentTileY, tileId, true, currentTileX, currentTileY, rot, flip, colorOverride, col, extraProps);
+          }
+          this.onMapChange();
+          this.inspectTileAt(currentTileX, currentTileY);
+        }
+      }
+      this.isDraggingTile = false;
+      this.dragTileData = null;
+    }
+
     this.isMouseDown = false;
     this.isPanning = false;
     this.isDraggingCollider = false;
@@ -872,7 +1002,125 @@ export class EditorController {
     const hx = this.hoverTileX * tileSize;
     const hy = this.hoverTileY * tileSize;
 
-    if (this.activeTool === 'select') {
+    // Drag & Drop Repositioning Ghost Overlay (Select Tool)
+    if (this.isDraggingTile && this.dragTileData) {
+      const dtData = this.dragTileData;
+      const dx = dtData.currentTileX * tileSize;
+      const dy = dtData.currentTileY * tileSize;
+      const baseGridW = dtData.gridW || 1;
+      const baseGridH = dtData.gridH || 1;
+      const rot = dtData.cell?.rotation || dtData.rotation || 0;
+      const isRot90or270 = (rot === 90 || rot === 270);
+      const occGridW = isRot90or270 ? baseGridH : baseGridW;
+      const occGridH = isRot90or270 ? baseGridW : baseGridH;
+      const occW = occGridW * tileSize;
+      const occH = occGridH * tileSize;
+      const rawW = baseGridW * tileSize;
+      const rawH = baseGridH * tileSize;
+
+      ctx.save();
+      // Source highlight box (where it came from)
+      const sx = dtData.sourceTileX * tileSize;
+      const sy = dtData.sourceTileY * tileSize;
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.15)';
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.fillRect(sx, sy, occW, occH);
+      ctx.strokeRect(sx, sy, occW, occH);
+      ctx.setLineDash([]);
+
+      // Destination highlight box
+      ctx.fillStyle = 'rgba(25, 200, 185, 0.28)';
+      ctx.strokeStyle = '#19c8b9';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([6, 4]);
+      ctx.fillRect(dx, dy, occW, occH);
+      ctx.strokeRect(dx, dy, occW, occH);
+      ctx.setLineDash([]);
+
+      // Floating Banner Badge "Mover para [X, Y]"
+      ctx.fillStyle = '#794f27';
+      ctx.strokeStyle = '#f8f8f0';
+      ctx.lineWidth = 1.5;
+      const badgeW = 120;
+      const badgeH = 20;
+      const badgeX = dx + occW / 2 - badgeW / 2;
+      const badgeY = dy - 24;
+      ctx.beginPath();
+      ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#fdfbf7';
+      ctx.font = 'bold 10px Nunito, Outfit, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`Mover para [${dtData.currentTileX}, ${dtData.currentTileY}]`, dx + occW / 2, badgeY + 10);
+
+      // Render dragged Ghost Avatar / Tile
+      ctx.globalAlpha = 0.75;
+      if (dtData.isPlayer) {
+        if (this.tileMap.avatarRenderer) {
+          const avatarScale = 0.33;
+          const targetX = dx + 32;
+          const targetY = dy + 60 - (265 * avatarScale);
+          this.tileMap.avatarRenderer.render(
+            ctx,
+            targetX,
+            targetY,
+            'south',
+            'idle',
+            performance.now() / 1000,
+            DEFAULT_AVATAR_CONFIG,
+            avatarScale
+          );
+        }
+      } else {
+        const meta = dtData.meta || this.assetLoader.getTileMetadata(dtData.tileId);
+        const isNpcMeta = dtData.tileId.startsWith('npc_') || dtData.tileId.startsWith('char_') || (meta && (meta.isCharacter && (meta.characterType === 'npc' || meta.characterType === 'hero' || meta.isNPC)));
+        if (isNpcMeta && this.tileMap.avatarRenderer) {
+          const npcData = getNPCData(dtData.tileId);
+          const avatarConfig = npcData?.avatarConfig || (MASTER_NPC_CONFIGS && MASTER_NPC_CONFIGS[dtData.tileId]?.avatarConfig) || DEFAULT_AVATAR_CONFIG;
+          const avatarScale = 0.33;
+          const targetX = dx + 32;
+          const targetY = dy + 60 - (265 * avatarScale);
+          this.tileMap.avatarRenderer.render(
+            ctx,
+            targetX,
+            targetY,
+            'south',
+            'idle',
+            performance.now() / 1000,
+            avatarConfig,
+            avatarScale
+          );
+        } else if (meta) {
+          let img = null;
+          if (meta.isAnimated && meta.frames) {
+            img = this.assetLoader.getImage(meta.frames[0]);
+          } else if (meta.src) {
+            img = this.assetLoader.getImage(meta.src);
+          }
+          if (img) {
+            const isFlipped = !!dtData.flipX;
+            if (rot !== 0 || isFlipped) {
+              ctx.save();
+              ctx.translate(dx + occW / 2, dy + occH / 2);
+              if (rot !== 0) ctx.rotate((rot * Math.PI) / 180);
+              if (isFlipped) ctx.scale(-1, 1);
+              ctx.drawImage(img, -rawW / 2, -rawH / 2, rawW, rawH);
+              ctx.restore();
+            } else {
+              ctx.drawImage(img, dx, dy, rawW, rawH);
+            }
+          }
+        }
+      }
+      ctx.restore();
+    }
+
+    if (this.activeTool === 'select' && !this.isDraggingTile) {
       ctx.fillStyle = 'rgba(6, 182, 212, 0.2)';
       ctx.strokeStyle = '#06b6d4';
       ctx.lineWidth = 2;
