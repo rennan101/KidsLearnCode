@@ -17,43 +17,8 @@ export class MultiplayerClient {
     this.remotePlayers = new Map();
     this.avatarRenderer = new ModularAvatarRenderer();
 
-    // Simulated offline bots for rich lively island when running standalone
-    this.simulatedBots = [
-      {
-        id: 'bot_lyra',
-        name: 'Lyra (Caçadora)',
-        heroId: 'char_wolf_hunter_f',
-        x: 380,
-        y: 350,
-        targetX: 380,
-        targetY: 350,
-        direction: 'south',
-        isMoving: false,
-        isSprinting: false,
-        isMounted: false,
-        activeDragonId: 'dragon_land_forest',
-        timer: 0,
-        animTimer: 0,
-        chatCooldown: 8.0
-      },
-      {
-        id: 'bot_vlad',
-        name: 'Vlad (Morcego)',
-        heroId: 'char_bat_vampire_m',
-        x: 260,
-        y: 400,
-        targetX: 260,
-        targetY: 400,
-        direction: 'east',
-        isMoving: false,
-        isSprinting: false,
-        isMounted: true,
-        activeDragonId: 'dragon_fly_storm',
-        timer: 0,
-        animTimer: 0,
-        chatCooldown: 12.0
-      }
-    ];
+    // Simulated offline bots list (empty by default - only real players and editor-placed entities exist)
+    this.simulatedBots = [];
 
     this.supabaseClient = null;
 

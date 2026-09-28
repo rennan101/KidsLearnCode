@@ -794,30 +794,42 @@ export class DragonManager {
       flying_north: stormNorthFrames
     };
 
-    // Load Zephyr Sprite Frames (South / Front 8-frame animation)
+    // Load Zephyr Sprite Frames (South, North, Side, Side Back/Front Layers)
+    const zephyrSideFrames = [];
+    const zephyrSideBackFrames = [];
+    const zephyrSideFrontFrames = [];
     const zephyrSouthFrames = [];
-    const zephyrFileNames = [
-      'zephyr_flying_south_frame_1.svg',
-      'zephyr_flying_south_frame_2.svg',
-      'zephyr_flying_south_frame_3.svg',
-      'zephyr_flying_south_frame_4.svg',
-      'zephyr_flying_south_frame_5.svg',
-      'zephyr_flying_south_frame_6.svg',
-      'zephyr_flying_south_frame_7.svg',
-      'zephyr_flying_south_frame_8.svg'
-    ];
+    const zephyrNorthFrames = [];
 
-    for (const fileName of zephyrFileNames) {
+    for (let i = 1; i <= 8; i++) {
+      const sideImg = new Image();
+      sideImg.src = `assets/Dragon/dragon_fly_zephyr/flying/zephyr_flying_right_frame_${i}.svg`;
+      zephyrSideFrames.push(sideImg);
+
+      const sideBackImg = new Image();
+      sideBackImg.src = `assets/Dragon/dragon_fly_zephyr/flying_side_layers/back_${i}.svg`;
+      zephyrSideBackFrames.push(sideBackImg);
+
+      const sideFrontImg = new Image();
+      sideFrontImg.src = `assets/Dragon/dragon_fly_zephyr/flying_side_layers/front_${i}.svg`;
+      zephyrSideFrontFrames.push(sideFrontImg);
+
       const southImg = new Image();
-      southImg.src = `assets/Dragon/dragon_fly_zephyr/flying_south_front/${fileName}`;
+      southImg.src = `assets/Dragon/dragon_fly_zephyr/flying_south_front/zephyr_flying_south_frame_${i}.svg`;
       zephyrSouthFrames.push(southImg);
+
+      const northImg = new Image();
+      northImg.src = `assets/Dragon/dragon_fly_zephyr/flying_north_back/zephyr_flying_north_frame_${i}.svg`;
+      zephyrNorthFrames.push(northImg);
     }
 
     this.dragonSpriteFrames['dragon_fly_zephyr'] = {
-      flying: zephyrSouthFrames,
-      flying_side: zephyrSouthFrames,
+      flying: zephyrSideFrames,
+      flying_side: zephyrSideFrames,
+      flying_side_back: zephyrSideBackFrames,
+      flying_side_front: zephyrSideFrontFrames,
       flying_south: zephyrSouthFrames,
-      flying_north: zephyrSouthFrames
+      flying_north: zephyrNorthFrames
     };
   }
 
