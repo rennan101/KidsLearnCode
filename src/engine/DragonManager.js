@@ -948,11 +948,32 @@ export class DragonManager {
     return true;
   }
 
-  toggleMount() {
+  canDismountAt(player, tileMap, assetLoader) {
+    if (!player || !tileMap) return true;
+    const footX = player.x + 32;
+    const footY = player.y + 56;
+    if (tileMap.isWaterAt(footX, footY, assetLoader)) {
+      return false;
+    }
+    if (tileMap.isMagmaAt(footX, footY, assetLoader)) {
+      return false;
+    }
+    return true;
+  }
+
+  toggleMount(player = null, tileMap = null, assetLoader = null) {
     const active = this.getActiveDragon();
     if (!active) return { success: false, reason: 'Nenhum dragão ativo selecionado!' };
 
     if (this.mode === 'mounted') {
+      const currentMap = tileMap || this.currentTileMap;
+      if (player && currentMap && !this.canDismountAt(player, currentMap, assetLoader)) {
+        return { 
+          success: false, 
+          blocked: true, 
+          reason: 'Você não pode descer do dragão sobre a água ou magma!' 
+        };
+      }
       this.mode = 'follow';
       this.targetFlightAltitude = 0;
       this.flightAltitude = 0;

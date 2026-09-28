@@ -410,6 +410,18 @@ header.app-header {
   box-shadow: 0 1px 0 0 #9a3412;
 }
 
+.quick-mount-btn.disabled,
+.quick-mount-btn:disabled {
+  background: #d8ceb9 !important;
+  border-color: #b8ac96 !important;
+  color: #725d42 !important;
+  box-shadow: 0 2px 0 0 #9f927d !important;
+  cursor: not-allowed !important;
+  opacity: 0.85;
+  transform: none !important;
+  pointer-events: auto !important;
+}
+
 
 /* ==========================================================================
    ANIMAL ISLAND UI - DRAGON COMBAT, 4-SKILL BAR & QUICK HUD (SPRINT 5+)

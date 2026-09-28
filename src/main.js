@@ -2817,6 +2817,7 @@ class RPGApplication {
         this.dragonManager.update(deltaTime, this.player, this.tileMap, this.inventorySystem);
         this.updateDragonQuickHUD?.();
         this.updateDragonSkillBar?.();
+        this.updateQuickMountHUD?.(this.player.isMounted);
       }
 
       // Update Multiplayer Client & Broadcast Local Movement
@@ -4908,13 +4909,18 @@ class RPGApplication {
       const isMounted = this.dragonManager.isMounted();
       const isActive = activeDragon?.id === selectedDragon.id;
 
-      this.dragonManager.setActiveDragon(selectedDragon.id);
       if (isActive && isMounted) {
+        if (this.tileMap && !this.dragonManager.canDismountAt(this.player, this.tileMap, this.assetLoader)) {
+          this.soundSystem?.playErrorSound?.();
+          this.showToast('Você não pode descer do dragão sobre a água ou magma!');
+          return;
+        }
         this.dragonManager.setMode('follow');
         this.player.isMounted = false;
         this.updateQuickMountHUD?.(false);
         this.showToast(`Você desmontou de ${selectedDragon.name}.`);
       } else {
+        this.dragonManager.setActiveDragon(selectedDragon.id);
         this.dragonManager.setMode('mounted');
         this.player.isMounted = true;
         this.player.mountSpeedMultiplier = selectedDragon.mountSpeedMultiplier || 1.8;
@@ -4929,6 +4935,13 @@ class RPGApplication {
 
     btnFollowDragon?.addEventListener('click', () => {
       if (!selectedDragon) return;
+      if (this.dragonManager.isMounted()) {
+        if (this.tileMap && !this.dragonManager.canDismountAt(this.player, this.tileMap, this.assetLoader)) {
+          this.soundSystem?.playErrorSound?.();
+          this.showToast('Você não pode descer do dragão sobre a água ou magma!');
+          return;
+        }
+      }
       this.dragonManager.setActiveDragon(selectedDragon.id);
       this.dragonManager.setMode('follow');
       this.player.isMounted = false;
@@ -5309,18 +5322,45 @@ class RPGApplication {
       const altitudeHud = document.getElementById('flight-altitude-hud');
 
       const canFly = this.dragonManager?.canActiveDragonFly();
-      if (btn) btn.classList.toggle('mounted', !!isMounted);
-      if (label) {
-        label.innerText = isMounted ? 'Descer [Espaço]' : (canFly ? 'Voar [Espaço]' : 'Montar [Espaço]');
+      const currentMounted = (isMounted !== undefined) ? !!isMounted : (this.dragonManager?.isMounted() || false);
+
+      if (btn) {
+        btn.classList.toggle('mounted', currentMounted);
+        
+        // Se montado, checa se está sobre terreno perigoso (água ou magma) onde não pode descer
+        if (currentMounted && this.dragonManager && this.player && this.tileMap) {
+          const canDismount = this.dragonManager.canDismountAt(this.player, this.tileMap, this.assetLoader);
+          btn.classList.toggle('disabled', !canDismount);
+          btn.disabled = !canDismount;
+          if (!canDismount) {
+            btn.title = 'Superfície de Água/Magma: Não é possível descer aqui!';
+          } else {
+            btn.title = 'Descer [Espaço]';
+          }
+        } else {
+          btn.classList.remove('disabled');
+          btn.disabled = false;
+          btn.title = currentMounted ? 'Descer [Espaço]' : (canFly ? 'Voar [Espaço]' : 'Montar [Espaço]');
+        }
       }
+
+      if (label) {
+        if (currentMounted) {
+          const canDismount = (this.dragonManager && this.player && this.tileMap) ? this.dragonManager.canDismountAt(this.player, this.tileMap, this.assetLoader) : true;
+          label.innerText = canDismount ? 'Descer [Espaço]' : 'Água/Magma [Bloqueado]';
+        } else {
+          label.innerText = canFly ? 'Voar [Espaço]' : 'Montar [Espaço]';
+        }
+      }
+
       if (altitudeHud) {
-        altitudeHud.style.display = (isMounted && canFly) ? 'flex' : 'none';
+        altitudeHud.style.display = (currentMounted && canFly) ? 'flex' : 'none';
       }
     };
 
     this.toggleQuickMount = () => {
       if (this.mode !== 'play') return;
-      const res = this.dragonManager.toggleMount();
+      const res = this.dragonManager.toggleMount(this.player, this.tileMap, this.assetLoader);
       if (res.success) {
         const isMounted = res.mounted;
         updateQuickMountHUD(isMounted);
@@ -5332,6 +5372,9 @@ class RPGApplication {
           this.showToast(`Você desmontou de ${res.dragon.name}.`);
         }
       } else {
+        if (res.blocked) {
+          this.soundSystem?.playErrorSound?.();
+        }
         this.showToast(res.reason || 'Nenhum dragão disponível para montaria.');
       }
     };
