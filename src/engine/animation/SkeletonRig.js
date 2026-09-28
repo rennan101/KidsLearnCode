@@ -153,28 +153,32 @@ export class SkeletonRig {
 
       case 'riding': {
         // Posição sentada e firme adaptada para montar dragões (estática sem oscilação de passos)
-        pose.root.y = 40;
+        pose.root.y = 80; // Senta mais fundo na sela do dragão
         pose.root.rot = 0;
         pose.head.bobY = 0;
         pose.head.rot = 0;
         if (effectiveDir === 'east') {
-          pose.hip_l.rot = 0.82;  // Pernas dobradas para a sela
-          pose.hip_r.rot = 0.82;
-          pose.leg_l.rot = -0.55;
-          pose.leg_r.rot = -0.55;
-          pose.arm_l.rot = -0.55; // Braços estendidos segurando o dragão
-          pose.arm_r.rot = -0.55;
+          pose.hip_l.rot = 0.98;  // Pernas dobradas e flexionadas sobre a sela
+          pose.hip_r.rot = 0.98;
+          pose.leg_l.rot = -0.75;
+          pose.leg_r.rot = -0.75;
+          pose.arm_l.rot = -0.48; // Braços estendidos segurando a sela/rédeas
+          pose.arm_r.rot = -0.48;
         } else if (effectiveDir === 'north') {
-          pose.hip_l.rot = 0.45;
-          pose.hip_r.rot = -0.45;
+          pose.hip_l.rot = 0.55;
+          pose.hip_r.rot = -0.55;
+          pose.leg_l.rot = 0.30;
+          pose.leg_r.rot = -0.30;
           pose.arm_l.rot = -0.45;
           pose.arm_r.rot = 0.45;
         } else {
           // south (frontal)
-          pose.hip_l.rot = 0.35;
-          pose.hip_r.rot = -0.35;
-          pose.arm_l.rot = 0.35;
-          pose.arm_r.rot = -0.35;
+          pose.hip_l.rot = 0.55;
+          pose.hip_r.rot = -0.55;
+          pose.leg_l.rot = 0.30;
+          pose.leg_r.rot = -0.30;
+          pose.arm_l.rot = 0.40;
+          pose.arm_r.rot = -0.40;
         }
         pose.shadow.scale = 0;
         break;
