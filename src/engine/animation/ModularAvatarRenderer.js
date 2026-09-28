@@ -173,7 +173,7 @@ export class ModularAvatarRenderer {
     ctx.restore();
 
     // 1. Pernas e Pés de Base_char_flat.svg
-    this.drawLegs(ctx, pose, cfg, 'south');
+    this.drawLegs(ctx, pose, cfg, 'south', state);
 
     // 2. Pescoço, Tronco e Roupas (O Pescoço cobre o Cabelo Traseiro, e a Roupa/Gola cobre a base do Pescoço)
     this.drawTorsoAndNeck(ctx, pose.root.rot, cfg, 'south');
@@ -228,7 +228,7 @@ export class ModularAvatarRenderer {
     }
 
     // 2. Pernas e Pés
-    this.drawLegs(ctx, pose, cfg, 'north');
+    this.drawLegs(ctx, pose, cfg, 'north', state);
 
     // 3. Tronco e Roupas (costas)
     this.drawTorsoAndNeck(ctx, pose.root.rot, cfg, 'north');
@@ -263,7 +263,7 @@ export class ModularAvatarRenderer {
     ctx.restore();
 
     // 1. Pernas e Pés
-    this.drawLegs(ctx, pose, cfg, 'east');
+    this.drawLegs(ctx, pose, cfg, 'east', state);
 
     // 2. Pescoço, Tronco e Roupas (O Pescoço cobre o Cabelo Traseiro, e a Roupa/Gola cobre a base do Pescoço)
     this.drawTorsoAndNeck(ctx, pose.root.rot, cfg, 'east');
@@ -671,7 +671,7 @@ export class ModularAvatarRenderer {
 
 
 
-  drawLegs(ctx, pose, cfg, dir) {
+  drawLegs(ctx, pose, cfg, dir, state = 'idle') {
     const skin = cfg.skinTone || '#f6dab9';
     const bottomColor = cfg.bottomColor || '#2563eb';
     const shoeColor = cfg.shoesColor || '#ea580c';
@@ -682,27 +682,32 @@ export class ModularAvatarRenderer {
     const liftL = (pose.hip_l && pose.hip_l.y !== undefined) ? ((pose.hip_l.y - 6) * 15) : 0;
     const liftR = (pose.hip_r && pose.hip_r.y !== undefined) ? ((pose.hip_r.y - 6) * 15) : 0;
 
+    // Quando montado em vista lateral (perfil east/west), a perna interna/distante fica oculta atrás do corpo do dragão
+    const isRidingSide = (dir === 'east' || dir === 'west') && state === 'riding';
+
     ctx.save();
 
     // Perna Esquerda (_04_Perna_Esquerda e _03_Pe_Esquerdo)
-    // Articula no quadril esquerdo (1145, 1600)
-    ctx.save();
-    ctx.translate(1145, 1600 + liftL);
-    ctx.rotate(pose.hip_l.rot + pose.leg_l.rot);
+    // Articula no quadril esquerdo (1145, 1600) - ocultada na vista lateral montada
+    if (!isRidingSide) {
+      ctx.save();
+      ctx.translate(1145, 1600 + liftL);
+      ctx.rotate(pose.hip_l.rot + pose.leg_l.rot);
 
-    // Perna de pele (_04_Perna_Esquerda)
-    const legLPath = this.getPath2D('M-80 70C-80 0 80 0 80 70L60 440C60 465 -70 465 -70 440L-80 70Z');
-    ctx.fillStyle = skin;
-    ctx.fill(legLPath);
+      // Perna de pele (_04_Perna_Esquerda)
+      const legLPath = this.getPath2D('M-80 70C-80 0 80 0 80 70L60 440C60 465 -70 465 -70 440L-80 70Z');
+      ctx.fillStyle = skin;
+      ctx.fill(legLPath);
 
-    // Pé esquerdo (_03_Pe_Esquerdo)
-    const footLPath = this.getPath2D('M-75 430C-75 390 65 390 65 430C75 475 70 535 20 548C-20 550 -80 530 -75 430Z');
-    ctx.fill(footLPath);
+      // Pé esquerdo (_03_Pe_Esquerdo)
+      const footLPath = this.getPath2D('M-75 430C-75 390 65 390 65 430C75 475 70 535 20 548C-20 550 -80 530 -75 430Z');
+      ctx.fill(footLPath);
 
-    // Calça e Sapato Esquerdo
-    this.renderLegClothingAndShoe(ctx, bottomColor, shoeColor, shoeTrim, bottomStyle, shoesStyle, 'left', dir);
+      // Calça e Sapato Esquerdo
+      this.renderLegClothingAndShoe(ctx, bottomColor, shoeColor, shoeTrim, bottomStyle, shoesStyle, 'left', dir);
 
-    ctx.restore();
+      ctx.restore();
+    }
 
     // Perna Direita (_06_Perna_Direita e _05_Pe_Direito)
     // Articula no quadril direito (1355, 1600)

@@ -8,22 +8,22 @@
 
 export const MOUNT_SOCKET_OFFSETS = {
   dragon_fly_storm: {
-    south: { x: 0, y: -6, scale: 0.88 },
+    south: { x: 0, y: -4, scale: 0.88 },
     north: { x: 0, y: 6, scale: 0.88 },
-    east:  { x: -2, y: -6, scale: 0.88 },
-    west:  { x: 2, y: -6, scale: 0.88 }
+    east:  { x: -8, y: 0, scale: 0.88 },
+    west:  { x: 8, y: 0, scale: 0.88 }
   },
   dragon_fly_zephyr: {
-    south: { x: 0, y: -6, scale: 0.88 },
-    north: { x: 0, y: 6, scale: 0.88 },
-    east:  { x: 0, y: -6, scale: 0.88 },
-    west:  { x: 0, y: -6, scale: 0.88 }
+    south: { x: 0, y: -2, scale: 0.88 },
+    north: { x: 0, y: 8, scale: 0.88 },
+    east:  { x: -2, y: 4, scale: 0.88 },
+    west:  { x: 2, y: 4, scale: 0.88 }
   },
   default: {
-    south: { x: 0, y: -6, scale: 0.88 },
-    north: { x: 0, y: 6, scale: 0.88 },
-    east:  { x: 0, y: -6, scale: 0.88 },
-    west:  { x: 0, y: -6, scale: 0.88 }
+    south: { x: 0, y: -2, scale: 0.88 },
+    north: { x: 0, y: 8, scale: 0.88 },
+    east:  { x: -4, y: 2, scale: 0.88 },
+    west:  { x: 4, y: 2, scale: 0.88 }
   }
 };
 
