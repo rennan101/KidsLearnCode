@@ -23,3 +23,7 @@
 - **Verificação Obrigatória de Impacto Cruzado**: Antes e após qualquer alteração, é mandatório verificar rigorosamente se a mudança afeta ou quebra outros módulos, sintaxe, assinaturas de funções, variáveis e referências no DOM (`document.getElementById`, classes e listeners).
 - **Validação de Sintaxe e Imports**: Executar checagem de sintaxe e testes de importação nos módulos JavaScript para assegurar que nenhum erro em tempo de execução impeça a inicialização da engine, o carregamento de assets ou o ciclo do game loop.
 
+## 5. Regra Estrita de Fechamento de Sintaxe (Parênteses, Chaves, Aspas e Pontuação)
+- **Fechamento e Balanceamento Obrigatórios**: É expressamente proibido deixar blocos de código com parênteses `()`, chaves `{}`, colchetes `[]`, aspas simples/duplas/crases (`''`, `""`, ```` ````) ou pontos e vírgulas sem o devido fechamento ou balanceamento.
+- **Validação Automática Mandatória**: Sempre após editar qualquer arquivo JavaScript, é obrigatório rodar a validação de sintaxe (`find src -name "*.js" -exec node --check {} +`) para certificar que nenhum `SyntaxError` impeça o carregamento da aplicação ou trave a tela de loading.
+

@@ -933,6 +933,8 @@ class RPGApplication {
         applyTiltShift(b);
         this.showToast(b === 0 ? 'Desfoque Tilt-Shift Desativado' : `Desfoque Tilt-Shift definido para ${b}px!`);
       });
+    });
+
     // Initialize camera settings from tileMap state
     this.updatePlayCameraZoomUI(this.tileMap.playCameraZoom || 1.0);
     applyTiltShift(this.tileMap.tiltShiftBlur !== undefined ? this.tileMap.tiltShiftBlur : 5);
