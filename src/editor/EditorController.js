@@ -1,6 +1,7 @@
 import { UndoRedoManager } from '../engine/UndoRedoManager.js';
 import { getNPCData } from '../engine/CharacterRegistry.js';
-import { MASTER_NPC_CONFIGS, DEFAULT_AVATAR_CONFIG } from '../engine/NPCManager.js';
+import { MASTER_NPC_CONFIGS } from '../engine/animation/NPCAppearanceGenerator.js';
+import { DEFAULT_AVATAR_CONFIG } from '../engine/animation/AvatarConfig.js';
 
 export class EditorController {
   constructor(tileMap, assetLoader, camera, onMapChange = () => {}, player = null) {
