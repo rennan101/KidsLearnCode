@@ -1932,25 +1932,6 @@ export class AssetLoader {
             }
       },
       {
-            "id": "character-geralt",
-            "name": "Spawn do Jogador (Geralt)",
-            "category": "Characters",
-            "layer": "characters",
-            "isCharacter": true,
-            "characterType": "player",
-            "scale": 1,
-            "gridW": 1,
-            "gridH": 1,
-            "src": "Geralt/Idle/rotations/south.png",
-            "collider": {
-                  "enabled": true,
-                  "x": 20,
-                  "y": 46,
-                  "w": 24,
-                  "h": 16
-            }
-      },
-      {
             "id": "char_wolf_hunter_m",
             "name": "Lobo Caçador (Ragnar)",
             "category": "Characters",
@@ -2280,25 +2261,6 @@ export class AssetLoader {
                   "y": 44,
                   "w": 28,
                   "h": 18
-            }
-      },
-      {
-            "id": "character-enemy-guard",
-            "name": "Guarda Sentinela",
-            "category": "Characters",
-            "layer": "characters",
-            "isCharacter": true,
-            "characterType": "enemy",
-            "scale": 1,
-            "gridW": 1,
-            "gridH": 1,
-            "src": "Geralt/Idle/rotations/north.png",
-            "collider": {
-                  "enabled": true,
-                  "x": 20,
-                  "y": 46,
-                  "w": 24,
-                  "h": 16
             }
       }
     ];
@@ -2908,14 +2870,6 @@ export class AssetLoader {
     for (let i = 1; i <= 15; i++) {
       const idx = String(i).padStart(3, '0');
       urlsToLoad.push(`assets/characters/char_wolf_hunter_m/Walk_Up/sprite_${idx}.png`);
-    }
-
-    // Legacy Geralt Fallback Sprites
-    if (this.directions) {
-      for (const dir of this.directions) {
-        urlsToLoad.push(`Geralt/Idle/rotations/${dir}.png`);
-        urlsToLoad.push(`Geralt/running/rotations/${dir}.png`);
-      }
     }
 
     // Tiles

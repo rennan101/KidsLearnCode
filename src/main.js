@@ -802,7 +802,7 @@ class RPGApplication {
       this.assetLoader.setCharacterScale(tileId, scale);
       updateScaleUI(scale);
 
-      if (tileId === 'character-geralt' && this.player) {
+      if ((tileId === this.player?.heroId || tileId === 'character-spawn') && this.player) {
         this.player.setScale(scale);
       }
       this.showToast(`Escala do personagem alterada para ${scale}x!`);
@@ -847,7 +847,7 @@ class RPGApplication {
       } else {
         // Fallback default prototype
         this.assetLoader.setTileCollider(tileId, colData);
-        if (tileId === 'character-geralt') {
+        if (tileId === this.player?.heroId || tileId === 'character-spawn') {
           this.player.syncCollider(this.assetLoader);
         }
         this.populateAssetDrawer(); // refresh badges

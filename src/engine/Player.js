@@ -123,7 +123,7 @@ export class Player {
 
   syncCollider(assetLoader) {
     if (!assetLoader) return;
-    const meta = assetLoader.getTileMetadata(this.heroId) || assetLoader.getTileMetadata('character-geralt');
+    const meta = assetLoader.getTileMetadata(this.heroId);
     if (meta) {
       if (meta.scale !== undefined) this.scale = meta.scale;
       if (meta.collider) {
@@ -604,8 +604,7 @@ export class Player {
     }
 
     if (!sprite) {
-      sprite = assetLoader.getImage(`assets/characters/${this.heroId}/portrait.jpg`)
-        || (this.isMoving ? assetLoader.getImage(`Geralt/running/rotations/${dir}.png`) : assetLoader.getImage(`Geralt/Idle/rotations/${dir}.png`));
+      sprite = assetLoader.getImage(`assets/characters/${this.heroId}/portrait.jpg`);
     }
 
     if (sprite) {
@@ -717,8 +716,7 @@ export class Player {
     }
 
     if (!sprite) {
-      sprite = assetLoader.getImage(`assets/characters/${this.heroId}/portrait.jpg`)
-        || assetLoader.getImage(`Geralt/Idle/rotations/${dir}.png`);
+      sprite = assetLoader.getImage(`assets/characters/${this.heroId}/portrait.jpg`);
     }
 
     const drawX = Math.round(centerX - renderW / 2);

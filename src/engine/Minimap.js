@@ -65,9 +65,7 @@ export class Minimap {
       'wheat': '#facc15',
       'invisible-collider': 'rgba(239, 68, 68, 0.4)',
       'invisible-collider-2x2': 'rgba(239, 68, 68, 0.4)',
-      'character-geralt': '#f59e0b',
-      'character-npc-villager': '#10b981',
-      'character-enemy-guard': '#dc2626'
+      'character-npc-villager': '#10b981'
     };
 
     this.initDOM();

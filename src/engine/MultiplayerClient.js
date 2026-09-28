@@ -383,8 +383,7 @@ export class MultiplayerClient {
       if (!sprite) {
         const frameUrl = `assets/characters/${heroId}/frames/wolf_hunter_r${row}_c${col}.png`;
         sprite = assetLoader?.getImage(frameUrl) 
-          || assetLoader?.getImage(`assets/characters/${heroId}/portrait.jpg`)
-          || (player.isMoving ? assetLoader?.getImage(`Geralt/running/rotations/${player.direction}.png`) : assetLoader?.getImage(`Geralt/Idle/rotations/${player.direction}.png`));
+          || assetLoader?.getImage(`assets/characters/${heroId}/portrait.jpg`);
       }
 
       if (sprite) {

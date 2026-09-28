@@ -4,6 +4,7 @@ Thumbs.db
 
 # Private Game Design Documents, GDDs, Second Brain Vault & Prompt Catalogs
 Brain/
+brain/
 HIGH_CONCEPT.md
 CATALOG_CHARACTERS_AND_NPCS.md
 CATALOG_DRAGONS_PROMPTS.md
@@ -12,6 +13,13 @@ planejamento_ilha_lua.md
 *.draft.md
 docs/private/
 scratch/
+GEMINI.md
+.agents/
+Skills/
+SUPABASE_EMAIL_TEMPLATES_PTBR.md
+
+# Legacy Assets removed
+Geralt/
 
 # Temporary and log files
 *.log
@@ -28,5 +36,3 @@ src/config/supabase.local.js
 
 # Exported Map Dumps (Raw Exports)
 world-map-*.json
-
-

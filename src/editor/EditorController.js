@@ -351,9 +351,10 @@ export class EditorController {
     const tileSize = this.tileMap.tileSize;
     const handleRadius = 14 / this.camera.zoom;
 
-    // 1. Check if clicking on Player (Geralt) collider
+    // 1. Check if clicking on Player collider
     if (this.player) {
-      const meta = this.assetLoader.getTileMetadata('character-geralt');
+      const heroId = this.player.heroId || 'char_wolf_hunter_m';
+      const meta = this.assetLoader.getTileMetadata(heroId);
       const col = meta?.collider || { enabled: true, x: 20, y: 46, w: 24, h: 16 };
       const boxX = this.player.x + (col.x || 0);
       const boxY = this.player.y + (col.y || 0);
@@ -369,7 +370,7 @@ export class EditorController {
         this.isDraggingCollider = true;
         this.colliderDragHandle = hitSE ? 'se' : (hitNW ? 'nw' : 'move');
         this.colliderDragTile = {
-          tileId: 'character-geralt',
+          tileId: heroId,
           isPlayer: true,
           rootX: this.player.x,
           rootY: this.player.y,
@@ -377,8 +378,8 @@ export class EditorController {
         };
         this.colliderDragStartWorld = { x: worldX, y: worldY };
 
-        this.setSelectedTile('character-geralt');
-        window.dispatchEvent(new CustomEvent('tile-collider-selected', { detail: { tileId: 'character-geralt' } }));
+        this.setSelectedTile(heroId);
+        window.dispatchEvent(new CustomEvent('tile-collider-selected', { detail: { tileId: heroId } }));
         return true;
       }
     }
@@ -446,10 +447,11 @@ export class EditorController {
       const spY = this.tileMap.spawnPoint ? Math.floor(this.tileMap.spawnPoint.y / tileSize) : (this.player ? Math.floor(this.player.y / tileSize) : null);
 
       if (spX !== null && spY !== null && tileX === spX && tileY === spY) {
+        const heroId = this.player?.heroId || 'char_wolf_hunter_m';
         this.isDraggingTile = true;
         this.dragTileData = {
           isPlayer: true,
-          tileId: 'character-geralt',
+          tileId: heroId,
           sourceTileX: spX,
           sourceTileY: spY,
           currentTileX: spX,
@@ -581,7 +583,8 @@ export class EditorController {
       };
 
       if (this.colliderDragTile.isPlayer) {
-        this.assetLoader.setTileCollider('character-geralt', updatedCol);
+        const heroId = this.player?.heroId || 'char_wolf_hunter_m';
+        this.assetLoader.setTileCollider(heroId, updatedCol);
         if (this.player) {
           this.player.syncCollider(this.assetLoader);
         }
@@ -676,7 +679,7 @@ export class EditorController {
       return;
     }
 
-    if (this.activeTool === 'spawn' || (this.activeTool === 'brush' && this.selectedTileId === 'character-geralt')) {
+    if (this.activeTool === 'spawn' || (this.activeTool === 'brush' && (this.selectedTileId === 'character-spawn' || this.selectedTileId === this.player?.heroId))) {
       const spawnX = tileX * this.tileMap.tileSize;
       const spawnY = tileY * this.tileMap.tileSize;
       this.tileMap.setSpawn(spawnX, spawnY);
@@ -703,7 +706,6 @@ export class EditorController {
         this.onMapChange();
       }
     } else if (this.activeTool === 'fill') {
-      if (this.selectedTileId === 'character-geralt') return;
       const meta = this.assetLoader.getTileMetadata(this.selectedTileId);
       const isFluidGround = meta?.layer === 'ground' || meta?.id === 'water-wind-waker' || meta?.id === 'water-animated' || meta?.id === 'magma-animated' || meta?.isMagma || meta?.category === 'Water' || meta?.category === 'Terrenos';
       const targetLayer = (meta?.isInvisibleAsset || meta?.layer === 'colliders') ? 'colliders' : (isFluidGround ? 'ground' : (meta?.layer || this.activeLayer || 'decor'));
@@ -717,8 +719,9 @@ export class EditorController {
         const px = Math.floor(this.player.x / this.tileMap.tileSize);
         const py = Math.floor(this.player.y / this.tileMap.tileSize);
         if (tileX === px && tileY === py) {
-          this.setSelectedTile('character-geralt');
-          window.dispatchEvent(new CustomEvent('tile-collider-selected', { detail: { tileId: 'character-geralt' } }));
+          const heroId = this.player.heroId || 'char_wolf_hunter_m';
+          this.setSelectedTile(heroId);
+          window.dispatchEvent(new CustomEvent('tile-collider-selected', { detail: { tileId: heroId } }));
           return;
         }
       }
@@ -1066,16 +1069,19 @@ export class EditorController {
           const avatarScale = 0.33;
           const targetX = dx + 32;
           const targetY = dy + 60 - (265 * avatarScale);
+          const avatarConfig = this.player?.customAvatarConfig || (this.player?.heroId && MASTER_NPC_CONFIGS[this.player.heroId]) || DEFAULT_AVATAR_CONFIG;
           this.tileMap.avatarRenderer.render(
             ctx,
             targetX,
             targetY,
-            'south',
+            this.player?.direction || 'south',
             'idle',
             performance.now() / 1000,
-            DEFAULT_AVATAR_CONFIG,
+            avatarConfig,
             avatarScale
           );
+        } else if (this.player) {
+          this.player.render(ctx, this.assetLoader, false);
         }
       } else {
         const meta = dtData.meta || this.assetLoader.getTileMetadata(dtData.tileId);
@@ -1264,9 +1270,10 @@ export class EditorController {
 
     ctx.save();
 
-    // 1. Render Player (Geralt) Collider Handles if Geralt is selected or collider tool active
+    // 1. Render Player Collider Handles if Player/Hero is selected or collider tool active
     if (this.player) {
-      const meta = this.assetLoader.getTileMetadata('character-geralt');
+      const heroId = this.player.heroId || 'char_wolf_hunter_m';
+      const meta = this.assetLoader.getTileMetadata(heroId);
       const col = meta?.collider || { enabled: true, x: 20, y: 46, w: 24, h: 16 };
       const s = this.player.scale || 1.0;
       const boxX = this.player.x + ((col.x || 0) * s);
@@ -1274,7 +1281,7 @@ export class EditorController {
       const boxW = (col.w || 24) * s;
       const boxH = (col.h || 16) * s;
 
-      const isSelected = this.selectedTileId === 'character-geralt';
+      const isSelected = this.selectedTileId === heroId;
 
       ctx.fillStyle = isSelected ? 'rgba(16, 185, 129, 0.4)' : 'rgba(16, 185, 129, 0.2)';
       ctx.strokeStyle = isSelected ? '#10b981' : 'rgba(16, 185, 129, 0.8)';
