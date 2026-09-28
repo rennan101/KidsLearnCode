@@ -1107,19 +1107,31 @@ export class DragonManager {
     if (tileMap) {
       for (const tile of affectedTiles) {
         const action = skill.terrainAction || '';
-        if (action.includes('vegetation') || action.includes('fire_all') || action.includes('nature_all') || action.includes('rock_vegetation')) {
-          tileMap.destroyVegetationAt(tile.x, tile.y, 40);
+        const elem = (skill.element || '').toLowerCase();
+        const cat = (dragon.category || '').toLowerCase();
+
+        // Stone / Earth Strikes (rock cracking into smaller rocks, then dropping collectible stones)
+        if (action.includes('rock') || action.includes('earth') || elem === 'earth' || elem === 'rock' || cat === 'land' || action.includes('stellar_all')) {
+          tileMap.interactStoneDragonAt(tile.x, tile.y, 40, this.assetLoader);
         }
-        if (action.includes('rock') || action.includes('earth') || action.includes('fire_all') || action.includes('stellar_all')) {
-          tileMap.destroyRockAt(tile.x, tile.y, 40);
+
+        // Wind / Air / Nature Strikes (trees to stumps/sprouts, flowers to small flowers, colorful bushes to green bushes)
+        if (action.includes('wind') || action.includes('air') || action.includes('vegetation') || action.includes('nature') || elem === 'wind' || elem === 'air' || elem === 'nature' || cat === 'fly') {
+          tileMap.interactWindDragonAt(tile.x, tile.y, 40, this.assetLoader);
         }
-        if (action.includes('evaporate') || action.includes('fire') || action.includes('solar')) {
+
+        // Thermal evaporation
+        if (action.includes('evaporate') || action.includes('fire') || action.includes('solar') || elem === 'fire') {
           tileMap.evaporateWaterAt(tile.x, tile.y, 40);
         }
-        if (action.includes('freeze') || action.includes('ice') || action.includes('frost')) {
+
+        // Glacial freezing
+        if (action.includes('freeze') || action.includes('ice') || action.includes('frost') || elem === 'ice') {
           tileMap.freezeWaterAt(tile.x, tile.y, 40, 10 + Math.min(15, level * 0.2));
         }
-        if (action.includes('puddle') || action.includes('create_puddle') || action.includes('water')) {
+
+        // Water puddles
+        if (action.includes('puddle') || action.includes('create_puddle') || action.includes('water') || elem === 'water') {
           tileMap.createPuddleAt(tile.x, tile.y, 40, 14);
         }
       }

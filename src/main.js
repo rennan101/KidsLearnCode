@@ -1212,6 +1212,20 @@ class RPGApplication {
 
       if (this.mode === 'play') {
         if (e.key === 'f' || e.key === 'F') {
+          const activeTag = document.activeElement?.tagName?.toLowerCase();
+          if (activeTag === 'input' || activeTag === 'textarea' || document.activeElement?.isContentEditable) {
+            return;
+          }
+
+          // 1. Check if there is any ground drop item nearby to pickup
+          const pickupRes = this.tileMap?.pickupNearbyGroundItem(this.player.x, this.player.y, this.inventorySystem, this.soundSystem || null);
+          if (pickupRes && pickupRes.success) {
+            this.showToast(`+${pickupRes.item.count} ${pickupRes.item.name} coletada! [Bolsa B]`);
+            this.triggerAutoSave();
+            return;
+          }
+
+          // 2. Otherwise center camera on Hero
           this.camera.follow(this.player.x + 32, this.player.y + 32, 1.0);
           this.showToast('Câmera centralizada no Herói [F]');
           return;
@@ -3073,6 +3087,15 @@ class RPGApplication {
           this.dragonManager.renderOverlay(this.ctx, this.assetLoader, this.player);
         } catch (dragonErr) {
           console.error('Error rendering dragon overlay:', dragonErr);
+        }
+      }
+
+      // Render Ground Drop Items & Interactive Collectibles System ([F] to Pickup)
+      if (this.tileMap && this.mode === 'play') {
+        try {
+          this.tileMap.renderGroundItems(this.ctx, this.assetLoader, this.camera, this.player.x, this.player.y);
+        } catch (itemErr) {
+          console.error('Error rendering ground items:', itemErr);
         }
       }
 

@@ -68,6 +68,10 @@ export class TileMap {
     this.temporaryIceTiles = new Map(); // key -> { tx, ty, originalTileId, expiresAt }
     this.temporaryPuddleTiles = new Map(); // key -> { tx, ty, expiresAt }
 
+    // Ground Drop Items & Interactive Collectibles System ([F] to Pickup)
+    this.groundItems = new Map(); // id -> { id, itemId, name, count, x, y, floatTimer, spawnTime }
+    this.groundParticles = [];
+
     // Player default spawn position (snapped to 64px grid)
     this.spawnPoint = { x: 320, y: 320 };
 
@@ -565,74 +569,450 @@ export class TileMap {
         this.temporaryPuddleTiles.delete(key);
       }
     }
+
+    // Update Ground Items floating physics & sparkle particles
+    const dt = Math.min(deltaTime / 1000, 0.1);
+    this.updateGroundItems(dt);
   }
 
-  // 1. Destroy Trees, Foliage, and Plants (Fire, Nature, Wind, Earth)
+  // =========================================================================
+  // GROUND ITEMS & COLLECTIBLES SYSTEM ([F] to Pickup)
+  // =========================================================================
+
+  spawnGroundItem(itemId = 'stone', name = 'Pedra', count = 1, worldX = 0, worldY = 0) {
+    const id = `drop_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+    this.groundItems.set(id, {
+      id,
+      itemId,
+      name,
+      count,
+      x: worldX,
+      y: worldY,
+      floatTimer: Math.random() * Math.PI * 2,
+      spawnTime: Date.now()
+    });
+
+    // Particle burst upon spawning item
+    for (let i = 0; i < 8; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      const spd = 25 + Math.random() * 35;
+      this.groundParticles.push({
+        x: worldX,
+        y: worldY,
+        vx: Math.cos(ang) * spd,
+        vy: Math.sin(ang) * spd - 20,
+        color: itemId === 'stone' ? '#a8a29e' : '#19c8b9',
+        size: 3 + Math.random() * 3,
+        life: 0,
+        maxLife: 0.5 + Math.random() * 0.3
+      });
+    }
+    return id;
+  }
+
+  pickupNearbyGroundItem(playerX, playerY, inventorySystem = null, soundFX = null, radius = 64) {
+    if (!this.groundItems || this.groundItems.size === 0) return { success: false };
+
+    const px = playerX + 32;
+    const py = playerY + 32;
+    let closestItem = null;
+    let closestDist = radius;
+
+    for (const item of this.groundItems.values()) {
+      const dist = Math.hypot(item.x - px, item.y - py);
+      if (dist <= closestDist) {
+        closestDist = dist;
+        closestItem = item;
+      }
+    }
+
+    if (closestItem) {
+      this.groundItems.delete(closestItem.id);
+
+      if (inventorySystem) {
+        inventorySystem.addItem(closestItem.itemId, closestItem.count, {
+          name: closestItem.name,
+          category: 'resource',
+          desc: 'Recurso mineral obtido de rochas da ilha.'
+        });
+      }
+
+      if (soundFX) {
+        if (typeof soundFX.playPop === 'function') soundFX.playPop(1.4);
+        else if (typeof soundFX.playPickUp === 'function') soundFX.playPickUp();
+      }
+
+      // Pickup poof sparkle particles
+      for (let i = 0; i < 10; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = 30 + Math.random() * 40;
+        this.groundParticles.push({
+          x: closestItem.x,
+          y: closestItem.y,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd - 25,
+          color: '#fbbf24',
+          size: 2.5 + Math.random() * 2.5,
+          life: 0,
+          maxLife: 0.45 + Math.random() * 0.25
+        });
+      }
+
+      return { success: true, item: closestItem };
+    }
+
+    return { success: false };
+  }
+
+  updateGroundItems(dt) {
+    if (this.groundItems && this.groundItems.size > 0) {
+      for (const item of this.groundItems.values()) {
+        item.floatTimer += dt;
+      }
+    }
+
+    if (this.groundParticles && this.groundParticles.length > 0) {
+      for (let i = this.groundParticles.length - 1; i >= 0; i--) {
+        const p = this.groundParticles[i];
+        p.life += dt;
+        if (p.life >= p.maxLife) {
+          this.groundParticles.splice(i, 1);
+        } else {
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.vy += 60 * dt; // Gravity
+        }
+      }
+    }
+  }
+
+  renderGroundItems(ctx, assetLoader, camera, playerX, playerY) {
+    if (!this.groundItems || this.groundItems.size === 0) {
+      // Render particles even if items are picked up
+      if (this.groundParticles && this.groundParticles.length > 0) {
+        this.renderGroundParticles(ctx);
+      }
+      return;
+    }
+
+    const px = playerX + 32;
+    const py = playerY + 32;
+
+    for (const item of this.groundItems.values()) {
+      const bobY = Math.sin(item.floatTimer * 3.8) * 3.5;
+      const drawX = item.x;
+      const drawY = item.y + bobY;
+
+      ctx.save();
+
+      // 1. Soft ground shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.24)';
+      ctx.beginPath();
+      ctx.ellipse(item.x, item.y + 12, 14, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 2. Render 3D Stylized Item on Ground
+      if (item.itemId === 'stone') {
+        // 3D Cel-Shade Stone Pebble
+        ctx.save();
+        ctx.translate(drawX, drawY);
+
+        // Stone Base Body
+        ctx.fillStyle = '#78716c';
+        ctx.strokeStyle = '#44403c';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-10, 4);
+        ctx.lineTo(-6, -8);
+        ctx.lineTo(6, -10);
+        ctx.lineTo(12, -2);
+        ctx.lineTo(8, 8);
+        ctx.lineTo(-4, 9);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Stone Facet Highlight
+        ctx.fillStyle = '#a8a29e';
+        ctx.beginPath();
+        ctx.moveTo(-6, -8);
+        ctx.lineTo(6, -10);
+        ctx.lineTo(2, -1);
+        ctx.lineTo(-4, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Shiny Top Edge
+        ctx.strokeStyle = '#e7e5e4';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(-4, -7);
+        ctx.lineTo(5, -9);
+        ctx.stroke();
+
+        ctx.restore();
+      } else {
+        // Generic round token
+        ctx.fillStyle = '#19c8b9';
+        ctx.strokeStyle = '#0f8e83';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(drawX, drawY, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      // 3. Proximity Interactive Pill Indicator (Animal Island UI Standard)
+      const distToPlayer = Math.hypot(item.x - px, item.y - py);
+      if (distToPlayer <= 64) {
+        const pillY = drawY - 26;
+        const text = `Pegar ${item.name}`;
+
+        ctx.font = 'bold 11px "Nunito", sans-serif';
+        const textMetrics = ctx.measureText(text);
+        const pillW = textMetrics.width + 36;
+        const pillH = 22;
+        const pillX = drawX - pillW / 2;
+
+        // 3D Depth Shadow
+        ctx.fillStyle = '#0f8e83';
+        ctx.beginPath();
+        ctx.roundRect(pillX, pillY + 2.5, pillW, pillH, 50);
+        ctx.fill();
+
+        // Main Parchment Pill
+        ctx.fillStyle = '#fdfbf7';
+        ctx.strokeStyle = '#19c8b9';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.roundRect(pillX, pillY, pillW, pillH, 50);
+        ctx.fill();
+        ctx.stroke();
+
+        // Key [F] Badge
+        ctx.fillStyle = '#19c8b9';
+        ctx.beginPath();
+        ctx.roundRect(pillX + 3, pillY + 3, 16, 16, 50);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px "Nunito", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('F', pillX + 11, pillY + 11);
+
+        // Prompt Label
+        ctx.fillStyle = '#7a583e';
+        ctx.font = 'bold 11px "Nunito", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, pillX + 23, pillY + 11);
+      }
+
+      ctx.restore();
+    }
+
+    if (this.groundParticles && this.groundParticles.length > 0) {
+      this.renderGroundParticles(ctx);
+    }
+  }
+
+  renderGroundParticles(ctx) {
+    ctx.save();
+    for (const p of this.groundParticles) {
+      const alpha = 1.0 - (p.life / p.maxLife);
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+      ctx.fillStyle = p.color || '#fbbf24';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // =========================================================================
+  // ELEMENTAL DRAGON TERRAIN INTERACTIONS (ECOLOGICAL & REVERSIBLE)
+  // =========================================================================
+
+  // 1. Stone / Earth Dragon Strikes (Break into small rocks -> drop stones with [F] Pickup)
+  interactStoneDragonAt(worldX, worldY, radius = 48, assetLoader = null) {
+    const affected = [];
+    const minTx = Math.floor((worldX - radius) / this.tileSize);
+    const maxTx = Math.floor((worldX + radius) / this.tileSize);
+    const minTy = Math.floor((worldY - radius) / this.tileSize);
+    const maxTy = Math.floor((worldY + radius) / this.tileSize);
+
+    const layers = ['solid', 'decor'];
+    for (let ty = minTy; ty <= maxTy; ty++) {
+      for (let tx = minTx; tx <= maxTx; tx++) {
+        const cx = tx * this.tileSize + 32;
+        const cy = ty * this.tileSize + 32;
+        if (Math.hypot(cx - worldX, cy - worldY) <= radius) {
+          for (const layerName of layers) {
+            const cell = this.getTile(layerName, tx, ty);
+            if (cell && cell.tileId) {
+              const id = cell.tileId.toLowerCase();
+
+              // Stage 1: Large Rock / Boulder -> Break into Smaller Rock ('rock-2')
+              if (id === 'rock-1' || id.includes('boulder') || id.includes('rock_large') || id.includes('rock-large')) {
+                this.setTile(layerName, tx, ty, 'rock-2');
+                affected.push({ x: cx, y: cy, from: cell.tileId, to: 'rock-2', stage: 1 });
+
+                // Dust and pebble particles
+                for (let k = 0; k < 6; k++) {
+                  this.groundParticles.push({
+                    x: cx,
+                    y: cy,
+                    vx: (Math.random() - 0.5) * 40,
+                    vy: -15 - Math.random() * 25,
+                    color: '#78716c',
+                    size: 2.5 + Math.random() * 2,
+                    life: 0,
+                    maxLife: 0.4
+                  });
+                }
+                break;
+              }
+              // Stage 2: Small Rock ('rock-2' or small stone) -> Break tile & Spawn Collectible Drop Item
+              else if (id === 'rock-2' || id.includes('rock') || id.includes('stone') || id.includes('ore') || id.includes('mineral')) {
+                this.deleteTile(tx, ty, layerName, assetLoader);
+                this.spawnGroundItem('stone', 'Pedra', 1, cx, cy);
+                affected.push({ x: cx, y: cy, from: cell.tileId, spawned: 'stone', stage: 2 });
+
+                // Fracturing rock particles
+                for (let k = 0; k < 10; k++) {
+                  this.groundParticles.push({
+                    x: cx,
+                    y: cy,
+                    vx: (Math.random() - 0.5) * 60,
+                    vy: -20 - Math.random() * 30,
+                    color: '#a8a29e',
+                    size: 3 + Math.random() * 2.5,
+                    life: 0,
+                    maxLife: 0.5
+                  });
+                }
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+    return affected;
+  }
+
+  // 2. Wind Dragon Strikes (Trees -> Stumps -> Sprouts, Flowers -> Small Flowers, Bushes -> Plain Bushes)
+  interactWindDragonAt(worldX, worldY, radius = 48, assetLoader = null) {
+    const affected = [];
+    const minTx = Math.floor((worldX - radius) / this.tileSize);
+    const maxTx = Math.floor((worldX + radius) / this.tileSize);
+    const minTy = Math.floor((worldY - radius) / this.tileSize);
+    const maxTy = Math.floor((worldY + radius) / this.tileSize);
+
+    const layers = ['solid', 'decor', 'overhead'];
+    for (let ty = minTy; ty <= maxTy; ty++) {
+      for (let tx = minTx; tx <= maxTx; tx++) {
+        const cx = tx * this.tileSize + 32;
+        const cy = ty * this.tileSize + 32;
+        if (Math.hypot(cx - worldX, cy - worldY) <= radius) {
+          for (const layerName of layers) {
+            const cell = this.getTile(layerName, tx, ty);
+            if (cell && cell.tileId) {
+              const id = cell.tileId.toLowerCase();
+
+              // 1. Trees ('tree-1', 'tree-2', pines) -> Shaken by wind into Stumps ('stump')
+              if (id.includes('tree') || id.includes('pine') || id.includes('palm')) {
+                this.setTile(layerName, tx, ty, 'stump');
+                affected.push({ x: cx, y: cy, from: cell.tileId, to: 'stump' });
+
+                // Swirling leaf particles
+                for (let k = 0; k < 8; k++) {
+                  this.groundParticles.push({
+                    x: cx,
+                    y: cy - 20,
+                    vx: (Math.random() - 0.5) * 50,
+                    vy: -20 - Math.random() * 20,
+                    color: '#15803d',
+                    size: 3 + Math.random() * 2,
+                    life: 0,
+                    maxLife: 0.6
+                  });
+                }
+                break;
+              }
+              // 2. Stumps ('stump') -> Pruned/germinated by wind into Sprouts ('sprout')
+              else if (id.includes('stump')) {
+                this.setTile(layerName, tx, ty, 'sprout');
+                affected.push({ x: cx, y: cy, from: cell.tileId, to: 'sprout' });
+
+                for (let k = 0; k < 6; k++) {
+                  this.groundParticles.push({
+                    x: cx,
+                    y: cy,
+                    vx: (Math.random() - 0.5) * 35,
+                    vy: -15 - Math.random() * 15,
+                    color: '#84cc16',
+                    size: 2.5 + Math.random() * 2,
+                    life: 0,
+                    maxLife: 0.5
+                  });
+                }
+                break;
+              }
+              // 3. Flowers ('flower-blue', 'flower-red', 'flower-white') -> Small Flowers ('flower-small-1')
+              else if (id.includes('flower') && !id.includes('small')) {
+                this.setTile(layerName, tx, ty, 'flower-small-1');
+                affected.push({ x: cx, y: cy, from: cell.tileId, to: 'flower-small-1' });
+
+                for (let k = 0; k < 6; k++) {
+                  this.groundParticles.push({
+                    x: cx,
+                    y: cy,
+                    vx: (Math.random() - 0.5) * 40,
+                    vy: -15 - Math.random() * 20,
+                    color: '#f472b6',
+                    size: 2.5 + Math.random() * 2,
+                    life: 0,
+                    maxLife: 0.5
+                  });
+                }
+                break;
+              }
+              // 4. Colorful Bushes ('bush-blue', 'bush-red', 'bush-white') -> Standard Green Bush ('bush')
+              else if (id.startsWith('bush-') || (id.includes('bush') && id !== 'bush')) {
+                this.setTile(layerName, tx, ty, 'bush');
+                affected.push({ x: cx, y: cy, from: cell.tileId, to: 'bush' });
+
+                for (let k = 0; k < 6; k++) {
+                  this.groundParticles.push({
+                    x: cx,
+                    y: cy,
+                    vx: (Math.random() - 0.5) * 40,
+                    vy: -15 - Math.random() * 20,
+                    color: '#10b981',
+                    size: 2.5 + Math.random() * 2,
+                    life: 0,
+                    maxLife: 0.5
+                  });
+                }
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+    return affected;
+  }
+
+  // Backwards-compatible terrain aliases that redirect safely to ecological interactions
   destroyVegetationAt(worldX, worldY, radius = 48, assetLoader = null) {
-    const destroyed = [];
-    const minTx = Math.floor((worldX - radius) / this.tileSize);
-    const maxTx = Math.floor((worldX + radius) / this.tileSize);
-    const minTy = Math.floor((worldY - radius) / this.tileSize);
-    const maxTy = Math.floor((worldY + radius) / this.tileSize);
-
-    const layers = ['solid', 'decor'];
-    for (let ty = minTy; ty <= maxTy; ty++) {
-      for (let tx = minTx; tx <= maxTx; tx++) {
-        const cx = tx * this.tileSize + 32;
-        const cy = ty * this.tileSize + 32;
-        if (Math.hypot(cx - worldX, cy - worldY) <= radius) {
-          for (const layerName of layers) {
-            const cell = this.getTile(layerName, tx, ty);
-            if (cell && cell.tileId) {
-              const id = cell.tileId.toLowerCase();
-              if (
-                id.includes('tree') || id.includes('pine') || id.includes('palm') ||
-                id.includes('bush') || id.includes('plant') || id.includes('flower') ||
-                id.includes('grass') || id.includes('crop') || id.includes('mushroom') ||
-                id.includes('stump') || id.includes('wood')
-              ) {
-                this.deleteTile(tx, ty, layerName, assetLoader);
-                destroyed.push({ x: cx, y: cy, tileId: cell.tileId });
-              }
-            }
-          }
-        }
-      }
-    }
-    return destroyed;
+    return this.interactWindDragonAt(worldX, worldY, radius, assetLoader);
   }
 
-  // 2. Destroy Rocks, Boulders, and Stones (Earth, Magma, Strength)
   destroyRockAt(worldX, worldY, radius = 48, assetLoader = null) {
-    const destroyed = [];
-    const minTx = Math.floor((worldX - radius) / this.tileSize);
-    const maxTx = Math.floor((worldX + radius) / this.tileSize);
-    const minTy = Math.floor((worldY - radius) / this.tileSize);
-    const maxTy = Math.floor((worldY + radius) / this.tileSize);
-
-    const layers = ['solid', 'decor'];
-    for (let ty = minTy; ty <= maxTy; ty++) {
-      for (let tx = minTx; tx <= maxTx; tx++) {
-        const cx = tx * this.tileSize + 32;
-        const cy = ty * this.tileSize + 32;
-        if (Math.hypot(cx - worldX, cy - worldY) <= radius) {
-          for (const layerName of layers) {
-            const cell = this.getTile(layerName, tx, ty);
-            if (cell && cell.tileId) {
-              const id = cell.tileId.toLowerCase();
-              if (
-                id.includes('rock') || id.includes('stone') || id.includes('boulder') ||
-                id.includes('ore') || id.includes('mineral') || id.includes('crystal')
-              ) {
-                this.deleteTile(tx, ty, layerName, assetLoader);
-                destroyed.push({ x: cx, y: cy, tileId: cell.tileId });
-              }
-            }
-          }
-        }
-      }
-    }
-    return destroyed;
+    return this.interactStoneDragonAt(worldX, worldY, radius, assetLoader);
   }
 
   // 3. Evaporate Water & Puddles into Dry Soil (Fire, Solar Heat)
@@ -1469,6 +1849,22 @@ export class TileMap {
       return obj;
     };
 
+    const serializeGroundItems = () => {
+      const items = [];
+      if (!this.groundItems) return items;
+      for (const item of this.groundItems.values()) {
+        items.push({
+          id: item.id,
+          itemId: item.itemId,
+          name: item.name,
+          count: item.count,
+          x: item.x,
+          y: item.y
+        });
+      }
+      return items;
+    };
+
     return {
       version: '3.4',
       tileSize: this.tileSize,
@@ -1478,6 +1874,7 @@ export class TileMap {
       layerOrder: this.layerOrder,
       waterConfig: this.waterWaveRenderer ? this.waterWaveRenderer.getConfig() : null,
       magmaConfig: this.magmaRenderer ? this.magmaRenderer.getConfig() : null,
+      groundItems: serializeGroundItems(),
       layers: {
         ground: serializeLayer(this.layers.ground),
         decor: serializeLayer(this.layers.decor),
@@ -1512,6 +1909,24 @@ export class TileMap {
     }
     if (data.magmaConfig && this.magmaRenderer) {
       this.magmaRenderer.setConfig(data.magmaConfig);
+    }
+
+    if (data.groundItems && Array.isArray(data.groundItems)) {
+      this.groundItems = new Map();
+      for (const item of data.groundItems) {
+        if (item && item.id) {
+          this.groundItems.set(item.id, {
+            id: item.id,
+            itemId: item.itemId || 'stone',
+            name: item.name || 'Pedra',
+            count: item.count || 1,
+            x: item.x || 0,
+            y: item.y || 0,
+            floatTimer: Math.random() * Math.PI * 2,
+            spawnTime: Date.now()
+          });
+        }
+      }
     }
 
     const deserializeLayer = (source) => {
