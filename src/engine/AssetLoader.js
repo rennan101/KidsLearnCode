@@ -28,6 +28,11 @@ export function generateDummySVG() {
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
 
+export function generateMagmaSVG() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><rect width="64" height="64" fill="#7f1d1d"/><circle cx="20" cy="22" r="12" fill="#ef4444" opacity="0.8"/><circle cx="46" cy="38" r="14" fill="#f97316" opacity="0.75"/><circle cx="32" cy="32" r="8" fill="#fbbf24" opacity="0.9"/><circle cx="16" cy="50" r="9" fill="#dc2626" opacity="0.7"/><circle cx="50" cy="14" r="8" fill="#f97316" opacity="0.7"/><path d="M 10 30 Q 32 15 54 30 Q 32 45 10 30 Z" fill="#fbbf24" opacity="0.5"/></svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
 export function generateWindWakerSVG() {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><rect width="64" height="64" fill="#0284c7"/><circle cx="20" cy="22" r="14" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="8 4"/><circle cx="46" cy="38" r="16" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="10 5"/><circle cx="16" cy="50" r="10" fill="none" stroke="#7dd3fc" stroke-width="2"/><circle cx="50" cy="14" r="9" fill="none" stroke="#7dd3fc" stroke-width="2"/><path d="M 0 32 Q 16 20, 32 32 T 64 32" stroke="#ffffff" stroke-width="1.5" fill="none" opacity="0.6"/></svg>`;
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
