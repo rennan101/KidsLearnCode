@@ -388,6 +388,22 @@ export class Player {
             }
           }
 
+          // Ignora tiles estáticos de personagens para que o player não colida com as posições âncora de NPCs/Heróis dinâmicos
+          const lowerId = (cell.tileId || '').toLowerCase();
+          if (
+            layerName === 'characters' ||
+            cell.isCharacter ||
+            meta?.isCharacter ||
+            lowerId.startsWith('char_') ||
+            lowerId.startsWith('npc_') ||
+            lowerId.startsWith('hero_') ||
+            lowerId.startsWith('char-') ||
+            lowerId.startsWith('npc-') ||
+            lowerId.startsWith('hero-')
+          ) {
+            continue;
+          }
+
           const isInvisibleCollider = (cell.tileId && cell.tileId.startsWith('invisible-collider')) || (cell.tileId && cell.tileId.includes('invisible'));
           if (cell.isRoot === false && !isInvisibleCollider) continue;
 

@@ -214,19 +214,19 @@ export class NPCManager {
           if (npc.stateTimer <= 0) {
             // Decide a próxima ação com base no ambiente
             const roll = Math.random();
-            if (roll < 0.60) {
+            if (roll < 0.75) {
               // Inicia passeio para um ponto próximo
               this.pickWanderDestination(npc, tileMap, playerCenters);
-            } else if (roll < 0.85) {
+            } else if (roll < 0.90) {
               // Olha para uma direção aleatória e contempla a ilha
               const dirs = ['south', 'north', 'east', 'west'];
               npc.direction = dirs[Math.floor(Math.random() * dirs.length)];
               npc.state = 'idle';
-              npc.stateTimer = 2.5 + Math.random() * 4.0;
+              npc.stateTimer = 1.2 + Math.random() * 2.0;
             } else {
               // Admira a natureza
               npc.state = 'admire';
-              npc.stateTimer = 2.0 + Math.random() * 3.0;
+              npc.stateTimer = 1.2 + Math.random() * 2.0;
             }
           }
           break;
@@ -242,7 +242,7 @@ export class NPCManager {
             npc.x = npc.targetX;
             npc.y = npc.targetY;
             npc.state = 'idle';
-            npc.stateTimer = 3.0 + Math.random() * 4.5;
+            npc.stateTimer = 1.2 + Math.random() * 2.4;
             break;
           }
 
@@ -357,7 +357,9 @@ export class NPCManager {
   }
 
   /**
-   * Checagem rigorosa de colisão contra terreno e camadas sólidas do TileMap.
+   * Checagem rigorosa de colisão contra terreno e camadas com colisores do TileMap.
+   * Leva em consideração todos os colisores do cenário (colliders, solid, decor, ground, overhead),
+   * ignorando apenas os tiles estáticos de personagens para permitir movimentação viva.
    */
   checkTerrainCollision(npc, px, py, tileMap, assetLoader = this.assetLoader) {
     if (!tileMap) return false;
@@ -376,9 +378,18 @@ export class NPCManager {
       return true; // Água / mar bloqueia passagem
     }
 
-    // 3. Verifica colisores AABB de camadas sólidas e colisores (ignora 'characters' para não colidir com o próprio tile de origem)
+    // 3. Verifica colisores AABB de todas as camadas do cenário com colisores
     if (typeof tileMap.checkCollision === 'function') {
-      const isSolidBlocked = tileMap.checkCollision(feet.x, feet.y, feet.w, feet.h, assetLoader, false, ['colliders', 'solid']);
+      const isSolidBlocked = tileMap.checkCollision(
+        feet.x,
+        feet.y,
+        feet.w,
+        feet.h,
+        assetLoader,
+        false,
+        ['colliders', 'solid', 'decor', 'ground', 'overhead'],
+        true // ignoreCharacters = true
+      );
       if (isSolidBlocked) return true;
     }
 

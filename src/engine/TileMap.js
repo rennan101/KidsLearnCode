@@ -1110,7 +1110,7 @@ export class TileMap {
    * Universal AABB Collision checker against tile map colliders, solid layers, and water.
    * Used by Player, NPCs, Dragons, and projectiles.
    */
-  checkCollision(boxX, boxY, boxW, boxH, assetLoader = null, ignoreWater = false, customLayers = null) {
+  checkCollision(boxX, boxY, boxW, boxH, assetLoader = null, ignoreWater = false, customLayers = null, ignoreCharacters = false) {
     const tileSize = this.tileSize || 64;
     const padding = 2;
     const startTileX = Math.floor(boxX / tileSize) - padding;
@@ -1136,6 +1136,25 @@ export class TileMap {
         for (let tx = startTileX; tx <= endTileX; tx++) {
           const cell = layer.get(this.getKey(tx, ty));
           if (!cell) continue;
+
+          // Se ignoreCharacters estiver ativo, ignora células que representam NPCs/Heróis dinâmicos
+          if (ignoreCharacters) {
+            const lowerId = (cell.tileId || '').toLowerCase();
+            const meta = assetLoader ? assetLoader.getTileMetadata(cell.tileId) : null;
+            if (
+              layerName === 'characters' ||
+              cell.isCharacter ||
+              meta?.isCharacter ||
+              lowerId.startsWith('char_') ||
+              lowerId.startsWith('npc_') ||
+              lowerId.startsWith('hero_') ||
+              lowerId.startsWith('char-') ||
+              lowerId.startsWith('npc-') ||
+              lowerId.startsWith('hero-')
+            ) {
+              continue;
+            }
+          }
 
           const isInvisibleCollider = (cell.tileId && cell.tileId.startsWith('invisible-collider')) || (cell.tileId && cell.tileId.includes('invisible'));
           if (cell.isRoot === false && !isInvisibleCollider) continue;
