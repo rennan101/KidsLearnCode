@@ -73,7 +73,12 @@ class RPGApplication {
       this.tileMap,
       this.assetLoader,
       this.camera,
-      () => this.triggerAutoSave(),
+      () => {
+        if (this.npcManager) {
+          this.npcManager.syncFromTileMap(this.tileMap);
+        }
+        this.triggerAutoSave();
+      },
       this.player
     );
 
@@ -208,6 +213,11 @@ class RPGApplication {
 
     // Load saved map & game state from IndexedDB (with multi-key migration/fallback)
     await this.loadGameFromStorage().catch(e => console.warn('loadGameFromStorage error:', e));
+
+    // Ativa e sincroniza imediatamente as inteligências autônomas dos NPCs e Heróis no mundo vivo
+    if (this.npcManager) {
+      this.npcManager.syncFromTileMap(this.tileMap);
+    }
 
     // Exibe a tela de login / criação de conta como primeira coisa se não autenticado
     const authModal = document.getElementById('auth-modal');
@@ -1999,6 +2009,9 @@ class RPGApplication {
   }
 
   triggerAutoSave() {
+    if (this.npcManager) {
+      this.npcManager.syncFromTileMap(this.tileMap);
+    }
     this.updateSaveIndicator('saving');
     clearTimeout(this.saveTimeout);
     this.saveTimeout = setTimeout(() => {
@@ -2721,6 +2734,9 @@ class RPGApplication {
             this.camera.zoom = this.tileMap.playCameraZoom || 1.0;
           }
           this.minimap.tileMap = this.tileMap;
+          if (this.npcManager) {
+            this.npcManager.syncFromTileMap(this.tileMap);
+          }
           this.saveGameToStorage(true);
           this.showToast('Mapa importado com sucesso!');
         } else {

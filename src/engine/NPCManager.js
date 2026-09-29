@@ -35,13 +35,13 @@ export class NPCEntity {
 
     // Estado da FSM: 'idle' | 'wander' | 'admire' | 'talking' | 'evade'
     this.state = 'idle';
-    this.direction = 'south'; // 'south' | 'north' | 'east' | 'west'
-    this.speed = 60; // Velocidade de caminhada suave (~1/3 da do jogador)
+    this.direction = ['south', 'north', 'east', 'west'][Math.floor(Math.random() * 4)];
+    this.speed = 55 + Math.random() * 15; // Velocidade de caminhada suave (~1/3 da do jogador)
     this.leashRadius = 320; // Raio máximo de afastamento da âncora (5 tiles)
     
-    // Temporizadores de Comportamento Orgânico (ACNH)
-    this.stateTimer = 2.0 + Math.random() * 3.5; // Tempo até mudar de ação
-    this.animTimer = Math.random() * 10.0; // Deslocamento para piscar de olhos e passos
+    // Temporizadores de Comportamento Orgânico (ACNH) - Inicia atividades no mundo imediatamente
+    this.stateTimer = 0.4 + Math.random() * 1.6; // Tempo até iniciar o primeiro passeio/ação
+    this.animTimer = Math.random() * 100.0; // Deslocamento para piscar de olhos e passos
     this.stepTimer = 0;
 
     // Colisor do pé para física (AABB)
@@ -86,7 +86,7 @@ export class NPCManager {
 
   /**
    * Sincroniza e descobre todos os NPCs e Heróis posicionados nas camadas do TileMap.
-   * Cria instâncias vivas de NPCEntity respeitando suas posições âncora originais e removendo água.
+   * Cria instâncias vivas de NPCEntity respeitando suas posições âncora originais e ativando sua IA no mundo vivo.
    */
   syncFromTileMap(tileMap = this.tileMap) {
     if (!tileMap || !tileMap.layers) return;
@@ -117,7 +117,9 @@ export class NPCManager {
         const isChar = (layerName === 'characters') || 
           lower.startsWith('npc_') || lower.startsWith('char_') || 
           lower.startsWith('npc-') || lower.startsWith('char-') || 
-          lower.startsWith('hero_') || lower.startsWith('hero-');
+          lower.startsWith('hero_') || lower.startsWith('hero-') ||
+          !!MASTER_NPC_CONFIGS[tileId] ||
+          (cell && cell.isCharacter);
 
         if (isChar) {
           const [tx, ty] = key.split(',').map(Number);
@@ -290,57 +292,68 @@ export class NPCManager {
    * Escolhe um destino viável de passeio dentro do raio de convivência (Leash Radius).
    */
   pickWanderDestination(npc, tileMap, playerCenters) {
-    const stepTiles = [1, 2, 3];
-    const stepCount = stepTiles[Math.floor(Math.random() * stepTiles.length)];
+    const stepCounts = [2, 1, 3];
     const tileSize = 64;
+    const distToAnchor = Math.hypot(npc.x - npc.anchorX, npc.y - npc.anchorY);
 
-    const cardinalOffsets = [
-      { dir: 'south', dx: 0, dy: stepCount * tileSize },
-      { dir: 'north', dx: 0, dy: -stepCount * tileSize },
-      { dir: 'east', dx: stepCount * tileSize, dy: 0 },
-      { dir: 'west', dx: -stepCount * tileSize, dy: 0 }
-    ];
+    for (const stepCount of stepCounts) {
+      const cardinalOffsets = [
+        { dir: 'south', dx: 0, dy: stepCount * tileSize },
+        { dir: 'north', dx: 0, dy: -stepCount * tileSize },
+        { dir: 'east', dx: stepCount * tileSize, dy: 0 },
+        { dir: 'west', dx: -stepCount * tileSize, dy: 0 }
+      ];
 
-    // Embaralha para testar direções de forma imprevisível
-    cardinalOffsets.sort(() => Math.random() - 0.5);
-
-    for (const offset of cardinalOffsets) {
-      const candX = Math.round((npc.x + offset.dx) / tileSize) * tileSize;
-      const candY = Math.round((npc.y + offset.dy) / tileSize) * tileSize;
-
-      // Verifica limite de afastamento da âncora
-      const distToAnchor = Math.hypot(candX - npc.anchorX, candY - npc.anchorY);
-      if (distToAnchor > npc.leashRadius) continue;
-
-      // Verifica colisão em cada passo intermediário do caminho
-      let pathBlocked = false;
-      const steps = Math.max(Math.abs(offset.dx / tileSize), Math.abs(offset.dy / tileSize));
-      for (let s = 1; s <= steps; s++) {
-        const stepX = Math.round((npc.x + (offset.dx * s / steps)) / tileSize) * tileSize;
-        const stepY = Math.round((npc.y + (offset.dy * s / steps)) / tileSize) * tileSize;
-        if (
-          this.checkTerrainCollision(npc, stepX, stepY, tileMap) ||
-          this.checkPlayerProximity(npc, stepX, stepY, playerCenters) ||
-          this.checkOtherNpcProximity(npc, stepX, stepY)
-        ) {
-          pathBlocked = true;
-          break;
-        }
+      // Se estiver se afastando da âncora (> 60% do leash), prioriza direções que voltam para a âncora
+      if (distToAnchor > npc.leashRadius * 0.6) {
+        cardinalOffsets.sort((a, b) => {
+          const distA = Math.hypot((npc.x + a.dx) - npc.anchorX, (npc.y + a.dy) - npc.anchorY);
+          const distB = Math.hypot((npc.x + b.dx) - npc.anchorX, (npc.y + b.dy) - npc.anchorY);
+          return distA - distB;
+        });
+      } else {
+        // Embaralha para passeios orgânicos e imprevisíveis
+        cardinalOffsets.sort(() => Math.random() - 0.5);
       }
 
-      if (!pathBlocked) {
-        npc.targetX = candX;
-        npc.targetY = candY;
-        npc.direction = offset.dir;
-        npc.state = 'wander';
-        npc.stateTimer = 4.0; // Limite de tempo de segurança para alcançar o alvo
-        return;
+      for (const offset of cardinalOffsets) {
+        const candX = Math.round((npc.x + offset.dx) / tileSize) * tileSize;
+        const candY = Math.round((npc.y + offset.dy) / tileSize) * tileSize;
+
+        // Verifica limite de afastamento da âncora
+        const candDistToAnchor = Math.hypot(candX - npc.anchorX, candY - npc.anchorY);
+        if (candDistToAnchor > npc.leashRadius) continue;
+
+        // Verifica colisão em cada passo intermediário do caminho
+        let pathBlocked = false;
+        const steps = Math.max(Math.abs(offset.dx / tileSize), Math.abs(offset.dy / tileSize));
+        for (let s = 1; s <= steps; s++) {
+          const stepX = Math.round((npc.x + (offset.dx * s / steps)) / tileSize) * tileSize;
+          const stepY = Math.round((npc.y + (offset.dy * s / steps)) / tileSize) * tileSize;
+          if (
+            this.checkTerrainCollision(npc, stepX, stepY, tileMap) ||
+            this.checkPlayerProximity(npc, stepX, stepY, playerCenters) ||
+            this.checkOtherNpcProximity(npc, stepX, stepY)
+          ) {
+            pathBlocked = true;
+            break;
+          }
+        }
+
+        if (!pathBlocked) {
+          npc.targetX = candX;
+          npc.targetY = candY;
+          npc.direction = offset.dir;
+          npc.state = 'wander';
+          npc.stateTimer = 4.0; // Limite de tempo de segurança para alcançar o alvo
+          return;
+        }
       }
     }
 
-    // Se nenhuma direção for favorável, descansa no local
+    // Se nenhuma direção for viável, descansa no local
     npc.state = 'idle';
-    npc.stateTimer = 2.0 + Math.random() * 3.0;
+    npc.stateTimer = 1.5 + Math.random() * 2.5;
   }
 
   /**
