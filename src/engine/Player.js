@@ -388,6 +388,8 @@ export class Player {
             }
           }
 
+          const meta = assetLoader ? assetLoader.getTileMetadata(cell.tileId) : null;
+
           // Ignora tiles estáticos de personagens para que o player não colida com as posições âncora de NPCs/Heróis dinâmicos
           const lowerId = (cell.tileId || '').toLowerCase();
           if (
@@ -407,7 +409,6 @@ export class Player {
           const isInvisibleCollider = (cell.tileId && cell.tileId.startsWith('invisible-collider')) || (cell.tileId && cell.tileId.includes('invisible'));
           if (cell.isRoot === false && !isInvisibleCollider) continue;
 
-          const meta = assetLoader ? assetLoader.getTileMetadata(cell.tileId) : null;
           let col = cell.collider || meta?.collider;
 
           // Fallback robusto garantido para qualquer variante de colisor invisível

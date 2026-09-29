@@ -1137,10 +1137,11 @@ export class TileMap {
           const cell = layer.get(this.getKey(tx, ty));
           if (!cell) continue;
 
+          const meta = assetLoader ? assetLoader.getTileMetadata(cell.tileId) : null;
+
           // Se ignoreCharacters estiver ativo, ignora células que representam NPCs/Heróis dinâmicos
           if (ignoreCharacters) {
             const lowerId = (cell.tileId || '').toLowerCase();
-            const meta = assetLoader ? assetLoader.getTileMetadata(cell.tileId) : null;
             if (
               layerName === 'characters' ||
               cell.isCharacter ||
@@ -1159,7 +1160,6 @@ export class TileMap {
           const isInvisibleCollider = (cell.tileId && cell.tileId.startsWith('invisible-collider')) || (cell.tileId && cell.tileId.includes('invisible'));
           if (cell.isRoot === false && !isInvisibleCollider) continue;
 
-          const meta = assetLoader ? assetLoader.getTileMetadata(cell.tileId) : null;
           let col = cell.collider || meta?.collider;
 
           // Fallback for invisible colliders
