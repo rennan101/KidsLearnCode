@@ -119,6 +119,15 @@ export class SupabaseClient {
     return this.init();
   }
 
+  getRedirectUrl() {
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      if (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')) {
+        return window.location.origin + (window.location.pathname || '/');
+      }
+    }
+    return 'https://kids-learn-code.vercel.app/';
+  }
+
   // ==========================================
   // Autenticação (Login / Cadastro / Guest)
   // ==========================================
@@ -132,7 +141,7 @@ export class SupabaseClient {
     }
 
     try {
-      const redirectUrl = window.location.origin + window.location.pathname;
+      const redirectUrl = this.getRedirectUrl();
       const isMinor = extraData.isOver18 === false;
       const parentEmail = extraData.parentEmail || null;
 
@@ -215,7 +224,7 @@ export class SupabaseClient {
     }
 
     try {
-      const redirectUrl = window.location.origin + window.location.pathname;
+      const redirectUrl = this.getRedirectUrl();
       const { data, error } = await this.client.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
       });
