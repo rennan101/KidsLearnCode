@@ -552,30 +552,33 @@ export class SupabaseClient {
     }
 
     this.onlineUsersCount = 1;
+    this.hasDetectedRemotePeers = false;
+    const uniqueId = (this.user && !this.user.isGuest && this.user.id) ? this.user.id : this.getGuestUser().id;
 
     try {
       this.realtimeChannel = this.client.channel('island_world_mmo', {
         config: {
           broadcast: { self: false },
-          presence: { key: this.user?.id || 'guest' }
+          presence: { key: uniqueId }
         }
       });
 
+      const updatePresenceCount = () => {
+        const state = this.realtimeChannel?.presenceState() || {};
+        const count = Object.keys(state).length;
+        this.onlineUsersCount = count;
+        if (count > 1) {
+          this.hasDetectedRemotePeers = true;
+        }
+      };
+
       this.realtimeChannel
-        .on('presence', { event: 'sync' }, () => {
-          const state = this.realtimeChannel?.presenceState() || {};
-          this.onlineUsersCount = Object.keys(state).length;
-        })
-        .on('presence', { event: 'join' }, () => {
-          const state = this.realtimeChannel?.presenceState() || {};
-          this.onlineUsersCount = Object.keys(state).length;
-        })
-        .on('presence', { event: 'leave' }, () => {
-          const state = this.realtimeChannel?.presenceState() || {};
-          this.onlineUsersCount = Object.keys(state).length;
-        })
+        .on('presence', { event: 'sync' }, updatePresenceCount)
+        .on('presence', { event: 'join' }, updatePresenceCount)
+        .on('presence', { event: 'leave' }, updatePresenceCount)
         .on('broadcast', { event: 'player_move' }, (payload) => {
           if (payload.payload && onRemotePlayerUpdate) {
+            this.hasDetectedRemotePeers = true;
             onRemotePlayerUpdate(payload.payload);
           }
         })
@@ -592,8 +595,8 @@ export class SupabaseClient {
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
             this.realtimeChannel.track({
-              id: this.user?.id || 'guest',
-              nickname: this.user?.nickname || this.user?.user_metadata?.nickname || 'Aventureiro',
+              id: uniqueId,
+              nickname: this.user?.nickname || this.user?.user_metadata?.nickname || this.getGuestUser().nickname,
               onlineAt: new Date().toISOString()
             });
           }
@@ -605,15 +608,19 @@ export class SupabaseClient {
 
   broadcastPlayerPosition(player, heroId, name, activeDragonId) {
     if (!this.realtimeChannel) return;
-    // OTIMIZAÇÃO CRÍTICA FREE-TIER: Não gasta cota de Realtime Messages se não houver outros jogadores na sala!
-    if (this.onlineUsersCount <= 1) return;
+    const uniqueId = (this.user && !this.user.isGuest && this.user.id) ? this.user.id : this.getGuestUser().id;
+
+    // OTIMIZAÇÃO FREE-TIER: Não gasta cota quando comprovadamente sozinho na sala
+    if (this.onlineUsersCount <= 1 && !this.hasDetectedRemotePeers) {
+      return;
+    }
 
     this.realtimeChannel.send({
       type: 'broadcast',
       event: 'player_move',
       payload: {
-        id: this.user?.id || 'guest',
-        name: name || this.profile?.nickname || this.user?.user_metadata?.nickname || this.user?.nickname || 'Aventureiro',
+        id: uniqueId,
+        name: name || this.profile?.nickname || this.user?.user_metadata?.nickname || this.getGuestUser().nickname,
         heroId,
         x: Math.round(player.x),
         y: Math.round(player.y),
@@ -623,7 +630,6 @@ export class SupabaseClient {
         isMounted: player.isMounted,
         activeDragonId
       }
-    });
   }
 
   broadcastChatMessage(text, player, senderName) {

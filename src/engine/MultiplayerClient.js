@@ -289,8 +289,9 @@ export class MultiplayerClient {
   }
 
   render(ctx, assetLoader, camera = null) {
-    const listToRender = this.isConnected 
-      ? Array.from(this.remotePlayers.values()) 
+    const remoteList = Array.from(this.remotePlayers.values());
+    const listToRender = (remoteList.length > 0 || this.isConnected || this.supabaseClient)
+      ? remoteList
       : this.simulatedBots;
 
     const tileSize = 64;
