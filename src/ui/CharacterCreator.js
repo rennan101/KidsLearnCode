@@ -182,7 +182,7 @@ export class CharacterCreator {
                 <button class="cc-dir-btn ${this.currentDirection === 'west' ? 'active' : ''}" data-dir="west">Esquerda</button>
               </div>
 
-              <!-- Animations: Parado, Andando, Montar Dragão, Comemorar -->
+              <!-- Animations: Parado, Andando -->
               <div class="cc-anim-pills">
                 <button class="cc-anim-btn ${this.currentAnimation === 'idle' ? 'active' : ''}" data-anim="idle">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ui-icon icon-sm"><circle cx="12" cy="12" r="10"/></svg>
@@ -192,14 +192,6 @@ export class CharacterCreator {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ui-icon icon-sm"><path d="M13 4v6l4 2-2 6-4-2-2 6"/></svg>
                   Andando
                 </button>
-                <button class="cc-anim-btn ${this.currentAnimation === 'riding' ? 'active' : ''}" data-anim="riding">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ui-icon icon-sm"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                  Montar no Dragão
-                </button>
-                <button class="cc-anim-btn ${this.currentAnimation === 'celebrate' ? 'active' : ''}" data-anim="celebrate">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ui-icon icon-sm"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                  Comemorar
-                </button>
               </div>
 
               <!-- Randomize Button -->
@@ -208,7 +200,7 @@ export class CharacterCreator {
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
                   <path d="M16 8h.01M8 8h.01M8 16h.01M16 16h.01M12 12h.01"/>
                 </svg>
-                Dado da Sorte
+                Persona Aleatória
               </button>
             </div>
           </div>
