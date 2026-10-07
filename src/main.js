@@ -85,6 +85,17 @@ class RPGApplication {
     // Mode: 'play' or 'edit'
     this.mode = 'play';
 
+    // Play Mode Interactive Object Placement & Moving System (Animal Island Sandbox)
+    this.playModeInteraction = {
+      activeMode: null, // 'move_object' | 'place_inventory' | null
+      heldObject: null, // { originTx, originTy, layerName, cellData, tileMeta }
+      placingItem: null, // { inventoryItem, tileId, tileMeta }
+      hoverTx: null,
+      hoverTy: null,
+      isValidPlacement: false,
+      maxInteractionDistancePx: 192 // ~3 tiles de alcance
+    };
+
     // Active NPC dialogue tracking & camera zoom
     this.activeDialogueNPC = null;
     this.dialogueSystem.onDialogueOpen = (npc) => {
@@ -1164,49 +1175,97 @@ class RPGApplication {
       if (document.activeElement && document.activeElement.tagName === 'INPUT') {
         document.activeElement.blur();
       }
-      if (this.mode === 'edit') {
-        this.editorController.handleMouseDown(e, this.canvas);
-      } else if (this.mode === 'play') {
-        // Allow clicking directly on nearby NPCs to start conversation
-        const rect = this.canvas.getBoundingClientRect();
-        const screenX = e.clientX - rect.left;
-        const screenY = e.clientY - rect.top;
-        const worldPos = this.camera.screenToWorld(screenX, screenY);
-        const clickedNpc = this.findNearbyNPC(worldPos.x - 32, worldPos.y - 32, 60);
-        if (clickedNpc) {
-          const pDist = Math.hypot(clickedNpc.worldX - this.player.x, clickedNpc.worldY - this.player.y);
-          if (pDist <= 140) {
-            this.interactWithNPC(clickedNpc);
-            return;
-          } else {
-            this.showToast(`Aproxime-se de ${clickedNpc.name.split(',')[0]} para conversar.`);
-            return;
-          }
-        }
 
-        const clickedDragon = this.findNearbyDragon(worldPos.x - 32, worldPos.y - 32, 60);
-        if (clickedDragon) {
-          const pDist = Math.hypot(clickedDragon.worldX - this.player.x, clickedDragon.worldY - this.player.y);
-          if (pDist <= 140) {
-            this.interactWithDragon(clickedDragon);
-            return;
-          } else {
-            this.showToast(`Aproxime-se de ${clickedDragon.name} para interagir.`);
-            return;
-          }
+      // Botão direito (2): Cancela imediatamente qualquer ação de posicionamento ou movimento em Play Mode
+      if (e.button === 2) {
+        if (this.mode === 'play' && this.playModeInteraction.activeMode) {
+          e.preventDefault();
+          this.cancelPlayModeInteraction();
+          return;
         }
+      }
 
-        const clickedNest = this.findNearbyPlacedNest(worldPos.x - 32, worldPos.y - 32, 60);
-        if (clickedNest) {
-          const pDist = Math.hypot(clickedNest.worldX - this.player.x, clickedNest.worldY - this.player.y);
-          if (pDist <= 140) {
-            this.interactWithPlacedNest(clickedNest);
-            return;
-          } else {
-            this.showToast(`Aproxime-se de ${clickedNest.name} para interagir.`);
+      // Botão esquerdo (0)
+      if (e.button === 0) {
+        if (this.mode === 'edit') {
+          this.editorController.handleMouseDown(e, this.canvas);
+        } else if (this.mode === 'play') {
+          const rect = this.canvas.getBoundingClientRect();
+          const screenX = e.clientX - rect.left;
+          const screenY = e.clientY - rect.top;
+          const worldPos = this.camera.screenToWorld(screenX, screenY);
+
+          // 1. Se já estiver no modo de movimentação ou posicionamento: confirma o posicionamento
+          if (this.playModeInteraction.activeMode) {
+            this.confirmPlayModePlacement();
             return;
           }
+
+          // 2. Interagir com NPCs próximos
+          const clickedNpc = this.findNearbyNPC(worldPos.x - 32, worldPos.y - 32, 60);
+          if (clickedNpc) {
+            const pDist = Math.hypot(clickedNpc.worldX - this.player.x, clickedNpc.worldY - this.player.y);
+            if (pDist <= 140) {
+              this.interactWithNPC(clickedNpc);
+              return;
+            } else {
+              this.showToast(`Aproxime-se de ${clickedNpc.name.split(',')[0]} para conversar.`);
+              return;
+            }
+          }
+
+          // 3. Interagir com Dragões próximos
+          const clickedDragon = this.findNearbyDragon(worldPos.x - 32, worldPos.y - 32, 60);
+          if (clickedDragon) {
+            const pDist = Math.hypot(clickedDragon.worldX - this.player.x, clickedDragon.worldY - this.player.y);
+            if (pDist <= 140) {
+              this.interactWithDragon(clickedDragon);
+              return;
+            } else {
+              this.showToast(`Aproxime-se de ${clickedDragon.name} para interagir.`);
+              return;
+            }
+          }
+
+          // 4. Interagir com Ninhos próximos
+          const clickedNest = this.findNearbyPlacedNest(worldPos.x - 32, worldPos.y - 32, 60);
+          if (clickedNest) {
+            const pDist = Math.hypot(clickedNest.worldX - this.player.x, clickedNest.worldY - this.player.y);
+            if (pDist <= 140) {
+              this.interactWithPlacedNest(clickedNest);
+              return;
+            } else {
+              this.showToast(`Aproxime-se de ${clickedNest.name} para interagir.`);
+              return;
+            }
+          }
+
+          // 5. Interagir / Mover Objetos do Cenário (Caixas, Baús, Móveis, Barris, etc.)
+          const movable = this.findMovableObjectAt(worldPos.x, worldPos.y);
+          if (movable) {
+            const pCenterX = this.player.x + 32;
+            const pCenterY = this.player.y + 32;
+            const targetCenterX = movable.tx * 64 + 32;
+            const targetCenterY = movable.ty * 64 + 32;
+            const pDist = Math.hypot(targetCenterX - pCenterX, targetCenterY - pCenterY);
+
+            if (pDist <= this.playModeInteraction.maxInteractionDistancePx) {
+              this.startMovingWorldObject(movable);
+              return;
+            } else {
+              this.showToast('Aproxime-se do objeto para movê-lo.');
+              return;
+            }
+          }
         }
+      }
+    });
+
+    // Impede menu de contexto do navegador ao clicar com botão direito durante posicionamento
+    this.canvas.addEventListener('contextmenu', (e) => {
+      if (this.mode === 'play' && this.playModeInteraction.activeMode) {
+        e.preventDefault();
+        this.cancelPlayModeInteraction();
       }
     });
 
@@ -1221,6 +1280,13 @@ class RPGApplication {
       if (e.target && e.target.tagName === 'INPUT') return;
 
       if (this.mode === 'play') {
+        if (e.key === 'Escape') {
+          if (this.playModeInteraction.activeMode) {
+            this.cancelPlayModeInteraction();
+            return;
+          }
+        }
+
         if (e.key === 'f' || e.key === 'F') {
           const activeTag = document.activeElement?.tagName?.toLowerCase();
           if (activeTag === 'input' || activeTag === 'textarea' || document.activeElement?.isContentEditable) {
@@ -1390,10 +1456,23 @@ class RPGApplication {
       }
     });
 
-    // Mouse events for editor
+    // Mouse events for editor and play mode interaction
     this.canvas.addEventListener('mousemove', (e) => {
       if (this.mode === 'edit') {
         this.editorController.handleMouseMove(e, this.canvas);
+      } else if (this.mode === 'play') {
+        if (this.playModeInteraction.activeMode) {
+          const rect = this.canvas.getBoundingClientRect();
+          const screenX = e.clientX - rect.left;
+          const screenY = e.clientY - rect.top;
+          const worldPos = this.camera.screenToWorld(screenX, screenY);
+          const targetTx = Math.floor(worldPos.x / this.tileMap.tileSize);
+          const targetTy = Math.floor(worldPos.y / this.tileMap.tileSize);
+
+          this.playModeInteraction.hoverTx = targetTx;
+          this.playModeInteraction.hoverTy = targetTy;
+          this.playModeInteraction.isValidPlacement = this.isPlacementTileValid(targetTx, targetTy);
+        }
       }
     });
 
@@ -2385,6 +2464,321 @@ class RPGApplication {
     }
   }
 
+  // ==========================================
+  // Play Mode Interactive Objects & Placement
+  // ==========================================
+
+  inferTileIdFromItem(itemId) {
+    if (!itemId) return 'crate';
+    if (this.assetLoader?.getTileMetadata(itemId)) return itemId;
+    const mapping = {
+      wood: 'crate',
+      stone: 'rock-2',
+      iron_ore: 'rock-1',
+      gold_coin: 'chest',
+      pumpkin_seed: 'sprout',
+      magic_flower: 'flower-small-1',
+      crate: 'crate',
+      chest: 'chest'
+    };
+    return mapping[itemId] || 'crate';
+  }
+
+  findMovableObjectAt(worldX, worldY) {
+    const tx = Math.floor(worldX / this.tileMap.tileSize);
+    const ty = Math.floor(worldY / this.tileMap.tileSize);
+    const key = this.tileMap.getKey(tx, ty);
+
+    // Checa camadas de objetos na ordem de sobreposição
+    const checkLayers = ['solid', 'decor'];
+    for (const layerName of checkLayers) {
+      const layer = this.tileMap.layers[layerName];
+      if (!layer) continue;
+      const cell = layer.get(key);
+      if (cell && cell.tileId) {
+        // Ignora colisores invisíveis ou bordas de sistema
+        if (cell.tileId.startsWith('invisible-collider')) continue;
+        const meta = this.assetLoader?.getTileMetadata(cell.tileId);
+        if (meta?.isInvisibleAsset) continue;
+        return { tx, ty, layerName, cell, meta };
+      }
+    }
+    return null;
+  }
+
+  isPlacementTileValid(tx, ty) {
+    // 1. Distância máxima do jogador (~192px = 3 tiles de alcance)
+    const pCenterX = this.player.x + 32;
+    const pCenterY = this.player.y + 32;
+    const targetCenterX = tx * 64 + 32;
+    const targetCenterY = ty * 64 + 32;
+    const dist = Math.hypot(targetCenterX - pCenterX, targetCenterY - pCenterY);
+    if (dist > this.playModeInteraction.maxInteractionDistancePx) {
+      return false;
+    }
+
+    // 2. Não pode ser no mesmo tile exato onde o jogador está pisando
+    const playerTx = Math.floor((this.player.x + 16) / 64);
+    const playerTy = Math.floor((this.player.y + 32) / 64);
+    if (playerTx === tx && playerTy === ty) {
+      return false;
+    }
+
+    // 3. Tile de destino não pode ter outro objeto sólido já ocupando o espaço
+    const key = this.tileMap.getKey(tx, ty);
+    const existingSolid = this.tileMap.layers.solid?.get(key);
+    if (existingSolid && existingSolid.tileId && !existingSolid.tileId.startsWith('invisible-collider')) {
+      return false;
+    }
+
+    // 4. Não pode ser água profunda ou magma intransponível sem ponte
+    if (this.tileMap.isWaterAt(targetCenterX, targetCenterY, this.assetLoader)) {
+      return false;
+    }
+    if (this.tileMap.isMagmaAt(targetCenterX, targetCenterY, this.assetLoader)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  startMovingWorldObject(movableObj) {
+    const { tx, ty, layerName, cell, meta } = movableObj;
+    
+    this.playModeInteraction.activeMode = 'move_object';
+    this.playModeInteraction.heldObject = {
+      originTx: tx,
+      originTy: ty,
+      layerName,
+      cellData: { ...cell },
+      tileMeta: meta || this.assetLoader?.getTileMetadata(cell.tileId) || { id: cell.tileId, gridW: 1, gridH: 1 }
+    };
+    this.playModeInteraction.placingItem = null;
+    this.playModeInteraction.hoverTx = tx;
+    this.playModeInteraction.hoverTy = ty;
+    this.playModeInteraction.isValidPlacement = true;
+
+    // Remove temporariamente o objeto do mapa enquanto está sendo movido pelo cursor
+    this.tileMap.deleteTile(tx, ty, layerName, this.assetLoader);
+    
+    soundFX.playPop(1.15);
+    this.showToast(`Movendo ${meta?.name || cell.tileId}. Clique para posicionar ou [ESC] para cancelar.`);
+  }
+
+  startPlacingItemFromInventory(inventoryItem, tileId, tileMeta) {
+    this.playModeInteraction.activeMode = 'place_inventory';
+    this.playModeInteraction.heldObject = null;
+    this.playModeInteraction.placingItem = {
+      inventoryItem,
+      tileId,
+      tileMeta: tileMeta || this.assetLoader?.getTileMetadata(tileId) || { id: tileId, gridW: 1, gridH: 1 }
+    };
+    
+    // Inicializa hover no tile em frente ao herói
+    const dirDeltas = { north: { dx: 0, dy: -1 }, south: { dx: 0, dy: 1 }, west: { dx: -1, dy: 0 }, east: { dx: 1, dy: 0 } };
+    const delta = dirDeltas[this.player.direction] || { dx: 0, dy: 1 };
+    const pTx = Math.floor((this.player.x + 32) / 64);
+    const pTy = Math.floor((this.player.y + 32) / 64);
+    this.playModeInteraction.hoverTx = pTx + delta.dx;
+    this.playModeInteraction.hoverTy = pTy + delta.dy;
+    this.playModeInteraction.isValidPlacement = this.isPlacementTileValid(this.playModeInteraction.hoverTx, this.playModeInteraction.hoverTy);
+
+    soundFX.playPop(1.05);
+    this.showToast(`Posicionando ${inventoryItem.name}. Clique no chão próximo ou [ESC] para cancelar.`);
+  }
+
+  cancelPlayModeInteraction() {
+    if (!this.playModeInteraction.activeMode) return;
+
+    if (this.playModeInteraction.activeMode === 'move_object' && this.playModeInteraction.heldObject) {
+      const { originTx, originTy, layerName, cellData, tileMeta } = this.playModeInteraction.heldObject;
+      if (tileMeta && ((tileMeta.gridW && tileMeta.gridW > 1) || (tileMeta.gridH && tileMeta.gridH > 1))) {
+        this.tileMap.placeMultiTile(layerName, originTx, originTy, tileMeta, cellData.rotation || 0, !!cellData.flipX, cellData.collider, cellData.depthOffset);
+      } else {
+        this.tileMap.setTile(layerName, originTx, originTy, cellData.tileId, true, originTx, originTy, cellData.rotation || 0, !!cellData.flipX, cellData.collider, cellData.depthOffset);
+      }
+      this.showToast('Movimentação cancelada.');
+    } else if (this.playModeInteraction.activeMode === 'place_inventory') {
+      this.showToast('Posicionamento cancelado.');
+    }
+
+    this.playModeInteraction.activeMode = null;
+    this.playModeInteraction.heldObject = null;
+    this.playModeInteraction.placingItem = null;
+    this.playModeInteraction.hoverTx = null;
+    this.playModeInteraction.hoverTy = null;
+  }
+
+  confirmPlayModePlacement() {
+    if (!this.playModeInteraction.activeMode || !this.playModeInteraction.isValidPlacement) {
+      soundFX.playPop(0.7);
+      this.showToast('Local inválido ou fora de alcance!');
+      return;
+    }
+
+    const targetTx = this.playModeInteraction.hoverTx;
+    const targetTy = this.playModeInteraction.hoverTy;
+
+    if (this.playModeInteraction.activeMode === 'move_object' && this.playModeInteraction.heldObject) {
+      const { layerName, cellData, tileMeta } = this.playModeInteraction.heldObject;
+      if (tileMeta && ((tileMeta.gridW && tileMeta.gridW > 1) || (tileMeta.gridH && tileMeta.gridH > 1))) {
+        this.tileMap.placeMultiTile(layerName, targetTx, targetTy, tileMeta, cellData.rotation || 0, !!cellData.flipX, cellData.collider, cellData.depthOffset);
+      } else {
+        this.tileMap.setTile(layerName, targetTx, targetTy, cellData.tileId, true, targetTx, targetTy, cellData.rotation || 0, !!cellData.flipX, cellData.collider, cellData.depthOffset);
+      }
+      
+      this.player.spawnCraftPoof();
+      soundFX.playPop(1.1);
+      this.showToast('Objeto posicionado com sucesso!');
+      this.triggerAutoSave();
+    } else if (this.playModeInteraction.activeMode === 'place_inventory' && this.playModeInteraction.placingItem) {
+      const { inventoryItem, tileId, tileMeta } = this.playModeInteraction.placingItem;
+      
+      this.inventorySystem.removeItem(inventoryItem.id, 1);
+      
+      if (tileMeta && ((tileMeta.gridW && tileMeta.gridW > 1) || (tileMeta.gridH && tileMeta.gridH > 1))) {
+        this.tileMap.placeMultiTile('solid', targetTx, targetTy, tileMeta);
+      } else {
+        this.tileMap.setTile('solid', targetTx, targetTy, tileId);
+      }
+
+      this.player.spawnCraftPoof();
+      soundFX.playPop(1.1);
+      this.showToast(`${inventoryItem.name} colocado no chão da ilha!`);
+      this.tutorialManager?.onItemPlacedOnGround();
+      this.triggerAutoSave();
+    }
+
+    this.playModeInteraction.activeMode = null;
+    this.playModeInteraction.heldObject = null;
+    this.playModeInteraction.placingItem = null;
+    this.playModeInteraction.hoverTx = null;
+    this.playModeInteraction.hoverTy = null;
+  }
+
+  renderPlayModeInteractionOverlay(ctx) {
+    if (!this.playModeInteraction.activeMode || this.playModeInteraction.hoverTx === null) return;
+
+    ctx.save();
+    try {
+      const tileSize = this.tileMap.tileSize || 64;
+      const hx = this.playModeInteraction.hoverTx * tileSize;
+      const hy = this.playModeInteraction.hoverTy * tileSize;
+      const isValid = !!this.playModeInteraction.isValidPlacement;
+
+      // 1. Círculo de alcance máximo de interação ao redor do Herói
+      const pCenterX = this.player.x + 32;
+      const pCenterY = this.player.y + 32;
+      const range = this.playModeInteraction.maxInteractionDistancePx;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(pCenterX, pCenterY, range, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(25, 200, 185, 0.05)';
+      ctx.fill();
+      ctx.setLineDash([8, 8]);
+      ctx.strokeStyle = 'rgba(25, 200, 185, 0.45)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+
+      // 2. Caixa de destaque na grade (Verde Menta se válido, Vermelho se inválido)
+      ctx.save();
+      if (isValid) {
+        ctx.fillStyle = 'rgba(25, 200, 185, 0.28)';
+        ctx.strokeStyle = '#19c8b9';
+      } else {
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
+        ctx.strokeStyle = '#ef4444';
+      }
+      ctx.lineWidth = 2.5;
+      ctx.fillRect(hx, hy, tileSize, tileSize);
+      ctx.strokeRect(hx, hy, tileSize, tileSize);
+      ctx.restore();
+
+      // 3. Renderização da Silhueta / Preview Transparente do Objeto
+      let meta = null;
+      let cellData = null;
+
+      if (this.playModeInteraction.activeMode === 'move_object') {
+        meta = this.playModeInteraction.heldObject?.tileMeta;
+        cellData = this.playModeInteraction.heldObject?.cellData;
+      } else if (this.playModeInteraction.activeMode === 'place_inventory') {
+        meta = this.playModeInteraction.placingItem?.tileMeta;
+      }
+
+      if (meta) {
+        ctx.save();
+        ctx.globalAlpha = 0.72;
+        const gridW = meta.gridW || 1;
+        const gridH = meta.gridH || 1;
+        const rawW = gridW * tileSize;
+        const rawH = gridH * tileSize;
+        const rot = cellData?.rotation || 0;
+        const isFlipped = !!cellData?.flipX;
+
+        let img = null;
+        if (meta.isAnimated && meta.frames) {
+          img = this.assetLoader.getImage(meta.frames[0]);
+        } else if (meta.src) {
+          img = this.assetLoader.getImage(meta.src);
+        } else if (meta.id) {
+          const m = this.assetLoader.getTileMetadata(meta.id);
+          if (m?.src) img = this.assetLoader.getImage(m.src);
+        }
+
+        if (img) {
+          if (rot !== 0 || isFlipped) {
+            ctx.save();
+            ctx.translate(hx + rawW / 2, hy + rawH / 2);
+            if (rot !== 0) ctx.rotate((rot * Math.PI) / 180);
+            if (isFlipped) ctx.scale(-1, 1);
+            ctx.drawImage(img, -rawW / 2, -rawH / 2, rawW, rawH);
+            ctx.restore();
+          } else {
+            ctx.drawImage(img, hx, hy, rawW, rawH);
+          }
+        }
+        ctx.restore();
+      }
+
+      // 4. Badge flutuante de instrução Animal Island UI logo acima do tile
+      ctx.save();
+      const badgeText = isValid ? 'Clique para posicionar • [ESC] Cancelar' : 'Fora de alcance ou ocupado • [ESC] Cancelar';
+      ctx.font = 'bold 12px "Nunito", sans-serif';
+      const textMetrics = ctx.measureText(badgeText);
+      const badgeW = textMetrics.width + 20;
+      const badgeH = 26;
+      const badgeX = hx + 32 - badgeW / 2;
+      const badgeY = hy - 34;
+
+      // Card pílula
+      ctx.fillStyle = isValid ? '#fdfbf7' : '#fee2e2';
+      ctx.strokeStyle = isValid ? '#7a583e' : '#b91c1c';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 13);
+      } else {
+        ctx.rect(badgeX, badgeY, badgeW, badgeH);
+      }
+      ctx.fill();
+      ctx.stroke();
+
+      // Texto acolhedor
+      ctx.fillStyle = isValid ? '#794f27' : '#991b1b';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(badgeText, hx + 32, badgeY + badgeH / 2);
+      ctx.restore();
+
+    } catch (e) {
+      console.warn('Error rendering play mode placement overlay:', e);
+    } finally {
+      ctx.restore();
+    }
+  }
+
   setupAuthUI() {
     const modal = document.getElementById('auth-modal');
     const triggerBtn = document.getElementById('btn-cloud-account');
@@ -3160,6 +3554,15 @@ class RPGApplication {
           this.tileMap.renderGroundItems(this.ctx, this.assetLoader, this.camera, this.player.x, this.player.y);
         } catch (itemErr) {
           console.error('Error rendering ground items:', itemErr);
+        }
+      }
+
+      // Render Play Mode Interactive Object Placement & Move Silhouette (Animal Island UI)
+      if (this.mode === 'play' && this.playModeInteraction.activeMode) {
+        try {
+          this.renderPlayModeInteractionOverlay(this.ctx);
+        } catch (placementOverlayErr) {
+          console.error('Error rendering play mode placement overlay:', placementOverlayErr);
         }
       }
 
@@ -4341,26 +4744,14 @@ class RPGApplication {
 
     btnPlaceItem?.addEventListener('click', () => {
       if (!selectedItem) return;
-      const dirDeltas = { north: { dx: 0, dy: -1 }, south: { dx: 0, dy: 1 }, west: { dx: -1, dy: 0 }, east: { dx: 1, dy: 0 } };
-      const delta = dirDeltas[this.player.direction] || { dx: 0, dy: 1 };
-      const pTx = Math.floor((this.player.x + 32) / 64);
-      const pTy = Math.floor((this.player.y + 32) / 64);
-      const targetX = pTx + delta.dx;
-      const targetY = pTy + delta.dy;
 
-      const itemName = selectedItem.name;
-      this.inventorySystem.removeItem(selectedItem.id, 1);
-      this.tileMap.setTile('solid', targetX, targetY, 'crate');
-      this.player.spawnCraftPoof();
-      this.triggerAutoSave();
-      this.showToast(`${itemName} colocado no chão da ilha!`);
-      this.tutorialManager?.onItemPlacedOnGround();
+      // Fecha o modal da bolsa
+      if (modal) modal.style.display = 'none';
 
-      if (selectedItem.count <= 0) {
-        selectedItem = null;
-      }
-      renderItemsTab();
-      updateItemDetailPanel(selectedItem);
+      const tileId = this.inferTileIdFromItem(selectedItem.id);
+      const tileMeta = this.assetLoader?.getTileMetadata(tileId) || { id: tileId, gridW: 1, gridH: 1 };
+
+      this.startPlacingItemFromInventory(selectedItem, tileId, tileMeta);
     });
 
     // ==========================================
