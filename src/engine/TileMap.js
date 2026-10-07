@@ -224,9 +224,126 @@ export class TileMap {
       } else if (existing && existing.tileId === tileId && existing.level !== undefined) {
         cellData.level = existing.level;
       }
+      if (extraProps && Array.isArray(extraProps.stack)) {
+        cellData.stack = extraProps.stack;
+      } else if (existing && Array.isArray(existing.stack) && existing.tileId === tileId) {
+        cellData.stack = existing.stack;
+      }
       layer.set(key, cellData);
     }
     this.invalidateSpatialCaches();
+  }
+
+  // ==========================================
+  // Tibia-Style Object Stacking System
+  // ==========================================
+
+  pushStackTile(layerName, x, y, tileId, rotation = 0, flipX = false, collider = null, depthOffset = null, extraProps = null) {
+    const layer = this.layers[layerName];
+    if (!layer) return false;
+    const key = this.getKey(x, y);
+    const existing = layer.get(key);
+
+    if (!existing || !existing.tileId) {
+      // Nenhum objeto existente: coloca como base
+      this.setTile(layerName, x, y, tileId, true, x, y, rotation, flipX, collider, depthOffset, extraProps);
+      return true;
+    }
+
+    // Inicializa a pilha se ainda não existir
+    if (!Array.isArray(existing.stack)) {
+      existing.stack = [];
+    }
+
+    // Limite máximo de até 4 itens empilhados
+    if (existing.stack.length >= 3) {
+      return false;
+    }
+
+    existing.stack.push({
+      tileId,
+      rotation: rotation || 0,
+      flipX: !!flipX,
+      collider,
+      depthOffset,
+      extraProps
+    });
+
+    this.invalidateSpatialCaches();
+    return true;
+  }
+
+  popStackTile(layerName, x, y, assetLoader = null) {
+    const layer = this.layers[layerName];
+    if (!layer) return null;
+    const key = this.getKey(x, y);
+    const cell = layer.get(key);
+    if (!cell) return null;
+
+    // Se houver itens na pilha, remove o do topo (LIFO)
+    if (Array.isArray(cell.stack) && cell.stack.length > 0) {
+      const topItem = cell.stack.pop();
+      const meta = assetLoader ? assetLoader.getTileMetadata(topItem.tileId) : null;
+      this.invalidateSpatialCaches();
+      return {
+        isStacked: true,
+        tileId: topItem.tileId,
+        cellData: topItem,
+        meta,
+        stackHeight: cell.stack.length + 1
+      };
+    }
+
+    // Caso contrário, remove o item base
+    const meta = assetLoader ? assetLoader.getTileMetadata(cell.tileId) : null;
+    this.deleteTile(x, y, layerName, assetLoader);
+    return {
+      isStacked: false,
+      tileId: cell.tileId,
+      cellData: cell,
+      meta,
+      stackHeight: 0
+    };
+  }
+
+  getStackCount(layerName, x, y) {
+    const layer = this.layers[layerName];
+    if (!layer) return 0;
+    const key = this.getKey(x, y);
+    const cell = layer.get(key);
+    if (!cell || !cell.tileId) return 0;
+    return 1 + (Array.isArray(cell.stack) ? cell.stack.length : 0);
+  }
+
+  getTopStackedTile(layerName, x, y, assetLoader = null) {
+    const layer = this.layers[layerName];
+    if (!layer) return null;
+    const key = this.getKey(x, y);
+    const cell = layer.get(key);
+    if (!cell || !cell.tileId) return null;
+
+    if (Array.isArray(cell.stack) && cell.stack.length > 0) {
+      const topItem = cell.stack[cell.stack.length - 1];
+      const meta = assetLoader ? assetLoader.getTileMetadata(topItem.tileId) : null;
+      return {
+        isTopStacked: true,
+        tileId: topItem.tileId,
+        cellData: topItem,
+        meta,
+        stackIndex: cell.stack.length,
+        totalStack: cell.stack.length + 1
+      };
+    }
+
+    const meta = assetLoader ? assetLoader.getTileMetadata(cell.tileId) : null;
+    return {
+      isTopStacked: false,
+      tileId: cell.tileId,
+      cellData: cell,
+      meta,
+      stackIndex: 0,
+      totalStack: 1
+    };
   }
 
   // Invalidate pre-calculated spatial caches
@@ -1654,6 +1771,63 @@ export class TileMap {
       ctx.ellipse(destX + 32, destY + 32, 20 + Math.sin(wavePhase + 1) * 3, 12 + Math.cos(wavePhase + 1) * 2, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
+    }
+
+    // Tibia-Style Render for Stacked Objects
+    if (Array.isArray(cell.stack) && cell.stack.length > 0) {
+      for (let sIdx = 0; sIdx < cell.stack.length; sIdx++) {
+        const stackItem = cell.stack[sIdx];
+        if (!stackItem || !stackItem.tileId) continue;
+        const stackMeta = assetLoader.getTileMetadata(stackItem.tileId);
+        if (!stackMeta) continue;
+
+        // Cada item empilhado sobe visualmente 16px no eixo Y
+        const stackOffsetY = -16 * (sIdx + 1);
+        const sRot = stackItem.rotation || 0;
+        const sRot90or270 = (sRot === 90 || sRot === 270);
+        const sBaseGridW = stackMeta.gridW || 1;
+        const sBaseGridH = stackMeta.gridH || 1;
+        const sOccGridW = sRot90or270 ? sBaseGridH : sBaseGridW;
+        const sOccGridH = sRot90or270 ? sBaseGridW : sBaseGridH;
+
+        const sDestX = destX;
+        const sDestY = destY + stackOffsetY;
+        const sOccW = sOccGridW * this.tileSize;
+        const sOccH = sOccGridH * this.tileSize;
+        const sRawW = sBaseGridW * this.tileSize;
+        const sRawH = sBaseGridH * this.tileSize;
+
+        let sImg = null;
+        if (stackMeta.isAnimated && stackMeta.frames) {
+          sImg = assetLoader.getImage(stackMeta.frames[0]);
+        } else if (stackMeta.src) {
+          sImg = assetLoader.getImage(stackMeta.src);
+        }
+
+        if (sImg) {
+          ctx.save();
+          // Leve sombra sob o objeto empilhado para dar profundidade tátil
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+          ctx.beginPath();
+          ctx.ellipse(sDestX + sOccW / 2, sDestY + sOccH - 4, sOccW * 0.38, 6, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          const sScale = stackMeta.scale || 1.0;
+          const sDrawW = sRawW * sScale;
+          const sDrawH = sRawH * sScale;
+          const sFlipped = !!stackItem.flipX;
+
+          if (sRot !== 0 || sScale !== 1.0 || sFlipped) {
+            ctx.translate(sDestX + sOccW / 2, sDestY + sOccH / 2);
+            if (sRot !== 0) ctx.rotate((sRot * Math.PI) / 180);
+            if (sFlipped) ctx.scale(-1, 1);
+            ctx.drawImage(sImg, -sDrawW / 2, -sDrawH / 2, sDrawW, sDrawH);
+          } else {
+            ctx.drawImage(sImg, sDestX, sDestY, sRawW, sRawH);
+          }
+          ctx.restore();
+        }
+      }
     }
   }
 

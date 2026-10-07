@@ -1464,17 +1464,37 @@ class RPGApplication {
       if (this.mode === 'edit') {
         this.editorController.handleMouseMove(e, this.canvas);
       } else if (this.mode === 'play') {
-        if (this.playModeInteraction.activeMode) {
-          const rect = this.canvas.getBoundingClientRect();
-          const screenX = e.clientX - rect.left;
-          const screenY = e.clientY - rect.top;
-          const worldPos = this.camera.screenToWorld(screenX, screenY);
-          const targetTx = Math.floor(worldPos.x / this.tileMap.tileSize);
-          const targetTy = Math.floor(worldPos.y / this.tileMap.tileSize);
+        const rect = this.canvas.getBoundingClientRect();
+        const screenX = e.clientX - rect.left;
+        const screenY = e.clientY - rect.top;
+        const worldPos = this.camera.screenToWorld(screenX, screenY);
+        const targetTx = Math.floor(worldPos.x / this.tileMap.tileSize);
+        const targetTy = Math.floor(worldPos.y / this.tileMap.tileSize);
 
+        if (this.playModeInteraction.activeMode) {
           this.playModeInteraction.hoverTx = targetTx;
           this.playModeInteraction.hoverTy = targetTy;
           this.playModeInteraction.isValidPlacement = this.isPlacementTileValid(targetTx, targetTy);
+          // Cursor de mãozinha fechada (segurando) durante posicionamento / movimentação
+          this.canvas.style.cursor = 'var(--animal-cursor-grabbing), grabbing';
+        } else {
+          // Cursor dinâmico: se estiver sobre um objeto movível próximo, exibe mãozinha aberta
+          const movable = this.findMovableObjectAt(worldPos.x, worldPos.y);
+          if (movable) {
+            const pCenterX = this.player.x + 32;
+            const pCenterY = this.player.y + 32;
+            const targetCenterX = movable.tx * 64 + 32;
+            const targetCenterY = movable.ty * 64 + 32;
+            const pDist = Math.hypot(targetCenterX - pCenterX, targetCenterY - pCenterY);
+
+            if (pDist <= this.playModeInteraction.maxInteractionDistancePx) {
+              this.canvas.style.cursor = 'var(--animal-cursor-grab), grab';
+            } else {
+              this.canvas.style.cursor = 'var(--animal-cursor-default), default';
+            }
+          } else {
+            this.canvas.style.cursor = 'var(--animal-cursor-default), default';
+          }
         }
       }
     });
@@ -2515,7 +2535,7 @@ class RPGApplication {
     const ty = Math.floor(worldY / this.tileMap.tileSize);
     const key = this.tileMap.getKey(tx, ty);
 
-    // Checa camadas de objetos na ordem de sobreposição
+    // Checa camadas de objetos na ordem de sobreposição (solid -> decor)
     const checkLayers = ['solid', 'decor'];
     for (const layerName of checkLayers) {
       const layer = this.tileMap.layers[layerName];
@@ -2526,7 +2546,23 @@ class RPGApplication {
         if (cell.tileId.startsWith('invisible-collider')) continue;
         const meta = this.assetLoader?.getTileMetadata(cell.tileId);
         if (meta?.isInvisibleAsset) continue;
-        return { tx, ty, layerName, cell, meta };
+
+        // Se houver itens empilhados, obtém o item do topo (Estilo Tibia - LIFO)
+        const topStacked = this.tileMap.getTopStackedTile(layerName, tx, ty, this.assetLoader);
+        if (topStacked) {
+          return {
+            tx,
+            ty,
+            layerName,
+            cell: topStacked.cellData,
+            meta: topStacked.meta,
+            isStacked: topStacked.isTopStacked,
+            stackIndex: topStacked.stackIndex,
+            totalStack: topStacked.totalStack
+          };
+        }
+
+        return { tx, ty, layerName, cell, meta, isStacked: false, stackIndex: 0, totalStack: 1 };
       }
     }
     return null;
@@ -2550,11 +2586,10 @@ class RPGApplication {
       return false;
     }
 
-    // 3. Tile de destino não pode ter outro objeto sólido já ocupando o espaço
-    const key = this.tileMap.getKey(tx, ty);
-    const existingSolid = this.tileMap.layers.solid?.get(key);
-    if (existingSolid && existingSolid.tileId && !existingSolid.tileId.startsWith('invisible-collider')) {
-      return false;
+    // 3. Empilhamento Estilo Tibia: Permite empilhar até 4 itens por tile
+    const stackCountSolid = this.tileMap.getStackCount('solid', tx, ty);
+    if (stackCountSolid >= 4) {
+      return false; // Altura máxima de pilha atingida
     }
 
     // 4. Não pode ser água profunda ou magma intransponível sem ponte
@@ -2569,26 +2604,32 @@ class RPGApplication {
   }
 
   startMovingWorldObject(movableObj) {
-    const { tx, ty, layerName, cell, meta } = movableObj;
+    const { tx, ty, layerName } = movableObj;
     
+    // Remove o item do topo da pilha no mundo enquanto é segurado pelo cursor
+    const popped = this.tileMap.popStackTile(layerName, tx, ty, this.assetLoader);
+    if (!popped) return;
+
+    const cellData = popped.cellData;
+    const meta = popped.meta || this.assetLoader?.getTileMetadata(popped.tileId) || { id: popped.tileId, gridW: 1, gridH: 1 };
+
     this.playModeInteraction.activeMode = 'move_object';
     this.playModeInteraction.heldObject = {
       originTx: tx,
       originTy: ty,
       layerName,
-      cellData: { ...cell },
-      tileMeta: meta || this.assetLoader?.getTileMetadata(cell.tileId) || { id: cell.tileId, gridW: 1, gridH: 1 }
+      cellData: { ...cellData },
+      tileMeta: meta,
+      wasStacked: popped.isStacked
     };
     this.playModeInteraction.placingItem = null;
     this.playModeInteraction.hoverTx = tx;
     this.playModeInteraction.hoverTy = ty;
     this.playModeInteraction.isValidPlacement = true;
 
-    // Remove temporariamente o objeto do mapa enquanto está sendo movido pelo cursor
-    this.tileMap.deleteTile(tx, ty, layerName, this.assetLoader);
-    
+    this.canvas.style.cursor = 'var(--animal-cursor-grabbing), grabbing';
     soundFX.playPop(1.15);
-    this.showToast(`Movendo ${meta?.name || cell.tileId}. Clique para posicionar ou [ESC] para cancelar.`);
+    this.showToast(`Movendo ${meta?.name || popped.tileId}. Clique para posicionar/empilhar ou [ESC] para cancelar.`);
   }
 
   startPlacingItemFromInventory(inventoryItem, tileId, tileMeta) {
@@ -2609,20 +2650,27 @@ class RPGApplication {
     this.playModeInteraction.hoverTy = pTy + delta.dy;
     this.playModeInteraction.isValidPlacement = this.isPlacementTileValid(this.playModeInteraction.hoverTx, this.playModeInteraction.hoverTy);
 
+    this.canvas.style.cursor = 'var(--animal-cursor-grabbing), grabbing';
     soundFX.playPop(1.05);
-    this.showToast(`Posicionando ${inventoryItem.name}. Clique no chão próximo ou [ESC] para cancelar.`);
+    this.showToast(`Posicionando ${inventoryItem.name}. Clique no chão ou sobre outro objeto para empilhar.`);
   }
 
   cancelPlayModeInteraction() {
     if (!this.playModeInteraction.activeMode) return;
 
     if (this.playModeInteraction.activeMode === 'move_object' && this.playModeInteraction.heldObject) {
-      const { originTx, originTy, layerName, cellData, tileMeta } = this.playModeInteraction.heldObject;
-      if (tileMeta && ((tileMeta.gridW && tileMeta.gridW > 1) || (tileMeta.gridH && tileMeta.gridH > 1))) {
-        this.tileMap.placeMultiTile(layerName, originTx, originTy, tileMeta, cellData.rotation || 0, !!cellData.flipX, cellData.collider, cellData.depthOffset);
-      } else {
-        this.tileMap.setTile(layerName, originTx, originTy, cellData.tileId, true, originTx, originTy, cellData.rotation || 0, !!cellData.flipX, cellData.collider, cellData.depthOffset);
-      }
+      const { originTx, originTy, layerName, cellData } = this.playModeInteraction.heldObject;
+      this.tileMap.pushStackTile(
+        layerName,
+        originTx,
+        originTy,
+        cellData.tileId,
+        cellData.rotation || 0,
+        !!cellData.flipX,
+        cellData.collider || null,
+        cellData.depthOffset || null,
+        cellData.extraProps || null
+      );
       this.showToast('Movimentação cancelada.');
     } else if (this.playModeInteraction.activeMode === 'place_inventory') {
       this.showToast('Posicionamento cancelado.');
@@ -2633,6 +2681,7 @@ class RPGApplication {
     this.playModeInteraction.placingItem = null;
     this.playModeInteraction.hoverTx = null;
     this.playModeInteraction.hoverTy = null;
+    this.canvas.style.cursor = 'var(--animal-cursor-default), default';
   }
 
   confirmPlayModePlacement() {
@@ -2646,34 +2695,49 @@ class RPGApplication {
     const targetTy = this.playModeInteraction.hoverTy;
 
     if (this.playModeInteraction.activeMode === 'move_object' && this.playModeInteraction.heldObject) {
-      const { layerName, cellData, tileMeta } = this.playModeInteraction.heldObject;
-      if (tileMeta && ((tileMeta.gridW && tileMeta.gridW > 1) || (tileMeta.gridH && tileMeta.gridH > 1))) {
-        this.tileMap.placeMultiTile(layerName, targetTx, targetTy, tileMeta, cellData.rotation || 0, !!cellData.flipX, cellData.collider, cellData.depthOffset);
-      } else {
-        this.tileMap.setTile(layerName, targetTx, targetTy, cellData.tileId, true, targetTx, targetTy, cellData.rotation || 0, !!cellData.flipX, cellData.collider, cellData.depthOffset);
-      }
+      const { layerName, cellData } = this.playModeInteraction.heldObject;
+      
+      // Empilha no destino (se o tile tiver outro objeto, empilha no topo estilo Tibia)
+      this.tileMap.pushStackTile(
+        layerName,
+        targetTx,
+        targetTy,
+        cellData.tileId,
+        cellData.rotation || 0,
+        !!cellData.flipX,
+        cellData.collider || null,
+        cellData.depthOffset || null,
+        cellData.extraProps || null
+      );
       
       this.player.spawnCraftPoof();
       soundFX.playPop(1.1);
-      this.showToast('Objeto posicionado com sucesso!');
+      const stackTotal = this.tileMap.getStackCount(layerName, targetTx, targetTy);
+      if (stackTotal > 1) {
+        this.showToast(`Objeto empilhado com sucesso (Camada ${stackTotal})!`);
+      } else {
+        this.showToast('Objeto posicionado com sucesso!');
+      }
       this.triggerAutoSave();
       if (this.supabaseClient) {
         this.supabaseClient.broadcastMapUpdate(this.tileMap.toJSON());
       }
     } else if (this.playModeInteraction.activeMode === 'place_inventory' && this.playModeInteraction.placingItem) {
-      const { inventoryItem, tileId, tileMeta } = this.playModeInteraction.placingItem;
+      const { inventoryItem, tileId } = this.playModeInteraction.placingItem;
       
       this.inventorySystem.removeItem(inventoryItem.id, 1);
       
-      if (tileMeta && ((tileMeta.gridW && tileMeta.gridW > 1) || (tileMeta.gridH && tileMeta.gridH > 1))) {
-        this.tileMap.placeMultiTile('solid', targetTx, targetTy, tileMeta);
-      } else {
-        this.tileMap.setTile('solid', targetTx, targetTy, tileId);
-      }
+      // Empilha na camada solid estilo Tibia
+      this.tileMap.pushStackTile('solid', targetTx, targetTy, tileId);
 
       this.player.spawnCraftPoof();
       soundFX.playPop(1.1);
-      this.showToast(`${inventoryItem.name} colocado no chão da ilha!`);
+      const stackTotal = this.tileMap.getStackCount('solid', targetTx, targetTy);
+      if (stackTotal > 1) {
+        this.showToast(`${inventoryItem.name} empilhado no chão da ilha (Altura ${stackTotal})!`);
+      } else {
+        this.showToast(`${inventoryItem.name} colocado no chão da ilha!`);
+      }
       this.tutorialManager?.onItemPlacedOnGround();
       this.triggerAutoSave();
       if (this.supabaseClient) {
@@ -2686,6 +2750,7 @@ class RPGApplication {
     this.playModeInteraction.placingItem = null;
     this.playModeInteraction.hoverTx = null;
     this.playModeInteraction.hoverTy = null;
+    this.canvas.style.cursor = 'var(--animal-cursor-default), default';
   }
 
   renderPlayModeInteractionOverlay(ctx) {
@@ -2728,7 +2793,7 @@ class RPGApplication {
       ctx.strokeRect(hx, hy, tileSize, tileSize);
       ctx.restore();
 
-      // 3. Renderização da Silhueta / Preview Transparente do Objeto
+      // 3. Renderização da Silhueta / Preview Transparente do Objeto (com elevação de empilhamento estilo Tibia)
       let meta = null;
       let cellData = null;
 
@@ -2739,6 +2804,11 @@ class RPGApplication {
         meta = this.playModeInteraction.placingItem?.tileMeta;
       }
 
+      // Calcula a altura da pilha no tile de destino sob o cursor
+      const currentStackUnderCursor = this.tileMap.getStackCount('solid', this.playModeInteraction.hoverTx, this.playModeInteraction.hoverTy);
+      const stackOffsetY = -16 * currentStackUnderCursor;
+      const previewY = hy + stackOffsetY;
+
       if (meta) {
         ctx.save();
         ctx.globalAlpha = 0.72;
@@ -2748,6 +2818,16 @@ class RPGApplication {
         const rawH = gridH * tileSize;
         const rot = cellData?.rotation || 0;
         const isFlipped = !!cellData?.flipX;
+
+        // Leve sombra sob a silhueta elevada
+        if (currentStackUnderCursor > 0) {
+          ctx.save();
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+          ctx.beginPath();
+          ctx.ellipse(hx + rawW / 2, previewY + rawH - 4, rawW * 0.4, 7, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
 
         let img = null;
         if (meta.isAnimated && meta.frames) {
@@ -2762,13 +2842,13 @@ class RPGApplication {
         if (img) {
           if (rot !== 0 || isFlipped) {
             ctx.save();
-            ctx.translate(hx + rawW / 2, hy + rawH / 2);
+            ctx.translate(hx + rawW / 2, previewY + rawH / 2);
             if (rot !== 0) ctx.rotate((rot * Math.PI) / 180);
             if (isFlipped) ctx.scale(-1, 1);
             ctx.drawImage(img, -rawW / 2, -rawH / 2, rawW, rawH);
             ctx.restore();
           } else {
-            ctx.drawImage(img, hx, hy, rawW, rawH);
+            ctx.drawImage(img, hx, previewY, rawW, rawH);
           }
         }
         ctx.restore();
@@ -2776,13 +2856,23 @@ class RPGApplication {
 
       // 4. Badge flutuante de instrução Animal Island UI logo acima do tile
       ctx.save();
-      const badgeText = isValid ? 'Clique para posicionar • [ESC] Cancelar' : 'Fora de alcance ou ocupado • [ESC] Cancelar';
+      let badgeText = '';
+      if (isValid) {
+        if (currentStackUnderCursor > 0) {
+          badgeText = `Clique para empilhar (Altura ${currentStackUnderCursor + 1}) • [ESC] Cancelar`;
+        } else {
+          badgeText = 'Clique para posicionar • [ESC] Cancelar';
+        }
+      } else {
+        badgeText = 'Fora de alcance ou ocupado • [ESC] Cancelar';
+      }
+
       ctx.font = 'bold 12px "Nunito", sans-serif';
       const textMetrics = ctx.measureText(badgeText);
       const badgeW = textMetrics.width + 20;
       const badgeH = 26;
       const badgeX = hx + 32 - badgeW / 2;
-      const badgeY = hy - 34;
+      const badgeY = previewY - 34;
 
       // Card pílula
       ctx.fillStyle = isValid ? '#fdfbf7' : '#fee2e2';
