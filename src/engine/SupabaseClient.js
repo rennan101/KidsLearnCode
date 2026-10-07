@@ -159,7 +159,17 @@ export class SupabaseClient {
         }
       });
 
-      if (error) return { success: false, error: error.message };
+      if (error) {
+        let msg = error.message;
+        if (msg.includes('rate limit') || msg.includes('over quota') || msg.includes('Email rate limit')) {
+          msg = 'Limite temporário de e-mails do Supabase atingido. Para permitir cadastros ilimitados sem bloqueios, desative a opção "Confirm email" no painel do Supabase.';
+        } else if (msg.includes('already registered') || msg.includes('already exists')) {
+          msg = 'Este e-mail já está cadastrado na Ilha Lua! Tente entrar ou recupere sua senha.';
+        } else if (msg.includes('Password should be at least')) {
+          msg = 'A senha precisa ter pelo menos 6 caracteres.';
+        }
+        return { success: false, error: msg };
+      }
 
       if (data.session && data.user) {
         this.user = data.user;
