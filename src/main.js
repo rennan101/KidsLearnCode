@@ -2064,13 +2064,19 @@ class RPGApplication {
         this.updateSaveIndicator('error');
       }
 
-      // Sincroniza com a Nuvem Supabase e transmite para todos os jogadores em tempo real
-      if (this.supabaseClient) {
-        if (!this.supabaseClient.user?.isGuest && this.supabaseClient.isValidUUID?.(this.supabaseClient.user?.id)) {
+      // Sincroniza com a Nuvem Supabase com throttling inteligente para economizar quota (Free Tier)
+      if (this.supabaseClient && !this.supabaseClient.user?.isGuest && this.supabaseClient.isValidUUID?.(this.supabaseClient.user?.id)) {
+        clearTimeout(this.cloudSaveDebounceTimer);
+        const timeSinceLastCloudSave = Date.now() - (this.lastCloudSaveTime || 0);
+        if (instant || timeSinceLastCloudSave >= 20000) {
+          this.lastCloudSaveTime = Date.now();
           this.supabaseClient.saveCloudGame(payload);
+        } else {
+          this.cloudSaveDebounceTimer = setTimeout(() => {
+            this.lastCloudSaveTime = Date.now();
+            this.supabaseClient?.saveCloudGame(payload);
+          }, 20000 - timeSinceLastCloudSave);
         }
-        // Salva e transmite o mapa mundial moldável online para todos os jogadores visualizarem
-        this.supabaseClient.saveGlobalWorldMap(mapData);
       }
     } catch (err) {
       console.warn('Failed to auto-save to StorageManager:', err);

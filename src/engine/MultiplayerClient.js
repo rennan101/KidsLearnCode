@@ -22,9 +22,9 @@ export class MultiplayerClient {
 
     this.supabaseClient = null;
 
-    // Throttling e detecção de mudança para economizar cota do Supabase Realtime
+    // Throttling e detecção de mudança para economizar cota do Supabase Realtime (Free Tier)
     this.lastBroadcastTime = 0;
-    this.broadcastIntervalMs = 120; // ~8 updates por segundo máx quando em movimento
+    this.broadcastIntervalMs = 250; // 4 updates/segundo máx (interpolado suavemente por LERP no client)
     this.lastSentState = {
       x: null,
       y: null,
@@ -169,7 +169,7 @@ export class MultiplayerClient {
       this.lastSentState.activeDragonId !== activeDragonId;
 
     const timeSinceLastSend = now - this.lastBroadcastTime;
-    const shouldSendPeriodicIdle = (now - this.lastSentState.idleHeartbeatTime) > 10000; // Heartbeat a cada 10s quando parado
+    const shouldSendPeriodicIdle = (now - this.lastSentState.idleHeartbeatTime) > 30000; // Heartbeat a cada 30s apenas se parado
 
     // Send only if enough time passed AND (player moved OR action changed OR heartbeat)
     const shouldSend = (timeSinceLastSend >= this.broadcastIntervalMs && (hasMoved || hasActionChanged)) || shouldSendPeriodicIdle;
