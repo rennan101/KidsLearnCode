@@ -58,6 +58,24 @@ export class SupabaseClient {
           this.notifyAuthChange(event, session);
         });
 
+        // Trata explicitamente código de confirmação PKCE caso retorne via URL query (?code=...)
+        if (typeof window !== 'undefined' && window.location?.search?.includes('code=')) {
+          try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const authCode = urlParams.get('code');
+            if (authCode) {
+              const { data: exchangeData, error: exchangeErr } = await this.client.auth.exchangeCodeForSession(authCode);
+              if (exchangeData?.session?.user) {
+                console.log('[SupabaseClient] Sessão confirmada via código PKCE:', exchangeData.session.user.email);
+              } else if (exchangeErr) {
+                console.warn('[SupabaseClient] Aviso na validação do código de confirmação:', exchangeErr.message);
+              }
+            }
+          } catch (e) {
+            console.warn('[SupabaseClient] Processamento de token de URL:', e.message);
+          }
+        }
+
         const { data: { session } } = await this.client.auth.getSession();
         if (session && session.user) {
           this.user = session.user;
