@@ -500,6 +500,8 @@ export class SupabaseClient {
       } catch (_) {}
     }
 
+    this.onlineUsersCount = 1;
+
     try {
       this.realtimeChannel = this.client.channel('island_world_mmo', {
         config: {
@@ -509,6 +511,18 @@ export class SupabaseClient {
       });
 
       this.realtimeChannel
+        .on('presence', { event: 'sync' }, () => {
+          const state = this.realtimeChannel?.presenceState() || {};
+          this.onlineUsersCount = Object.keys(state).length;
+        })
+        .on('presence', { event: 'join' }, () => {
+          const state = this.realtimeChannel?.presenceState() || {};
+          this.onlineUsersCount = Object.keys(state).length;
+        })
+        .on('presence', { event: 'leave' }, () => {
+          const state = this.realtimeChannel?.presenceState() || {};
+          this.onlineUsersCount = Object.keys(state).length;
+        })
         .on('broadcast', { event: 'player_move' }, (payload) => {
           if (payload.payload && onRemotePlayerUpdate) {
             onRemotePlayerUpdate(payload.payload);
@@ -527,7 +541,7 @@ export class SupabaseClient {
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
             this.realtimeChannel.track({
-              id: this.user?.id,
+              id: this.user?.id || 'guest',
               nickname: this.user?.nickname || this.user?.user_metadata?.nickname || 'Aventureiro',
               onlineAt: new Date().toISOString()
             });
@@ -540,6 +554,8 @@ export class SupabaseClient {
 
   broadcastPlayerPosition(player, heroId, name, activeDragonId) {
     if (!this.realtimeChannel) return;
+    // OTIMIZAÇÃO CRÍTICA FREE-TIER: Não gasta cota de Realtime Messages se não houver outros jogadores na sala!
+    if (this.onlineUsersCount <= 1) return;
 
     this.realtimeChannel.send({
       type: 'broadcast',
@@ -577,6 +593,8 @@ export class SupabaseClient {
 
   broadcastMapUpdate(mapData) {
     if (!this.realtimeChannel || !mapData) return;
+    // Se estiver sozinho, não gasta broadcast de mapa
+    if (this.onlineUsersCount <= 1) return;
 
     this.realtimeChannel.send({
       type: 'broadcast',
