@@ -353,17 +353,20 @@ export class ModularAvatarRenderer {
 
   drawHeadBase(ctx, cfg, dir) {
     const isBackView = dir === 'north';
-    // Na vista traseira (north), a cabeça inteira fica na cor do cabelo
-    const skin = isBackView ? (cfg.hairColor || '#3d2314') : (cfg.skinTone || '#ffd0a8');
+    const skin = cfg.skinTone || '#ffd0a8';
     const hair = cfg.hairColor || '#3d2314';
     const headId = cfg.headStyle || 'head_01';
 
     ctx.save();
 
     // 1. Renderiza o Head SVG Oficial (Cabeça + Penteado + Orelhas integradas dos arquivos assets/characters/Heads)
-    const headSvg = getHeadSvgContent(headId, skin, hair);
+    // Na vista traseira (north), a base da cabeça fica na cor do cabelo, mantendo as orelhas na cor da pele
+    const headSvg = getHeadSvgContent(headId, skin, hair, isBackView);
     const headDef = SVG_HEADS.find(h => h.id === headId) || SVG_HEADS[0];
-    const img = this.getSvgImage(`head_${headId}_${skin}_${hair}`, headSvg);
+    const cacheKey = isBackView
+      ? `head_back_${headId}_${skin}_${hair}`
+      : `head_${headId}_${skin}_${hair}`;
+    const img = this.getSvgImage(cacheKey, headSvg);
 
     if (img && img.complete && img.naturalWidth > 0) {
       // O viewBox de headDef está mapeado com precisão pelo centro (1250, 760)
@@ -374,9 +377,12 @@ export class ModularAvatarRenderer {
       ctx.drawImage(img, vx - cx, vy - cy, vw, vh);
     } else {
       // Fallback vetorial instantâneo enquanto a imagem carrega no primeiro tick
-      ctx.fillStyle = skin;
+      ctx.fillStyle = isBackView ? hair : skin;
       const headLocalPath = this.getPath2D('M0 -350C230 -350 390 -200 390 0C390 160 310 320 170 375C100 400 -100 400 -170 375C-310 320 -390 160 -390 0C-390 -200 -230 -350 0 -350Z');
       ctx.fill(headLocalPath);
+      if (isBackView) {
+        this.drawEars(ctx, 0, 0, cfg, dir);
+      }
     }
 
     ctx.restore();

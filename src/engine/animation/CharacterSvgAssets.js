@@ -263,10 +263,20 @@ export function getHeadBackSvgContent(headId, hairColor = "#4a2e18") {
   return svg;
 }
 
-export function getHeadSvgContent(headId, skinTone = "#f6dab9", hairColor = "#4a2e18") {
+export function getHeadSvgContent(headId, skinTone = "#f6dab9", hairColor = "#4a2e18", isBackView = false) {
   const head = SVG_HEADS.find(h => h.id === headId) || SVG_HEADS[0];
   let svg = head.svgContent;
-  svg = svg.replace(/rgb\(246,218,185\)/g, skinTone);
+  if (isBackView) {
+    // Na vista traseira (north), a base da cabeça fica na cor do cabelo,
+    // mas as orelhas (_01_Orelha_Esquerda e _02_Orelha_Direita) permanecem sempre na cor da pele escolhida
+    svg = svg.replace(/(<g[^>]*id="_0[12]_Orelha_(?:Esquerda|Direita)"[\s\S]*?<\/g>\s*<\/g>)/g, (earBlock) => {
+      return earBlock.replace(/rgb\(246,218,185\)/g, '__EAR_SKIN_COLOR__');
+    });
+    svg = svg.replace(/rgb\(246,218,185\)/g, hairColor);
+    svg = svg.replace(/__EAR_SKIN_COLOR__/g, skinTone);
+  } else {
+    svg = svg.replace(/rgb\(246,218,185\)/g, skinTone);
+  }
   svg = svg.replace(/rgb\(74,46,24\)/g, hairColor);
   if (head.viewBox) {
     svg = svg.replace(/viewBox="[^"]*"/, `viewBox="${head.viewBox}"`);
