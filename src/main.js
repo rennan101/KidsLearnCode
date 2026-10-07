@@ -2295,8 +2295,9 @@ class RPGApplication {
   }
 
   isAdminUser() {
-    const email = this.supabaseClient?.user?.email;
-    return email === 'rennancr93@gmail.com';
+    const email = this.supabaseClient?.user?.email?.toLowerCase().trim();
+    const adminEmails = ['rennancr93@gmail.com', 'eduardasa@proton.me'];
+    return Boolean(email && adminEmails.includes(email));
   }
 
   updateAdminAndModeUI() {
@@ -2316,7 +2317,7 @@ class RPGApplication {
     }
 
     // 2. Opções admin / desenvolvedor (Colliders, Save JSON, Load JSON, Clear Map)
-    // Só devem aparecer no modo de edição para a conta com o e-mail rennancr93@gmail.com
+    // Só devem aparecer no modo de edição para administradores autorizados
     const adminButtons = [
       'btn-toggle-colliders',
       'btn-water-settings',
