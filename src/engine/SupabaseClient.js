@@ -8,29 +8,56 @@ import { SUPABASE_CONFIG } from '../config/supabase.js';
 
 export class SupabaseClient {
   constructor() {
-    this.url = localStorage.getItem('kidslearn_supabase_url') || SUPABASE_CONFIG.url || '';
-    this.anonKey = localStorage.getItem('kidslearn_supabase_key') || SUPABASE_CONFIG.anonKey || '';
+    const storedUrl = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_supabase_url')) || '';
+    const storedKey = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_supabase_key')) || '';
+
+    this.url = (storedUrl && storedUrl.startsWith('https://')) ? storedUrl.trim() : (SUPABASE_CONFIG.url || '');
+    this.anonKey = (storedKey && storedKey.length > 20) ? storedKey.trim() : (SUPABASE_CONFIG.anonKey || '');
     this.client = null;
     this.user = null;
     this.profile = null;
     this.isConfigured = false;
     this.realtimeChannel = null;
     this.listeners = [];
+    this.initPromise = null;
   }
 
   async init() {
-    try {
-      // Importa dinamicamente a SDK do Supabase com timeout de segurança (2.5s)
-      const importPromise = import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Supabase SDK load timeout')), 2500));
-      
-      const { createClient } = await Promise.race([importPromise, timeoutPromise]);
-      
-      const activeUrl = this.url.trim();
-      const activeKey = this.anonKey.trim();
+    if (this.initPromise) return this.initPromise;
+    this.initPromise = this._doInit();
+    return this.initPromise;
+  }
 
-      if (activeUrl && activeUrl.startsWith('https://') && activeKey && activeKey.length > 20) {
-        this.client = createClient(activeUrl, activeKey, {
+  async _doInit() {
+    try {
+      let createClientFn = null;
+
+      // 1. Tenta carregar do escopo global se existir
+      if (typeof window !== 'undefined' && window.supabase && typeof window.supabase.createClient === 'function') {
+        createClientFn = window.supabase.createClient;
+      } else {
+        // 2. Import dinâmico com múltiplos CDNs resilientes
+        try {
+          const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+          createClientFn = mod.createClient;
+        } catch (e1) {
+          try {
+            const mod2 = await import('https://esm.sh/@supabase/supabase-js@2');
+            createClientFn = mod2.createClient;
+          } catch (e2) {
+            console.warn('[SupabaseClient] CDNs indisponíveis:', e1.message, e2.message);
+          }
+        }
+      }
+
+      const activeUrl = (this.url && this.url.startsWith('https://')) ? this.url.trim() : (SUPABASE_CONFIG.url || '').trim();
+      const activeKey = (this.anonKey && this.anonKey.length > 20) ? this.anonKey.trim() : (SUPABASE_CONFIG.anonKey || '').trim();
+
+      if (createClientFn && activeUrl && activeKey) {
+        this.url = activeUrl;
+        this.anonKey = activeKey;
+
+        this.client = createClientFn(activeUrl, activeKey, {
           auth: {
             persistSession: true,
             autoRefreshToken: true,
@@ -48,7 +75,7 @@ export class SupabaseClient {
             this.setupRealtimeChannel();
 
             // Limpa parâmetros de token e hash da URL após confirmação de e-mail bem-sucedida
-            if (window.location.hash.includes('access_token') || window.location.search.includes('code=')) {
+            if (typeof window !== 'undefined' && (window.location.hash.includes('access_token') || window.location.search.includes('code='))) {
               window.history.replaceState({}, document.title, window.location.pathname);
             }
           } else if (event === 'SIGNED_OUT') {
@@ -96,13 +123,19 @@ export class SupabaseClient {
     return { success: false, user: this.user, isConfigured: false };
   }
 
+  async ensureClient() {
+    if (this.client) return this.client;
+    await this.init();
+    return this.client;
+  }
+
   getGuestUser() {
-    let guestId = localStorage.getItem('kidslearn_guest_id');
+    let guestId = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_guest_id')) || '';
     if (!guestId) {
       guestId = 'guest_' + Math.random().toString(36).substring(2, 9);
-      localStorage.setItem('kidslearn_guest_id', guestId);
+      if (typeof localStorage !== 'undefined') localStorage.setItem('kidslearn_guest_id', guestId);
     }
-    const guestName = localStorage.getItem('kidslearn_guest_name') || `Aventureiro_${guestId.substring(6, 10)}`;
+    const guestName = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_guest_name')) || `Aventureiro_${guestId.substring(6, 10)}`;
     return {
       id: guestId,
       email: `${guestId}@kidslearncode.local`,
@@ -114,8 +147,11 @@ export class SupabaseClient {
   setCredentials(url, key) {
     this.url = url.trim();
     this.anonKey = key.trim();
-    localStorage.setItem('kidslearn_supabase_url', this.url);
-    localStorage.setItem('kidslearn_supabase_key', this.anonKey);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('kidslearn_supabase_url', this.url);
+      localStorage.setItem('kidslearn_supabase_key', this.anonKey);
+    }
+    this.initPromise = null;
     return this.init();
   }
 
@@ -133,10 +169,11 @@ export class SupabaseClient {
   // ==========================================
 
   async signUp(email, password, nickname = 'Aventureiro', extraData = {}) {
+    await this.ensureClient();
     if (!this.client) {
       return { 
         success: false, 
-        error: 'Supabase não conectado. Configure a URL e a Anon Key do projeto nas configurações.' 
+        error: 'Não foi possível conectar ao servidor. Verifique sua conexão com a internet.' 
       };
     }
 
@@ -200,10 +237,11 @@ export class SupabaseClient {
   }
 
   async signIn(email, password) {
+    await this.ensureClient();
     if (!this.client) {
       return { 
         success: false, 
-        error: 'Supabase não conectado. Configure a URL e a Anon Key do projeto nas configurações.' 
+        error: 'Não foi possível conectar ao servidor. Verifique sua conexão com a internet.' 
       };
     }
 
@@ -213,11 +251,19 @@ export class SupabaseClient {
         password
       });
 
-      if (error) return { success: false, error: error.message };
+      if (error) {
+        let msg = error.message;
+        if (msg.includes('Invalid login credentials')) {
+          msg = 'E-mail ou senha incorretos. Verifique os dados digitados.';
+        } else if (msg.includes('Email not confirmed')) {
+          msg = 'Este e-mail ainda não foi confirmado. Acesse sua caixa de entrada ou solicite a liberação imediata ao administrador desmarcando "Confirm email" no Supabase.';
+        }
+        return { success: false, error: msg };
+      }
       
       this.user = data.user;
       this.profile = await this.getUserProfile();
-      this.notifyAuthChange();
+      this.notifyAuthChange('SIGNED_IN', data.session);
       this.setupRealtimeChannel();
       return { success: true, user: data.user, profile: this.profile };
     } catch (err) {
@@ -226,10 +272,11 @@ export class SupabaseClient {
   }
 
   async resetPassword(email) {
+    await this.ensureClient();
     if (!this.client) {
       return { 
         success: false, 
-        error: 'Supabase não conectado. Configure a URL e a Anon Key do projeto nas configurações.' 
+        error: 'Não foi possível conectar ao servidor. Verifique sua conexão com a internet.' 
       };
     }
 
@@ -251,10 +298,11 @@ export class SupabaseClient {
   }
 
   async updatePassword(newPassword) {
+    await this.ensureClient();
     if (!this.client) {
       return { 
         success: false, 
-        error: 'Supabase não conectado.' 
+        error: 'Não foi possível conectar ao servidor.' 
       };
     }
 
@@ -290,6 +338,7 @@ export class SupabaseClient {
   // ==========================================
 
   async getUserProfile() {
+    await this.ensureClient();
     if (!this.client || this.user?.isGuest) return null;
 
     try {
@@ -314,6 +363,7 @@ export class SupabaseClient {
   }
 
   async syncUserProfile(profileData = {}) {
+    await this.ensureClient();
     if (!this.client || this.user?.isGuest) return null;
 
     try {
@@ -358,12 +408,13 @@ export class SupabaseClient {
   }
 
   async saveGlobalWorldMap(mapData) {
+    await this.ensureClient();
     if (!this.client || !mapData) {
       return { success: false, reason: 'offline_or_invalid_map' };
     }
 
     try {
-      // 1. Sempre dispara broadcast em tempo real para sincronizar players online
+      // 1. Dispara broadcast em tempo real apenas se houver players online
       this.broadcastMapUpdate(mapData);
 
       // 2. Apenas tenta salvar no banco se houver usuário autenticado válido
@@ -375,9 +426,6 @@ export class SupabaseClient {
         user_id: this.user.id,
         map_data: mapData,
         player_data: { x: mapData.spawnPoint?.x || 320, y: mapData.spawnPoint?.y || 320 },
-        inventory_data: {},
-        dragons_data: {},
-        coding_progress: {},
         updated_at: new Date().toISOString()
       };
 
@@ -395,6 +443,7 @@ export class SupabaseClient {
   }
 
   async loadGlobalWorldMap() {
+    await this.ensureClient();
     if (!this.client) return null;
 
     try {
@@ -435,6 +484,7 @@ export class SupabaseClient {
   }
 
   async saveCloudGame(payload) {
+    await this.ensureClient();
     if (!this.client || !this.user || this.user.isGuest || !this.isValidUUID(this.user.id)) {
       return { success: false, reason: 'guest_or_offline' };
     }
@@ -460,6 +510,7 @@ export class SupabaseClient {
   }
 
   async loadCloudGame() {
+    await this.ensureClient();
     if (!this.client || !this.user || this.user.isGuest || !this.isValidUUID(this.user.id)) {
       return null;
     }
