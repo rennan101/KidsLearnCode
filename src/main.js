@@ -1575,6 +1575,12 @@ class RPGApplication {
     });
 
     btnEdit.addEventListener('click', () => {
+      if (!this.isAdminUser()) {
+        soundFX?.playPop(0.7);
+        this.showToast('O Modo de Edição é exclusivo para os Administradores da ilha.');
+        return;
+      }
+
       this.mode = 'edit';
       this.player.resetKeys();
       this.editorController.resetKeys();
@@ -2383,10 +2389,27 @@ class RPGApplication {
     const isEdit = this.mode === 'edit';
     const isAdmin = this.isAdminUser();
 
+    // Se o usuário não for admin e de alguma forma estiver em modo edit, força retorno imediato para play mode
+    if (!isAdmin && this.mode === 'edit') {
+      this.mode = 'play';
+      const btnPlay = document.getElementById('btn-mode-play');
+      const btnEdit = document.getElementById('btn-mode-edit');
+      if (btnPlay) btnPlay.classList.add('active');
+      if (btnEdit) btnEdit.classList.remove('active');
+      const statusMode = document.getElementById('status-mode');
+      if (statusMode) statusMode.innerText = 'PLAY';
+    }
+
+    // 0. Botão de Alternar para Editor: Visível APENAS para administradores
+    const btnModeEdit = document.getElementById('btn-mode-edit');
+    if (btnModeEdit) {
+      btnModeEdit.style.display = isAdmin ? 'inline-flex' : 'none';
+    }
+
     // 1. Badge de status de persistência (Apenas no Modo de Edição)
     const saveStatus = document.getElementById('save-status');
     if (saveStatus) {
-      saveStatus.style.display = isEdit ? 'flex' : 'none';
+      saveStatus.style.display = (isEdit && isAdmin) ? 'flex' : 'none';
     }
 
     // 1b. Minimap HUD: completamente oculto no Modo de Edição para não obstruir a barra de ferramentas
@@ -2428,13 +2451,13 @@ class RPGApplication {
       if (headerLogoutBtn) headerLogoutBtn.style.display = 'none';
     }
 
-    // 4. Asset Drawer & Editor controls strictly hidden in Play Mode
+    // 4. Asset Drawer & Editor controls strictly hidden in Play Mode or for non-admins
     const assetDrawer = document.getElementById('asset-drawer');
     const btnToggleDrawer = document.getElementById('btn-toggle-drawer');
     const editorTools = document.getElementById('editor-tools');
     const playHint = document.getElementById('play-hint');
 
-    if (!isEdit) {
+    if (!isEdit || !isAdmin) {
       if (assetDrawer) {
         assetDrawer.classList.add('collapsed');
         assetDrawer.style.display = 'none';
@@ -2631,6 +2654,9 @@ class RPGApplication {
       soundFX.playPop(1.1);
       this.showToast('Objeto posicionado com sucesso!');
       this.triggerAutoSave();
+      if (this.supabaseClient) {
+        this.supabaseClient.broadcastMapUpdate(this.tileMap.toJSON());
+      }
     } else if (this.playModeInteraction.activeMode === 'place_inventory' && this.playModeInteraction.placingItem) {
       const { inventoryItem, tileId, tileMeta } = this.playModeInteraction.placingItem;
       
@@ -2647,6 +2673,9 @@ class RPGApplication {
       this.showToast(`${inventoryItem.name} colocado no chão da ilha!`);
       this.tutorialManager?.onItemPlacedOnGround();
       this.triggerAutoSave();
+      if (this.supabaseClient) {
+        this.supabaseClient.broadcastMapUpdate(this.tileMap.toJSON());
+      }
     }
 
     this.playModeInteraction.activeMode = null;
