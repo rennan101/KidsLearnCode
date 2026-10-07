@@ -630,6 +630,7 @@ export class SupabaseClient {
         isMounted: player.isMounted,
         activeDragonId
       }
+    });
   }
 
   broadcastChatMessage(text, player, senderName) {

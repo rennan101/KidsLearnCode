@@ -289,6 +289,9 @@ class RPGApplication {
     } catch (tutErr) {
       console.warn('TutorialManager start error:', tutErr);
     }
+
+    // Garante que a tela de carregamento seja fechada
+    hideLoader();
   }
 
   setupWindowResize() {
