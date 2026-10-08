@@ -46,6 +46,9 @@ class RPGApplication {
     }
     this.scratchEngine = new ScratchBlockEngine();
     this.multiplayerClient = new MultiplayerClient();
+    if (this.dragonManager) {
+      this.multiplayerClient.attachDragonManager(this.dragonManager);
+    }
     this.tutorialManager = new TutorialManager(this);
     this.characterCreator = new CharacterCreator({
       onSave: (config) => this.handleCustomAvatarSave(config)
@@ -3692,7 +3695,9 @@ class RPGApplication {
             avatarConfig: this.player.customAvatarConfig,
             scale: this.player.scale || 1.0,
             dragonMode: this.dragonManager?.mode || (isMounted ? 'mounted' : (activeDragonId ? 'follow' : 'none')),
-            flightAltitude: (isMounted && this.dragonManager) ? (this.dragonManager.flightAltitude || 0) : 0
+            flightAltitude: (isMounted && this.dragonManager) ? (this.dragonManager.flightAltitude || 0) : 0,
+            dragonX: this.dragonManager ? this.dragonManager.x : null,
+            dragonY: this.dragonManager ? this.dragonManager.y : null
           }
         );
       }

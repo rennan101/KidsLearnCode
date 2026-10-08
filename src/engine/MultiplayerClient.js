@@ -360,11 +360,28 @@ export class MultiplayerClient {
   update(deltaTime, dialogueSystem) {
     const dt = Math.min(deltaTime / 1000, 0.1);
 
-    // 1. Update real remote players LERP
+    // 1. Update real remote players Velocity LERP (Anti-Teletransporte)
     for (const [, rp] of this.remotePlayers) {
       rp.animTimer = (rp.animTimer || 0) + dt;
-      rp.x += (rp.targetX - rp.x) * Math.min(1.0, 10 * dt);
-      rp.y += (rp.targetY - rp.y) * Math.min(1.0, 10 * dt);
+      rp.dragonAnimTimer = (rp.dragonAnimTimer || 0) + dt;
+
+      const lerpSpeed = rp.isSprinting ? 22 : 18;
+      const step = Math.min(1.0, lerpSpeed * dt);
+
+      // Aproximação contínua e suave em direção ao alvo
+      rp.x += (rp.targetX - rp.x) * step;
+      rp.y += (rp.targetY - rp.y) * step;
+
+      // Suavização da posição do Dragão Remoto
+      if (rp.dragonTargetX !== undefined && rp.dragonTargetY !== undefined) {
+        if (rp.isMounted) {
+          rp.dragonX = rp.x;
+          rp.dragonY = rp.y;
+        } else {
+          rp.dragonX = (rp.dragonX || rp.x) + (rp.dragonTargetX - (rp.dragonX || rp.x)) * Math.min(1.0, 14 * dt);
+          rp.dragonY = (rp.dragonY || rp.y) + (rp.dragonTargetY - (rp.dragonY || rp.y)) * Math.min(1.0, 14 * dt);
+        }
+      }
     }
 
     // 2. Update simulated offline bots
@@ -446,6 +463,115 @@ export class MultiplayerClient {
     }
   }
 
+  // Renderiza um dragão remoto com animações completas SVG, direção, sombra e flutuação
+  renderRemoteDragonVisual(ctx, dragonId, drawX, drawY, dir, alt, animTimer, isMounted, assetLoader, isReflection = false) {
+    const dragonData = DRAGON_CATALOG ? DRAGON_CATALOG.find(d => d.id === dragonId) : null;
+    const isWest = dir === 'west';
+    const isFrontOrBack = dir === 'north' || dir === 'south';
+    const bounce = Math.sin((animTimer || 0) * (alt > 10 ? 8 : 4)) * (alt > 10 ? 6 : 4);
+    const dgDrawY = drawY + bounce - alt;
+
+    // 1. Sombra do Dragão no Chão
+    if (!isReflection) {
+      ctx.save();
+      const shadowScaleX = 20 + (alt * 0.14);
+      const shadowScaleY = 8 + (alt * 0.06);
+      const shadowAlpha = isMounted ? Math.max(0.12, 0.38 - (alt / 120) * 0.20) : 0.28;
+      ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+      ctx.beginPath();
+      ctx.ellipse(drawX + 32, drawY + (isMounted ? 54 : 44), shadowScaleX, shadowScaleY, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 2. Animação de Frames SVG com Direção
+    const spriteSet = this.dragonSpriteFrames?.[dragonId] || this.dragonManager?.dragonSpriteFrames?.[dragonId];
+    if (spriteSet) {
+      let frames = spriteSet.flying_side || spriteSet.flying;
+      if (dir === 'north' && spriteSet.flying_north?.length) {
+        frames = spriteSet.flying_north;
+      } else if (dir === 'south' && spriteSet.flying_south?.length) {
+        frames = spriteSet.flying_south;
+      }
+
+      if (frames && frames.length > 0) {
+        const frameIdx = Math.floor(((animTimer || 0) * 10) % frames.length);
+        const frameImg = frames[frameIdx];
+
+        if (frameImg && frameImg.complete && frameImg.naturalWidth > 0) {
+          ctx.save();
+          ctx.translate(drawX + 32, dgDrawY + 28);
+          if (isWest) {
+            ctx.scale(-1, 1);
+          }
+          const spriteSize = isFrontOrBack ? 104 : 112;
+          const halfSize = spriteSize / 2;
+          ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
+          ctx.restore();
+          return;
+        }
+      }
+    }
+
+    // 3. Fallback: Sprite estático do catálogo
+    const spritePath = dragonData?.iconPath || dragonData?.image;
+    const staticImg = assetLoader?.getImage(spritePath);
+    if (staticImg && staticImg.complete && staticImg.naturalWidth > 0) {
+      ctx.save();
+      ctx.translate(drawX + 32, dgDrawY + 28);
+      if (isWest) ctx.scale(-1, 1);
+      ctx.drawImage(staticImg, -48, -48, 96, 96);
+      ctx.restore();
+      return;
+    }
+
+    // 4. Fallback Vetorial com Asas Batendo
+    ctx.save();
+    if (isWest) {
+      ctx.translate(drawX + 64, dgDrawY);
+      ctx.scale(-1, 1);
+    } else {
+      ctx.translate(drawX, dgDrawY);
+    }
+    const bodyColor = dragonData?.color || '#38bdf8';
+    const accentColor = dragonData?.secondaryColor || '#fef08a';
+    const flapFreq = alt > 10 ? 14 : 7;
+    const flapAmp = alt > 10 ? 9 : 5;
+    const wingFlap = Math.sin((animTimer || 0) * flapFreq) * flapAmp;
+
+    // Asas
+    ctx.fillStyle = accentColor;
+    ctx.beginPath();
+    ctx.ellipse(22, 28 - wingFlap, 14, 8, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(42, 28 + wingFlap, 14, 8, 0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Corpo
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.ellipse(32, 34, 18, 14, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cabeça
+    ctx.beginPath();
+    ctx.arc(42, 26, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Olho
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(45, 24, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#794f27';
+    ctx.beginPath();
+    ctx.arc(46, 24, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
   renderRemotePlayer(ctx, player, assetLoader, isReflection = false) {
     ctx.save();
     const s = player.scale || 1.0;
@@ -453,42 +579,19 @@ export class MultiplayerClient {
     const drawY = Math.round(player.y);
     const heroId = player.heroId || 'char_wolf_hunter_m';
     const activeDragonId = player.activeDragonId;
-    const isMounted = !!player.isMounted;
+    const isMounted = Boolean(player.isMounted);
     const alt = player.flightAltitude || 0;
     const dir = player.direction || 'south';
+    const animTimer = player.dragonAnimTimer || player.animTimer || 0;
 
-    // 0. Render Companion Dragon Underlay (quando o dragão estiver em modo 'follow' ao lado do jogador)
-    if (activeDragonId && !isMounted && DRAGON_CATALOG) {
-      const dragonData = DRAGON_CATALOG.find(d => d.id === activeDragonId);
-      if (dragonData) {
-        ctx.save();
-        const dragonOffset = (dir === 'east') ? { x: -36, y: -8 } : ((dir === 'west') ? { x: 36, y: -8 } : { x: -28, y: -16 });
-        const dgX = drawX + dragonOffset.x;
-        const dgY = drawY + dragonOffset.y + Math.sin((player.animTimer || 0) * 4) * 4;
-
-        // Shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-        ctx.beginPath();
-        ctx.ellipse(dgX + 24, drawY + 48, 16, 6, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Animated SVG frame or Vector Fallback
-        const spritePath = dragonData.iconPath || dragonData.image;
-        const dragonImg = assetLoader?.getImage(spritePath);
-        if (dragonImg && dragonImg.complete && dragonImg.naturalWidth > 0) {
-          ctx.drawImage(dragonImg, dgX - 24, dgY - 24, 96, 96);
-        } else {
-          // Vector Fallback
-          ctx.fillStyle = dragonData.color || '#38bdf8';
-          ctx.beginPath();
-          ctx.ellipse(dgX + 24, dgY + 24, 16, 14, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.restore();
-      }
+    // 0. Render Companion Dragon Underlay (quando em modo 'follow' acompanhando o jogador)
+    if (activeDragonId && !isMounted) {
+      const dgX = player.dragonX !== undefined ? Math.round(player.dragonX) : (drawX - 28);
+      const dgY = player.dragonY !== undefined ? Math.round(player.dragonY) : (drawY - 14);
+      this.renderRemoteDragonVisual(ctx, activeDragonId, dgX, dgY, dir, 0, animTimer, false, assetLoader, isReflection);
     }
 
-    // 1. Sombra circular nos pés (omitida em reflexos ou quando montado alto)
+    // 1. Sombra circular nos pés do jogador (omitida em reflexos ou quando montado alto)
     if (!isReflection && (!isMounted || alt <= 5)) {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
       ctx.beginPath();
@@ -496,37 +599,12 @@ export class MultiplayerClient {
       ctx.fill();
     }
 
-    // 1b. Se estiver montado, renderiza a base do dragão de montaria
-    if (isMounted && activeDragonId && DRAGON_CATALOG) {
-      const dragonData = DRAGON_CATALOG.find(d => d.id === activeDragonId);
-      if (dragonData) {
-        ctx.save();
-        const bounce = Math.sin((player.animTimer || 0) * (alt > 10 ? 8 : 4)) * (alt > 10 ? 6 : 4);
-        const dgMountY = drawY + bounce - alt;
-
-        // Sombra no chão em voo
-        if (!isReflection) {
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
-          ctx.beginPath();
-          ctx.ellipse(drawX + 32, drawY + 54, 20 + alt * 0.1, 8 + alt * 0.05, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        const spritePath = dragonData.iconPath || dragonData.image;
-        const dragonImg = assetLoader?.getImage(spritePath);
-        if (dragonImg && dragonImg.complete && dragonImg.naturalWidth > 0) {
-          ctx.drawImage(dragonImg, drawX - 16, dgMountY - 16, 96, 96);
-        } else {
-          ctx.fillStyle = dragonData.color || '#38bdf8';
-          ctx.beginPath();
-          ctx.ellipse(drawX + 32, dgMountY + 36, 22, 18, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.restore();
-      }
+    // 1b. Se estiver montado, renderiza o Dragão sob o avatar
+    if (isMounted && activeDragonId) {
+      this.renderRemoteDragonVisual(ctx, activeDragonId, drawX, drawY, dir, alt, animTimer, true, assetLoader, isReflection);
     }
 
-    // 2. Modular Cutout Avatar Engine (Renderiza sempre o avatar fiel personalizado ou herói)
+    // 2. Modular Cutout Avatar Engine (Renderiza o avatar fiel do jogador ou herói)
     const avatarConfig = player.avatarConfig || MASTER_NPC_CONFIGS[heroId] || DEFAULT_AVATAR_CONFIG;
     if (this.avatarRenderer) {
       let animState = 'idle';
@@ -549,7 +627,7 @@ export class MultiplayerClient {
         avatarScale
       );
     } else {
-      // Fallback simples de emergência
+      // Fallback simples
       const rowMap = { south: 0, east: 1, north: 2, west: 3 };
       const row = rowMap[dir] ?? 0;
       let col = player.isMoving ? 2 : 0;
