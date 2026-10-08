@@ -989,7 +989,7 @@ export class DragonManager {
     const level = dragon.level || 1;
     const px = player ? (player.x + 32) : (this.x + 32);
     const py = player ? (player.y + 32) : (this.y + 32);
-    const dir = player ? player.direction : 'south';
+    const dir = player ? (player.direction || 'south') : (this.direction || 'south');
     const tileSize = 64;
 
     let fwdX = 0, fwdY = 1;
@@ -1004,10 +1004,10 @@ export class DragonManager {
     const isTerrain = (slotIndex === 1);
 
     if (level <= 4) {
-      // Lv 1-4: Exactly 1 tile in front (64px)
+      // Lv 1-4: Exactly 1 tile in front (64px) in facing direction
       tiles.push({ x: px + fwdX * tileSize, y: py + fwdY * tileSize });
     } else if (level <= 14) {
-      // Lv 5-14: 2 to 3 tiles in front / narrow line
+      // Lv 5-14: 2 to 3 tiles in front / narrow cone
       const reach = isUltimate ? 3 : 2;
       for (let r = 1; r <= reach; r++) {
         tiles.push({ x: px + fwdX * (r * tileSize), y: py + fwdY * (r * tileSize) });
@@ -1017,7 +1017,7 @@ export class DragonManager {
         tiles.push({ x: px + fwdX * tileSize - rightX * tileSize, y: py + fwdY * tileSize - rightY * tileSize });
       }
     } else if (level <= 39) {
-      // Lv 15-39: 4 to 6 tiles AoE
+      // Lv 15-39: 4 to 6 tiles AoE forward cone
       const reach = isUltimate ? 5 : 3;
       for (let r = 1; r <= reach; r++) {
         tiles.push({ x: px + fwdX * (r * tileSize), y: py + fwdY * (r * tileSize) });
@@ -1025,7 +1025,7 @@ export class DragonManager {
         tiles.push({ x: px + fwdX * (r * tileSize) - rightX * tileSize, y: py + fwdY * (r * tileSize) - rightY * tileSize });
       }
     } else if (level <= 79) {
-      // Lv 40-79: 8 to 12 tiles AoE
+      // Lv 40-79: 8 to 12 tiles wide swath
       const reach = isUltimate ? 8 : 5;
       const width = isUltimate ? 3 : 2;
       for (let r = 1; r <= reach; r++) {
@@ -1034,7 +1034,7 @@ export class DragonManager {
         }
       }
     } else {
-      // Lv 80-100: Mega AoE / Full Screen (15+ tiles radius)
+      // Lv 80-100: Mega AoE / Full Screen (15+ tiles radius forward and circular)
       const radius = isUltimate ? 9 : 6;
       for (let dy = -radius; dy <= radius; dy++) {
         for (let dx = -radius; dx <= radius; dx++) {
@@ -1101,12 +1101,13 @@ export class DragonManager {
     const level = dragon.level || 1;
     const px = player ? (player.x + 32) : (this.x + 32);
     const py = player ? (player.y + 32) : (this.y + 32);
+    const dir = player ? (player.direction || 'south') : (this.direction || 'south');
 
     // Slot 4 (index 3): Universal Tactical Dodge
     if (skill.type === 'dodge' || slotIndex === 3) {
       this.isDodging = true;
       this.dodgeTimer = skill.invulnDuration || 0.8;
-      this.spawnDodgeParticles(this.x, this.y, dragon);
+      this.spawnDodgeParticles(px, py, dragon, dir);
       if (camera && dragon.level >= 20) {
         camera.shake(0.15, 3);
       }
@@ -1121,7 +1122,7 @@ export class DragonManager {
     // Slots 1, 2, 3: Offensive & Terrain Skills trigger in-battle state
     this.triggerCombatActivity(5.0);
 
-    // Slots 1, 2, 3: Calculate Level-Scaled AoE Tiles
+    // Slots 1, 2, 3: Calculate Level-Scaled AoE Tiles in facing direction
     const affectedTiles = this.calculateSkillAoETiles(dragon, slotIndex, player);
 
     // 1. Terrain Interaction on affected tiles
@@ -1162,7 +1163,6 @@ export class DragonManager {
     const baseDmg = skill.baseDamage || 25;
     const finalDamage = Math.floor(baseDmg * (1 + (level - 1) * 0.22));
 
-    const dir = player ? player.direction : 'south';
     let kx = 0, ky = 1;
     if (dir === 'north') { kx = 0; ky = -1; }
     else if (dir === 'south') { kx = 0; ky = 1; }
@@ -1237,8 +1237,8 @@ export class DragonManager {
       }
     }
 
-    // 3. Spawn Visual FX Particles for Skill Element & Level
-    this.spawnSkillParticles(px, py, skill.element, skill.type, level, affectedTiles);
+    // 3. Spawn Visual FX Particles for Skill Element, Level & Facing Direction
+    this.spawnSkillParticles(px, py, skill.element, skill.type, level, affectedTiles, dir, dragon);
 
     // 4. Camera Screen Shake
     if (camera) {
@@ -1274,55 +1274,166 @@ export class DragonManager {
     }
   }
 
-  spawnSkillParticles(fromX, fromY, element, skillType, level, affectedTiles) {
+  spawnSkillParticles(fromX, fromY, element, skillType, level, affectedTiles, dir = 'south', dragon = null) {
     const isUltra = level >= 80;
-    const count = isUltra ? 45 : (level >= 20 ? 28 : 14);
+    const count = isUltra ? 45 : (level >= 20 ? 28 : 16);
 
+    // 1. Calculate Facing Vectors & Orientation
+    let fwdX = 0, fwdY = 1;
+    let rightX = 1, rightY = 0;
+    let baseAngle = Math.PI * 0.5; // south (frente)
+
+    if (dir === 'north') {
+      fwdX = 0; fwdY = -1; rightX = 1; rightY = 0;
+      baseAngle = -Math.PI * 0.5; // costas
+    } else if (dir === 'south') {
+      fwdX = 0; fwdY = 1; rightX = 1; rightY = 0;
+      baseAngle = Math.PI * 0.5; // frente
+    } else if (dir === 'east') {
+      fwdX = 1; fwdY = 0; rightX = 0; rightY = 1;
+      baseAngle = 0; // lado direito
+    } else if (dir === 'west') {
+      fwdX = -1; fwdY = 0; rightX = 0; rightY = 1;
+      baseAngle = Math.PI; // lado esquerdo
+    }
+
+    const castOriginX = fromX + fwdX * 22;
+    const castOriginY = fromY + fwdY * 22;
+
+    // Palette per element
+    let pColor = dragon?.color || '#38bdf8';
+    let pSecondary = dragon?.secondaryColor || '#fef08a';
+    const elem = (element || '').toLowerCase();
+
+    if (elem.includes('fire') || elem.includes('magma')) {
+      pColor = '#ef4444'; pSecondary = '#f97316';
+    } else if (elem.includes('ice') || elem.includes('frost')) {
+      pColor = '#38bdf8'; pSecondary = '#e0f2fe';
+    } else if (elem.includes('electric') || elem.includes('trovão')) {
+      pColor = '#facc15'; pSecondary = '#818cf8';
+    } else if (elem.includes('earth') || elem.includes('rocha')) {
+      pColor = '#78716c'; pSecondary = '#84cc16';
+    } else if (elem.includes('nature') || elem.includes('flora')) {
+      pColor = '#10b981'; pSecondary = '#f472b6';
+    } else if (elem.includes('water') || elem.includes('maré')) {
+      pColor = '#06b6d4'; pSecondary = '#3b82f6';
+    } else if (elem.includes('solar') || elem.includes('aurora')) {
+      pColor = '#fbbf24'; pSecondary = '#f97316';
+    } else if (elem.includes('shadow') || elem.includes('sombra')) {
+      pColor = '#6366f1'; pSecondary = '#06b6d4';
+    } else if (elem.includes('stellar') || elem.includes('lua')) {
+      pColor = '#e0e7ff'; pSecondary = '#fbbf24';
+    } else if (elem.includes('wind') || elem.includes('ar')) {
+      pColor = '#38bdf8'; pSecondary = '#fef08a';
+    }
+
+    // 2. Spawn Directional Crescent Slash Waves launching forward
+    const numWaves = skillType === 'ultimate' ? 3 : (skillType === 'terrain' ? 2 : 1);
+    for (let w = 0; w < numWaves; w++) {
+      const waveOffset = (w - (numWaves - 1) / 2) * 16;
+      const speed = 280 + w * 40;
+      this.combatParticles.push({
+        x: castOriginX + rightX * waveOffset,
+        y: castOriginY + rightY * waveOffset,
+        vx: fwdX * speed,
+        vy: fwdY * speed,
+        drag: 0.94,
+        angle: baseAngle,
+        rotSpeed: 0,
+        color: pColor,
+        secondaryColor: pSecondary,
+        size: (skillType === 'ultimate' ? 36 : 24) + (isUltra ? 12 : 0),
+        lineWidth: skillType === 'ultimate' ? 5.5 : 3.8,
+        life: 0,
+        maxLife: 0.45 + (level >= 40 ? 0.25 : 0.1),
+        alpha: 1.0,
+        type: 'slash_wave'
+      });
+    }
+
+    // 3. Spawn Directional Forward Breath Stream in cone of facing angle
+    const streamCount = isUltra ? 22 : (level >= 20 ? 14 : 8);
+    for (let i = 0; i < streamCount; i++) {
+      const spreadAngle = baseAngle + (Math.random() - 0.5) * 0.55;
+      const pSpeed = 160 + Math.random() * 220;
+      this.combatParticles.push({
+        x: castOriginX + (Math.random() - 0.5) * 12,
+        y: castOriginY + (Math.random() - 0.5) * 12,
+        vx: Math.cos(spreadAngle) * pSpeed,
+        vy: Math.sin(spreadAngle) * pSpeed,
+        drag: 0.92,
+        angle: spreadAngle,
+        rotSpeed: (Math.random() - 0.5) * 6,
+        color: i % 2 === 0 ? pColor : pSecondary,
+        size: (isUltra ? 5.5 : 3.5) + Math.random() * 3,
+        life: 0,
+        maxLife: 0.4 + Math.random() * 0.3,
+        alpha: 1.0,
+        type: (elem.includes('earth') ? 'earth_spike' : (elem.includes('stellar') || elem.includes('electric') ? 'star_spark' : 'generic'))
+      });
+    }
+
+    // 4. Spawn Elemental Ground Bursts & Impact Rings at Affected Tiles in front
     for (const tile of affectedTiles) {
-      const perTileCount = Math.max(1, Math.min(6, Math.ceil(count / affectedTiles.length)));
-      for (let i = 0; i < perTileCount; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 30 + Math.random() * 120;
-        let pColor = '#38bdf8';
-        if (element === 'fire') pColor = i % 2 === 0 ? '#ef4444' : '#f97316';
-        else if (element === 'ice') pColor = i % 2 === 0 ? '#bae6fd' : '#38bdf8';
-        else if (element === 'electric') pColor = i % 2 === 0 ? '#fef08a' : '#818cf8';
-        else if (element === 'earth') pColor = i % 2 === 0 ? '#78716c' : '#84cc16';
-        else if (element === 'nature') pColor = i % 2 === 0 ? '#10b981' : '#f472b6';
-        else if (element === 'water') pColor = i % 2 === 0 ? '#06b6d4' : '#67e8f9';
-        else if (element === 'solar') pColor = i % 2 === 0 ? '#fbbf24' : '#f97316';
-        else if (element === 'shadow') pColor = i % 2 === 0 ? '#312e81' : '#06b6d4';
-        else if (element === 'stellar') pColor = i % 2 === 0 ? '#e0e7ff' : '#fbbf24';
+      // Shockwave impact ring
+      this.combatParticles.push({
+        x: tile.x,
+        y: tile.y,
+        vx: fwdX * 20,
+        vy: fwdY * 20,
+        color: pColor,
+        size: 10,
+        growth: 48,
+        lineWidth: 2.6,
+        life: 0,
+        maxLife: 0.38,
+        alpha: 1.0,
+        type: 'impact_ring'
+      });
 
+      // Shrapnel / Spark burst on tile
+      const perTileCount = Math.max(1, Math.min(5, Math.ceil(count / affectedTiles.length)));
+      for (let i = 0; i < perTileCount; i++) {
+        const burstAngle = baseAngle + (Math.random() - 0.5) * 1.6;
+        const burstSpeed = 40 + Math.random() * 110;
         this.combatParticles.push({
-          x: tile.x + (Math.random() - 0.5) * 32,
-          y: tile.y + (Math.random() - 0.5) * 32,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          color: pColor,
-          size: (isUltra ? 6 : 4) + Math.random() * (isUltra ? 6 : 4),
+          x: tile.x + (Math.random() - 0.5) * 24,
+          y: tile.y + (Math.random() - 0.5) * 24,
+          vx: Math.cos(burstAngle) * burstSpeed,
+          vy: Math.sin(burstAngle) * burstSpeed,
+          color: i % 2 === 0 ? pColor : pSecondary,
+          size: (isUltra ? 5 : 3.2) + Math.random() * 3.5,
+          angle: Math.random() * Math.PI * 2,
+          rotSpeed: (Math.random() - 0.5) * 8,
           life: 0,
-          maxLife: 0.5 + Math.random() * 0.4,
+          maxLife: 0.45 + Math.random() * 0.35,
           alpha: 1.0,
-          type: element || 'generic'
+          type: (elem.includes('earth') ? 'earth_spike' : (elem.includes('stellar') || elem.includes('electric') ? 'star_spark' : 'generic'))
         });
       }
     }
   }
 
-  spawnDodgeParticles(x, y, dragon) {
+  spawnDodgeParticles(x, y, dragon, dir = 'south') {
+    let kx = 0, ky = 1;
+    if (dir === 'north') { kx = 0; ky = -1; }
+    else if (dir === 'south') { kx = 0; ky = 1; }
+    else if (dir === 'east') { kx = 1; ky = 0; }
+    else if (dir === 'west') { kx = -1; ky = 0; }
+
     for (let i = 0; i < 18; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 60 + Math.random() * 120;
       this.combatParticles.push({
-        x: x + 24,
-        y: y + 24,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        color: i % 2 === 0 ? dragon.color : dragon.secondaryColor,
-        size: 4 + Math.random() * 6,
+        x: x + (Math.random() - 0.5) * 16,
+        y: y + (Math.random() - 0.5) * 16,
+        vx: Math.cos(angle) * speed - kx * 80,
+        vy: Math.sin(angle) * speed - ky * 80,
+        drag: 0.92,
+        color: i % 2 === 0 ? (dragon?.color || '#38bdf8') : (dragon?.secondaryColor || '#fef08a'),
+        size: 4 + Math.random() * 5,
         life: 0,
-        maxLife: 0.6 + Math.random() * 0.3,
+        maxLife: 0.55 + Math.random() * 0.25,
         alpha: 1.0,
         type: 'dodge'
       });
@@ -1728,6 +1839,16 @@ export class DragonManager {
       p.life += dt;
       p.x += (p.vx || 0) * dt;
       p.y += (p.vy || 0) * dt;
+      if (p.drag) {
+        p.vx *= Math.pow(p.drag, dt * 60);
+        p.vy *= Math.pow(p.drag, dt * 60);
+      }
+      if (p.rotSpeed) {
+        p.angle = (p.angle || 0) + p.rotSpeed * dt;
+      }
+      if (p.growth) {
+        p.size = (p.size || 4) + p.growth * dt;
+      }
       p.alpha = Math.max(0, 1 - (p.life / p.maxLife));
       if (p.life >= p.maxLife) {
         this.combatParticles.splice(i, 1);
@@ -3369,11 +3490,83 @@ export class DragonManager {
       const alpha = typeof p.alpha === 'number' && !isNaN(p.alpha) ? Math.max(0, Math.min(1, p.alpha)) : 1;
       if (alpha <= 0) continue;
       ctx.save();
-      ctx.fillStyle = p.color || '#38bdf8';
       ctx.globalAlpha = alpha;
-      ctx.beginPath();
-      ctx.arc(p.x || 0, p.y || 0, Math.max(1, p.size || 4), 0, Math.PI * 2);
-      ctx.fill();
+
+      if (p.type === 'slash_wave') {
+        // Crescent energy blade traveling forward in facing direction
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle || 0);
+        const rad = p.size || 24;
+
+        // Outer glowing crescent aura
+        ctx.strokeStyle = p.color || '#38bdf8';
+        ctx.lineWidth = Math.max(2, (p.lineWidth || 4) * alpha);
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.arc(0, 0, rad, -Math.PI * 0.42, Math.PI * 0.42);
+        ctx.stroke();
+
+        // Inner bright core
+        ctx.strokeStyle = p.secondaryColor || '#ffffff';
+        ctx.lineWidth = Math.max(1, (p.lineWidth || 4) * 0.45 * alpha);
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(1, rad - 2.5), -Math.PI * 0.32, Math.PI * 0.32);
+        ctx.stroke();
+
+        ctx.restore();
+      } else if (p.type === 'impact_ring') {
+        // Expanding shockwave ring on affected tile
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.strokeStyle = p.color || '#38bdf8';
+        ctx.lineWidth = Math.max(1, (p.lineWidth || 2.5) * alpha);
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(2, p.size || 16), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      } else if (p.type === 'star_spark' || p.type === 'spark') {
+        // 4-pointed glittering star spark
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle || 0);
+        ctx.fillStyle = p.color || '#ffffff';
+        const s = Math.max(1, p.size || 4);
+        ctx.beginPath();
+        ctx.moveTo(0, -s);
+        ctx.lineTo(s * 0.3, -s * 0.3);
+        ctx.lineTo(s, 0);
+        ctx.lineTo(s * 0.3, s * 0.3);
+        ctx.lineTo(0, s);
+        ctx.lineTo(-s * 0.3, s * 0.3);
+        ctx.lineTo(-s, 0);
+        ctx.lineTo(-s * 0.3, -s * 0.3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      } else if (p.type === 'earth_spike') {
+        // Jagged rock spike
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle || 0);
+        ctx.fillStyle = p.color || '#78716c';
+        const w = Math.max(2, p.size || 6);
+        const h = w * 2.2;
+        ctx.beginPath();
+        ctx.moveTo(0, -h);
+        ctx.lineTo(w, 0);
+        ctx.lineTo(-w, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      } else {
+        // Standard circle particle
+        ctx.fillStyle = p.color || '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(p.x || 0, p.y || 0, Math.max(1, p.size || 4), 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       ctx.restore();
     }
   }
