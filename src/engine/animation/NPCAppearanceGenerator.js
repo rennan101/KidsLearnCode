@@ -506,7 +506,7 @@ export function generateNPCAppearance(npcId, role = 'villager') {
     'head_01', 'head_02', 'head_03', 'head_04', 'head_05',
     'head_06', 'head_07', 'head_08', 'head_09', 'head_10',
     'head_11', 'head_12', 'head_13', 'head_14', 'head_15',
-    'head_16', 'head_17', 'head_18', 'head_19', 'head_20', 'head_21'
+    'head_16', 'head_17', 'head_18', 'head_19', 'head_20'
   ];
 
   const eyeShapes = [

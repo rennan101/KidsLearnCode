@@ -33,9 +33,9 @@ import {
 // Acima deste Y: cabelo renderiza na frente (step 4). 
 // Abaixo: hidden no layer frontal; backSvgContent (step 0) mostra a parte de trás.
 const HAIR_CLIP_Y = {
-  'head_14': 430,  // Cachos Longos – coroa visível, corpo longo via backSvgContent
+  'head_12': 430,  // Cachos Longos – coroa visível, corpo longo via backSvgContent
+  'head_14': 455,  // Espetado Selvagem – topo espetado visível, resto via sandwich
   'head_15': 430,  // Afro Puffs – puffs acima do queixo
-  'head_16': 455,  // Espetado Selvagem – topo espetado visível, resto via sandwich
 };
 
 function getCharacterSeed(cfg) {
@@ -317,10 +317,11 @@ export class ModularAvatarRenderer {
 
   drawEars(ctx, hx, hy, cfg, dir) {
     if (dir === 'east') return;
-    const skin = cfg.skinTone || '#f6dab9';
+    const headDef = SVG_HEADS.find(h => h.id === (cfg.headStyle || 'head_01')) || SVG_HEADS[0];
+    const earColor = headDef?.earsMatchHair ? (cfg.hairColor || '#3d2314') : (cfg.skinTone || '#f6dab9');
 
     ctx.save();
-    ctx.fillStyle = skin;
+    ctx.fillStyle = earColor;
 
     // _01_Orelha_Esquerda: M900,810C800,805 765,850 765,890C765,940 815,975 900,970L900,810Z (transform Y-37)
     const earLeftPath = this.getPath2D('M900 773C800 768 765 813 765 853C765 903 815 938 900 933L900 773Z');
