@@ -3681,11 +3681,19 @@ class RPGApplication {
       // Update Multiplayer Client & Broadcast Local Movement
       if (this.multiplayerClient) {
         this.multiplayerClient.update(deltaTime, this.dialogueSystem);
+        const isMounted = Boolean(this.player.isMounted && this.dragonManager?.isMounted());
+        const activeDragonId = this.dragonManager?.getActiveDragon()?.id || null;
         this.multiplayerClient.sendLocalPlayerUpdate(
           this.player,
           this.player.heroId,
           this.player.heroData?.name || 'Aventureiro',
-          this.dragonManager?.getActiveDragon()?.id
+          activeDragonId,
+          {
+            avatarConfig: this.player.customAvatarConfig,
+            scale: this.player.scale || 1.0,
+            dragonMode: this.dragonManager?.mode || (isMounted ? 'mounted' : (activeDragonId ? 'follow' : 'none')),
+            flightAltitude: (isMounted && this.dragonManager) ? (this.dragonManager.flightAltitude || 0) : 0
+          }
         );
       }
 

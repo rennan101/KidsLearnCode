@@ -630,7 +630,7 @@ export class SupabaseClient {
     }
   }
 
-  broadcastPlayerPosition(player, heroId, name, activeDragonId) {
+  broadcastPlayerPosition(player, heroId, name, activeDragonId, extraData = {}) {
     if (!this.realtimeChannel) return;
     const uniqueId = (this.user && !this.user.isGuest && this.user.id) ? this.user.id : this.getGuestUser().id;
 
@@ -647,7 +647,11 @@ export class SupabaseClient {
         isMoving: player.isMoving,
         isSprinting: player.isSprinting,
         isMounted: player.isMounted,
-        activeDragonId
+        activeDragonId,
+        avatarConfig: player.customAvatarConfig || extraData.avatarConfig || null,
+        scale: player.scale || 1.0,
+        dragonMode: extraData.dragonMode || (player.isMounted ? 'mounted' : (activeDragonId ? 'follow' : 'none')),
+        flightAltitude: extraData.flightAltitude || 0
       }
     });
   }

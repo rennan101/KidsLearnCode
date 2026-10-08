@@ -7,6 +7,7 @@
 import { ModularAvatarRenderer } from './animation/ModularAvatarRenderer.js';
 import { MASTER_NPC_CONFIGS } from './animation/NPCAppearanceGenerator.js';
 import { DEFAULT_AVATAR_CONFIG } from './animation/AvatarConfig.js';
+import { DRAGON_CATALOG } from './DragonManager.js';
 
 export class MultiplayerClient {
   constructor(serverUrl = 'ws://localhost:8080') {
@@ -69,7 +70,11 @@ export class MultiplayerClient {
         ...p,
         targetX: p.x,
         targetY: p.y,
-        animTimer: 0
+        animTimer: 0,
+        avatarConfig: p.avatarConfig || null,
+        scale: p.scale || 1.0,
+        dragonMode: p.dragonMode || (p.isMounted ? 'mounted' : (p.activeDragonId ? 'follow' : 'none')),
+        flightAltitude: p.flightAltitude || 0
       };
       this.remotePlayers.set(p.id, existing);
     } else {
@@ -82,6 +87,10 @@ export class MultiplayerClient {
       existing.heroId = p.heroId;
       existing.name = p.name;
       existing.activeDragonId = p.activeDragonId;
+      if (p.avatarConfig) existing.avatarConfig = p.avatarConfig;
+      if (p.scale !== undefined) existing.scale = p.scale;
+      if (p.dragonMode !== undefined) existing.dragonMode = p.dragonMode;
+      if (p.flightAltitude !== undefined) existing.flightAltitude = p.flightAltitude;
     }
   }
 
@@ -149,11 +158,15 @@ export class MultiplayerClient {
         existing.heroId = p.heroId;
         existing.name = p.name;
         existing.activeDragonId = p.activeDragonId;
+        if (p.avatarConfig) existing.avatarConfig = p.avatarConfig;
+        if (p.scale !== undefined) existing.scale = p.scale;
+        if (p.dragonMode !== undefined) existing.dragonMode = p.dragonMode;
+        if (p.flightAltitude !== undefined) existing.flightAltitude = p.flightAltitude;
       }
     }
   }
 
-  sendLocalPlayerUpdate(player, heroId, name = 'Aventureiro', activeDragonId = null) {
+  sendLocalPlayerUpdate(player, heroId, name = 'Aventureiro', activeDragonId = null, extraData = {}) {
     const now = performance.now();
     const currentX = Math.round(player.x);
     const currentY = Math.round(player.y);
@@ -201,12 +214,16 @@ export class MultiplayerClient {
         isMounted: player.isMounted,
         heroId: currentHeroId,
         name,
-        activeDragonId
+        activeDragonId,
+        avatarConfig: player.customAvatarConfig || extraData.avatarConfig || null,
+        scale: player.scale || 1.0,
+        dragonMode: extraData.dragonMode || (player.isMounted ? 'mounted' : (activeDragonId ? 'follow' : 'none')),
+        flightAltitude: extraData.flightAltitude || 0
       }));
     }
 
     if (this.supabaseClient) {
-      this.supabaseClient.broadcastPlayerPosition(player, currentHeroId, name, activeDragonId);
+      this.supabaseClient.broadcastPlayerPosition(player, currentHeroId, name, activeDragonId, extraData);
     }
   }
 
@@ -317,85 +334,119 @@ export class MultiplayerClient {
 
   renderRemotePlayer(ctx, player, assetLoader, isReflection = false) {
     ctx.save();
+    const s = player.scale || 1.0;
     const drawX = Math.round(player.x);
     const drawY = Math.round(player.y);
     const heroId = player.heroId || 'char_wolf_hunter_m';
+    const activeDragonId = player.activeDragonId;
+    const isMounted = !!player.isMounted;
+    const alt = player.flightAltitude || 0;
+    const dir = player.direction || 'south';
 
-    // 1. Shadow (omitted in reflections)
-    if (!isReflection) {
+    // 0. Render Companion Dragon Underlay (quando o dragão estiver em modo 'follow' ao lado do jogador)
+    if (activeDragonId && !isMounted && DRAGON_CATALOG) {
+      const dragonData = DRAGON_CATALOG.find(d => d.id === activeDragonId);
+      if (dragonData) {
+        ctx.save();
+        const dragonOffset = (dir === 'east') ? { x: -36, y: -8 } : ((dir === 'west') ? { x: 36, y: -8 } : { x: -28, y: -16 });
+        const dgX = drawX + dragonOffset.x;
+        const dgY = drawY + dragonOffset.y + Math.sin((player.animTimer || 0) * 4) * 4;
+
+        // Shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        ctx.beginPath();
+        ctx.ellipse(dgX + 24, drawY + 48, 16, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Animated SVG frame or Vector Fallback
+        const spritePath = dragonData.iconPath || dragonData.image;
+        const dragonImg = assetLoader?.getImage(spritePath);
+        if (dragonImg && dragonImg.complete && dragonImg.naturalWidth > 0) {
+          ctx.drawImage(dragonImg, dgX - 24, dgY - 24, 96, 96);
+        } else {
+          // Vector Fallback
+          ctx.fillStyle = dragonData.color || '#38bdf8';
+          ctx.beginPath();
+          ctx.ellipse(dgX + 24, dgY + 24, 16, 14, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    // 1. Sombra circular nos pés (omitida em reflexos ou quando montado alto)
+    if (!isReflection && (!isMounted || alt <= 5)) {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
       ctx.beginPath();
-      ctx.ellipse(drawX + 32, drawY + 60, 16, 6, 0, 0, Math.PI * 2);
+      ctx.ellipse(drawX + 32 * s, drawY + 60 * s, 16 * s, 6 * s, 0, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // 2. Modular Cutout Avatar or Sprite Frame
-    const avatarConfig = player.avatarConfig || MASTER_NPC_CONFIGS[heroId];
-    if (avatarConfig && this.avatarRenderer) {
+    // 1b. Se estiver montado, renderiza a base do dragão de montaria
+    if (isMounted && activeDragonId && DRAGON_CATALOG) {
+      const dragonData = DRAGON_CATALOG.find(d => d.id === activeDragonId);
+      if (dragonData) {
+        ctx.save();
+        const bounce = Math.sin((player.animTimer || 0) * (alt > 10 ? 8 : 4)) * (alt > 10 ? 6 : 4);
+        const dgMountY = drawY + bounce - alt;
+
+        // Sombra no chão em voo
+        if (!isReflection) {
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+          ctx.beginPath();
+          ctx.ellipse(drawX + 32, drawY + 54, 20 + alt * 0.1, 8 + alt * 0.05, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        const spritePath = dragonData.iconPath || dragonData.image;
+        const dragonImg = assetLoader?.getImage(spritePath);
+        if (dragonImg && dragonImg.complete && dragonImg.naturalWidth > 0) {
+          ctx.drawImage(dragonImg, drawX - 16, dgMountY - 16, 96, 96);
+        } else {
+          ctx.fillStyle = dragonData.color || '#38bdf8';
+          ctx.beginPath();
+          ctx.ellipse(drawX + 32, dgMountY + 36, 22, 18, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    // 2. Modular Cutout Avatar Engine (Renderiza sempre o avatar fiel personalizado ou herói)
+    const avatarConfig = player.avatarConfig || MASTER_NPC_CONFIGS[heroId] || DEFAULT_AVATAR_CONFIG;
+    if (this.avatarRenderer) {
       let animState = 'idle';
-      if (player.isMounted) animState = 'riding';
+      if (isMounted) animState = 'riding';
+      else if (player.isSprinting && player.isMoving) animState = 'run';
       else if (player.isMoving) animState = 'walk';
 
-      const avatarScale = 0.33;
-      const targetX = drawX + 32;
-      const targetY = drawY + 60 - (265 * avatarScale);
+      const avatarScale = 0.33 * s;
+      const targetX = drawX + (32 * s);
+      const targetY = drawY + (60 * s) - (265 * avatarScale) - (isMounted ? alt : 0);
 
       this.avatarRenderer.render(
         ctx,
         targetX,
         targetY,
-        player.direction || 'south',
+        dir,
         animState,
         player.animTimer || performance.now() / 1000,
         avatarConfig,
         avatarScale
       );
     } else {
+      // Fallback simples de emergência
       const rowMap = { south: 0, east: 1, north: 2, west: 3 };
-      const row = rowMap[player.direction] ?? 0;
-      let col = 0;
-      if (player.isMoving) {
-        col = 2 + (Math.floor((player.animTimer || 0) * 8) % 3);
-      } else {
-        col = Math.floor((player.animTimer || 0) * 3) % 2;
-      }
-
-      let sprite = null;
-      if (heroId === 'char_wolf_hunter_m') {
-        if (player.direction === 'south') {
-          if (player.isMoving) {
-            const frameNum = (Math.floor((player.animTimer || 0) * 12) % 17) + 1;
-            const frameIdx = String(frameNum).padStart(3, '0');
-            sprite = assetLoader?.getImage(`assets/characters/char_wolf_hunter_m/Walk_Down/sprite_${frameIdx}.png`);
-          } else {
-            sprite = assetLoader?.getImage(`assets/characters/char_wolf_hunter_m/Walk_Down/sprite_001.png`);
-          }
-        } else if (player.direction === 'north') {
-          if (player.isMoving) {
-            const frameNum = (Math.floor((player.animTimer || 0) * 12) % 15) + 1;
-            const frameIdx = String(frameNum).padStart(3, '0');
-            sprite = assetLoader?.getImage(`assets/characters/char_wolf_hunter_m/Walk_Up/sprite_${frameIdx}.png`);
-          } else {
-            sprite = assetLoader?.getImage(`assets/characters/char_wolf_hunter_m/Walk_Up/sprite_001.png`);
-          }
-        }
-      }
-
-      if (!sprite) {
-        const frameUrl = `assets/characters/${heroId}/frames/wolf_hunter_r${row}_c${col}.png`;
-        sprite = assetLoader?.getImage(frameUrl) 
-          || assetLoader?.getImage(`assets/characters/${heroId}/portrait.jpg`);
-      }
-
+      const row = rowMap[dir] ?? 0;
+      let col = player.isMoving ? 2 : 0;
+      const frameUrl = `assets/characters/char_wolf_hunter_m/frames/wolf_hunter_r${row}_c${col}.png`;
+      const sprite = assetLoader?.getImage(frameUrl);
       if (sprite) {
-        ctx.drawImage(sprite, drawX, drawY, 64, 64);
-      } else {
-        ctx.fillStyle = '#6366f1';
-        ctx.fillRect(drawX + 16, drawY + 16, 32, 48);
+        ctx.drawImage(sprite, drawX, drawY, 64 * s, 64 * s);
       }
     }
 
-    // 3. Overhead Name Badge (Animal Island UI - Matches NPC layout and height)
+    // 3. Overhead Name Badge (Animal Island UI 3D)
     if (!isReflection) {
       ctx.save();
       const nameText = player.name || 'Aventureiro';
@@ -403,8 +454,8 @@ export class MultiplayerClient {
       const textMetrics = ctx.measureText(nameText);
       const badgeW = Math.max(44, textMetrics.width + 16);
       const badgeH = 18;
-      const badgeX = drawX + 32 - badgeW / 2;
-      const badgeY = drawY - 58; // Posicionado confortavelmente acima da cabeça
+      const badgeX = drawX + (32 * s) - badgeW / 2;
+      const badgeY = drawY - 58 - (isMounted ? alt : 0);
 
       // Badge shadow 3D
       ctx.fillStyle = '#7a583e';
@@ -431,11 +482,11 @@ export class MultiplayerClient {
       ctx.lineWidth = 1.8;
       ctx.stroke();
 
-      // Badge text (marrom terra aconchegante)
+      // Badge text
       ctx.fillStyle = '#794f27';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(nameText, drawX + 32, badgeY + badgeH / 2);
+      ctx.fillText(nameText, drawX + (32 * s), badgeY + badgeH / 2);
       ctx.restore();
     }
 
