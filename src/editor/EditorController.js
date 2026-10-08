@@ -291,7 +291,11 @@ export class EditorController {
   setSelectedTile(tileId) {
     this.selectedTileId = tileId;
     const meta = this.assetLoader?.getTileMetadata(tileId);
-    if (meta && meta.layer) {
+    const isChar = meta?.category === 'Characters' || meta?.isCharacter || meta?.layer === 'characters' || (tileId && (tileId.startsWith('npc_') || tileId.startsWith('char_') || tileId.startsWith('hero_')));
+    if (isChar) {
+      this.activeLayer = 'characters';
+      window.dispatchEvent(new CustomEvent('editor-layer-switched', { detail: { layer: 'characters' } }));
+    } else if (meta && meta.layer) {
       this.activeLayer = meta.layer;
       window.dispatchEvent(new CustomEvent('editor-layer-switched', { detail: { layer: meta.layer } }));
     }
@@ -694,9 +698,16 @@ export class EditorController {
       const meta = this.assetLoader.getTileMetadata(this.selectedTileId);
       if (meta) {
         const isFluidGround = meta.layer === 'ground' || meta.id === 'water-wind-waker' || meta.id === 'water-animated' || meta.id === 'magma-animated' || meta.isMagma || meta.category === 'Water' || meta.category === 'Terrenos';
-        const targetLayer = (meta.isInvisibleAsset || meta.layer === 'colliders') ? 'colliders' : (isFluidGround ? 'ground' : (meta.layer || this.activeLayer || 'decor'));
+        const isChar = meta.category === 'Characters' || meta.isCharacter || meta.layer === 'characters' || (this.selectedTileId && (this.selectedTileId.startsWith('npc_') || this.selectedTileId.startsWith('char_') || this.selectedTileId.startsWith('hero_')));
+        const targetLayer = (meta.isInvisibleAsset || meta.layer === 'colliders') ? 'colliders' : (isFluidGround ? 'ground' : (isChar ? 'characters' : (meta.layer || this.activeLayer || 'decor')));
         const isDragon = meta.isDragon || (this.selectedTileId && this.selectedTileId.startsWith('dragon_'));
         const extraProps = isDragon ? { level: Math.max(1, Math.min(100, parseInt(this.dragonPlacementLevel, 10) || 1)) } : null;
+
+        // Se estiver inserindo um personagem, limpa duplicatas em outras camadas na mesma célula
+        if (isChar) {
+          this.tileMap.layers.solid?.delete(this.tileMap.getKey(tileX, tileY));
+          this.tileMap.layers.decor?.delete(this.tileMap.getKey(tileX, tileY));
+        }
 
         if ((meta.gridW && meta.gridW > 1) || (meta.gridH && meta.gridH > 1)) {
           this.tileMap.placeMultiTile(targetLayer, tileX, tileY, meta, this.activeRotation, this.activeFlipX, null, null, extraProps);
@@ -708,7 +719,8 @@ export class EditorController {
     } else if (this.activeTool === 'fill') {
       const meta = this.assetLoader.getTileMetadata(this.selectedTileId);
       const isFluidGround = meta?.layer === 'ground' || meta?.id === 'water-wind-waker' || meta?.id === 'water-animated' || meta?.id === 'magma-animated' || meta?.isMagma || meta?.category === 'Water' || meta?.category === 'Terrenos';
-      const targetLayer = (meta?.isInvisibleAsset || meta?.layer === 'colliders') ? 'colliders' : (isFluidGround ? 'ground' : (meta?.layer || this.activeLayer || 'decor'));
+      const isChar = meta?.category === 'Characters' || meta?.isCharacter || meta?.layer === 'characters' || (this.selectedTileId && (this.selectedTileId.startsWith('npc_') || this.selectedTileId.startsWith('char_') || this.selectedTileId.startsWith('hero_')));
+      const targetLayer = (meta?.isInvisibleAsset || meta?.layer === 'colliders') ? 'colliders' : (isFluidGround ? 'ground' : (isChar ? 'characters' : (meta?.layer || this.activeLayer || 'decor')));
       this.floodFill(tileX, tileY, targetLayer, this.selectedTileId);
       this.onMapChange();
     } else if (this.activeTool === 'select') {
