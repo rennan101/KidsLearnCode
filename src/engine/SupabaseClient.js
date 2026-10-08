@@ -643,15 +643,20 @@ export class SupabaseClient {
         heroId,
         x: Math.round(player.x),
         y: Math.round(player.y),
+        vx: Math.round(extraData.vx || 0),
+        vy: Math.round(extraData.vy || 0),
         direction: player.direction,
-        isMoving: player.isMoving,
-        isSprinting: player.isSprinting,
-        isMounted: player.isMounted,
-        activeDragonId,
+        isMoving: Boolean(player.isMoving),
+        isSprinting: Boolean(player.isSprinting),
+        isMounted: Boolean(player.isMounted),
+        activeDragonId: activeDragonId || null,
         avatarConfig: player.customAvatarConfig || extraData.avatarConfig || null,
         scale: player.scale || 1.0,
         dragonMode: extraData.dragonMode || (player.isMounted ? 'mounted' : (activeDragonId ? 'follow' : 'none')),
-        flightAltitude: extraData.flightAltitude || 0
+        flightAltitude: Math.round(extraData.flightAltitude || 0),
+        dragonX: extraData.dragonX !== undefined ? Math.round(extraData.dragonX) : null,
+        dragonY: extraData.dragonY !== undefined ? Math.round(extraData.dragonY) : null,
+        t: Date.now()
       }
     });
   }

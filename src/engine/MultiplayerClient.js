@@ -22,10 +22,11 @@ export class MultiplayerClient {
     this.simulatedBots = [];
 
     this.supabaseClient = null;
+    this.dragonManager = null;
 
-    // Throttling e detecção de mudança para economizar cota do Supabase Realtime (Free Tier)
+    // Taxa de broadcast fluida em tempo real (~15 Hz no Supabase, ~30 Hz em WebSockets nativos)
     this.lastBroadcastTime = 0;
-    this.broadcastIntervalMs = 250; // 4 updates/segundo máx (interpolado suavemente por LERP no client)
+    this.broadcastIntervalMs = 66; // 66ms = ~15 updates/s (fluido e dentro da cota do Supabase)
     this.lastSentState = {
       x: null,
       y: null,
@@ -34,10 +35,78 @@ export class MultiplayerClient {
       isSprinting: null,
       isMounted: null,
       activeDragonId: null,
+      dragonMode: null,
+      flightAltitude: null,
       idleHeartbeatTime: 0
     };
 
+    // Cache de sprites animados SVG de Dragões para jogadores remotos
+    this.dragonSpriteFrames = {};
+    this.loadDragonSpriteFrames();
+
     this.connect();
+  }
+
+  attachDragonManager(dragonManager) {
+    if (!dragonManager) return;
+    this.dragonManager = dragonManager;
+    if (dragonManager.dragonSpriteFrames && Object.keys(dragonManager.dragonSpriteFrames).length > 0) {
+      this.dragonSpriteFrames = dragonManager.dragonSpriteFrames;
+    }
+  }
+
+  loadDragonSpriteFrames() {
+    if (typeof Image === 'undefined') return;
+
+    // 1. Dragon Storm (Volt)
+    const stormSideFrames = [];
+    const stormSouthFrames = [];
+    const stormNorthFrames = [];
+    for (let i = 1; i <= 8; i++) {
+      const side = new Image();
+      side.src = `assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_${i}.svg`;
+      stormSideFrames.push(side);
+
+      const south = new Image();
+      south.src = `assets/Dragon/dragon_fly_storm/flying_south_front/dragon_flying_south_frame_${i}.svg`;
+      stormSouthFrames.push(south);
+
+      const north = new Image();
+      north.src = `assets/Dragon/dragon_fly_storm/flying_north_back/dragon_flying_north_back_frame_${i}.svg`;
+      stormNorthFrames.push(north);
+    }
+
+    this.dragonSpriteFrames['dragon_fly_storm'] = {
+      flying: stormSideFrames,
+      flying_side: stormSideFrames,
+      flying_south: stormSouthFrames,
+      flying_north: stormNorthFrames
+    };
+
+    // 2. Dragon Zephyr
+    const zephyrSideFrames = [];
+    const zephyrSouthFrames = [];
+    const zephyrNorthFrames = [];
+    for (let i = 1; i <= 8; i++) {
+      const side = new Image();
+      side.src = `assets/Dragon/dragon_fly_zephyr/flying/zephyr_flying_right_frame_${i}.svg`;
+      zephyrSideFrames.push(side);
+
+      const south = new Image();
+      south.src = `assets/Dragon/dragon_fly_zephyr/flying_south_front/zephyr_flying_south_frame_${i}.svg`;
+      zephyrSouthFrames.push(south);
+
+      const north = new Image();
+      north.src = `assets/Dragon/dragon_fly_zephyr/flying_north_back/zephyr_flying_north_frame_${i}.svg`;
+      zephyrNorthFrames.push(north);
+    }
+
+    this.dragonSpriteFrames['dragon_fly_zephyr'] = {
+      flying: zephyrSideFrames,
+      flying_side: zephyrSideFrames,
+      flying_south: zephyrSouthFrames,
+      flying_north: zephyrNorthFrames
+    };
   }
 
   attachSupabase(supabaseClient) {
@@ -65,12 +134,28 @@ export class MultiplayerClient {
     if (!p || p.id === this.supabaseClient?.user?.id || p.id === this.playerId) return;
 
     let existing = this.remotePlayers.get(p.id);
+    const targetX = p.x;
+    const targetY = p.y;
+    const defaultDragonX = (p.dragonX !== null && p.dragonX !== undefined) ? p.dragonX : (targetX - 28);
+    const defaultDragonY = (p.dragonY !== null && p.dragonY !== undefined) ? p.dragonY : (targetY - 14);
+
     if (!existing) {
       existing = {
         ...p,
-        targetX: p.x,
-        targetY: p.y,
+        x: targetX,
+        y: targetY,
+        prevX: targetX,
+        prevY: targetY,
+        targetX,
+        targetY,
+        vx: p.vx || 0,
+        vy: p.vy || 0,
         animTimer: 0,
+        dragonAnimTimer: 0,
+        dragonX: defaultDragonX,
+        dragonY: defaultDragonY,
+        dragonTargetX: defaultDragonX,
+        dragonTargetY: defaultDragonY,
         avatarConfig: p.avatarConfig || null,
         scale: p.scale || 1.0,
         dragonMode: p.dragonMode || (p.isMounted ? 'mounted' : (p.activeDragonId ? 'follow' : 'none')),
@@ -78,12 +163,37 @@ export class MultiplayerClient {
       };
       this.remotePlayers.set(p.id, existing);
     } else {
-      existing.targetX = p.x;
-      existing.targetY = p.y;
+      const dist = Math.hypot(targetX - existing.x, targetY - existing.y);
+      if (dist > 250) {
+        // Snap imediato em caso de teleporte / portal / respawn
+        existing.x = targetX;
+        existing.y = targetY;
+        existing.prevX = targetX;
+        existing.prevY = targetY;
+        existing.targetX = targetX;
+        existing.targetY = targetY;
+        existing.dragonX = defaultDragonX;
+        existing.dragonY = defaultDragonY;
+      } else {
+        existing.prevX = existing.x;
+        existing.prevY = existing.y;
+        existing.targetX = targetX;
+        existing.targetY = targetY;
+      }
+
+      existing.vx = p.vx !== undefined ? p.vx : (targetX - existing.prevX) / 0.066;
+      existing.vy = p.vy !== undefined ? p.vy : (targetY - existing.prevY) / 0.066;
+      existing.dragonTargetX = defaultDragonX;
+      existing.dragonTargetY = defaultDragonY;
+      if (existing.dragonX === undefined) {
+        existing.dragonX = defaultDragonX;
+        existing.dragonY = defaultDragonY;
+      }
+
       existing.direction = p.direction;
-      existing.isMoving = p.isMoving;
-      existing.isSprinting = p.isSprinting;
-      existing.isMounted = p.isMounted;
+      existing.isMoving = Boolean(p.isMoving);
+      existing.isSprinting = Boolean(p.isSprinting);
+      existing.isMounted = Boolean(p.isMounted);
       existing.heroId = p.heroId;
       existing.name = p.name;
       existing.activeDragonId = p.activeDragonId;
@@ -138,31 +248,7 @@ export class MultiplayerClient {
 
     for (const p of playerList) {
       if (p.id === this.playerId) continue; // Skip local player
-
-      let existing = this.remotePlayers.get(p.id);
-      if (!existing) {
-        existing = {
-          ...p,
-          targetX: p.x,
-          targetY: p.y,
-          animTimer: 0
-        };
-        this.remotePlayers.set(p.id, existing);
-      } else {
-        existing.targetX = p.x;
-        existing.targetY = p.y;
-        existing.direction = p.direction;
-        existing.isMoving = p.isMoving;
-        existing.isSprinting = p.isSprinting;
-        existing.isMounted = p.isMounted;
-        existing.heroId = p.heroId;
-        existing.name = p.name;
-        existing.activeDragonId = p.activeDragonId;
-        if (p.avatarConfig) existing.avatarConfig = p.avatarConfig;
-        if (p.scale !== undefined) existing.scale = p.scale;
-        if (p.dragonMode !== undefined) existing.dragonMode = p.dragonMode;
-        if (p.flightAltitude !== undefined) existing.flightAltitude = p.flightAltitude;
-      }
+      this.handleRemotePlayerUpdate(p);
     }
   }
 
@@ -171,34 +257,58 @@ export class MultiplayerClient {
     const currentX = Math.round(player.x);
     const currentY = Math.round(player.y);
     const currentHeroId = heroId || player.heroId;
+    const currentDragonMode = extraData.dragonMode || (player.isMounted ? 'mounted' : (activeDragonId ? 'follow' : 'none'));
+    const currentAltitude = Math.round(extraData.flightAltitude || 0);
 
-    // Detect if state actually changed
+    // Detecção de mudança de estado crítico (início/fim de movimento, virar de direção, montar, trocar dragão)
+    const isMovingChanged = this.lastSentState.isMoving !== Boolean(player.isMoving);
+    const directionChanged = this.lastSentState.direction !== player.direction;
+    const mountChanged = this.lastSentState.isMounted !== Boolean(player.isMounted);
+    const dragonChanged = this.lastSentState.activeDragonId !== activeDragonId || this.lastSentState.dragonMode !== currentDragonMode;
+    const sprintChanged = this.lastSentState.isSprinting !== Boolean(player.isSprinting);
+    const altitudeChanged = Math.abs((this.lastSentState.flightAltitude || 0) - currentAltitude) > 4;
+
+    const isCriticalStateChange = isMovingChanged || directionChanged || mountChanged || dragonChanged || sprintChanged || altitudeChanged;
+
     const hasMoved = this.lastSentState.x !== currentX || this.lastSentState.y !== currentY;
-    const hasActionChanged = 
-      this.lastSentState.direction !== player.direction ||
-      this.lastSentState.isMoving !== player.isMoving ||
-      this.lastSentState.isSprinting !== player.isSprinting ||
-      this.lastSentState.isMounted !== player.isMounted ||
-      this.lastSentState.activeDragonId !== activeDragonId;
-
     const timeSinceLastSend = now - this.lastBroadcastTime;
-    const shouldSendPeriodicIdle = (now - this.lastSentState.idleHeartbeatTime) > 30000; // Heartbeat a cada 30s apenas se parado
+    const shouldSendPeriodicIdle = (now - this.lastSentState.idleHeartbeatTime) > 30000;
 
-    // Send only if enough time passed AND (player moved OR action changed OR heartbeat)
-    const shouldSend = (timeSinceLastSend >= this.broadcastIntervalMs && (hasMoved || hasActionChanged)) || shouldSendPeriodicIdle;
+    // Intervalo adaptativo: 33ms em WebSockets dedicados, 66ms no Supabase Realtime
+    const targetInterval = (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) ? 33 : this.broadcastIntervalMs;
+
+    // Disparo imediato se houve mudança crítica (com debounce mínimo de 20ms) OU se atingiu o intervalo de movimento regular
+    const shouldSend = (isCriticalStateChange && timeSinceLastSend >= 20) ||
+      (timeSinceLastSend >= targetInterval && (hasMoved || player.isMoving)) ||
+      shouldSendPeriodicIdle;
 
     if (!shouldSend) {
       return;
     }
 
+    const dtSeconds = Math.max(0.016, timeSinceLastSend / 1000);
+    const vx = hasMoved && this.lastSentState.x !== null ? Math.round((currentX - this.lastSentState.x) / dtSeconds) : 0;
+    const vy = hasMoved && this.lastSentState.y !== null ? Math.round((currentY - this.lastSentState.y) / dtSeconds) : 0;
+
+    const fullExtraData = {
+      ...extraData,
+      vx,
+      vy,
+      dragonMode: currentDragonMode,
+      flightAltitude: currentAltitude
+    };
+
     this.lastBroadcastTime = now;
     this.lastSentState.x = currentX;
     this.lastSentState.y = currentY;
     this.lastSentState.direction = player.direction;
-    this.lastSentState.isMoving = player.isMoving;
-    this.lastSentState.isSprinting = player.isSprinting;
-    this.lastSentState.isMounted = player.isMounted;
+    this.lastSentState.isMoving = Boolean(player.isMoving);
+    this.lastSentState.isSprinting = Boolean(player.isSprinting);
+    this.lastSentState.isMounted = Boolean(player.isMounted);
     this.lastSentState.activeDragonId = activeDragonId;
+    this.lastSentState.dragonMode = currentDragonMode;
+    this.lastSentState.flightAltitude = currentAltitude;
+
     if (shouldSendPeriodicIdle) {
       this.lastSentState.idleHeartbeatTime = now;
     }
@@ -208,22 +318,26 @@ export class MultiplayerClient {
         type: 'PLAYER_UPDATE',
         x: currentX,
         y: currentY,
+        vx,
+        vy,
         direction: player.direction,
-        isMoving: player.isMoving,
-        isSprinting: player.isSprinting,
-        isMounted: player.isMounted,
+        isMoving: Boolean(player.isMoving),
+        isSprinting: Boolean(player.isSprinting),
+        isMounted: Boolean(player.isMounted),
         heroId: currentHeroId,
         name,
         activeDragonId,
         avatarConfig: player.customAvatarConfig || extraData.avatarConfig || null,
         scale: player.scale || 1.0,
-        dragonMode: extraData.dragonMode || (player.isMounted ? 'mounted' : (activeDragonId ? 'follow' : 'none')),
-        flightAltitude: extraData.flightAltitude || 0
+        dragonMode: currentDragonMode,
+        flightAltitude: currentAltitude,
+        dragonX: extraData.dragonX !== undefined ? Math.round(extraData.dragonX) : null,
+        dragonY: extraData.dragonY !== undefined ? Math.round(extraData.dragonY) : null
       }));
     }
 
     if (this.supabaseClient) {
-      this.supabaseClient.broadcastPlayerPosition(player, currentHeroId, name, activeDragonId, extraData);
+      this.supabaseClient.broadcastPlayerPosition(player, currentHeroId, name, activeDragonId, fullExtraData);
     }
   }
 
