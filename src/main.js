@@ -3860,7 +3860,7 @@ class RPGApplication {
                     playerRendered = true;
                   }
                 } else if (item.type === 'npc') {
-                  this.npcManager.renderNPCEntity(this.ctx, item.npc);
+                  this.npcManager.renderNPCEntity(this.ctx, item.npc, false, this.player, this.blocklySystem);
                 } else if (item.type === 'wild_dragon') {
                   this.dragonManager.renderWildDragonEntityBody(this.ctx, item.wildEntity, this.player);
                 } else if (item.type === 'companion_dragon') {
@@ -4043,66 +4043,6 @@ class RPGApplication {
     // 2. Animal Crossing Floating Speech Bubbles (Rendered in screen space)
     if (this.dialogueSystem) {
       this.dialogueSystem.render(this.ctx, this.camera);
-    }
-
-    // 3. Floating Interaction Key Prompt for Nearby NPCs (Play Mode: Clean [E] Keycap)
-    if (this.mode === 'play') {
-      const nearbyNpc = this.findNearbyNPC(this.player.x, this.player.y, 110);
-      if (nearbyNpc) {
-        const hasActiveQuest = hasAvailableQuestForNpc(nearbyNpc.tileId, this.blocklySystem);
-
-        const bob = Math.sin(performance.now() / 160) * 3;
-        // Se houver missão ativa ("!" visível a Y = -74px no centro), o [E] aparece lado a lado (+24px à direita)
-        // Se NÃO houver missão ativa, o [E] fica centralizado acima do nome do NPC sem sobreposições
-        const promptOffsetX = hasActiveQuest ? 24 : 0;
-        const promptOffsetY = 74;
-        const screenPos = this.camera.worldToScreen(nearbyNpc.worldX + 32 + promptOffsetX, nearbyNpc.worldY - promptOffsetY + bob);
-        this.ctx.save();
-
-        const btnSize = 26;
-        const x = screenPos.x - btnSize / 2;
-        const y = screenPos.y - btnSize / 2;
-
-        // Soft drop shadow
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
-        this.ctx.beginPath();
-        this.ctx.roundRect(x, y + 3, btnSize, btnSize, 13);
-        this.ctx.fill();
-
-        // 3D Bottom edge
-        this.ctx.fillStyle = '#0f766e';
-        this.ctx.beginPath();
-        this.ctx.roundRect(x, y + 2, btnSize, btnSize, 13);
-        this.ctx.fill();
-
-        // Button face (Animal Island UI cozy parchment/white)
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.beginPath();
-        this.ctx.roundRect(x, y, btnSize, btnSize, 13);
-        this.ctx.fill();
-
-        // Mint-teal border
-        this.ctx.strokeStyle = '#19c8b9';
-        this.ctx.lineWidth = 2;
-        this.ctx.stroke();
-
-        // Small indicator notch pointing down
-        this.ctx.fillStyle = '#19c8b9';
-        this.ctx.beginPath();
-        this.ctx.moveTo(screenPos.x - 4, y + btnSize - 1);
-        this.ctx.lineTo(screenPos.x, y + btnSize + 4);
-        this.ctx.lineTo(screenPos.x + 4, y + btnSize - 1);
-        this.ctx.fill();
-
-        // Clean 'E' Key
-        this.ctx.fillStyle = '#0f766e';
-        this.ctx.font = '900 13px "JetBrains Mono", "Outfit", sans-serif';
-        this.ctx.textAlign = 'center';
-        this.ctx.textBaseline = 'middle';
-        this.ctx.fillText('E', screenPos.x, screenPos.y);
-
-        this.ctx.restore();
-      }
     }
   }
 

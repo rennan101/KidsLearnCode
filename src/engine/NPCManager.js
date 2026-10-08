@@ -97,7 +97,8 @@ export class NPCManager {
       tileMap.removeCharactersOnWater(this.assetLoader);
     }
 
-    const discoveredIds = new Set();
+    const discoveredKeys = new Set();
+    const discoveredTileIds = new Set();
     const layersToCheck = ['characters', 'solid', 'decor'];
 
     for (const layerName of layersToCheck) {
@@ -132,21 +133,45 @@ export class NPCManager {
             continue;
           }
 
-          const entityKey = `${tileId}_${tx}_${ty}`;
-          discoveredIds.add(entityKey);
+          // Se for NPC Mestre/Herói com identidade única e já foi descoberto em outra camada, remove a duplicata residual
+          const isMasterNpc = lower.startsWith('npc_') || !!MASTER_NPC_CONFIGS[tileId];
+          if (isMasterNpc && discoveredTileIds.has(tileId)) {
+            if (layerName !== 'characters') {
+              layer.delete(key); // Limpa resíduo duplicado em solid ou decor
+            }
+            continue;
+          }
+
+          const entityKey = isMasterNpc ? tileId : `${tileId}_${tx}_${ty}`;
+          discoveredKeys.add(entityKey);
+          discoveredTileIds.add(tileId);
 
           if (!this.entities.has(entityKey)) {
-            const npcData = getNPCData(tileId);
-            const entity = new NPCEntity(tileId, tx, ty, npcData);
-            this.entities.set(entityKey, entity);
+            // Verifica se já existe por ID antes de criar
+            let existingEntity = null;
+            for (const ent of this.entities.values()) {
+              if (ent.id === tileId) {
+                existingEntity = ent;
+                break;
+              }
+            }
+
+            if (existingEntity) {
+              // Reutiliza entidade existente preservando sua posição atual de caminhada
+              this.entities.set(entityKey, existingEntity);
+            } else {
+              const npcData = getNPCData(tileId);
+              const entity = new NPCEntity(tileId, tx, ty, npcData);
+              this.entities.set(entityKey, entity);
+            }
           }
         }
       }
     }
 
     // Remove entidades que foram apagadas do mapa pelo editor
-    for (const entityKey of this.entities.keys()) {
-      if (!discoveredIds.has(entityKey)) {
+    for (const [entityKey, ent] of this.entities.entries()) {
+      if (!discoveredKeys.has(entityKey) && !discoveredTileIds.has(ent.id)) {
         this.entities.delete(entityKey);
       }
     }
@@ -550,7 +575,7 @@ export class NPCManager {
   /**
    * Renderiza um NPC dinâmico completo no mundo com sombra, avatar modular e overhead badges.
    */
-  renderNPCEntity(ctx, npc, isReflection = false) {
+  renderNPCEntity(ctx, npc, isReflection = false, player = null, blocklySystem = null) {
     const avatarScale = 0.33;
     const targetX = npc.x + 32;
     const targetY = npc.y + 60 - (265 * avatarScale);
@@ -621,14 +646,24 @@ export class NPCManager {
       ctx.fillText(nameText, npc.x + 32, badgeY + badgeH / 2);
 
       // Quest indicator (! dourado flutuante para mestres com desafios pendentes)
-      const hasQuest = hasAvailableQuestForNpc(npc.id);
+      const hasQuest = hasAvailableQuestForNpc(npc.id, blocklySystem);
+
+      // Distância do jogador para exibir prompt de interação [E]
+      let isPlayerNearby = false;
+      if (player) {
+        const pDist = Math.hypot((player.x + 32) - (npc.x + 32), (player.y + 32) - (npc.y + 32));
+        isPlayerNearby = (pDist <= 110);
+      }
+
       if (hasQuest) {
         const bounce = Math.sin(npc.animTimer * 4) * 3;
+        // Se o [E] estiver ativo, o "!" fica deslocado à esquerda (-14px)
+        const questX = isPlayerNearby ? (npc.x + 32 - 14) : (npc.x + 32);
         const questY = badgeY - 14 + bounce;
 
         ctx.fillStyle = '#f59e0b';
         ctx.beginPath();
-        ctx.arc(npc.x + 32, questY, 7, 0, Math.PI * 2);
+        ctx.arc(questX, questY, 7.5, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = '#78350f';
         ctx.lineWidth = 1.5;
@@ -638,7 +673,58 @@ export class NPCManager {
         ctx.font = 'bold 10px "Outfit", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('!', npc.x + 32, questY);
+        ctx.fillText('!', questX, questY);
+      }
+
+      // Prompt de Tecla [E] Flutuante (100% fisicamente atrelado ao NPC vivo)
+      if (isPlayerNearby) {
+        const bob = Math.sin(performance.now() / 160) * 2.5;
+        const promptX = hasQuest ? (npc.x + 32 + 14) : (npc.x + 32);
+        const promptY = badgeY - 15 + bob;
+        const btnSize = 22;
+        const bx = promptX - btnSize / 2;
+        const by = promptY - btnSize / 2;
+
+        // Shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(bx, by + 2.5, btnSize, btnSize, 11);
+        else ctx.rect(bx, by + 2.5, btnSize, btnSize);
+        ctx.fill();
+
+        // 3D edge
+        ctx.fillStyle = '#0f766e';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(bx, by + 1.8, btnSize, btnSize, 11);
+        else ctx.rect(bx, by + 1.8, btnSize, btnSize);
+        ctx.fill();
+
+        // Button face
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(bx, by, btnSize, btnSize, 11);
+        else ctx.rect(bx, by, btnSize, btnSize);
+        ctx.fill();
+
+        // Border mint
+        ctx.strokeStyle = '#19c8b9';
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+
+        // Indicator notch pointing down
+        ctx.fillStyle = '#19c8b9';
+        ctx.beginPath();
+        ctx.moveTo(promptX - 3.5, by + btnSize - 0.5);
+        ctx.lineTo(promptX, by + btnSize + 3);
+        ctx.lineTo(promptX + 3.5, by + btnSize - 0.5);
+        ctx.fill();
+
+        // Text 'E'
+        ctx.fillStyle = '#0f766e';
+        ctx.font = '900 11.5px "JetBrains Mono", "Outfit", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('E', promptX, promptY);
       }
 
       ctx.restore();
