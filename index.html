@@ -1538,14 +1538,22 @@
           </div>
         </div>
 
-        <!-- Action Buttons (Personalizar & Sair) -->
+        <!-- Action Buttons (Personalizar, Configurações de Desempenho & Sair) -->
         <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
           <button type="button" id="btn-profile-customize" class="btn-equip-tool" style="width: 100%; border-radius: 50px; font-weight: 800; padding: 12px 0; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
             <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 20h9"></path>
               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
             </svg>
-            <span>Personalizar</span>
+            <span>Personalizar Personagem</span>
+          </button>
+
+          <button type="button" id="btn-profile-settings" style="width: 100%; border-radius: 50px; font-weight: 800; padding: 11px 0; font-size: 0.92rem; display: flex; align-items: center; justify-content: center; gap: 8px; background: #e6f9f6; color: #0f8e83; border: 2px solid #19c8b9; box-shadow: 0 3px 0 0 #0f8e83; cursor: pointer; transition: all 0.15s ease;">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span>Configurações de Desempenho</span>
           </button>
 
           <button type="button" id="btn-profile-logout" class="codekit-btn-secondary" style="width: 100%; border-radius: 50px; font-weight: 800; padding: 11px 0; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; background: #fee2e2; color: #b91c1c; border: 2px solid #ef4444; box-shadow: 0 3px 0 0 #dc2626;">
@@ -1559,6 +1567,92 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Performance Settings Modal (Animal Island UI) -->
+  <div class="crafting-modal" id="settings-performance-modal" style="display: none; z-index: 99995;">
+    <div class="crafting-card ac-pocket-card" style="width: 440px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="crafting-header ac-header-mint">
+        <div class="crafting-title">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>Configurações de Desempenho</span>
+        </div>
+        <button id="btn-close-perf-settings" class="modal-close-btn" title="Fechar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+
+      <div class="crafting-body" style="padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; flex: 1;">
+        <!-- Predefinições Rápidas por Memória RAM -->
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-family: var(--animal-font-title, 'Cinzel', serif); font-size: 0.85rem; font-weight: 800; color: var(--animal-text, #794f27); display: flex; align-items: center; gap: 6px;">
+            <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+            Predefinição por Memória RAM
+          </label>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+            <button type="button" class="perf-preset-pill active" id="perf-preset-4gb" data-preset="4gb" style="padding: 8px 4px; border-radius: 50px; font-size: 0.80rem; font-weight: 800; border: 2px solid #d5cbaf; background: #f7f3df; color: #725d42; cursor: pointer; transition: all 0.15s; text-align: center;">4 GB (Leve)</button>
+            <button type="button" class="perf-preset-pill" id="perf-preset-8gb" data-preset="8gb" style="padding: 8px 4px; border-radius: 50px; font-size: 0.80rem; font-weight: 800; border: 2px solid #d5cbaf; background: #f7f3df; color: #725d42; cursor: pointer; transition: all 0.15s; text-align: center;">8 GB (Equilibrado)</button>
+            <button type="button" class="perf-preset-pill" id="perf-preset-16gb" data-preset="16gb" style="padding: 8px 4px; border-radius: 50px; font-size: 0.80rem; font-weight: 800; border: 2px solid #d5cbaf; background: #f7f3df; color: #725d42; cursor: pointer; transition: all 0.15s; text-align: center;">16 GB+ (Alto)</button>
+          </div>
+        </div>
+
+        <div style="height: 1px; background: #e5dec9; width: 100%;"></div>
+
+        <!-- Opção 1: Limite de Taxa de Quadros (FPS Target) -->
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 0.82rem; font-weight: 800; color: #725d42;">Taxa de Quadros Máxima (FPS):</label>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;" id="perf-target-fps-group">
+            <button type="button" class="perf-option-pill" data-key="targetFps" data-val="30" style="padding: 7px 4px; border-radius: 50px; font-size: 0.80rem; font-weight: 800; border: 2px solid #d5cbaf; background: #f7f3df; color: #725d42; cursor: pointer; transition: all 0.15s; text-align: center;">30 FPS</button>
+            <button type="button" class="perf-option-pill active" data-key="targetFps" data-val="60" style="padding: 7px 4px; border-radius: 50px; font-size: 0.80rem; font-weight: 800; border: 2px solid #0f8e83; background: #19c8b9; color: #ffffff; cursor: pointer; box-shadow: 0 2px 0 0 #0f8e83; transition: all 0.15s; text-align: center;">60 FPS</button>
+            <button type="button" class="perf-option-pill" data-key="targetFps" data-val="120" style="padding: 7px 4px; border-radius: 50px; font-size: 0.80rem; font-weight: 800; border: 2px solid #d5cbaf; background: #f7f3df; color: #725d42; cursor: pointer; transition: all 0.15s; text-align: center;">120 FPS</button>
+          </div>
+        </div>
+
+        <!-- Opção 2: Reflexos na Água -->
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 0.82rem; font-weight: 800; color: #725d42;">Reflexos na Água:</label>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;" id="perf-water-group">
+            <button type="button" class="perf-option-pill" data-key="waterReflections" data-val="low" style="padding: 7px 4px; border-radius: 50px; font-size: 0.80rem; font-weight: 800; border: 2px solid #d5cbaf; background: #f7f3df; color: #725d42; cursor: pointer; transition: all 0.15s; text-align: center;">Desligado (Low)</button>
+            <button type="button" class="perf-option-pill active" data-key="waterReflections" data-val="medium" style="padding: 7px 4px; border-radius: 50px; font-size: 0.80rem; font-weight: 800; border: 2px solid #0f8e83; background: #19c8b9; color: #ffffff; cursor: pointer; box-shadow: 0 2px 0 0 #0f8e83; transition: all 0.15s; text-align: center;">Médio (Herói)</button>
+            <button type="button" class="perf-option-pill" data-key="waterReflections" data-val="high" style="padding: 7px 4px; border-radius: 50px; font-size: 0.80rem; font-weight: 800; border: 2px solid #d5cbaf; background: #f7f3df; color: #725d42; cursor: pointer; transition: all 0.15s; text-align: center;">Alto (Completo)</button>
+          </div>
+        </div>
+
+        <!-- Opção 3: Taxa de Atualização do Minimapa -->
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 0.82rem; font-weight: 800; color: #725d42;">Atualização do Minimapa:</label>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;" id="perf-minimap-group">
+            <button type="button" class="perf-option-pill" data-key="minimapFps" data-val="10" style="padding: 7px 4px; border-radius: 50px; font-size: 0.80rem; font-weight: 800; border: 2px solid #d5cbaf; background: #f7f3df; color: #725d42; cursor: pointer; transition: all 0.15s; text-align: center;">10 FPS (Econômico)</button>
+            <button type="button" class="perf-option-pill active" data-key="minimapFps" data-val="20" style="padding: 7px 4px; border-radius: 50px; font-size: 0.80rem; font-weight: 800; border: 2px solid #0f8e83; background: #19c8b9; color: #ffffff; cursor: pointer; box-shadow: 0 2px 0 0 #0f8e83; transition: all 0.15s; text-align: center;">20 FPS</button>
+            <button type="button" class="perf-option-pill" data-key="minimapFps" data-val="60" style="padding: 7px 4px; border-radius: 50px; font-size: 0.80rem; font-weight: 800; border: 2px solid #d5cbaf; background: #f7f3df; color: #725d42; cursor: pointer; transition: all 0.15s; text-align: center;">60 FPS (Fluido)</button>
+          </div>
+        </div>
+
+        <!-- Opção 4: Iluminação Noturna & Contador FPS -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="font-size: 0.80rem; font-weight: 800; color: #725d42;">Iluminação Noturna:</label>
+            <button type="button" id="perf-lighting-toggle" class="perf-toggle-btn" style="padding: 7px 10px; border-radius: 50px; font-size: 0.78rem; font-weight: 800; border: 2px solid #d5cbaf; background: #f7f3df; color: #725d42; cursor: pointer; transition: all 0.15s; text-align: center;">Gradiente Suave</button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="font-size: 0.80rem; font-weight: 800; color: #725d42;">Contador de FPS:</label>
+            <button type="button" id="perf-fps-counter-toggle" class="perf-toggle-btn" style="padding: 7px 10px; border-radius: 50px; font-size: 0.78rem; font-weight: 800; border: 2px solid #d5cbaf; background: #f7f3df; color: #725d42; cursor: pointer; transition: all 0.15s; text-align: center;">Oculto</button>
+          </div>
+        </div>
+
+        <!-- Botão Aplicar & Fechar -->
+        <button type="button" id="btn-save-perf-settings" class="btn-equip-tool" style="width: 100%; border-radius: 50px; font-weight: 800; padding: 12px 0; font-size: 0.95rem; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Salvar & Aplicar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Realtime In-Game FPS HUD Counter (Animal Island Badge) -->
+  <div id="fps-counter-hud" style="display: none; position: fixed; top: 12px; left: 16px; z-index: 99999; background: rgba(248, 248, 240, 0.92); border: 2px solid #19c8b9; border-radius: 50px; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 800; color: #0f8e83; box-shadow: 0 3px 0 0 #0f8e83; pointer-events: none; user-select: none;">
+    <span id="fps-counter-val">60</span> FPS
   </div>
 
   <!-- Logout Confirmation Modal (Animal Island UI) -->

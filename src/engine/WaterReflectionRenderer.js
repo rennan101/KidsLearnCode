@@ -98,6 +98,10 @@ export class WaterReflectionRenderer {
   renderReflections(ctx, tileMap, assetLoader, visibleWaterCells, renderContext = {}, timeMs = 0) {
     if (!visibleWaterCells || visibleWaterCells.length === 0) return;
 
+    // Performance Mode Quality Gate (Low = 0 draw calls, Medium = Player/Pet only, High = Full Scene)
+    const perfQuality = renderContext?.performanceController?.settings?.waterReflections || renderContext?.waterReflectionsQuality || 'high';
+    if (perfQuality === 'low') return;
+
     const timeSec = timeMs / 1000;
     const { player, dragonManager, multiplayerClient, camera, isEditor } = renderContext;
 
@@ -111,23 +115,25 @@ export class WaterReflectionRenderer {
     }
     ctx.clip();
 
-    // 2. Render Shoreline Solid & Decor Upright Objects Reflections (Trees, Rocks, Buildings, Bushes)
-    this.renderShorelineObjectReflections(ctx, tileMap, assetLoader, camera, isEditor, timeSec);
+    if (perfQuality === 'high') {
+      // 2. Render Shoreline Solid & Decor Upright Objects Reflections (Trees, Rocks, Buildings, Bushes)
+      this.renderShorelineObjectReflections(ctx, tileMap, assetLoader, camera, isEditor, timeSec);
 
-    // 3. Render Characters & NPCs Reflections near water (pure body, no overhead name badges or prompts)
-    this.renderNPCReflections(ctx, tileMap, assetLoader, camera, isEditor, timeSec, renderContext);
+      // 3. Render Characters & NPCs Reflections near water (pure body, no overhead name badges or prompts)
+      this.renderNPCReflections(ctx, tileMap, assetLoader, camera, isEditor, timeSec, renderContext);
 
-    // 4. Render Wild Dragons Reflections (flying over or swimming in water)
-    if (dragonManager && dragonManager.wildDragons) {
-      this.renderWildDragonReflections(ctx, dragonManager, player, assetLoader, timeSec);
+      // 4. Render Wild Dragons Reflections (flying over or swimming in water)
+      if (dragonManager && dragonManager.wildDragons) {
+        this.renderWildDragonReflections(ctx, dragonManager, player, assetLoader, timeSec);
+      }
+
+      // 5. Render Remote Players Reflections (Multiplayer - pure body, no overhead tags)
+      if (multiplayerClient) {
+        this.renderMultiplayerReflections(ctx, multiplayerClient, assetLoader, timeSec);
+      }
     }
 
-    // 5. Render Remote Players Reflections (Multiplayer - pure body, no overhead tags)
-    if (multiplayerClient) {
-      this.renderMultiplayerReflections(ctx, multiplayerClient, assetLoader, timeSec);
-    }
-
-    // 6. Render Local Player & Dragon Mount Reflection (Flying or Standing near water)
+    // 6. Render Local Player & Dragon Mount Reflection (Flying or Standing near water) - rendered on Medium & High
     if (player) {
       this.renderPlayerReflection(ctx, player, dragonManager, assetLoader, timeSec);
     }

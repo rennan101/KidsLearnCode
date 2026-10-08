@@ -21,6 +21,7 @@ import { soundFX } from './engine/SoundFX.js';
 import { CharacterCreator } from './ui/CharacterCreator.js';
 import { DEFAULT_AVATAR_CONFIG } from './engine/animation/AvatarConfig.js';
 import { NPCManager } from './engine/NPCManager.js';
+import { PerformanceController } from './engine/PerformanceController.js';
 
 
 class RPGApplication {
@@ -59,6 +60,9 @@ class RPGApplication {
     this.assetLoader = new AssetLoader();
     this.tileMap = new TileMap();
     this.isFullLightActive = false;
+    this.performanceController = new PerformanceController();
+    this.ySortPool = []; // Reusable object pool to achieve zero GC allocation in render loop
+    this.lastRenderTimestamp = performance.now();
     this.npcManager = new NPCManager(this.tileMap, this.assetLoader);
     this.player = new Player(320, 320);
     this.player.dragonManager = this.dragonManager;
@@ -3283,7 +3287,36 @@ class RPGApplication {
     const deltaTime = Math.min(Math.max(0, currentTime - this.lastTime), 33.34);
     this.lastTime = currentTime;
 
-    // Update FPS
+    // Atualiza estatísticas do PerformanceController
+    if (this.performanceController) {
+      this.performanceController.update(currentTime);
+
+      // Atualização do HUD de FPS em tempo real
+      if (this.performanceController.settings.showFpsCounter) {
+        const fpsHud = document.getElementById('fps-counter-hud');
+        const fpsVal = document.getElementById('fps-counter-val');
+        if (fpsHud && fpsHud.style.display !== 'block') fpsHud.style.display = 'block';
+        if (fpsVal && (currentTime - (this.performanceController.lastFpsHudUpdateTime || 0) > 200)) {
+          this.performanceController.lastFpsHudUpdateTime = currentTime;
+          fpsVal.innerText = this.performanceController.currentFps;
+        }
+      } else {
+        const fpsHud = document.getElementById('fps-counter-hud');
+        if (fpsHud && fpsHud.style.display !== 'none') fpsHud.style.display = 'none';
+      }
+
+      // Frame Rate Limiter (30 FPS, 60 FPS, 120 FPS / Sem limite)
+      const targetFps = this.performanceController.settings.targetFps || 60;
+      const minFrameInterval = (targetFps >= 120) ? 0 : (1000 / targetFps) - 2;
+      const timeSinceLastRender = currentTime - (this.lastRenderTimestamp || 0);
+      if (minFrameInterval > 0 && timeSinceLastRender < minFrameInterval) {
+        requestAnimationFrame((t) => this.gameLoop(t));
+        return;
+      }
+      this.lastRenderTimestamp = currentTime;
+    }
+
+    // Update Legacy FPS status element if present
     this.frameCount++;
     this.fpsTimer += deltaTime;
     if (this.fpsTimer >= 1000) {
@@ -3397,8 +3430,8 @@ class RPGApplication {
     // Render pass
     this.render();
 
-    // Render Minimap pass
-    this.minimap.render(this.mode === 'edit');
+    // Render Minimap pass with performance throttling
+    this.minimap.render(this.mode === 'edit', this.performanceController);
 
     requestAnimationFrame((t) => this.gameLoop(t));
   }
@@ -3445,8 +3478,26 @@ class RPGApplication {
               }
             }
 
-            // Collect visible solid tiles and characters entities for unified Y-sorting
-            const ySortEntities = [];
+            // Collect visible solid tiles and characters entities for unified Y-sorting (Zero GC Allocation Pool)
+            let ySortCount = 0;
+            const pushYSort = (type, cell, x, y, npc, wildEntity, dragon, baseY) => {
+              let item = this.ySortPool[ySortCount];
+              if (!item) {
+                item = { type, cell, x, y, npc, wildEntity, dragon, baseY };
+                this.ySortPool[ySortCount] = item;
+              } else {
+                item.type = type;
+                item.cell = cell;
+                item.x = x;
+                item.y = y;
+                item.npc = npc;
+                item.wildEntity = wildEntity;
+                item.dragon = dragon;
+                item.baseY = baseY;
+              }
+              ySortCount++;
+            };
+
             const camW = (this.camera.viewportWidth && this.camera.viewportWidth > 0) ? this.camera.viewportWidth : (this.canvas.width || 800);
             const camH = (this.camera.viewportHeight && this.camera.viewportHeight > 0) ? this.camera.viewportHeight : (this.canvas.height || 600);
             const camZ = (this.camera.zoom && this.camera.zoom > 0.05) ? this.camera.zoom : 1.0;
@@ -3467,14 +3518,7 @@ class RPGApplication {
                   const cell = solidLayer.get(this.tileMap.getKey(x, y));
                   if (!cell || cell.isRoot === false) continue;
                   const baseY = this.tileMap.getCellBaseY(cell, x, y, this.assetLoader);
-                  ySortEntities.push({
-                    type: 'tile',
-                    layerName: 'solid',
-                    cell,
-                    x,
-                    y,
-                    baseY
-                  });
+                  pushYSort('tile', cell, x, y, null, null, null, baseY);
                 }
               }
             }
@@ -3494,14 +3538,7 @@ class RPGApplication {
                   const cell = charLayer.get(this.tileMap.getKey(x, y));
                   if (!cell || cell.isRoot === false) continue;
                   const baseY = this.tileMap.getCellBaseY(cell, x, y, this.assetLoader);
-                  ySortEntities.push({
-                    type: 'tile',
-                    layerName: 'characters',
-                    cell,
-                    x,
-                    y,
-                    baseY
-                  });
+                  pushYSort('tile', cell, x, y, null, null, null, baseY);
                 }
               }
             }
@@ -3512,11 +3549,7 @@ class RPGApplication {
               for (const npc of npcEntities) {
                 // Base Y at feet position
                 const baseY = npc.y + (npc.height || 64);
-                ySortEntities.push({
-                  type: 'npc',
-                  npc,
-                  baseY
-                });
+                pushYSort('npc', null, 0, 0, npc, null, null, baseY);
               }
             }
 
@@ -3524,11 +3557,7 @@ class RPGApplication {
             if (!isEditor && this.dragonManager && this.dragonManager.wildDragons) {
               for (const wildEntity of this.dragonManager.wildDragons.values()) {
                 const baseY = wildEntity.y + 52;
-                ySortEntities.push({
-                  type: 'wild_dragon',
-                  wildEntity,
-                  baseY
-                });
+                pushYSort('wild_dragon', null, 0, 0, null, wildEntity, null, baseY);
               }
             }
 
@@ -3537,27 +3566,22 @@ class RPGApplication {
               const activeDragon = this.dragonManager.getActiveDragon();
               if (activeDragon) {
                 const baseY = this.dragonManager.y + 44;
-                ySortEntities.push({
-                  type: 'companion_dragon',
-                  dragon: activeDragon,
-                  baseY
-                });
+                pushYSort('companion_dragon', null, 0, 0, null, null, activeDragon, baseY);
               }
             }
 
             // 3. Player entity (Geralt) Y-Sort Base Position (Feet center)
             const playerFeet = this.player.getFeetBox();
             const playerBaseY = playerFeet.y + playerFeet.h;
-            ySortEntities.push({
-              type: 'player',
-              baseY: playerBaseY
-            });
+            pushYSort('player', null, 0, 0, null, null, null, playerBaseY);
 
-            // Sort all entities strictly by baseY (lower Y rendered first, higher Y in front)
-            ySortEntities.sort((a, b) => a.baseY - b.baseY);
+            // Sort active pool slice strictly by baseY
+            const activeYSortList = this.ySortPool.slice(0, ySortCount);
+            activeYSortList.sort((a, b) => a.baseY - b.baseY);
 
             // Draw all entities in correct depth order
-            for (const item of ySortEntities) {
+            for (let i = 0; i < ySortCount; i++) {
+              const item = activeYSortList[i];
               try {
                 if (item.type === 'player') {
                   const isMounted = this.player.isMounted && this.dragonManager?.isMounted();
@@ -3592,6 +3616,7 @@ class RPGApplication {
                 dragonManager: this.dragonManager, 
                 multiplayerClient: this.multiplayerClient, 
                 dayNightSystem: this.dayNightSystem,
+                performanceController: this.performanceController,
                 mode: this.mode 
               };
               this.tileMap.renderLayer(this.ctx, layerName, this.assetLoader, this.camera, isEditor, showColliders, renderCtx);
@@ -3609,6 +3634,7 @@ class RPGApplication {
               dragonManager: this.dragonManager, 
               multiplayerClient: this.multiplayerClient, 
               dayNightSystem: this.dayNightSystem,
+              performanceController: this.performanceController,
               mode: this.mode 
             };
             if (layerName === 'characters') {
@@ -3705,9 +3731,10 @@ class RPGApplication {
     // 1. Day / Night Atmospheric Lighting Tint & Deep Night Darkness Overlay (Play Mode)
     if (this.mode === 'play' && this.dayNightSystem && !this.isFullLightActive) {
       const ambient = this.dayNightSystem.getAmbientLight();
+      const lightingQuality = this.performanceController?.settings?.lightingQuality || 'gradient';
       if (ambient.alpha > 0.02) {
         this.ctx.save();
-        if (ambient.alpha >= 0.40) {
+        if (ambient.alpha >= 0.40 && lightingQuality === 'gradient') {
           // Night / Dusk Darkness with dynamic player lantern glow aura (tracks player visual center on foot and in flight)
           const isMounted = Boolean(this.player.isMounted && (this.dragonManager?.isMounted?.() || this.dragonManager?.mode === 'mounted'));
           const flightAlt = isMounted ? (this.dragonManager?.flightAltitude || 0) : 0;
@@ -3738,7 +3765,7 @@ class RPGApplication {
           this.ctx.fillStyle = `rgba(${ambient.r}, ${ambient.g}, ${ambient.b}, ${ambient.alpha * 0.22})`;
           this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         } else {
-          // Daytime / Dawn / Sunset soft color tint
+          // Daytime / Dawn / Flat Performance Mode color tint (fast single pass fill)
           this.ctx.fillStyle = `rgba(${ambient.r}, ${ambient.g}, ${ambient.b}, ${ambient.alpha})`;
           this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         }
@@ -4657,6 +4684,168 @@ class RPGApplication {
     this.closeLogoutConfirmModal = () => {
       if (logoutConfirmModal) logoutConfirmModal.style.display = 'none';
     };
+
+    const profileSettingsBtn = document.getElementById('btn-profile-settings');
+    const perfSettingsModal = document.getElementById('settings-performance-modal');
+    const closePerfSettingsBtn = document.getElementById('btn-close-perf-settings');
+    const savePerfSettingsBtn = document.getElementById('btn-save-perf-settings');
+
+    const syncPerfModalUI = () => {
+      if (!this.performanceController) return;
+      const s = this.performanceController.settings;
+
+      // Presets
+      document.querySelectorAll('.perf-preset-pill').forEach(btn => {
+        const isPresetActive = btn.dataset.preset === s.preset;
+        if (isPresetActive) {
+          btn.style.background = '#19c8b9';
+          btn.style.color = '#ffffff';
+          btn.style.borderColor = '#0f8e83';
+          btn.style.boxShadow = '0 2px 0 0 #0f8e83';
+        } else {
+          btn.style.background = '#f7f3df';
+          btn.style.color = '#725d42';
+          btn.style.borderColor = '#d5cbaf';
+          btn.style.boxShadow = 'none';
+        }
+      });
+
+      // Target FPS pills
+      document.querySelectorAll('#perf-target-fps-group .perf-option-pill').forEach(btn => {
+        const isActive = Number(btn.dataset.val) === Number(s.targetFps);
+        if (isActive) {
+          btn.style.background = '#19c8b9';
+          btn.style.color = '#ffffff';
+          btn.style.borderColor = '#0f8e83';
+          btn.style.boxShadow = '0 2px 0 0 #0f8e83';
+        } else {
+          btn.style.background = '#f7f3df';
+          btn.style.color = '#725d42';
+          btn.style.borderColor = '#d5cbaf';
+          btn.style.boxShadow = 'none';
+        }
+      });
+
+      // Water reflection pills
+      document.querySelectorAll('#perf-water-group .perf-option-pill').forEach(btn => {
+        const isActive = btn.dataset.val === s.waterReflections;
+        if (isActive) {
+          btn.style.background = '#19c8b9';
+          btn.style.color = '#ffffff';
+          btn.style.borderColor = '#0f8e83';
+          btn.style.boxShadow = '0 2px 0 0 #0f8e83';
+        } else {
+          btn.style.background = '#f7f3df';
+          btn.style.color = '#725d42';
+          btn.style.borderColor = '#d5cbaf';
+          btn.style.boxShadow = 'none';
+        }
+      });
+
+      // Minimap FPS pills
+      document.querySelectorAll('#perf-minimap-group .perf-option-pill').forEach(btn => {
+        const isActive = Number(btn.dataset.val) === Number(s.minimapFps);
+        if (isActive) {
+          btn.style.background = '#19c8b9';
+          btn.style.color = '#ffffff';
+          btn.style.borderColor = '#0f8e83';
+          btn.style.boxShadow = '0 2px 0 0 #0f8e83';
+        } else {
+          btn.style.background = '#f7f3df';
+          btn.style.color = '#725d42';
+          btn.style.borderColor = '#d5cbaf';
+          btn.style.boxShadow = 'none';
+        }
+      });
+
+      // Lighting toggle
+      const lightingBtn = document.getElementById('perf-lighting-toggle');
+      if (lightingBtn) {
+        if (s.lightingQuality === 'gradient') {
+          lightingBtn.innerText = 'Gradiente Suave';
+          lightingBtn.style.background = '#e6f9f6';
+          lightingBtn.style.borderColor = '#19c8b9';
+          lightingBtn.style.color = '#0f8e83';
+        } else {
+          lightingBtn.innerText = 'Flat (Econômica)';
+          lightingBtn.style.background = '#f7f3df';
+          lightingBtn.style.borderColor = '#d5cbaf';
+          lightingBtn.style.color = '#725d42';
+        }
+      }
+
+      // FPS Counter toggle
+      const fpsToggleBtn = document.getElementById('perf-fps-counter-toggle');
+      if (fpsToggleBtn) {
+        if (s.showFpsCounter) {
+          fpsToggleBtn.innerText = 'Visível';
+          fpsToggleBtn.style.background = '#e6f9f6';
+          fpsToggleBtn.style.borderColor = '#19c8b9';
+          fpsToggleBtn.style.color = '#0f8e83';
+        } else {
+          fpsToggleBtn.innerText = 'Oculto';
+          fpsToggleBtn.style.background = '#f7f3df';
+          fpsToggleBtn.style.borderColor = '#d5cbaf';
+          fpsToggleBtn.style.color = '#725d42';
+        }
+      }
+    };
+
+    this.openPerformanceSettingsModal = () => {
+      syncPerfModalUI();
+      if (perfSettingsModal) perfSettingsModal.style.display = 'flex';
+    };
+
+    this.closePerformanceSettingsModal = () => {
+      if (perfSettingsModal) perfSettingsModal.style.display = 'none';
+    };
+
+    profileSettingsBtn?.addEventListener('click', () => {
+      this.closePlayerProfileModal();
+      this.openPerformanceSettingsModal();
+    });
+
+    closePerfSettingsBtn?.addEventListener('click', () => this.closePerformanceSettingsModal());
+    savePerfSettingsBtn?.addEventListener('click', () => {
+      this.closePerformanceSettingsModal();
+      this.showToast('Configurações de desempenho salvas com sucesso!');
+    });
+
+    // Event listeners para Presets
+    document.querySelectorAll('.perf-preset-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const preset = btn.dataset.preset;
+        this.performanceController?.applyPreset(preset);
+        syncPerfModalUI();
+        this.showToast(`Predefinição ${preset.toUpperCase()} aplicada!`);
+      });
+    });
+
+    // Event listeners para Opções Manuais
+    document.querySelectorAll('.perf-option-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.key;
+        let val = btn.dataset.val;
+        if (key === 'targetFps' || key === 'minimapFps') val = Number(val);
+        this.performanceController?.setSetting(key, val);
+        syncPerfModalUI();
+      });
+    });
+
+    // Toggle Iluminação
+    document.getElementById('perf-lighting-toggle')?.addEventListener('click', () => {
+      const current = this.performanceController?.settings?.lightingQuality || 'gradient';
+      const next = current === 'gradient' ? 'flat' : 'gradient';
+      this.performanceController?.setSetting('lightingQuality', next);
+      syncPerfModalUI();
+    });
+
+    // Toggle FPS Counter
+    document.getElementById('perf-fps-counter-toggle')?.addEventListener('click', () => {
+      const current = Boolean(this.performanceController?.settings?.showFpsCounter);
+      this.performanceController?.setSetting('showFpsCounter', !current);
+      syncPerfModalUI();
+    });
 
     closeProfileModalBtn?.addEventListener('click', () => this.closePlayerProfileModal());
     closeLogoutModalBtn?.addEventListener('click', () => this.closeLogoutConfirmModal());

@@ -261,7 +261,7 @@ export class Minimap {
     return color;
   }
 
-  render(isEditor = false) {
+  render(isEditor = false, performanceController = null) {
     if (this.container) {
       this.container.style.display = isEditor ? 'none' : 'block';
     }
@@ -279,6 +279,14 @@ export class Minimap {
         );
       }
       return;
+    }
+
+    const now = performance.now();
+    // Performance Throttling: If compact minimap doesn't need a redraw this frame, skip rendering
+    if (performanceController && !this.isExpanded) {
+      if (!performanceController.shouldRenderMinimap(now)) {
+        return;
+      }
     }
 
     // 1. Render Compact Circular Minimap
