@@ -1551,7 +1551,16 @@ export class TileMap {
     }
 
     // Modular NPC Entity Cutout Renderer (Human/Anime Stylized with AvatarConfig)
-    if ((cell.tileId.startsWith('npc_') || cell.tileId.startsWith('char_') || tileMeta.isNPC || tileMeta.isCharacter) && !tileMeta.isDragon && !cell.tileId.startsWith('dragon_')) {
+    const lowerTileId = (cell.tileId || '').toLowerCase();
+    const isCharacterEntity = (
+      lowerTileId.startsWith('npc_') || lowerTileId.startsWith('char_') ||
+      lowerTileId.startsWith('hero_') || lowerTileId.startsWith('npc-') ||
+      lowerTileId.startsWith('char-') || lowerTileId.startsWith('hero-') ||
+      tileMeta.isNPC || tileMeta.isCharacter || cell.isCharacter ||
+      !!MASTER_NPC_CONFIGS[cell.tileId]
+    ) && !tileMeta.isDragon && !lowerTileId.startsWith('dragon_') && !lowerTileId.startsWith('dragon-');
+
+    if (isCharacterEntity) {
       // No Modo Play, os NPCs e Heróis vivos são atualizados e renderizados dinamicamente pelo NPCManager
       if (!isEditor) {
         return;

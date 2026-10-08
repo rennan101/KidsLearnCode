@@ -4143,9 +4143,11 @@ class RPGApplication {
   }
 
   findNearbyNPC(worldX, worldY, radius = 110) {
-    if (this.mode === 'play' && this.npcManager) {
-      const dynamicNpc = this.npcManager.findNearbyNPC(worldX, worldY, radius);
-      if (dynamicNpc) return dynamicNpc;
+    if (this.mode === 'play') {
+      if (this.npcManager) {
+        return this.npcManager.findNearbyNPC(worldX, worldY, radius);
+      }
+      return null;
     }
 
     if (!this.tileMap || !this.tileMap.layers) return null;
@@ -4160,7 +4162,7 @@ class RPGApplication {
 
       for (const [key, cell] of layer.entries()) {
         const tileId = (typeof cell === 'object' && cell !== null) ? cell.tileId : (typeof cell === 'string' ? cell : null);
-        if (tileId && typeof tileId === 'string' && (tileId.startsWith('npc_') || tileId.startsWith('char_'))) {
+        if (tileId && typeof tileId === 'string' && (tileId.startsWith('npc_') || tileId.startsWith('char_') || tileId.startsWith('hero_'))) {
           const [tx, ty] = key.split(',').map(Number);
           const npcWorldX = tx * 64 + 32;
           const npcWorldY = ty * 64 + 32;
