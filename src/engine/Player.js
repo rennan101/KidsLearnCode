@@ -218,7 +218,7 @@ export class Player {
     };
   }
 
-  update(deltaTime, tileMap, assetLoader) {
+  update(deltaTime, tileMap, assetLoader, npcManager = null) {
     const dt = Math.min(deltaTime / 1000, 0.1);
     this.animTimer += dt;
 
@@ -317,7 +317,7 @@ export class Player {
       const nextY = this.y + moveDistY;
 
       // Movimento 4-way direto com teste de colisão
-      if (!this.checkCollision(nextX, nextY, tileMap, assetLoader)) {
+      if (!this.checkCollision(nextX, nextY, tileMap, assetLoader, npcManager)) {
         this.x = nextX;
         this.y = nextY;
       }
@@ -326,7 +326,7 @@ export class Player {
     }
   }
 
-  checkCollision(testPlayerX, testPlayerY, tileMap, assetLoader) {
+  checkCollision(testPlayerX, testPlayerY, tileMap, assetLoader, npcManager = null) {
     if (!tileMap || !assetLoader) return false;
 
     const activeDragon = this.dragonManager?.getActiveDragon();
@@ -341,6 +341,36 @@ export class Player {
     }
 
     const feet = this.getFeetBox(testPlayerX, testPlayerY);
+
+    // Prevenção de colisão física contra NPCs vivos que passeiam pela ilha (quando no chão ou voo rasante)
+    if (npcManager && typeof npcManager.getEntities === 'function' && flightAlt < 30) {
+      const curFeet = this.getFeetBox(this.x, this.y);
+      const npcs = npcManager.getEntities();
+      for (const npc of npcs) {
+        if (!npc) continue;
+        const nFeet = (typeof npc.getFeetBox === 'function') 
+          ? npc.getFeetBox() 
+          : { x: npc.x + 20, y: npc.y + 48, w: 24, h: 14 };
+
+        const isOverlapping = (
+          feet.x < nFeet.x + nFeet.w &&
+          feet.x + feet.w > nFeet.x &&
+          feet.y < nFeet.y + nFeet.h &&
+          feet.y + feet.h > nFeet.y
+        );
+
+        if (isOverlapping) {
+          // Se já estiver em contato, permite movimentos que aumentem o distanciamento (escape inteligente)
+          const curDist = Math.hypot(curFeet.x - nFeet.x, curFeet.y - nFeet.y);
+          const newDist = Math.hypot(feet.x - nFeet.x, feet.y - nFeet.y);
+          if (newDist >= curDist) {
+            continue; // Afastando-se do NPC: permitido!
+          }
+          return true; // Bloqueia avanço contra o NPC
+        }
+      }
+    }
+
     const tileSize = tileMap.tileSize;
 
     const padding = 4;

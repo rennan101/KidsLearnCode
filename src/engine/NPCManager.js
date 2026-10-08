@@ -251,11 +251,12 @@ export class NPCManager {
           const nextX = npc.x + moveX;
           const nextY = npc.y + moveY;
 
-          // Verificação de Colisão com Terreno e Jogadores
+          // Verificação de Colisão com Terreno, Jogadores e Outros NPCs
           const isTerrainBlocked = this.checkTerrainCollision(npc, nextX, nextY, tileMap);
           const isPlayerBlocked = this.checkPlayerProximity(npc, nextX, nextY, playerFeetBoxes);
+          const isOtherNpcBlocked = this.checkOtherNpcProximity(npc, nextX, nextY);
 
-          if (isTerrainBlocked || isPlayerBlocked) {
+          if (isTerrainBlocked || isPlayerBlocked || isOtherNpcBlocked) {
             // Obstáculo detectado: conclui o passo e entra em breve idle antes de nova rota
             npc.state = 'idle';
             npc.stateTimer = 0.2 + Math.random() * 0.5;
@@ -484,7 +485,7 @@ export class NPCManager {
    */
   startDialogue(npcId, playerX, playerY) {
     for (const [, npc] of this.entities) {
-      if (npc.id === npcId || npc.name === npcId) {
+      if (npc.id === npcId || npc.name === npcId || (npcId && (npc.id === npcId.id || npc.id === npcId.tileId))) {
         npc.state = 'talking';
         npc.direction = this.getDirectionTowards(npc.x, npc.y, playerX, playerY);
         npc.targetX = npc.x;
@@ -500,7 +501,7 @@ export class NPCManager {
    */
   endDialogue(npcId) {
     for (const [, npc] of this.entities) {
-      if (npc.id === npcId || npc.name === npcId) {
+      if (npc.id === npcId || npc.name === npcId || (npcId && (npc.id === npcId.id || npc.id === npcId.tileId))) {
         npc.state = 'idle';
         npc.pauseAfterDialogueTimer = 2.0;
         npc.stateTimer = 2.5 + Math.random() * 3.0;
@@ -526,6 +527,7 @@ export class NPCManager {
         nearest = {
           ...npc.data,
           id: npc.id,
+          tileId: npc.id,
           name: npc.name,
           worldX: npc.x,
           worldY: npc.y,

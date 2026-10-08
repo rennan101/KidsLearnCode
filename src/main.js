@@ -97,8 +97,10 @@ class RPGApplication {
       hoverTx: null,
       hoverTy: null,
       isValidPlacement: false,
+      isDragging: false,
       maxInteractionDistancePx: 192 // ~3 tiles de alcance
     };
+    this.remoteLockedObjects = new Map(); // key: `${tx},${ty}` -> { playerId, timestamp }
 
     // Active NPC dialogue tracking & camera zoom
     this.activeDialogueNPC = null;
@@ -1506,6 +1508,16 @@ class RPGApplication {
     window.addEventListener('mouseup', () => {
       if (this.mode === 'edit') {
         this.editorController.handleMouseUp();
+      } else if (this.mode === 'play') {
+        if (this.playModeInteraction.activeMode && this.playModeInteraction.isDragging) {
+          if (this.playModeInteraction.isValidPlacement) {
+            this.confirmPlayModePlacement();
+          } else {
+            // Soltou em local inválido ou com colisor (tile vermelho): retorna o objeto ao local de origem
+            this.cancelPlayModeInteraction();
+          }
+          this.playModeInteraction.isDragging = false;
+        }
       }
     });
 
@@ -2534,6 +2546,155 @@ class RPGApplication {
     return mapping[itemId] || 'crate';
   }
 
+  isTileIdMovable(tileId, meta = null) {
+    if (!tileId || typeof tileId !== 'string') return false;
+    const id = tileId.toLowerCase();
+
+    // 1. ITENS QUE NÃO SÃO POSSÍVEIS DE ARRASTAR (Regra Estrita):
+    // Pisos, Chão e Terrenos
+    if (
+      id.startsWith('ground') || id.startsWith('floor') || id.startsWith('path') ||
+      id.startsWith('road') || id.startsWith('terrain') || id.startsWith('water') ||
+      id.startsWith('sand') || id.startsWith('grass') || id.startsWith('dirt') ||
+      id.includes('cliff') || id.includes('lava') || id.includes('magma') || id.includes('water-animated')
+    ) {
+      return false;
+    }
+
+    // Pedras, Rochas e Minérios
+    if (
+      id.includes('rock') || id.includes('stone') || id.includes('boulder') ||
+      id.includes('ore') || id.includes('pedra') || id.includes('rocha') ||
+      id.includes('geode') || id.includes('mineral')
+    ) {
+      return false;
+    }
+
+    // Árvores, Troncos e Cepos
+    if (
+      id.includes('tree') || id.includes('trunk') || id.includes('stump') ||
+      id.includes('arvore') || id.includes('tronco') || id.includes('pine') ||
+      id.includes('palm') || id.includes('oak') || id.includes('birch') || id.includes('willow')
+    ) {
+      return false;
+    }
+
+    // Plantas, Flores, Cogumelos e Arbustos
+    if (
+      id.includes('plant') || id.includes('flower') || id.includes('flor') ||
+      id.includes('planta') || id.includes('bush') || id.includes('arbusto') ||
+      id.includes('shrub') || id.includes('mushroom') || id.includes('cogumelo') ||
+      id.includes('wheat') || id.includes('crop') || id.includes('herb') ||
+      id.includes('foliage') || id.includes('leaf') || id.includes('cactus')
+    ) {
+      return false;
+    }
+
+    // Casas, Construções, Paredes, Telhados, Cercas, Portões, Pontes e Estruturas
+    if (
+      id.includes('house') || id.includes('casa') || id.includes('building') ||
+      id.includes('roof') || id.includes('wall') || id.includes('parede') ||
+      id.includes('telhado') || id.includes('fence') || id.includes('cerca') ||
+      id.includes('gate') || id.includes('portao') || id.includes('door') ||
+      id.includes('porta') || id.includes('window') || id.includes('janela') ||
+      id.includes('bridge') || id.includes('ponte') || id.includes('tower') ||
+      id.includes('torre') || id.includes('pillar') || id.includes('coluna') ||
+      id.includes('stairs') || id.includes('escada') || id.includes('castle') ||
+      id.includes('chimney') || id.includes('well_') || id.includes('fountain')
+    ) {
+      return false;
+    }
+
+    // Personagens, Heróis, NPCs, Dragões e Colisores Invisíveis
+    if (
+      id.startsWith('invisible-collider') || id.startsWith('npc_') ||
+      id.startsWith('char_') || id.startsWith('hero_') || id.includes('dragon')
+    ) {
+      return false;
+    }
+
+    // Metadados explícitos
+    if (meta) {
+      if (
+        meta.isInvisibleAsset || meta.isTerrain || meta.isWall ||
+        meta.isTree || meta.isRock || meta.isBuilding || meta.isFloor || meta.isVegetation
+      ) {
+        return false;
+      }
+      if (meta.isMovable === false) return false;
+      if (meta.isMovable === true || meta.isItem || meta.isDraggable) return true;
+    }
+
+    // 2. ITENS QUE SÃO POSSÍVEIS DE ARRASTAR (Itens, Baús, Caixas, Ovos, Ninhos, Barris, Mobília Solta):
+    const isExplicitMovable = (
+      id.includes('chest') ||
+      id.includes('crate') ||
+      id.includes('box') ||
+      id.includes('barrel') ||
+      id.includes('egg') ||
+      id.includes('nest') ||
+      id.includes('bag') ||
+      id.includes('item') ||
+      id.includes('loot') ||
+      id.includes('gem') ||
+      id.includes('potion') ||
+      id.includes('scroll') ||
+      id.includes('coin') ||
+      id.includes('chair') ||
+      id.includes('table') ||
+      id.includes('bench') ||
+      id.includes('stool') ||
+      id.includes('lantern') ||
+      id.includes('torch') ||
+      id.includes('bed') ||
+      id.includes('sign') ||
+      id.includes('pot') ||
+      id.includes('jar') ||
+      id.includes('vase') ||
+      id.includes('statue') ||
+      id.includes('furniture')
+    );
+
+    return isExplicitMovable;
+  }
+
+  isObjectLockedByOther(tx, ty) {
+    if (!this.remoteLockedObjects) return false;
+    const key = `${tx},${ty}`;
+    const entry = this.remoteLockedObjects.get(key);
+    if (!entry) return false;
+
+    // Expira travas com mais de 30 segundos (failsafe)
+    if (Date.now() - entry.timestamp > 30000) {
+      this.remoteLockedObjects.delete(key);
+      return false;
+    }
+    const myId = this.multiplayerClient?.playerId || 'local_player';
+    return entry.playerId !== myId;
+  }
+
+  lockObject(tx, ty) {
+    if (!this.remoteLockedObjects) this.remoteLockedObjects = new Map();
+    const key = `${tx},${ty}`;
+    const myId = this.multiplayerClient?.playerId || 'local_player';
+    this.remoteLockedObjects.set(key, { playerId: myId, timestamp: Date.now() });
+
+    if (this.supabaseClient && typeof this.supabaseClient.broadcastCustomEvent === 'function') {
+      this.supabaseClient.broadcastCustomEvent({ type: 'object_lock', tx, ty, playerId: myId });
+    }
+  }
+
+  unlockObject(tx, ty) {
+    if (!this.remoteLockedObjects) return;
+    const key = `${tx},${ty}`;
+    this.remoteLockedObjects.delete(key);
+
+    const myId = this.multiplayerClient?.playerId || 'local_player';
+    if (this.supabaseClient && typeof this.supabaseClient.broadcastCustomEvent === 'function') {
+      this.supabaseClient.broadcastCustomEvent({ type: 'object_unlock', tx, ty, playerId: myId });
+    }
+  }
+
   findMovableObjectAt(worldX, worldY) {
     const tx = Math.floor(worldX / this.tileMap.tileSize);
     const ty = Math.floor(worldY / this.tileMap.tileSize);
@@ -2546,14 +2707,19 @@ class RPGApplication {
       if (!layer) continue;
       const cell = layer.get(key);
       if (cell && cell.tileId) {
-        // Ignora colisores invisíveis ou bordas de sistema
-        if (cell.tileId.startsWith('invisible-collider')) continue;
         const meta = this.assetLoader?.getTileMetadata(cell.tileId);
-        if (meta?.isInvisibleAsset) continue;
+
+        // Valida se o item é permitido para arrasto (rejeita pedras, árvores, plantas, casas, pisos)
+        if (!this.isTileIdMovable(cell.tileId, meta)) {
+          continue;
+        }
 
         // Se houver itens empilhados, obtém o item do topo (Estilo Tibia - LIFO)
         const topStacked = this.tileMap.getTopStackedTile(layerName, tx, ty, this.assetLoader);
         if (topStacked) {
+          if (!this.isTileIdMovable(topStacked.tileId, topStacked.meta)) {
+            continue;
+          }
           return {
             tx,
             ty,
@@ -2590,17 +2756,72 @@ class RPGApplication {
       return false;
     }
 
-    // 3. Empilhamento Estilo Tibia: Permite empilhar até 4 itens por tile
+    // 3. Não pode ser água profunda, magma ou vácuo sem terreno
+    if (this.tileMap.isWaterAt(targetCenterX, targetCenterY, this.assetLoader)) {
+      return false;
+    }
+    if (this.tileMap.isMagmaAt(targetCenterX, targetCenterY, this.assetLoader)) {
+      return false;
+    }
+    const key = this.tileMap.getKey(tx, ty);
+    const hasGround = this.tileMap.layers?.ground?.has(key);
+    if (!hasGround) {
+      const hasSupport = this.tileMap.layers?.solid?.has(key) || this.tileMap.layers?.decor?.has(key);
+      if (!hasSupport) return false; // Abismo sem suporte
+    }
+
+    // 4. Bloqueio estrito de colisores do mapa (camada colliders, rochas, paredes, casas, árvores)
+    const collidersLayer = this.tileMap.layers?.colliders;
+    if (collidersLayer && collidersLayer.has(key)) {
+      return false; // Colisor invisível ou borda bloqueada
+    }
+
+    // Verifica se há construções fixas, paredes, árvores, pedras na camada solid ou decor
+    const solidCell = this.tileMap.layers?.solid?.get(key);
+    if (solidCell && solidCell.tileId) {
+      const solidMeta = this.assetLoader?.getTileMetadata(solidCell.tileId);
+      // Se houver algo não-arrastável naquele tile (ex: pedra, árvore, parede, casa), o tile é VERMELHO (bloqueado)
+      if (!this.isTileIdMovable(solidCell.tileId, solidMeta)) {
+        return false;
+      }
+    }
+
+    const decorCell = this.tileMap.layers?.decor?.get(key);
+    if (decorCell && decorCell.tileId) {
+      const decorMeta = this.assetLoader?.getTileMetadata(decorCell.tileId);
+      if (!this.isTileIdMovable(decorCell.tileId, decorMeta)) {
+        return false;
+      }
+    }
+
+    // 5. Empilhamento Estilo Tibia: Permite empilhar até 4 itens permitidos por tile
     const stackCountSolid = this.tileMap.getStackCount('solid', tx, ty);
     if (stackCountSolid >= 4) {
       return false; // Altura máxima de pilha atingida
     }
 
-    // 4. Não pode ser água profunda ou magma intransponível sem ponte
-    if (this.tileMap.isWaterAt(targetCenterX, targetCenterY, this.assetLoader)) {
-      return false;
+    // 6. Não pode colocar sobre NPCs vivos ou outros jogadores
+    if (this.npcManager && this.npcManager.entities) {
+      for (const [, npc] of this.npcManager.entities) {
+        const ntx = Math.floor((npc.x + 32) / 64);
+        const nty = Math.floor((npc.y + 48) / 64);
+        if (ntx === tx && nty === ty) return false;
+      }
     }
-    if (this.tileMap.isMagmaAt(targetCenterX, targetCenterY, this.assetLoader)) {
+
+    if (this.multiplayerClient) {
+      const remoteList = this.multiplayerClient.isConnected 
+        ? Array.from(this.multiplayerClient.remotePlayers.values()) 
+        : (this.multiplayerClient.simulatedBots || []);
+      for (const rp of remoteList) {
+        const rtx = Math.floor((rp.x + 32) / 64);
+        const rty = Math.floor((rp.y + 48) / 64);
+        if (rtx === tx && rty === ty) return false;
+      }
+    }
+
+    // 7. Não pode colocar se outro jogador estiver interagindo/bloqueando este tile
+    if (this.isObjectLockedByOther(tx, ty)) {
       return false;
     }
 
@@ -2609,15 +2830,29 @@ class RPGApplication {
 
   startMovingWorldObject(movableObj) {
     const { tx, ty, layerName } = movableObj;
+
+    // Trava de concorrência multiplayer: impede se outro jogador já estiver movendo
+    if (this.isObjectLockedByOther(tx, ty)) {
+      soundFX.playPop(0.7);
+      this.showToast('Outro jogador está movendo este objeto no momento.', 'warning');
+      return;
+    }
+
+    // Trava o objeto local e remotamente
+    this.lockObject(tx, ty);
     
     // Remove o item do topo da pilha no mundo enquanto é segurado pelo cursor
     const popped = this.tileMap.popStackTile(layerName, tx, ty, this.assetLoader);
-    if (!popped) return;
+    if (!popped) {
+      this.unlockObject(tx, ty);
+      return;
+    }
 
     const cellData = popped.cellData;
     const meta = popped.meta || this.assetLoader?.getTileMetadata(popped.tileId) || { id: popped.tileId, gridW: 1, gridH: 1 };
 
     this.playModeInteraction.activeMode = 'move_object';
+    this.playModeInteraction.isDragging = true;
     this.playModeInteraction.heldObject = {
       originTx: tx,
       originTy: ty,
@@ -2633,11 +2868,11 @@ class RPGApplication {
 
     this.canvas.style.cursor = 'var(--animal-cursor-grabbing), grabbing';
     soundFX.playPop(1.15);
-    this.showToast(`Movendo ${meta?.name || popped.tileId}. Clique para posicionar/empilhar ou [ESC] para cancelar.`);
   }
 
   startPlacingItemFromInventory(inventoryItem, tileId, tileMeta) {
     this.playModeInteraction.activeMode = 'place_inventory';
+    this.playModeInteraction.isDragging = true;
     this.playModeInteraction.heldObject = null;
     this.playModeInteraction.placingItem = {
       inventoryItem,
@@ -2656,7 +2891,6 @@ class RPGApplication {
 
     this.canvas.style.cursor = 'var(--animal-cursor-grabbing), grabbing';
     soundFX.playPop(1.05);
-    this.showToast(`Posicionando ${inventoryItem.name}. Clique no chão ou sobre outro objeto para empilhar.`);
   }
 
   cancelPlayModeInteraction() {
@@ -2664,6 +2898,7 @@ class RPGApplication {
 
     if (this.playModeInteraction.activeMode === 'move_object' && this.playModeInteraction.heldObject) {
       const { originTx, originTy, layerName, cellData } = this.playModeInteraction.heldObject;
+      // Devolve o objeto exatamente para o local onde estava
       this.tileMap.pushStackTile(
         layerName,
         originTx,
@@ -2675,8 +2910,11 @@ class RPGApplication {
         cellData.depthOffset || null,
         cellData.extraProps || null
       );
-      this.showToast('Movimentação cancelada.');
+      this.unlockObject(originTx, originTy);
+      soundFX.playPop(0.85);
+      this.showToast('Objeto retornado para o local de origem.');
     } else if (this.playModeInteraction.activeMode === 'place_inventory') {
+      soundFX.playPop(0.85);
       this.showToast('Posicionamento cancelado.');
     }
 
@@ -2685,13 +2923,14 @@ class RPGApplication {
     this.playModeInteraction.placingItem = null;
     this.playModeInteraction.hoverTx = null;
     this.playModeInteraction.hoverTy = null;
+    this.playModeInteraction.isDragging = false;
     this.canvas.style.cursor = 'var(--animal-cursor-default), default';
   }
 
   confirmPlayModePlacement() {
     if (!this.playModeInteraction.activeMode || !this.playModeInteraction.isValidPlacement) {
-      soundFX.playPop(0.7);
-      this.showToast('Local inválido ou fora de alcance!');
+      // Soltou em local inválido/vermelho: cancela e retorna para onde estava
+      this.cancelPlayModeInteraction();
       return;
     }
 
@@ -2699,9 +2938,9 @@ class RPGApplication {
     const targetTy = this.playModeInteraction.hoverTy;
 
     if (this.playModeInteraction.activeMode === 'move_object' && this.playModeInteraction.heldObject) {
-      const { layerName, cellData } = this.playModeInteraction.heldObject;
+      const { originTx, originTy, layerName, cellData } = this.playModeInteraction.heldObject;
       
-      // Empilha no destino (se o tile tiver outro objeto, empilha no topo estilo Tibia)
+      // Empilha no destino
       this.tileMap.pushStackTile(
         layerName,
         targetTx,
@@ -2714,6 +2953,7 @@ class RPGApplication {
         cellData.extraProps || null
       );
       
+      this.unlockObject(originTx, originTy);
       this.player.spawnCraftPoof();
       soundFX.playPop(1.1);
       const stackTotal = this.tileMap.getStackCount(layerName, targetTx, targetTy);
@@ -2730,8 +2970,6 @@ class RPGApplication {
       const { inventoryItem, tileId } = this.playModeInteraction.placingItem;
       
       this.inventorySystem.removeItem(inventoryItem.id, 1);
-      
-      // Empilha na camada solid estilo Tibia
       this.tileMap.pushStackTile('solid', targetTx, targetTy, tileId);
 
       this.player.spawnCraftPoof();
@@ -2754,6 +2992,7 @@ class RPGApplication {
     this.playModeInteraction.placingItem = null;
     this.playModeInteraction.hoverTx = null;
     this.playModeInteraction.hoverTy = null;
+    this.playModeInteraction.isDragging = false;
     this.canvas.style.cursor = 'var(--animal-cursor-default), default';
   }
 
@@ -2767,7 +3006,7 @@ class RPGApplication {
       const hy = this.playModeInteraction.hoverTy * tileSize;
       const isValid = !!this.playModeInteraction.isValidPlacement;
 
-      // 1. Círculo de alcance máximo de interação ao redor do Herói
+      // 1. Círculo de alcance de interação suave ao redor do Herói
       const pCenterX = this.player.x + 32;
       const pCenterY = this.player.y + 32;
       const range = this.playModeInteraction.maxInteractionDistancePx;
@@ -2775,29 +3014,29 @@ class RPGApplication {
       ctx.save();
       ctx.beginPath();
       ctx.arc(pCenterX, pCenterY, range, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(25, 200, 185, 0.05)';
+      ctx.fillStyle = 'rgba(25, 200, 185, 0.04)';
       ctx.fill();
-      ctx.setLineDash([8, 8]);
-      ctx.strokeStyle = 'rgba(25, 200, 185, 0.45)';
-      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
+      ctx.strokeStyle = 'rgba(25, 200, 185, 0.40)';
+      ctx.lineWidth = 1.8;
       ctx.stroke();
       ctx.restore();
 
-      // 2. Caixa de destaque na grade (Verde Menta se válido, Vermelho se inválido)
+      // 2. Caixa de destaque na grade: Borda Verde (se válido) ou Borda Vermelha (se inválido/colisor)
       ctx.save();
       if (isValid) {
-        ctx.fillStyle = 'rgba(25, 200, 185, 0.28)';
-        ctx.strokeStyle = '#19c8b9';
+        ctx.fillStyle = 'rgba(34, 197, 94, 0.22)';
+        ctx.strokeStyle = '#22c55e'; // Verde vibrante
       } else {
         ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
-        ctx.strokeStyle = '#ef4444';
+        ctx.strokeStyle = '#ef4444'; // Vermelho vibrante
       }
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 3;
       ctx.fillRect(hx, hy, tileSize, tileSize);
       ctx.strokeRect(hx, hy, tileSize, tileSize);
       ctx.restore();
 
-      // 3. Renderização da Silhueta / Preview Transparente do Objeto (com elevação de empilhamento estilo Tibia)
+      // 3. Renderização do Objeto com Transparência de 60% (globalAlpha = 0.60)
       let meta = null;
       let cellData = null;
 
@@ -2808,14 +3047,15 @@ class RPGApplication {
         meta = this.playModeInteraction.placingItem?.tileMeta;
       }
 
-      // Calcula a altura da pilha no tile de destino sob o cursor
+      // Altura da pilha no tile de destino
       const currentStackUnderCursor = this.tileMap.getStackCount('solid', this.playModeInteraction.hoverTx, this.playModeInteraction.hoverTy);
       const stackOffsetY = -16 * currentStackUnderCursor;
       const previewY = hy + stackOffsetY;
 
       if (meta) {
         ctx.save();
-        ctx.globalAlpha = 0.72;
+        // Exatamente 60% de transparência conforme solicitado
+        ctx.globalAlpha = 0.60;
         const gridW = meta.gridW || 1;
         const gridH = meta.gridH || 1;
         const rawW = gridW * tileSize;
@@ -2823,12 +3063,12 @@ class RPGApplication {
         const rot = cellData?.rotation || 0;
         const isFlipped = !!cellData?.flipX;
 
-        // Leve sombra sob a silhueta elevada
+        // Sombra leve nos pés do objeto
         if (currentStackUnderCursor > 0) {
           ctx.save();
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.20)';
           ctx.beginPath();
-          ctx.ellipse(hx + rawW / 2, previewY + rawH - 4, rawW * 0.4, 7, 0, 0, Math.PI * 2);
+          ctx.ellipse(hx + rawW / 2, previewY + rawH - 4, rawW * 0.38, 6, 0, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }
@@ -2858,41 +3098,41 @@ class RPGApplication {
         ctx.restore();
       }
 
-      // 4. Badge flutuante de instrução Animal Island UI logo acima do tile
+      // 4. Badge flutuante de status Animal Island UI
       ctx.save();
       let badgeText = '';
       if (isValid) {
         if (currentStackUnderCursor > 0) {
-          badgeText = `Clique para empilhar (Altura ${currentStackUnderCursor + 1}) • [ESC] Cancelar`;
+          badgeText = `Solte para empilhar (Altura ${currentStackUnderCursor + 1})`;
         } else {
-          badgeText = 'Clique para posicionar • [ESC] Cancelar';
+          badgeText = 'Solte para posicionar aqui';
         }
       } else {
-        badgeText = 'Fora de alcance ou ocupado • [ESC] Cancelar';
+        badgeText = 'Local com obstáculo ou colisor (inválido)';
       }
 
-      ctx.font = 'bold 12px "Nunito", sans-serif';
+      ctx.font = 'bold 11.5px "Nunito", sans-serif';
       const textMetrics = ctx.measureText(badgeText);
       const badgeW = textMetrics.width + 20;
-      const badgeH = 26;
+      const badgeH = 24;
       const badgeX = hx + 32 - badgeW / 2;
-      const badgeY = previewY - 34;
+      const badgeY = previewY - 32;
 
       // Card pílula
       ctx.fillStyle = isValid ? '#fdfbf7' : '#fee2e2';
-      ctx.strokeStyle = isValid ? '#7a583e' : '#b91c1c';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = isValid ? '#22c55e' : '#ef4444';
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
       if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 13);
+        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 12);
       } else {
         ctx.rect(badgeX, badgeY, badgeW, badgeH);
       }
       ctx.fill();
       ctx.stroke();
 
-      // Texto acolhedor
-      ctx.fillStyle = isValid ? '#794f27' : '#991b1b';
+      // Texto
+      ctx.fillStyle = isValid ? '#15803d' : '#b91c1c';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(badgeText, hx + 32, badgeY + badgeH / 2);
@@ -3348,23 +3588,47 @@ class RPGApplication {
       return;
     }
 
-    // Update animations & floating chat bubbles (with real-time flight altitude tracking)
+    // Update animations & floating chat bubbles (with real-time flight altitude tracking and live NPC positions)
     this.tileMap.update(deltaTime);
     if (this.dialogueSystem && this.player) {
+      const entityPosMap = new Map();
       const playerAlt = (this.player.isMounted && this.dragonManager) ? (this.dragonManager.flightAltitude || 0) : 0;
-      const playerDrawY = this.player.y - playerAlt;
-      this.dialogueSystem.update(new Map([['player', { x: this.player.x, y: playerDrawY }]]));
+      entityPosMap.set('player', { x: this.player.x, y: this.player.y - playerAlt });
+
+      // Atualiza posições em tempo real de todos os NPCs e Heróis vivos que passeiam pela ilha
+      if (this.npcManager && this.npcManager.entities) {
+        for (const [key, npc] of this.npcManager.entities) {
+          entityPosMap.set(npc.id, { x: npc.x, y: npc.y });
+          entityPosMap.set(key, { x: npc.x, y: npc.y });
+          if (npc.name) entityPosMap.set(npc.name, { x: npc.x, y: npc.y });
+        }
+      }
+
+      // Atualiza posições em tempo real de jogadores remotos e bots do multiplayer
+      if (this.multiplayerClient) {
+        const remoteList = this.multiplayerClient.isConnected 
+          ? Array.from(this.multiplayerClient.remotePlayers.values()) 
+          : (this.multiplayerClient.simulatedBots || []);
+        for (const rp of remoteList) {
+          if (rp && rp.id) entityPosMap.set(rp.id, { x: rp.x, y: rp.y });
+        }
+      }
+
+      this.dialogueSystem.update(entityPosMap);
     }
 
     if (this.mode === 'play') {
       this.tutorialManager?.update(this.camera, this.player);
 
-      // NPC Dialogue Camera Zoom and Anchor Positioning
+      // NPC Dialogue Camera Zoom and Live Dynamic Anchor Positioning
       if (this.player.isDialogueActive && this.activeDialogueNPC) {
         const targetZoom = 1.55;
         this.camera.zoom += (targetZoom - this.camera.zoom) * 0.08;
-        const targetWorldX = this.activeDialogueNPC.worldX ?? (this.activeDialogueNPC.tx ? this.activeDialogueNPC.tx * 64 : this.player.x);
-        const targetWorldY = this.activeDialogueNPC.worldY ?? (this.activeDialogueNPC.ty ? this.activeDialogueNPC.ty * 64 : this.player.y);
+        
+        // Localiza a entidade viva mais atualizada no mundo
+        const liveNpc = this.activeDialogueNPC.entityRef || (this.npcManager?.entities ? Array.from(this.npcManager.entities.values()).find(e => e.id === this.activeDialogueNPC.id || e.id === this.activeDialogueNPC.tileId || e.name === this.activeDialogueNPC.name) : null);
+        const targetWorldX = liveNpc ? liveNpc.x : (this.activeDialogueNPC.worldX ?? (this.activeDialogueNPC.tx ? this.activeDialogueNPC.tx * 64 : this.player.x));
+        const targetWorldY = liveNpc ? liveNpc.y : (this.activeDialogueNPC.worldY ?? (this.activeDialogueNPC.ty ? this.activeDialogueNPC.ty * 64 : this.player.y));
         const midX = ((this.player.x + targetWorldX) / 2) + 32;
         const midY = ((this.player.y + targetWorldY) / 2) + 32;
         this.camera.follow(midX, midY, 0.08);
@@ -3389,8 +3653,8 @@ class RPGApplication {
         this.player.speed = (this.player.isSprinting ? this.player.sprintSpeed : this.player.baseSpeed) * (activeDragon.mountSpeedMultiplier || 1.6);
       }
 
-      // Move player with collision checking against tile colliders (4-way)
-      this.player.update(deltaTime, this.tileMap, this.assetLoader);
+      // Move player with collision checking against tile colliders & live wandering NPCs (4-way)
+      this.player.update(deltaTime, this.tileMap, this.assetLoader, this.npcManager);
 
       // Update Dragon Manager (Pet Follow AI, Combat, Particles, Defeat to Egg)
       if (this.dragonManager) {
