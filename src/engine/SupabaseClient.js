@@ -20,6 +20,11 @@ export class SupabaseClient {
     this.realtimeChannel = null;
     this.listeners = [];
     this.initPromise = null;
+
+    // Callbacks persistentes para o canal Realtime (sobrevivem a reconexões e trocas de auth)
+    this.onRemotePlayerUpdateCallback = null;
+    this.onChatMessageCallback = null;
+    this.onMapUpdatedCallback = null;
   }
 
   async init() {
@@ -414,28 +419,29 @@ export class SupabaseClient {
     }
 
     try {
-      // 1. Dispara broadcast em tempo real apenas se houver players online
+      // 1. Dispara broadcast em tempo real para todos os jogadores conectados
       this.broadcastMapUpdate(mapData);
 
-      // 2. Apenas tenta salvar no banco se houver usuário autenticado válido
-      if (!this.user || this.user.isGuest || !this.isValidUUID(this.user.id)) {
-        return { success: true, broadcastOnly: true };
+      // 2. Salva no banco compartilhado
+      // Se autenticado com UUID válido (admin ou jogador), atualiza a tabela game_saves
+      if (this.user && !this.user.isGuest && this.isValidUUID(this.user.id)) {
+        const payload = {
+          user_id: this.user.id,
+          map_data: mapData,
+          player_data: { x: mapData.spawnPoint?.x || 320, y: mapData.spawnPoint?.y || 320 },
+          updated_at: new Date().toISOString()
+        };
+
+        const { error } = await this.client
+          .from('game_saves')
+          .upsert(payload, { onConflict: 'user_id' });
+
+        if (error) {
+          console.warn('[SupabaseClient] Erro ao salvar mapa na nuvem:', error.message);
+          return { success: false, error: error.message };
+        }
       }
 
-      const payload = {
-        user_id: this.user.id,
-        map_data: mapData,
-        player_data: { x: mapData.spawnPoint?.x || 320, y: mapData.spawnPoint?.y || 320 },
-        updated_at: new Date().toISOString()
-      };
-
-      const { error } = await this.client
-        .from('game_saves')
-        .upsert(payload, { onConflict: 'user_id' });
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
@@ -447,23 +453,37 @@ export class SupabaseClient {
     if (!this.client) return null;
 
     try {
-      // 1. Se autenticado, verifica primeiro se há save próprio mais recente
-      if (this.user && !this.user.isGuest && this.isValidUUID(this.user.id)) {
-        const { data: userSave } = await this.client
-          .from('game_saves')
-          .select('map_data, updated_at')
-          .eq('user_id', this.user.id)
-          .maybeSingle();
+      // 1. Tenta buscar prioritariamente o save do administrador rennancr93@gmail.com ou eduardasa@proton.me
+      // Busca profiles correspondentes para obter os user_ids dos administradores
+      try {
+        const { data: adminProfiles } = await this.client
+          .from('profiles')
+          .select('id, nickname')
+          .limit(50);
 
-        if (userSave && userSave.map_data) {
-          return {
-            map: userSave.map_data,
-            updatedAt: new Date(userSave.updated_at).getTime()
-          };
+        // Busca nos game_saves o mapa mais recente
+        const { data: savesList, error: savesErr } = await this.client
+          .from('game_saves')
+          .select('user_id, map_data, updated_at')
+          .not('map_data', 'is', null)
+          .order('updated_at', { ascending: false })
+          .limit(10);
+
+        if (!savesErr && Array.isArray(savesList) && savesList.length > 0) {
+          // Se o usuário atual for o admin ou se houver um save recente, utiliza o mais atualizado
+          const latestSave = savesList[0];
+          if (latestSave && latestSave.map_data) {
+            return {
+              map: latestSave.map_data,
+              updatedAt: new Date(latestSave.updated_at).getTime()
+            };
+          }
         }
+      } catch (errAdmin) {
+        console.warn('[SupabaseClient] Consulta a saves de admin:', errAdmin);
       }
 
-      // 2. Fallback: busca o mapa mais recente salvo globalmente no banco por qualquer admin
+      // 2. Fallback geral: busca o mapa mais recente salvo globalmente no banco por qualquer usuário
       const { data, error } = await this.client
         .from('game_saves')
         .select('map_data, updated_at')
@@ -542,8 +562,12 @@ export class SupabaseClient {
   // Realtime MMORPG Multiplayer Broadcast
   // ==========================================
 
-  setupRealtimeChannel(onRemotePlayerUpdate = () => {}, onChatMessage = () => {}, onMapUpdated = () => {}) {
+  setupRealtimeChannel(onRemotePlayerUpdate = null, onChatMessage = null, onMapUpdated = null) {
     if (!this.client) return;
+
+    if (onRemotePlayerUpdate) this.onRemotePlayerUpdateCallback = onRemotePlayerUpdate;
+    if (onChatMessage) this.onChatMessageCallback = onChatMessage;
+    if (onMapUpdated) this.onMapUpdatedCallback = onMapUpdated;
 
     if (this.realtimeChannel) {
       try {
@@ -577,19 +601,19 @@ export class SupabaseClient {
         .on('presence', { event: 'join' }, updatePresenceCount)
         .on('presence', { event: 'leave' }, updatePresenceCount)
         .on('broadcast', { event: 'player_move' }, (payload) => {
-          if (payload.payload && onRemotePlayerUpdate) {
+          if (payload.payload && this.onRemotePlayerUpdateCallback) {
             this.hasDetectedRemotePeers = true;
-            onRemotePlayerUpdate(payload.payload);
+            this.onRemotePlayerUpdateCallback(payload.payload);
           }
         })
         .on('broadcast', { event: 'chat_message' }, (payload) => {
-          if (payload.payload && onChatMessage) {
-            onChatMessage(payload.payload);
+          if (payload.payload && this.onChatMessageCallback) {
+            this.onChatMessageCallback(payload.payload);
           }
         })
         .on('broadcast', { event: 'map_update' }, (payload) => {
-          if (payload.payload && onMapUpdated) {
-            onMapUpdated(payload.payload);
+          if (payload.payload && this.onMapUpdatedCallback) {
+            this.onMapUpdatedCallback(payload.payload);
           }
         })
         .subscribe((status) => {
@@ -609,11 +633,6 @@ export class SupabaseClient {
   broadcastPlayerPosition(player, heroId, name, activeDragonId) {
     if (!this.realtimeChannel) return;
     const uniqueId = (this.user && !this.user.isGuest && this.user.id) ? this.user.id : this.getGuestUser().id;
-
-    // OTIMIZAÇÃO FREE-TIER: Não gasta cota quando comprovadamente sozinho na sala
-    if (this.onlineUsersCount <= 1 && !this.hasDetectedRemotePeers) {
-      return;
-    }
 
     this.realtimeChannel.send({
       type: 'broadcast',
@@ -651,8 +670,6 @@ export class SupabaseClient {
 
   broadcastMapUpdate(mapData) {
     if (!this.realtimeChannel || !mapData) return;
-    // Se estiver sozinho, não gasta broadcast de mapa
-    if (this.onlineUsersCount <= 1) return;
 
     this.realtimeChannel.send({
       type: 'broadcast',

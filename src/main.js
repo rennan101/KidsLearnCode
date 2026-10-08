@@ -2132,18 +2132,18 @@ class RPGApplication {
     checkDragonSelectorVisibility(this.editorController.selectedTileId, 'All');
   }
 
-  triggerAutoSave() {
+  triggerAutoSave(broadcastNow = true) {
     if (this.npcManager) {
       this.npcManager.syncFromTileMap(this.tileMap);
     }
     this.updateSaveIndicator('saving');
     clearTimeout(this.saveTimeout);
     this.saveTimeout = setTimeout(() => {
-      this.saveGameToStorage(false);
+      this.saveGameToStorage(false, broadcastNow);
     }, 250);
   }
 
-  async saveGameToStorage(instant = false) {
+  async saveGameToStorage(instant = false, broadcastMap = false) {
     if (!this.isGameLoaded) return;
     try {
       const mapData = this.tileMap.toJSON();
@@ -2188,18 +2188,24 @@ class RPGApplication {
         this.updateSaveIndicator('error');
       }
 
+      // Propaga o mapa global atualizado via Realtime quando houver alteração
+      if (broadcastMap && this.supabaseClient) {
+        this.supabaseClient.broadcastMapUpdate(mapData);
+        this.supabaseClient.saveGlobalWorldMap(mapData);
+      }
+
       // Sincroniza com a Nuvem Supabase com throttling inteligente para economizar quota (Free Tier)
       if (this.supabaseClient && !this.supabaseClient.user?.isGuest && this.supabaseClient.isValidUUID?.(this.supabaseClient.user?.id)) {
         clearTimeout(this.cloudSaveDebounceTimer);
         const timeSinceLastCloudSave = Date.now() - (this.lastCloudSaveTime || 0);
-        if (instant || timeSinceLastCloudSave >= 20000) {
+        if (instant || timeSinceLastCloudSave >= 15000) {
           this.lastCloudSaveTime = Date.now();
           this.supabaseClient.saveCloudGame(payload);
         } else {
           this.cloudSaveDebounceTimer = setTimeout(() => {
             this.lastCloudSaveTime = Date.now();
             this.supabaseClient?.saveCloudGame(payload);
-          }, 20000 - timeSinceLastCloudSave);
+          }, 15000 - timeSinceLastCloudSave);
         }
       }
     } catch (err) {
@@ -2237,33 +2243,41 @@ class RPGApplication {
     try {
       let data = await this.storageManager.loadGame();
 
-      // Se autenticado na nuvem, verifica se o save do Supabase é mais recente
+      // 1. Se autenticado na nuvem, carrega dados de inventário, dragões e progresso pessoal do jogador
       if (this.supabaseClient && !this.supabaseClient.user?.isGuest) {
         const cloudData = await this.supabaseClient.loadCloudGame();
-        if (cloudData && (!data || (cloudData.savedAt && cloudData.savedAt > (data.savedAt || 0)))) {
-          data = cloudData;
-          await this.storageManager.saveGame(cloudData);
+        if (cloudData) {
+          if (!data) {
+            data = cloudData;
+          } else {
+            // Atualiza progresso pessoal
+            if (cloudData.player) data.player = cloudData.player;
+            if (cloudData.inventory) data.inventory = cloudData.inventory;
+            if (cloudData.dragons) data.dragons = cloudData.dragons;
+            if (cloudData.codingProgress) data.codingProgress = cloudData.codingProgress;
+            if (cloudData.activeHero) data.activeHero = cloudData.activeHero;
+            if (cloudData.customAvatar) data.customAvatar = cloudData.customAvatar;
+          }
         }
       }
 
-      // Se conectado ao Supabase, verifica se há um mapa global online compartilhado mais recente
-      // IMPORTANTE: Atualiza APENAS o mapData (data.map), NUNCA sobrescreve player, dragons, inventário do jogador
+      // 2. REGRA DE OURO DO MMO: O Mapa, Construções, Objetos e Terreno são SEMPRE o Mapa Global Oficial Compartilhado
       if (this.supabaseClient) {
         const globalOnlineMap = await this.supabaseClient.loadGlobalWorldMap();
         if (globalOnlineMap && globalOnlineMap.map) {
+          console.log('[MMO] Mapa Global Oficial sincronizado da nuvem com sucesso!');
           if (!data) {
             data = {
               id: 'active_save',
               map: globalOnlineMap.map,
-              player: { x: 320, y: 320 },
+              player: { x: globalOnlineMap.map.spawnPoint?.x || 320, y: globalOnlineMap.map.spawnPoint?.y || 320 },
               activeHero: 'char_wolf_hunter_m',
               savedAt: globalOnlineMap.updatedAt || Date.now()
             };
           } else {
+            // O mapa global substitui SEMPRE o mapa do jogador
             data.map = globalOnlineMap.map;
-            if (globalOnlineMap.updatedAt && globalOnlineMap.updatedAt > (data.savedAt || 0)) {
-              data.savedAt = globalOnlineMap.updatedAt;
-            }
+            data.savedAt = Math.max(data.savedAt || 0, globalOnlineMap.updatedAt || Date.now());
           }
           await this.storageManager.saveGame(data);
         }
