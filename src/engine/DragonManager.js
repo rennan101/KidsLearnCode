@@ -984,11 +984,50 @@ export class DragonManager {
     }
   }
 
-  // Calculate Level-Scaled AoE Affected Tiles (Lv 1 = 1 tile frontal -> Lv 80+ = screen-wide AoE)
+  // Get dragon's visual center and mouth/snout emission point in world space
+  getDragonEmissionPoint(player = null, dir = 'south') {
+    const isMounted = this.mode === 'mounted';
+    const alt = isMounted ? (this.flightAltitude || 0) : 0;
+    const bounce = isMounted ? Math.sin(this.floatTimer * (alt > 10 ? 8 : 4)) * (alt > 10 ? 6 : 4) : 0;
+
+    // Dragon body base coordinates
+    const baseWorldX = isMounted ? (player ? player.x : this.x) : this.x;
+    const baseWorldY = isMounted ? (player ? player.y : this.y) : this.y;
+
+    const dragonCenterX = baseWorldX + 32;
+    const dragonCenterY = baseWorldY + bounce - alt + 28;
+
+    // Mouth / snout emission point offsets for all 4 directions
+    let mouthX = dragonCenterX;
+    let mouthY = dragonCenterY;
+
+    if (dir === 'south') {
+      mouthX = dragonCenterX;
+      mouthY = dragonCenterY + 26; // Snout pointing down (frente)
+    } else if (dir === 'north') {
+      mouthX = dragonCenterX;
+      mouthY = dragonCenterY - 26; // Snout pointing up (costas)
+    } else if (dir === 'east') {
+      mouthX = dragonCenterX + 32; // Snout pointing right (lado direito)
+      mouthY = dragonCenterY + 2;
+    } else if (dir === 'west') {
+      mouthX = dragonCenterX - 32; // Snout pointing left (lado esquerdo)
+      mouthY = dragonCenterY + 2;
+    }
+
+    return {
+      dragonCenterX,
+      dragonCenterY,
+      mouthX,
+      mouthY,
+      groundX: baseWorldX + 32,
+      groundY: baseWorldY + 44
+    };
+  }
+
+  // Calculate Level-Scaled AoE Affected Tiles (Always aligned to 64x64 TileMap grid)
   calculateSkillAoETiles(dragon, slotIndex, player) {
     const level = dragon.level || 1;
-    const px = player ? (player.x + 32) : (this.x + 32);
-    const py = player ? (player.y + 32) : (this.y + 32);
     const dir = player ? (player.direction || 'south') : (this.direction || 'south');
     const tileSize = 64;
 
@@ -999,60 +1038,82 @@ export class DragonManager {
     else if (dir === 'east') { fwdX = 1; fwdY = 0; rightX = 0; rightY = 1; }
     else if (dir === 'west') { fwdX = -1; fwdY = 0; rightX = 0; rightY = 1; }
 
-    const tiles = [];
     const isUltimate = (slotIndex === 2);
     const isTerrain = (slotIndex === 1);
 
-    if (level <= 4) {
-      // Lv 1-4: Exactly 1 tile in front (64px) in facing direction
-      tiles.push({ x: px + fwdX * tileSize, y: py + fwdY * tileSize });
-    } else if (level <= 14) {
-      // Lv 5-14: 2 to 3 tiles in front / narrow cone
-      const reach = isUltimate ? 3 : 2;
-      for (let r = 1; r <= reach; r++) {
-        tiles.push({ x: px + fwdX * (r * tileSize), y: py + fwdY * (r * tileSize) });
+    // Grid tile where the dragon/player is standing
+    const baseWorldX = (this.mode === 'mounted' && player) ? player.x : this.x;
+    const baseWorldY = (this.mode === 'mounted' && player) ? player.y : this.y;
+    const startTx = Math.floor((baseWorldX + 32) / tileSize);
+    const startTy = Math.floor((baseWorldY + 44) / tileSize);
+
+    // Reach in tiles in the direction of the attack (minimum 3 tiles forward for all skills)
+    let reach = 3;
+    if (slotIndex === 0) {
+      // Skill 1: Fast direct line (3 to 7 tiles)
+      reach = Math.max(3, Math.min(7, 3 + Math.floor((level - 1) / 18)));
+    } else if (slotIndex === 1) {
+      // Skill 2: Terrain cone / blast (4 to 8 tiles)
+      reach = Math.max(4, Math.min(8, 4 + Math.floor((level - 1) / 14)));
+    } else if (slotIndex === 2) {
+      // Skill 3: Ultimate devastation (5 to 12 tiles)
+      reach = Math.max(5, Math.min(12, 5 + Math.floor((level - 1) / 10)));
+    }
+
+    const tileMap = new Map();
+    const addTile = (tx, ty, dist) => {
+      const key = `${tx},${ty}`;
+      if (!tileMap.has(key)) {
+        tileMap.set(key, {
+          tx,
+          ty,
+          x: tx * tileSize + 32,
+          y: ty * tileSize + 32,
+          dist: dist || 1
+        });
       }
-      if (isUltimate || isTerrain) {
-        tiles.push({ x: px + fwdX * tileSize + rightX * tileSize, y: py + fwdY * tileSize + rightY * tileSize });
-        tiles.push({ x: px + fwdX * tileSize - rightX * tileSize, y: py + fwdY * tileSize - rightY * tileSize });
+    };
+
+    // 1. Direct forward beam / line of tiles (from tile 1 to reach)
+    for (let r = 1; r <= reach; r++) {
+      const targetTx = startTx + fwdX * r;
+      const targetTy = startTy + fwdY * r;
+      addTile(targetTx, targetTy, r);
+
+      // Width expansion for cone / terrain / ultimate
+      if (isTerrain && r >= 2) {
+        addTile(targetTx + rightX, targetTy + rightY, r);
+        addTile(targetTx - rightX, targetTy - rightY, r);
       }
-    } else if (level <= 39) {
-      // Lv 15-39: 4 to 6 tiles AoE forward cone
-      const reach = isUltimate ? 5 : 3;
-      for (let r = 1; r <= reach; r++) {
-        tiles.push({ x: px + fwdX * (r * tileSize), y: py + fwdY * (r * tileSize) });
-        tiles.push({ x: px + fwdX * (r * tileSize) + rightX * tileSize, y: py + fwdY * (r * tileSize) + rightY * tileSize });
-        tiles.push({ x: px + fwdX * (r * tileSize) - rightX * tileSize, y: py + fwdY * (r * tileSize) - rightY * tileSize });
-      }
-    } else if (level <= 79) {
-      // Lv 40-79: 8 to 12 tiles wide swath
-      const reach = isUltimate ? 8 : 5;
-      const width = isUltimate ? 3 : 2;
-      for (let r = 1; r <= reach; r++) {
-        for (let w = -width; w <= width; w++) {
-          tiles.push({ x: px + fwdX * (r * tileSize) + rightX * (w * tileSize), y: py + fwdY * (r * tileSize) + rightY * (w * tileSize) });
+      if (isUltimate) {
+        const spread = r >= 4 ? 2 : 1;
+        for (let s = 1; s <= spread; s++) {
+          addTile(targetTx + rightX * s, targetTy + rightY * s, r);
+          addTile(targetTx - rightX * s, targetTy - rightY * s, r);
         }
       }
-    } else {
-      // Lv 80-100: Mega AoE / Full Screen (15+ tiles radius forward and circular)
-      const radius = isUltimate ? 9 : 6;
-      for (let dy = -radius; dy <= radius; dy++) {
-        for (let dx = -radius; dx <= radius; dx++) {
-          if (Math.hypot(dx, dy) <= radius) {
-            tiles.push({ x: px + dx * tileSize, y: py + dy * tileSize });
+    }
+
+    // High level (80+) Mega Screen-Wide AoE
+    if (level >= 80) {
+      const extraRadius = isUltimate ? 5 : 3;
+      for (let dy = -extraRadius; dy <= extraRadius; dy++) {
+        for (let dx = -extraRadius; dx <= extraRadius; dx++) {
+          if (Math.hypot(dx, dy) <= extraRadius) {
+            addTile(startTx + dx, startTy + dy, Math.hypot(dx, dy));
           }
         }
       }
     }
-    return tiles;
+
+    return Array.from(tileMap.values());
   }
 
   getAoEDescription(dragon) {
     const level = dragon?.level || 1;
-    if (level <= 4) return '1 Tile Frontal';
-    if (level <= 14) return '2-3 Tiles';
-    if (level <= 39) return '4-6 Tiles';
-    if (level <= 79) return '8-12 Tiles';
+    if (level <= 15) return '3-4 Tiles Frontal';
+    if (level <= 39) return '5-6 Tiles Cone';
+    if (level <= 79) return '8-10 Tiles Swath';
     return 'Tela Toda (Mega AoE)';
   }
 
@@ -1099,15 +1160,14 @@ export class DragonManager {
     this.skillMaxCooldowns[slotIndex] = skill.cooldown || 2.0;
 
     const level = dragon.level || 1;
-    const px = player ? (player.x + 32) : (this.x + 32);
-    const py = player ? (player.y + 32) : (this.y + 32);
     const dir = player ? (player.direction || 'south') : (this.direction || 'south');
+    const emission = this.getDragonEmissionPoint(player, dir);
 
     // Slot 4 (index 3): Universal Tactical Dodge
     if (skill.type === 'dodge' || slotIndex === 3) {
       this.isDodging = true;
       this.dodgeTimer = skill.invulnDuration || 0.8;
-      this.spawnDodgeParticles(px, py, dragon, dir);
+      this.spawnDodgeParticles(emission, dragon, dir);
       if (camera && dragon.level >= 20) {
         camera.shake(0.15, 3);
       }
@@ -1238,7 +1298,7 @@ export class DragonManager {
     }
 
     // 3. Spawn Visual FX Particles for Skill Element, Level & Facing Direction
-    this.spawnSkillParticles(px, py, skill.element, skill.type, level, affectedTiles, dir, dragon);
+    this.spawnSkillParticles(emission, skill.element, skill.type, level, affectedTiles, dir, dragon);
 
     // 4. Camera Screen Shake
     if (camera) {
@@ -1274,11 +1334,12 @@ export class DragonManager {
     }
   }
 
-  spawnSkillParticles(fromX, fromY, element, skillType, level, affectedTiles, dir = 'south', dragon = null) {
+  spawnSkillParticles(dragonMouth, element, skillType, level, affectedTiles, dir = 'south', dragon = null) {
     const isUltra = level >= 80;
-    const count = isUltra ? 45 : (level >= 20 ? 28 : 16);
+    const originX = dragonMouth ? dragonMouth.mouthX : (this.x + 32);
+    const originY = dragonMouth ? dragonMouth.mouthY : (this.y + 28);
 
-    // 1. Calculate Facing Vectors & Orientation
+    // 1. Direction Vectors & Base Orientation
     let fwdX = 0, fwdY = 1;
     let rightX = 1, rightY = 0;
     let baseAngle = Math.PI * 0.5; // south (frente)
@@ -1296,9 +1357,6 @@ export class DragonManager {
       fwdX = -1; fwdY = 0; rightX = 0; rightY = 1;
       baseAngle = Math.PI; // lado esquerdo
     }
-
-    const castOriginX = fromX + fwdX * 22;
-    const castOriginY = fromY + fwdY * 22;
 
     // Palette per element
     let pColor = dragon?.color || '#38bdf8';
@@ -1327,86 +1385,95 @@ export class DragonManager {
       pColor = '#38bdf8'; pSecondary = '#fef08a';
     }
 
-    // 2. Spawn Directional Crescent Slash Waves launching forward
+    // Reach distance in pixels to travel the full line
+    const maxDist = (Math.max(1, ...affectedTiles.map(t => t.dist || 1))) * 64;
+    const waveSpeed = 420;
+    const waveLife = Math.max(0.35, (maxDist + 32) / waveSpeed);
+
+    // 2. High-Visibility Traveling Slash / Breath Wave Projectiles (Leaves mouth -> travels full distance)
     const numWaves = skillType === 'ultimate' ? 3 : (skillType === 'terrain' ? 2 : 1);
     for (let w = 0; w < numWaves; w++) {
       const waveOffset = (w - (numWaves - 1) / 2) * 16;
-      const speed = 280 + w * 40;
       this.combatParticles.push({
-        x: castOriginX + rightX * waveOffset,
-        y: castOriginY + rightY * waveOffset,
-        vx: fwdX * speed,
-        vy: fwdY * speed,
-        drag: 0.94,
+        x: originX + rightX * waveOffset,
+        y: originY + rightY * waveOffset,
+        vx: fwdX * waveSpeed,
+        vy: fwdY * waveSpeed,
+        drag: 0.98,
         angle: baseAngle,
         rotSpeed: 0,
         color: pColor,
         secondaryColor: pSecondary,
-        size: (skillType === 'ultimate' ? 36 : 24) + (isUltra ? 12 : 0),
-        lineWidth: skillType === 'ultimate' ? 5.5 : 3.8,
+        size: (skillType === 'ultimate' ? 36 : 26) + (isUltra ? 14 : 0),
+        lineWidth: skillType === 'ultimate' ? 6 : 4,
         life: 0,
-        maxLife: 0.45 + (level >= 40 ? 0.25 : 0.1),
+        maxLife: waveLife,
         alpha: 1.0,
         type: 'slash_wave'
       });
     }
 
-    // 3. Spawn Directional Forward Breath Stream in cone of facing angle
-    const streamCount = isUltra ? 22 : (level >= 20 ? 14 : 8);
+    // 3. Dense Stream of Breath / Elemental Energy shooting out of Dragon Mouth
+    const streamCount = 18 + Math.min(24, affectedTiles.length * 2);
     for (let i = 0; i < streamCount; i++) {
-      const spreadAngle = baseAngle + (Math.random() - 0.5) * 0.55;
-      const pSpeed = 160 + Math.random() * 220;
+      const spread = (Math.random() - 0.5) * 0.42;
+      const pSpeed = 200 + Math.random() * (waveSpeed - 80);
+      const angle = baseAngle + spread;
       this.combatParticles.push({
-        x: castOriginX + (Math.random() - 0.5) * 12,
-        y: castOriginY + (Math.random() - 0.5) * 12,
-        vx: Math.cos(spreadAngle) * pSpeed,
-        vy: Math.sin(spreadAngle) * pSpeed,
-        drag: 0.92,
-        angle: spreadAngle,
+        x: originX + (Math.random() - 0.5) * 12,
+        y: originY + (Math.random() - 0.5) * 12,
+        vx: Math.cos(angle) * pSpeed,
+        vy: Math.sin(angle) * pSpeed,
+        drag: 0.96,
+        angle: angle,
         rotSpeed: (Math.random() - 0.5) * 6,
         color: i % 2 === 0 ? pColor : pSecondary,
-        size: (isUltra ? 5.5 : 3.5) + Math.random() * 3,
+        size: 3.5 + Math.random() * 3.5,
         life: 0,
-        maxLife: 0.4 + Math.random() * 0.3,
+        maxLife: waveLife * (0.6 + Math.random() * 0.4),
         alpha: 1.0,
         type: (elem.includes('earth') ? 'earth_spike' : (elem.includes('stellar') || elem.includes('electric') ? 'star_spark' : 'generic'))
       });
     }
 
-    // 4. Spawn Elemental Ground Bursts & Impact Rings at Affected Tiles in front
+    // 4. Staggered Impact Shockwaves and Ground Bursts on EACH affected Tile
     for (const tile of affectedTiles) {
-      // Shockwave impact ring
+      const dist = tile.dist || 1;
+      const delay = (dist * 64) / waveSpeed; // Delay matches projectile travel arrival
+
       this.combatParticles.push({
         x: tile.x,
         y: tile.y,
-        vx: fwdX * 20,
-        vy: fwdY * 20,
+        vx: fwdX * 16,
+        vy: fwdY * 16,
         color: pColor,
-        size: 10,
-        growth: 48,
-        lineWidth: 2.6,
+        size: 8,
+        growth: 44,
+        lineWidth: 2.8,
+        delay: delay * 0.75,
         life: 0,
-        maxLife: 0.38,
+        maxLife: 0.42,
         alpha: 1.0,
         type: 'impact_ring'
       });
 
-      // Shrapnel / Spark burst on tile
-      const perTileCount = Math.max(1, Math.min(5, Math.ceil(count / affectedTiles.length)));
-      for (let i = 0; i < perTileCount; i++) {
-        const burstAngle = baseAngle + (Math.random() - 0.5) * 1.6;
-        const burstSpeed = 40 + Math.random() * 110;
+      // Ground burst sparks & fragments per tile
+      const perTile = skillType === 'ultimate' ? 4 : 2;
+      for (let s = 0; s < perTile; s++) {
+        const burstAngle = baseAngle + (Math.random() - 0.5) * 1.8;
+        const burstSpeed = 35 + Math.random() * 90;
         this.combatParticles.push({
-          x: tile.x + (Math.random() - 0.5) * 24,
-          y: tile.y + (Math.random() - 0.5) * 24,
+          x: tile.x + (Math.random() - 0.5) * 20,
+          y: tile.y + (Math.random() - 0.5) * 20,
           vx: Math.cos(burstAngle) * burstSpeed,
           vy: Math.sin(burstAngle) * burstSpeed,
-          color: i % 2 === 0 ? pColor : pSecondary,
-          size: (isUltra ? 5 : 3.2) + Math.random() * 3.5,
+          color: s % 2 === 0 ? pColor : pSecondary,
+          size: 3.5 + Math.random() * 3,
           angle: Math.random() * Math.PI * 2,
           rotSpeed: (Math.random() - 0.5) * 8,
+          delay: delay * 0.75,
           life: 0,
-          maxLife: 0.45 + Math.random() * 0.35,
+          maxLife: 0.38 + Math.random() * 0.25,
           alpha: 1.0,
           type: (elem.includes('earth') ? 'earth_spike' : (elem.includes('stellar') || elem.includes('electric') ? 'star_spark' : 'generic'))
         });
@@ -1414,21 +1481,24 @@ export class DragonManager {
     }
   }
 
-  spawnDodgeParticles(x, y, dragon, dir = 'south') {
+  spawnDodgeParticles(dragonMouth, dragon, dir = 'south') {
     let kx = 0, ky = 1;
     if (dir === 'north') { kx = 0; ky = -1; }
     else if (dir === 'south') { kx = 0; ky = 1; }
     else if (dir === 'east') { kx = 1; ky = 0; }
     else if (dir === 'west') { kx = -1; ky = 0; }
 
-    for (let i = 0; i < 18; i++) {
+    const originX = dragonMouth ? dragonMouth.dragonCenterX : (this.x + 32);
+    const originY = dragonMouth ? dragonMouth.dragonCenterY : (this.y + 28);
+
+    for (let i = 0; i < 22; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 60 + Math.random() * 120;
+      const speed = 70 + Math.random() * 140;
       this.combatParticles.push({
-        x: x + (Math.random() - 0.5) * 16,
-        y: y + (Math.random() - 0.5) * 16,
-        vx: Math.cos(angle) * speed - kx * 80,
-        vy: Math.sin(angle) * speed - ky * 80,
+        x: originX + (Math.random() - 0.5) * 20,
+        y: originY + (Math.random() - 0.5) * 20,
+        vx: Math.cos(angle) * speed - kx * 120,
+        vy: Math.sin(angle) * speed - ky * 120,
         drag: 0.92,
         color: i % 2 === 0 ? (dragon?.color || '#38bdf8') : (dragon?.secondaryColor || '#fef08a'),
         size: 4 + Math.random() * 5,
@@ -1836,6 +1906,10 @@ export class DragonManager {
     // 3. Update Combat Particles
     for (let i = this.combatParticles.length - 1; i >= 0; i--) {
       const p = this.combatParticles[i];
+      if (p.delay && p.delay > 0) {
+        p.delay -= dt;
+        continue;
+      }
       p.life += dt;
       p.x += (p.vx || 0) * dt;
       p.y += (p.vy || 0) * dt;
@@ -3487,6 +3561,7 @@ export class DragonManager {
 
   renderParticles(ctx) {
     for (const p of this.combatParticles) {
+      if (p.delay && p.delay > 0) continue;
       const alpha = typeof p.alpha === 'number' && !isNaN(p.alpha) ? Math.max(0, Math.min(1, p.alpha)) : 1;
       if (alpha <= 0) continue;
       ctx.save();
