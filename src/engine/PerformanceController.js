@@ -15,9 +15,9 @@ export class PerformanceController {
       preset: '8gb',               // '4gb' | '8gb' | '16gb' | 'custom'
       targetFps: 60,                // 30 | 60 | 120
       waterReflections: 'medium',   // 'low' | 'medium' | 'high'
-      minimapFps: 20,               // 10 | 20 | 60
+      minimapFps: 10,               // 10 FPS fixo por padrão para máxima performance
       lightingQuality: 'gradient',  // 'flat' | 'gradient'
-      showFpsCounter: false         // true | false
+      showFpsCounter: false         // true | false (controla o contador na barra inferior)
     };
 
     // Métricas de FPS em tempo real
@@ -83,13 +83,13 @@ export class PerformanceController {
       this.settings.preset = '8gb';
       this.settings.targetFps = 60;
       this.settings.waterReflections = 'medium';
-      this.settings.minimapFps = 20;
+      this.settings.minimapFps = 10;
       this.settings.lightingQuality = 'gradient';
     } else if (preset === '16gb') {
       this.settings.preset = '16gb';
       this.settings.targetFps = 120;
       this.settings.waterReflections = 'high';
-      this.settings.minimapFps = 60;
+      this.settings.minimapFps = 10;
       this.settings.lightingQuality = 'gradient';
     }
     this.saveToStorage();

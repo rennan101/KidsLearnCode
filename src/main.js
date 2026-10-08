@@ -3291,18 +3291,21 @@ class RPGApplication {
     if (this.performanceController) {
       this.performanceController.update(currentTime);
 
-      // Atualização do HUD de FPS em tempo real
+      // Atualização do contador de FPS na barra de status inferior
+      const statusFpsItem = document.getElementById('status-fps-item');
+      const statusFps = document.getElementById('status-fps');
       if (this.performanceController.settings.showFpsCounter) {
-        const fpsHud = document.getElementById('fps-counter-hud');
-        const fpsVal = document.getElementById('fps-counter-val');
-        if (fpsHud && fpsHud.style.display !== 'block') fpsHud.style.display = 'block';
-        if (fpsVal && (currentTime - (this.performanceController.lastFpsHudUpdateTime || 0) > 200)) {
+        if (statusFpsItem && statusFpsItem.style.display === 'none') {
+          statusFpsItem.style.display = 'inline-block';
+        }
+        if (statusFps && (currentTime - (this.performanceController.lastFpsHudUpdateTime || 0) > 200)) {
           this.performanceController.lastFpsHudUpdateTime = currentTime;
-          fpsVal.innerText = this.performanceController.currentFps;
+          statusFps.innerText = this.performanceController.currentFps;
         }
       } else {
-        const fpsHud = document.getElementById('fps-counter-hud');
-        if (fpsHud && fpsHud.style.display !== 'none') fpsHud.style.display = 'none';
+        if (statusFpsItem && statusFpsItem.style.display !== 'none') {
+          statusFpsItem.style.display = 'none';
+        }
       }
 
       // Frame Rate Limiter (30 FPS, 60 FPS, 120 FPS / Sem limite)
@@ -4742,22 +4745,6 @@ class RPGApplication {
         }
       });
 
-      // Minimap FPS pills
-      document.querySelectorAll('#perf-minimap-group .perf-option-pill').forEach(btn => {
-        const isActive = Number(btn.dataset.val) === Number(s.minimapFps);
-        if (isActive) {
-          btn.style.background = '#19c8b9';
-          btn.style.color = '#ffffff';
-          btn.style.borderColor = '#0f8e83';
-          btn.style.boxShadow = '0 2px 0 0 #0f8e83';
-        } else {
-          btn.style.background = '#f7f3df';
-          btn.style.color = '#725d42';
-          btn.style.borderColor = '#d5cbaf';
-          btn.style.boxShadow = 'none';
-        }
-      });
-
       // Lighting toggle
       const lightingBtn = document.getElementById('perf-lighting-toggle');
       if (lightingBtn) {
@@ -4774,19 +4761,22 @@ class RPGApplication {
         }
       }
 
-      // FPS Counter toggle
+      // FPS Counter toggle (controla a exibição na barra inferior)
       const fpsToggleBtn = document.getElementById('perf-fps-counter-toggle');
+      const statusFpsItem = document.getElementById('status-fps-item');
       if (fpsToggleBtn) {
         if (s.showFpsCounter) {
           fpsToggleBtn.innerText = 'Visível';
           fpsToggleBtn.style.background = '#e6f9f6';
           fpsToggleBtn.style.borderColor = '#19c8b9';
           fpsToggleBtn.style.color = '#0f8e83';
+          if (statusFpsItem) statusFpsItem.style.display = 'inline-block';
         } else {
           fpsToggleBtn.innerText = 'Oculto';
           fpsToggleBtn.style.background = '#f7f3df';
           fpsToggleBtn.style.borderColor = '#d5cbaf';
           fpsToggleBtn.style.color = '#725d42';
+          if (statusFpsItem) statusFpsItem.style.display = 'none';
         }
       }
     };
@@ -4826,7 +4816,7 @@ class RPGApplication {
       btn.addEventListener('click', () => {
         const key = btn.dataset.key;
         let val = btn.dataset.val;
-        if (key === 'targetFps' || key === 'minimapFps') val = Number(val);
+        if (key === 'targetFps') val = Number(val);
         this.performanceController?.setSetting(key, val);
         syncPerfModalUI();
       });

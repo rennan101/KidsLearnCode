@@ -687,7 +687,7 @@
       <span class="status-sep">•</span>
       <span class="status-shortcut-item">Chat <span class="status-key">Enter</span></span>
     </div>
-    <div class="status-fps-item"><span id="status-fps">60</span> FPS</div>
+    <div class="status-fps-item" id="status-fps-item" style="display: none;"><span id="status-fps">60</span> FPS</div>
   </footer>
 
   <!-- In-Game Chat Input Bar (Press Enter to Chat) -->
@@ -1619,24 +1619,14 @@
           </div>
         </div>
 
-        <!-- Opção 3: Taxa de Atualização do Minimapa -->
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-size: 0.82rem; font-weight: 800; color: #725d42;">Atualização do Minimapa:</label>
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;" id="perf-minimap-group">
-            <button type="button" class="perf-option-pill" data-key="minimapFps" data-val="10" style="padding: 7px 4px; border-radius: 50px; font-size: 0.80rem; font-weight: 800; border: 2px solid #d5cbaf; background: #f7f3df; color: #725d42; cursor: pointer; transition: all 0.15s; text-align: center;">10 FPS (Econômico)</button>
-            <button type="button" class="perf-option-pill active" data-key="minimapFps" data-val="20" style="padding: 7px 4px; border-radius: 50px; font-size: 0.80rem; font-weight: 800; border: 2px solid #0f8e83; background: #19c8b9; color: #ffffff; cursor: pointer; box-shadow: 0 2px 0 0 #0f8e83; transition: all 0.15s; text-align: center;">20 FPS</button>
-            <button type="button" class="perf-option-pill" data-key="minimapFps" data-val="60" style="padding: 7px 4px; border-radius: 50px; font-size: 0.80rem; font-weight: 800; border: 2px solid #d5cbaf; background: #f7f3df; color: #725d42; cursor: pointer; transition: all 0.15s; text-align: center;">60 FPS (Fluido)</button>
-          </div>
-        </div>
-
-        <!-- Opção 4: Iluminação Noturna & Contador FPS -->
+        <!-- Opção 3: Iluminação Noturna & Contador FPS na Barra Inferior -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div style="display: flex; flex-direction: column; gap: 4px;">
             <label style="font-size: 0.80rem; font-weight: 800; color: #725d42;">Iluminação Noturna:</label>
             <button type="button" id="perf-lighting-toggle" class="perf-toggle-btn" style="padding: 7px 10px; border-radius: 50px; font-size: 0.78rem; font-weight: 800; border: 2px solid #d5cbaf; background: #f7f3df; color: #725d42; cursor: pointer; transition: all 0.15s; text-align: center;">Gradiente Suave</button>
           </div>
           <div style="display: flex; flex-direction: column; gap: 4px;">
-            <label style="font-size: 0.80rem; font-weight: 800; color: #725d42;">Contador de FPS:</label>
+            <label style="font-size: 0.80rem; font-weight: 800; color: #725d42;">Contador de FPS (Barra):</label>
             <button type="button" id="perf-fps-counter-toggle" class="perf-toggle-btn" style="padding: 7px 10px; border-radius: 50px; font-size: 0.78rem; font-weight: 800; border: 2px solid #d5cbaf; background: #f7f3df; color: #725d42; cursor: pointer; transition: all 0.15s; text-align: center;">Oculto</button>
           </div>
         </div>
@@ -1648,11 +1638,6 @@
         </button>
       </div>
     </div>
-  </div>
-
-  <!-- Realtime In-Game FPS HUD Counter (Animal Island Badge) -->
-  <div id="fps-counter-hud" style="display: none; position: fixed; top: 12px; left: 16px; z-index: 99999; background: rgba(248, 248, 240, 0.92); border: 2px solid #19c8b9; border-radius: 50px; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 800; color: #0f8e83; box-shadow: 0 3px 0 0 #0f8e83; pointer-events: none; user-select: none;">
-    <span id="fps-counter-val">60</span> FPS
   </div>
 
   <!-- Logout Confirmation Modal (Animal Island UI) -->
