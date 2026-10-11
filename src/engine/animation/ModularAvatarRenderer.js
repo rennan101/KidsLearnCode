@@ -209,6 +209,9 @@ export class ModularAvatarRenderer {
 
     ctx.restore();
 
+    // 4.1 Pescoço Frontal (cobre o cabelo que desce da cabeça, mas fica restrito abaixo da linha do queixo)
+    this.drawNeckFront(ctx, cfg, pose);
+
     // 5. Se estiver comemorando, braços na frente de tudo
     if (isCelebrating) {
       this.drawArms(ctx, pose, cfg, 'south');
@@ -308,6 +311,9 @@ export class ModularAvatarRenderer {
 
     ctx.restore();
 
+    // 4.1 Pescoço Frontal (cobre o cabelo que desce da cabeça, mas fica restrito abaixo da linha do queixo)
+    this.drawNeckFront(ctx, cfg, pose);
+
     if (isCelebrating) {
       this.drawArms(ctx, pose, cfg, 'east');
     }
@@ -406,6 +412,23 @@ export class ModularAvatarRenderer {
     if (pose && pose.root) ctx.rotate(pose.root.rot);
     ctx.fillStyle = skin;
     // Pescoço oficial (_07_Pescoco de Base_char_flat.svg: x=1130, y=1080, w=240, h=180 -> relativo a (1250, 1450): x=-120, y=-370, w=240, h=180)
+    ctx.fillRect(-120, -370, 240, 180);
+    ctx.restore();
+  }
+
+  drawNeckFront(ctx, cfg, pose) {
+    const skin = cfg.skinTone || '#f6dab9';
+    ctx.save();
+    ctx.translate(1250, 1450);
+    if (pose && pose.root) ctx.rotate(pose.root.rot);
+
+    // Clip restringe o desenho à região do pescoço abaixo do queixo (y >= -290 local do tronco)
+    // evitando cobrir o queixo/crânio (linha do queixo em -290 relativo a (1250, 1450))
+    ctx.beginPath();
+    ctx.rect(-150, -290, 300, 150);
+    ctx.clip();
+
+    ctx.fillStyle = skin;
     ctx.fillRect(-120, -370, 240, 180);
     ctx.restore();
   }
