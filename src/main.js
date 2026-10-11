@@ -1202,6 +1202,8 @@ class RPGApplication {
         if (this.mode === 'edit') {
           this.editorController.handleMouseDown(e, this.canvas);
         } else if (this.mode === 'play') {
+          if (this.isAnyModalOpen()) return;
+
           const rect = this.canvas.getBoundingClientRect();
           const screenX = e.clientX - rect.left;
           const screenY = e.clientY - rect.top;
@@ -1297,6 +1299,10 @@ class RPGApplication {
             this.cancelPlayModeInteraction();
             return;
           }
+        }
+
+        if (this.isAnyModalOpen()) {
+          return;
         }
 
         if (e.key === 'f' || e.key === 'F') {
@@ -4386,6 +4392,7 @@ class RPGApplication {
         chatInput.blur();
         this.canvas.focus();
       } else {
+        if (this.isAnyModalOpen()) return;
         chatBar.style.display = 'flex';
         chatInput.value = '';
         chatInput.focus();
@@ -4468,6 +4475,7 @@ class RPGApplication {
 
     this.openCraftingModal = () => {
       if (!craftingModal || !recipeList) return;
+      if (this.isAnyModalOpen()) return;
       this.updateGlobalWalletPills();
       craftingModal.style.display = 'flex';
       recipeList.innerHTML = '';
@@ -4882,6 +4890,7 @@ class RPGApplication {
 
     this.openPlayerProfileModal = () => {
       if (!profileModal) return;
+      if (this.isAnyModalOpen()) return;
       const cfg = this.player.customAvatarConfig || DEFAULT_AVATAR_CONFIG;
       const user = this.supabaseClient?.user;
       const userName = cfg.name || ((user && !user.isGuest && user.nickname) ? user.nickname : 'Aventureiro');
@@ -5980,6 +5989,7 @@ class RPGApplication {
 
     this.openBackpackModal = (initialTab = 'items') => {
       if (!modal) return;
+      if (this.isAnyModalOpen()) return;
       modal.style.display = 'flex';
       switchTab(initialTab);
       this.tutorialManager?.onBackpackOpened();
@@ -6002,6 +6012,7 @@ class RPGApplication {
         if (isVisible) {
           modal.style.display = 'none';
         } else {
+          if (this.isAnyModalOpen()) return;
           this.openBackpackModal('items');
         }
       }
@@ -6468,6 +6479,27 @@ class RPGApplication {
       closeBtn?.removeEventListener('click', handleClose);
     };
     closeBtn?.addEventListener('click', handleClose);
+  }
+
+  isAnyModalOpen() {
+    const craftingModal = document.getElementById('crafting-modal');
+    const backpackModal = document.getElementById('backpack-modal');
+    const profileModal = document.getElementById('player-profile-modal');
+    const chatBar = document.getElementById('game-chat-bar');
+    const codingModal = document.getElementById('coding-modal') || document.getElementById('coding-studio-modal');
+    const characterCreatorModal = document.getElementById('character-creator-modal');
+
+    const isCraftingOpen = Boolean(craftingModal && (craftingModal.style.display === 'flex' || craftingModal.style.display === 'block'));
+    const isBackpackOpen = Boolean(backpackModal && (backpackModal.style.display === 'flex' || backpackModal.style.display === 'block'));
+    const isProfileOpen = Boolean(profileModal && (profileModal.style.display === 'flex' || profileModal.style.display === 'block'));
+    const isChatOpen = Boolean(chatBar && chatBar.style.display !== 'none' && chatBar.style.display !== '');
+    const isCodingOpen = Boolean(codingModal && (codingModal.style.display === 'flex' || codingModal.style.display === 'block'));
+    const isCreatorOpen = Boolean(
+      (this.characterCreator && this.characterCreator.isOpen) ||
+      (characterCreatorModal && (characterCreatorModal.style.display === 'flex' || characterCreatorModal.style.display === 'block'))
+    );
+
+    return isCraftingOpen || isBackpackOpen || isProfileOpen || isChatOpen || isCodingOpen || isCreatorOpen;
   }
 }
 
