@@ -682,7 +682,7 @@ export class CharacterCreator {
       { id: 'f_gold', color: '#f59e0b', name: 'Dourado Clássico' },
       { id: 'f_silver', color: '#94a3b8', name: 'Prata Metálico' },
       { id: 'f_teal', color: '#19c8b9', name: 'Verde Menta' },
-      { id: 'f_red', color: '#dc2626', name: 'Vermelho Persona' },
+      { id: 'f_red', color: '#dc2626', name: 'Vermelho Escarlate' },
       { id: 'f_white', color: '#ffffff', name: 'Branco Neve' },
       { id: 'f_navy', color: '#1d4ed8', name: 'Azul Real' },
       { id: 'f_purple', color: '#9333ea', name: 'Roxo Estiloso' },
@@ -692,7 +692,7 @@ export class CharacterCreator {
     const glassesLensColors = [
       { id: 'l_dark', color: '#0f172a', name: 'Solar Escuro' },
       { id: 'l_clear', color: '#ffffff', name: 'Cristalina / Grau' },
-      { id: 'l_cyan', color: '#38bdf8', name: 'Ciano Neon / VR' },
+      { id: 'l_cyan', color: '#38bdf8', name: 'Ciano Neon' },
       { id: 'l_amber', color: '#d97706', name: 'Âmbar Retrô' },
       { id: 'l_ruby', color: '#ef4444', name: 'Vermelho Rubi' },
       { id: 'l_emerald', color: '#10b981', name: 'Verde Esmeralda' },

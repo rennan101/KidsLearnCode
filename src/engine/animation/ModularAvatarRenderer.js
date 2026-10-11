@@ -1695,7 +1695,7 @@ export class ModularAvatarRenderer {
     const lensBase = cfg.glassesLensColor || (cfg.glassesStyle === 'sunglasses_cool' ? '#0f172a' : '#ffffff');
     const opacityPct = (cfg.glassesLensOpacity !== undefined && cfg.glassesLensOpacity !== null)
       ? Number(cfg.glassesLensOpacity)
-      : (cfg.glassesStyle === 'sunglasses_cool' ? 88 : 30);
+      : (Math.floor(Math.random() * 71) + 20); // 20-90 aleatório para NPCs e heróis
     const lensAlpha = Math.max(0, Math.min(100, opacityPct)) / 100;
 
     // Helper para converter cor hex / rgb em rgba com lensAlpha
@@ -1720,29 +1720,6 @@ export class ModularAvatarRenderer {
     if (dir === 'east') {
       // Perfil / Vista lateral (east)
       switch (cfg.glassesStyle) {
-        case 'vr_headset': {
-          // Headset VR volumoso cobrindo a lateral da face
-          ctx.fillStyle = frameColor;
-          ctx.beginPath();
-          ctx.roundRect(70, -60, 200, 160, 30);
-          ctx.fill();
-
-          // Visor frontal brilhante com lente
-          ctx.fillStyle = lensFill;
-          ctx.beginPath();
-          ctx.roundRect(170, -45, 90, 130, 20);
-          ctx.fill();
-
-          // Tira lateral do headset
-          ctx.strokeStyle = '#334155';
-          ctx.lineWidth = 22;
-          ctx.beginPath();
-          ctx.moveTo(80, 20);
-          ctx.lineTo(-120, 25);
-          ctx.stroke();
-          break;
-        }
-
         case 'square_frame': {
           ctx.fillStyle = lensFill;
           ctx.beginPath();
@@ -1772,25 +1749,6 @@ export class ModularAvatarRenderer {
           ctx.moveTo(155, 105);
           ctx.quadraticCurveTo(130, 180, 90, 250);
           ctx.stroke();
-          break;
-        }
-
-        case 'mask_persona': {
-          // Máscara estilizada tipo Persona 5 (arrojada pontuda)
-          ctx.fillStyle = frameColor;
-          ctx.beginPath();
-          ctx.moveTo(40, -40);
-          ctx.lineTo(260, -20);
-          ctx.lineTo(220, 90);
-          ctx.lineTo(70, 70);
-          ctx.closePath();
-          ctx.fill();
-
-          // Abertura do olho / lente
-          ctx.fillStyle = lensFill;
-          ctx.beginPath();
-          ctx.ellipse(150, 20, 50, 25, Math.PI / 8, 0, Math.PI * 2);
-          ctx.fill();
           break;
         }
 
@@ -1827,29 +1785,6 @@ export class ModularAvatarRenderer {
     } else {
       // Vista frontal (south)
       switch (cfg.glassesStyle) {
-        case 'vr_headset': {
-          // Headset VR frontal em bloco estilizado
-          ctx.fillStyle = frameColor;
-          ctx.beginPath();
-          ctx.roundRect(-270, -35, 540, 175, 40);
-          ctx.fill();
-
-          // Visor / Lentes frontais tecnológicas
-          ctx.fillStyle = lensFill;
-          ctx.beginPath();
-          ctx.roundRect(-240, -15, 480, 135, 30);
-          ctx.fill();
-
-          // Led frontal suave
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-          ctx.lineWidth = 8;
-          ctx.beginPath();
-          ctx.moveTo(-180, 50);
-          ctx.lineTo(180, 50);
-          ctx.stroke();
-          break;
-        }
-
         case 'square_frame': {
           ctx.fillStyle = lensFill;
           [-175, 185].forEach(gx => {
@@ -1882,28 +1817,6 @@ export class ModularAvatarRenderer {
           ctx.moveTo(185, 150);
           ctx.quadraticCurveTo(160, 240, 110, 310);
           ctx.stroke();
-          break;
-        }
-
-        case 'mask_persona': {
-          // Máscara estilizada pontiaguda Persona 5
-          ctx.fillStyle = frameColor;
-          ctx.beginPath();
-          ctx.moveTo(-290, -10);
-          ctx.quadraticCurveTo(-140, -45, 0, 30);
-          ctx.quadraticCurveTo(140, -45, 290, -10);
-          ctx.quadraticCurveTo(240, 135, 0, 95);
-          ctx.quadraticCurveTo(-240, 135, -290, -10);
-          ctx.closePath();
-          ctx.fill();
-
-          // Aberturas para os olhos
-          ctx.fillStyle = lensFill;
-          [-150, 150].forEach(mx => {
-            ctx.beginPath();
-            ctx.ellipse(mx, 45, 65, 32, (mx > 0 ? -1 : 1) * Math.PI / 12, 0, Math.PI * 2);
-            ctx.fill();
-          });
           break;
         }
 

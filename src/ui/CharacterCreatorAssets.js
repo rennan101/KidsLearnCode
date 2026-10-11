@@ -132,10 +132,8 @@ export const GLASSES_OPTIONS = [
   { id: 'none', name: 'Sem Óculos', desc: 'Nenhum acessório' },
   { id: 'round_wire', name: 'Óculos Redondos', desc: 'Armação fina clássica' },
   { id: 'sunglasses_cool', name: 'Óculos Escuros', desc: 'Lentes solares' },
-  { id: 'vr_headset', name: 'Óculos VR', desc: 'Headset de Realidade Virtual' },
   { id: 'square_frame', name: 'Óculos Quadrado', desc: 'Armação geométrica moderna' },
-  { id: 'monoculo', name: 'Monóculo', desc: 'Lente clássica de gala' },
-  { id: 'mask_persona', name: 'Máscara Persona', desc: 'Máscara estilizada de herói' }
+  { id: 'monoculo', name: 'Monóculo', desc: 'Lente clássica de gala' }
 ];
 
 /* ========================================================================= */
@@ -239,14 +237,10 @@ export function getGlassesSvg(glassesId) {
       return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><rect x="6" y="14" width="12" height="12" rx="3" fill="#0f172a"/><rect x="22" y="14" width="12" height="12" rx="3" fill="#0f172a"/><rect x="18" y="18" width="4" height="3" fill="#0f172a"/></svg>`;
     case 'round_wire':
       return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><circle cx="12" cy="20" r="7" fill="none" stroke="#5c3c26" stroke-width="2"/><circle cx="28" cy="20" r="7" fill="none" stroke="#5c3c26" stroke-width="2"/><line x1="19" y1="20" x2="21" y2="20" stroke="#5c3c26" stroke-width="2"/></svg>`;
-    case 'vr_headset':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><rect x="5" y="12" width="30" height="15" rx="5" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/><circle cx="12" cy="19.5" r="3" fill="#38bdf8"/><circle cx="28" cy="19.5" r="3" fill="#38bdf8"/><path d="M2" y="19" L5 19 M35 19 L38 19" stroke="#64748b" stroke-width="2.5"/></svg>`;
     case 'square_frame':
       return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><rect x="6" y="13" width="12" height="13" rx="2" fill="none" stroke="#5c3c26" stroke-width="2"/><rect x="22" y="13" width="12" height="13" rx="2" fill="none" stroke="#5c3c26" stroke-width="2"/><line x1="18" y1="19" x2="22" y2="19" stroke="#5c3c26" stroke-width="2"/></svg>`;
     case 'monoculo':
       return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><circle cx="25" cy="19" r="8" fill="none" stroke="#f59e0b" stroke-width="2.5"/><path d="M25 27 C26 33 22 36 21 39" fill="none" stroke="#f59e0b" stroke-width="1.5"/></svg>`;
-    case 'mask_persona':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M5 14 Q12 11 20 18 Q28 11 35 14 Q32 27 20 23 Q8 27 5 14 Z" fill="#ffffff" stroke="#dc2626" stroke-width="2"/><ellipse cx="13" cy="17" rx="3.5" ry="2" fill="#0f172a"/><ellipse cx="27" cy="17" rx="3.5" ry="2" fill="#0f172a"/></svg>`;
     default:
       // none
       return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><circle cx="20" cy="20" r="12" fill="none" stroke="#c4b89e" stroke-width="2"/><line x1="12" y1="12" x2="28" y2="28" stroke="#c4b89e" stroke-width="2"/></svg>`;
