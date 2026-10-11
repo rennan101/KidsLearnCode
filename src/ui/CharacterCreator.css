@@ -357,6 +357,34 @@
   box-shadow: 0 0 0 3px #19c8b9, 0 4px 8px rgba(0, 0, 0, 0.25);
 }
 
+.cc-swatch-reset {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fdfbf7;
+  color: #725d42;
+}
+
+.cc-swatch-reset svg {
+  width: 20px;
+  height: 20px;
+  stroke: #725d42;
+  transition: transform 0.2s ease;
+}
+
+.cc-swatch-reset:hover svg {
+  transform: rotate(-45deg);
+}
+
+.cc-swatch-reset.active {
+  background: #e6f9f6;
+  color: #0f8e83;
+}
+
+.cc-swatch-reset.active svg {
+  stroke: #0f8e83;
+}
+
 /* Style Items Card Grid - Visual Icon Buttons */
 .cc-items-grid {
   display: grid;

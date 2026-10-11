@@ -522,10 +522,20 @@ export class CharacterCreator {
   }
 
   renderTopTab(container) {
+    const isOriginalColor = !this.currentConfig.topColorPrimary;
     const section = document.createElement('div');
     section.innerHTML = `
       <div class="cc-section-title">Paleta de cores da camisa</div>
       <div class="cc-swatches-grid">
+        <button class="cc-swatch cc-swatch-reset ${isOriginalColor ? 'active' : ''}" 
+                id="cc-top-color-reset"
+                title="Cor Original da Camisa" 
+                aria-label="Cor Original da Camisa">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ui-icon">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+        </button>
         ${CLOTH_PALETTES.map(p => `
           <button class="cc-swatch ${this.currentConfig.topColorPrimary === p.primary ? 'active' : ''}" 
                   style="background: ${p.primary};" 
@@ -545,7 +555,13 @@ export class CharacterCreator {
       </div>
     `;
 
-    section.querySelectorAll('.cc-swatch').forEach(sw => {
+    section.querySelector('#cc-top-color-reset')?.addEventListener('click', () => {
+      this.currentConfig.topColorPrimary = null;
+      this.currentConfig.topColorSecondary = null;
+      this.renderCategoryContent();
+    });
+
+    section.querySelectorAll('.cc-swatch[data-primary]').forEach(sw => {
       sw.addEventListener('click', () => {
         section.querySelectorAll('.cc-swatch').forEach(s => s.classList.remove('active'));
         sw.classList.add('active');

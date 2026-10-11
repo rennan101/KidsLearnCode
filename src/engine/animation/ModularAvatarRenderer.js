@@ -546,48 +546,7 @@ export class ModularAvatarRenderer {
     const fullW = topDef.w * scale;
     const fullH = topDef.h * scale;
 
-    // Quando o jogador estiver de costas (dir === 'north'), renderiza a camisa em cor sólida única
-    if (dir === 'north') {
-      ctx.fillStyle = primary || topDef.primaryColor || '#19c8b9';
-      if (topStyle === 'top_cupcake_dress') {
-        ctx.beginPath();
-        ctx.moveTo(-95, -280);
-        ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
-        ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
-        ctx.bezierCurveTo(218, 130, 250, 260, 260, 360);
-        ctx.lineTo(-260, 360);
-        ctx.bezierCurveTo(-250, 260, -218, 130, -208, 10);
-        ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
-        ctx.closePath();
-        ctx.fill();
-      } else if (topStyle === 'top_crop_top' || topDef.sleeveType === 'none') {
-        ctx.beginPath();
-        ctx.moveTo(-95, -280);
-        ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
-        ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
-        ctx.bezierCurveTo(210, 50, 208, 80, 204, 100);
-        ctx.lineTo(-204, 100);
-        ctx.bezierCurveTo(-208, 80, -210, 50, -208, 10);
-        ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
-        ctx.closePath();
-        ctx.fill();
-      } else {
-        ctx.beginPath();
-        ctx.moveTo(-95, -280);
-        ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
-        ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
-        ctx.bezierCurveTo(215, 130, 185, 210, 180, 215);
-        ctx.lineTo(-180, 215);
-        ctx.bezierCurveTo(-185, 210, -215, 130, -208, 10);
-        ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
-        ctx.closePath();
-        ctx.fill();
-      }
-      ctx.restore();
-      return;
-    }
-
-    // Frente e perfil: renderiza o SVG oficial da camisa
+    // Renderiza o SVG oficial da camisa (frente, perfil e costas com cor primária/secundária preservando o formato real)
     const img = this.getTintedTopImage(topPath, topDef, primary, secondary);
 
     if (img && img.complete && img.naturalWidth > 0) {
