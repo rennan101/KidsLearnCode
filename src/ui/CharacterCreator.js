@@ -16,6 +16,7 @@ import {
   createDefaultAvatarConfig,
   randomizeAvatarConfig
 } from '../engine/animation/AvatarConfig.js';
+import { SVG_TOPS } from '../engine/animation/SvgAssetCatalog.js';
 import {
   CREATOR_CATEGORIES,
   HEAD_STYLE_OPTIONS,
@@ -522,7 +523,8 @@ export class CharacterCreator {
   }
 
   renderTopTab(container) {
-    const isOriginalColor = !this.currentConfig.topColorPrimary;
+    const topDef = SVG_TOPS.find(t => t.id === this.currentConfig.topStyle || t.baseId === this.currentConfig.topStyle) || SVG_TOPS[0];
+    const isOriginalColor = !this.currentConfig.topColorPrimary || (topDef && this.currentConfig.topColorPrimary.toLowerCase() === topDef.primaryColor?.toLowerCase());
     const section = document.createElement('div');
     section.innerHTML = `
       <div class="cc-section-title">Paleta de cores da camisa</div>
@@ -537,7 +539,7 @@ export class CharacterCreator {
           </svg>
         </button>
         ${CLOTH_PALETTES.map(p => `
-          <button class="cc-swatch ${this.currentConfig.topColorPrimary === p.primary ? 'active' : ''}" 
+          <button class="cc-swatch ${(!isOriginalColor && this.currentConfig.topColorPrimary === p.primary) ? 'active' : ''}" 
                   style="background: ${p.primary};" 
                   data-primary="${p.primary}" 
                   data-secondary="${p.secondary}" 
@@ -556,8 +558,9 @@ export class CharacterCreator {
     `;
 
     section.querySelector('#cc-top-color-reset')?.addEventListener('click', () => {
-      this.currentConfig.topColorPrimary = null;
-      this.currentConfig.topColorSecondary = null;
+      const currentTopDef = SVG_TOPS.find(t => t.id === this.currentConfig.topStyle || t.baseId === this.currentConfig.topStyle) || SVG_TOPS[0];
+      this.currentConfig.topColorPrimary = currentTopDef?.primaryColor || null;
+      this.currentConfig.topColorSecondary = currentTopDef?.secondaryColor || null;
       this.renderCategoryContent();
     });
 

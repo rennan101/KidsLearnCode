@@ -212,6 +212,9 @@ export class ModularAvatarRenderer {
     // 4.1 Pescoço Frontal (cobre o cabelo que desce da cabeça, mas fica restrito abaixo da linha do queixo)
     this.drawNeckFront(ctx, cfg, pose);
 
+    // 4.2 Camisa na Frente do Pescoço (vista frontal)
+    this.drawTopOnTorsoFront(ctx, pose.root.rot, cfg, 'south');
+
     // 5. Se estiver comemorando, braços na frente de tudo
     if (isCelebrating) {
       this.drawArms(ctx, pose, cfg, 'south');
@@ -508,7 +511,25 @@ export class ModularAvatarRenderer {
       }
     }
 
-    // 4. ROUPAS SUPERIORES OFICIAIS (assets/Tops) - Renderização anatômica SEMPRE POR CIMA das calças
+    // 4. ROUPAS SUPERIORES OFICIAIS (assets/Tops) - Na vista frontal (south), a camisa é desenhada em drawTopOnTorsoFront na frente do pescoço
+    if (dir !== 'south') {
+      this.renderTopOnTorso(ctx, topStyle, primary, secondary, skin, dir);
+    }
+
+    ctx.restore();
+  }
+
+  drawTopOnTorsoFront(ctx, rot, cfg, dir = 'south') {
+    const skin = cfg.skinTone || '#f6dab9';
+    const topStyle = cfg.topStyle || 'top_tee';
+    const topDef = SVG_TOPS.find(t => t.id === topStyle || t.baseId === topStyle) || SVG_TOPS[0];
+    const primary = cfg.topColorPrimary || topDef.primaryColor || '#19c8b9';
+    const secondary = cfg.topColorSecondary || topDef.secondaryColor || '#ffffff';
+
+    ctx.save();
+    ctx.translate(1250, 1450);
+    ctx.rotate(rot);
+
     this.renderTopOnTorso(ctx, topStyle, primary, secondary, skin, dir);
 
     ctx.restore();
@@ -623,14 +644,14 @@ export class ModularAvatarRenderer {
     ctx.arc(-300, 405, 62, 0, Math.PI * 2);
     ctx.fill();
 
-    // Quando tem mangas, pinta a manga base anatômica acompanhando o braço
+    // Quando tem mangas, pinta a manga base anatômica acompanhando o braço (mais larga no ombro)
     if (hasSleeves) {
       ctx.fillStyle = primary;
       if (topDef.sleeveType === 'long') {
-        const sleeveLongLPath = this.getPath2D('M0 0C35 10 50 50 30 85L-210 375C-230 395 -265 385 -280 360C-295 335 -285 305 -260 290L-28 10C-20 3 -10 0 0 0Z');
+        const sleeveLongLPath = this.getPath2D('M0 0C55 15 75 55 50 95L-205 385C-225 405 -265 395 -285 365C-300 335 -290 300 -265 285L-20 0C-10 -5 0 0 0 0Z');
         ctx.fill(sleeveLongLPath);
       } else {
-        const sleeveUpperLPath = this.getPath2D('M0 0C35 10 50 50 30 85L-135 230C-155 245 -180 235 -190 215C-200 195 -190 170 -170 155L-28 10C-20 3 -10 0 0 0Z');
+        const sleeveUpperLPath = this.getPath2D('M0 0C55 15 75 55 50 95L-130 240C-150 255 -185 245 -200 220C-210 195 -195 165 -170 150L-20 0C-10 -5 0 0 0 0Z');
         ctx.fill(sleeveUpperLPath);
       }
     }
@@ -652,14 +673,14 @@ export class ModularAvatarRenderer {
     ctx.arc(300, 405, 62, 0, Math.PI * 2);
     ctx.fill();
 
-    // Quando tem mangas, pinta a manga base anatômica acompanhando o braço
+    // Quando tem mangas, pinta a manga base anatômica acompanhando o braço (mais larga no ombro)
     if (hasSleeves) {
       ctx.fillStyle = primary;
       if (topDef.sleeveType === 'long') {
-        const sleeveLongRPath = this.getPath2D('M0 0C-35 10 -50 50 -30 85L210 375C230 395 265 385 280 360C295 335 285 305 260 290L28 10C20 3 10 0 0 0Z');
+        const sleeveLongRPath = this.getPath2D('M0 0C-55 15 -75 55 -50 95L205 385C225 405 265 395 285 365C300 335 290 300 265 285L20 0C10 -5 0 0 0 0Z');
         ctx.fill(sleeveLongRPath);
       } else {
-        const sleeveUpperRPath = this.getPath2D('M0 0C-35 10 -50 50 -30 85L135 230C155 245 180 235 190 215C200 195 190 170 170 155L28 10C20 3 10 0 0 0Z');
+        const sleeveUpperRPath = this.getPath2D('M0 0C-55 15 -75 55 -50 95L130 240C150 255 185 245 200 220C210 195 195 165 170 150L20 0C10 -5 0 0 0 0Z');
         ctx.fill(sleeveUpperRPath);
       }
     }
