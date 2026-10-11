@@ -238,7 +238,18 @@ export class ModularAvatarRenderer {
     ctx.translate(1250, 760);
     ctx.rotate(headRot);
 
+    const _hairClipYN = HAIR_CLIP_Y[cfg.headStyle];
+    if (_hairClipYN !== undefined) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(-1500, -900, 3000, 900 + _hairClipYN);
+      ctx.clip();
+    }
+
     this.drawHeadBase(ctx, cfg, 'north');
+
+    if (_hairClipYN !== undefined) ctx.restore();
+
     this.drawBackHair(ctx, cfg, 'north');
 
     ctx.restore();
