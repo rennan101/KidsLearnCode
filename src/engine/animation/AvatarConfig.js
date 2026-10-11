@@ -87,7 +87,9 @@ export const DEFAULT_AVATAR_CONFIG = {
   shoesColor: '#ea580c',
   shoesTrim: '#ffffff',
   glassesStyle: 'none',
-  glassesColor: '#5c3c26'
+  glassesColor: '#5c3c26',
+  glassesLensColor: '#0f172a',
+  glassesLensOpacity: 85
 };
 
 export function createDefaultAvatarConfig(name = 'Aventureiro') {
@@ -129,9 +131,16 @@ export function randomizeAvatarConfig(currentName) {
     'top_long_sleeve', 'top_puffy_sleeve', 'top_sleeveless', 'top_crop_top'
   ];
 
-  const bottomStyles = ['shorts_denim', 'pants_cargo', 'skirt_pleated'];
+  const bottomStyles = [
+    'shorts_denim', 'pants_cargo', 'skirt_pleated',
+    'shorts_bermuda', 'shorts_esporte', 'skinny_jeans',
+    'wide_leg', 'saia_longa', 'calca_jogger', 'shorts_praia'
+  ];
   const shoeStyles = ['sneakers_classic', 'boots_hunter', 'sandals_beach'];
-  const glassesStyles = ['none', 'none', 'none', 'round_wire', 'sunglasses_cool'];
+  const glassesStyles = [
+    'none', 'none', 'none',
+    'round_wire', 'sunglasses_cool', 'vr_headset', 'square_frame', 'monoculo', 'mask_persona'
+  ];
 
   return {
     version: 2,
@@ -157,7 +166,9 @@ export function randomizeAvatarConfig(currentName) {
     shoesColor: clothP.primary,
     shoesTrim: '#ffffff',
     glassesStyle: glassesStyles[Math.floor(Math.random() * glassesStyles.length)],
-    glassesColor: '#5c3c26'
+    glassesColor: '#5c3c26',
+    glassesLensColor: '#0f172a',
+    glassesLensOpacity: 85
   };
 }
 

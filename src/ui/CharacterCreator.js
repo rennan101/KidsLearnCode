@@ -676,8 +676,36 @@ export class CharacterCreator {
 
   renderGlassesTab(container) {
     const section = document.createElement('div');
+    const glassesFrameColors = [
+      { id: 'f_brown', color: '#5c3c26', name: 'Madeira / Café' },
+      { id: 'f_black', color: '#1e293b', name: 'Preto Ônix' },
+      { id: 'f_gold', color: '#f59e0b', name: 'Dourado Clássico' },
+      { id: 'f_silver', color: '#94a3b8', name: 'Prata Metálico' },
+      { id: 'f_teal', color: '#19c8b9', name: 'Verde Menta' },
+      { id: 'f_red', color: '#dc2626', name: 'Vermelho Persona' },
+      { id: 'f_white', color: '#ffffff', name: 'Branco Neve' },
+      { id: 'f_navy', color: '#1d4ed8', name: 'Azul Real' },
+      { id: 'f_purple', color: '#9333ea', name: 'Roxo Estiloso' },
+      { id: 'f_pink', color: '#ec4899', name: 'Rosa Chiclete' }
+    ];
+
+    const glassesLensColors = [
+      { id: 'l_dark', color: '#0f172a', name: 'Solar Escuro' },
+      { id: 'l_clear', color: '#ffffff', name: 'Cristalina / Grau' },
+      { id: 'l_cyan', color: '#38bdf8', name: 'Ciano Neon / VR' },
+      { id: 'l_amber', color: '#d97706', name: 'Âmbar Retrô' },
+      { id: 'l_ruby', color: '#ef4444', name: 'Vermelho Rubi' },
+      { id: 'l_emerald', color: '#10b981', name: 'Verde Esmeralda' },
+      { id: 'l_violet', color: '#8b5cf6', name: 'Violeta Tecnológico' },
+      { id: 'l_rose', color: '#f43f5e', name: 'Rosa Pastel' }
+    ];
+
+    const currentFrameColor = this.currentConfig.glassesColor || '#5c3c26';
+    const currentLensColor = this.currentConfig.glassesLensColor || '#0f172a';
+    const currentOpacity = this.currentConfig.glassesLensOpacity !== undefined ? Number(this.currentConfig.glassesLensOpacity) : 85;
+
     section.innerHTML = `
-      <div class="cc-section-title">Óculos & Acessórios Faciais</div>
+      <div class="cc-section-title">Modelo de Óculos & Acessórios</div>
       <div class="cc-items-grid">
         ${GLASSES_OPTIONS.map(opt => `
           <button class="cc-item-card ${this.currentConfig.glassesStyle === opt.id ? 'active' : ''}" data-glasses="${opt.id}" title="${opt.name}" aria-label="${opt.name}">
@@ -685,14 +713,74 @@ export class CharacterCreator {
           </button>
         `).join('')}
       </div>
+
+      <div class="cc-glasses-custom-panel" style="${this.currentConfig.glassesStyle === 'none' ? 'opacity: 0.45; pointer-events: none;' : ''}">
+        <div class="cc-section-title" style="margin-top: 22px;">Cor da Armação</div>
+        <div class="cc-swatches-grid">
+          ${glassesFrameColors.map(c => `
+            <button class="cc-swatch ${currentFrameColor.toLowerCase() === c.color.toLowerCase() ? 'active' : ''}" 
+                    style="background: ${c.color};" 
+                    data-frame-color="${c.color}" 
+                    title="${c.name}"></button>
+          `).join('')}
+        </div>
+
+        <div class="cc-section-title" style="margin-top: 22px;">Cor da Lente</div>
+        <div class="cc-swatches-grid">
+          ${glassesLensColors.map(c => `
+            <button class="cc-swatch ${currentLensColor.toLowerCase() === c.color.toLowerCase() ? 'active' : ''}" 
+                    style="background: ${c.color};" 
+                    data-lens-color="${c.color}" 
+                    title="${c.name}"></button>
+          `).join('')}
+        </div>
+
+        <div class="cc-section-title" style="margin-top: 22px;">
+          <span>Transparência da Lente:</span>
+          <span id="cc-lens-opacity-val" style="color: #19c8b9; margin-left: 6px;">${currentOpacity}%</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px; max-width: 380px;">
+          <input type="range" id="cc-lens-opacity-slider" min="0" max="100" value="${currentOpacity}" 
+                 style="flex: 1; accent-color: #19c8b9; cursor: var(--animal-cursor-pointer, pointer); height: 8px; border-radius: 4px;" />
+        </div>
+      </div>
     `;
 
+    // Seleção de modelo de óculos
     section.querySelectorAll('[data-glasses]').forEach(card => {
       card.addEventListener('click', () => {
         section.querySelectorAll('[data-glasses]').forEach(c => c.classList.remove('active'));
         card.classList.add('active');
         this.currentConfig.glassesStyle = card.dataset.glasses;
+        this.renderCategoryContent();
       });
+    });
+
+    // Seleção da cor da armação
+    section.querySelectorAll('[data-frame-color]').forEach(sw => {
+      sw.addEventListener('click', () => {
+        section.querySelectorAll('[data-frame-color]').forEach(s => s.classList.remove('active'));
+        sw.classList.add('active');
+        this.currentConfig.glassesColor = sw.dataset.frameColor;
+      });
+    });
+
+    // Seleção da cor da lente
+    section.querySelectorAll('[data-lens-color]').forEach(sw => {
+      sw.addEventListener('click', () => {
+        section.querySelectorAll('[data-lens-color]').forEach(s => s.classList.remove('active'));
+        sw.classList.add('active');
+        this.currentConfig.glassesLensColor = sw.dataset.lensColor;
+      });
+    });
+
+    // Slider de transparência / opacidade da lente (0 a 100)
+    const slider = section.querySelector('#cc-lens-opacity-slider');
+    const valLabel = section.querySelector('#cc-lens-opacity-val');
+    slider?.addEventListener('input', (e) => {
+      const val = Number(e.target.value);
+      this.currentConfig.glassesLensOpacity = val;
+      if (valLabel) valLabel.textContent = `${val}%`;
     });
 
     container.appendChild(section);

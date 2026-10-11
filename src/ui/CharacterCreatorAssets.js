@@ -112,7 +112,14 @@ export const TOP_OPTIONS = SVG_TOPS.map(t => ({
 export const BOTTOM_OPTIONS = [
   { id: 'shorts_denim', name: 'Shorts Jeans', desc: 'Shorts de brim' },
   { id: 'pants_cargo', name: 'Calça Cargo', desc: 'Calça com bolsos' },
-  { id: 'skirt_pleated', name: 'Saia Plissada', desc: 'Saia plissada' }
+  { id: 'skirt_pleated', name: 'Saia Plissada', desc: 'Saia plissada colegial' },
+  { id: 'shorts_bermuda', name: 'Bermuda', desc: 'Bermuda casual no joelho' },
+  { id: 'shorts_esporte', name: 'Shorts Esporte', desc: 'Shorts com listras atléticas' },
+  { id: 'skinny_jeans', name: 'Calça Skinny', desc: 'Calça justa de brim' },
+  { id: 'wide_leg', name: 'Calça Wide Leg', desc: 'Calça com corte reto e largo' },
+  { id: 'saia_longa', name: 'Saia Longa', desc: 'Saia elegante e fluida' },
+  { id: 'calca_jogger', name: 'Calça Jogger', desc: 'Calça com punho no tornozelo' },
+  { id: 'shorts_praia', name: 'Shorts de Praia', desc: 'Shorts leve de verão' }
 ];
 
 export const SHOES_OPTIONS = [
@@ -123,8 +130,12 @@ export const SHOES_OPTIONS = [
 
 export const GLASSES_OPTIONS = [
   { id: 'none', name: 'Sem Óculos', desc: 'Nenhum acessório' },
-  { id: 'round_wire', name: 'Óculos Redondos', desc: 'Armação fina' },
-  { id: 'sunglasses_cool', name: 'Óculos Escuros', desc: 'Lentes solares' }
+  { id: 'round_wire', name: 'Óculos Redondos', desc: 'Armação fina clássica' },
+  { id: 'sunglasses_cool', name: 'Óculos Escuros', desc: 'Lentes solares' },
+  { id: 'vr_headset', name: 'Óculos VR', desc: 'Headset de Realidade Virtual' },
+  { id: 'square_frame', name: 'Óculos Quadrado', desc: 'Armação geométrica moderna' },
+  { id: 'monoculo', name: 'Monóculo', desc: 'Lente clássica de gala' },
+  { id: 'mask_persona', name: 'Máscara Persona', desc: 'Máscara estilizada de herói' }
 ];
 
 /* ========================================================================= */
@@ -188,11 +199,26 @@ export function getTopSvg(topId) {
 export function getBottomSvg(bottomId, color = '#2563eb') {
   switch (bottomId) {
     case 'pants_cargo':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M11 8 L29 8 L31 32 L22 32 L20 18 L18 32 L9 32 Z" fill="${color}"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M11 8 L29 8 L31 32 L22 32 L20 18 L18 32 L9 32 Z" fill="${color}"/><rect x="8" y="16" width="3" height="6" fill="#1e293b"/><rect x="29" y="16" width="3" height="6" fill="#1e293b"/></svg>`;
     case 'skirt_pleated':
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M13 10 L27 10 L33 28 L7 28 Z" fill="${color}"/></svg>`;
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M13 10 L27 10 L33 28 L7 28 Z" fill="${color}"/><line x1="16" y1="12" x2="14" y2="28" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/><line x1="20" y1="12" x2="20" y2="28" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/><line x1="24" y1="12" x2="26" y2="28" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/></svg>`;
+    case 'shorts_bermuda':
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M11 9 L29 9 L30 26 L22 26 L20 16 L18 26 L10 26 Z" fill="${color}"/><line x1="10" y1="24" x2="18" y2="24" stroke="rgba(255,255,255,0.3)" stroke-width="1"/><line x1="22" y1="24" x2="30" y2="24" stroke="rgba(255,255,255,0.3)" stroke-width="1"/></svg>`;
+    case 'shorts_esporte':
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M11 11 L29 11 L30 23 L22 23 L20 16 L18 23 L10 23 Z" fill="${color}"/><path d="M10 11 L10 23" stroke="#ffffff" stroke-width="2"/><path d="M30 11 L30 23" stroke="#ffffff" stroke-width="2"/></svg>`;
+    case 'skinny_jeans':
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M12 8 L28 8 L27 34 L21 34 L20 18 L19 34 L13 34 Z" fill="${color}"/><line x1="16" y1="14" x2="16" y2="22" stroke="rgba(255,255,255,0.25)" stroke-width="1"/><line x1="24" y1="14" x2="24" y2="22" stroke="rgba(255,255,255,0.25)" stroke-width="1"/></svg>`;
+    case 'wide_leg':
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M13 8 L27 8 L33 34 L22 34 L20 18 L18 34 L7 34 Z" fill="${color}"/></svg>`;
+    case 'saia_longa':
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M14 9 L26 9 L34 35 L6 35 Z" fill="${color}"/><path d="M6 35 Q20 38 34 35" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/></svg>`;
+    case 'calca_jogger':
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M11 8 L29 8 L30 31 L23 31 L20 17 L17 31 L10 31 Z" fill="${color}"/><rect x="10" y="31" width="7" height="3" rx="1.5" fill="#1e293b"/><rect x="23" y="31" width="7" height="3" rx="1.5" fill="#1e293b"/></svg>`;
+    case 'shorts_praia':
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M11 11 L29 11 L31 22 L22 22 L20 16 L18 22 L9 22 Z" fill="${color}"/><circle cx="16" cy="16" r="1.5" fill="#ffffff" opacity="0.6"/><circle cx="24" cy="18" r="1.5" fill="#ffffff" opacity="0.6"/></svg>`;
     default:
-      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M11 10 L29 10 L31 24 L22 24 L20 16 L18 24 L9 24 Z" fill="${color}"/></svg>`;
+      // shorts_denim
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M11 10 L29 10 L31 24 L22 24 L20 16 L18 24 L9 24 Z" fill="${color}"/><line x1="12" y1="22" x2="28" y2="22" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/></svg>`;
   }
 }
 
@@ -213,7 +239,16 @@ export function getGlassesSvg(glassesId) {
       return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><rect x="6" y="14" width="12" height="12" rx="3" fill="#0f172a"/><rect x="22" y="14" width="12" height="12" rx="3" fill="#0f172a"/><rect x="18" y="18" width="4" height="3" fill="#0f172a"/></svg>`;
     case 'round_wire':
       return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><circle cx="12" cy="20" r="7" fill="none" stroke="#5c3c26" stroke-width="2"/><circle cx="28" cy="20" r="7" fill="none" stroke="#5c3c26" stroke-width="2"/><line x1="19" y1="20" x2="21" y2="20" stroke="#5c3c26" stroke-width="2"/></svg>`;
+    case 'vr_headset':
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><rect x="5" y="12" width="30" height="15" rx="5" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/><circle cx="12" cy="19.5" r="3" fill="#38bdf8"/><circle cx="28" cy="19.5" r="3" fill="#38bdf8"/><path d="M2" y="19" L5 19 M35 19 L38 19" stroke="#64748b" stroke-width="2.5"/></svg>`;
+    case 'square_frame':
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><rect x="6" y="13" width="12" height="13" rx="2" fill="none" stroke="#5c3c26" stroke-width="2"/><rect x="22" y="13" width="12" height="13" rx="2" fill="none" stroke="#5c3c26" stroke-width="2"/><line x1="18" y1="19" x2="22" y2="19" stroke="#5c3c26" stroke-width="2"/></svg>`;
+    case 'monoculo':
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><circle cx="25" cy="19" r="8" fill="none" stroke="#f59e0b" stroke-width="2.5"/><path d="M25 27 C26 33 22 36 21 39" fill="none" stroke="#f59e0b" stroke-width="1.5"/></svg>`;
+    case 'mask_persona':
+      return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><path d="M5 14 Q12 11 20 18 Q28 11 35 14 Q32 27 20 23 Q8 27 5 14 Z" fill="#ffffff" stroke="#dc2626" stroke-width="2"/><ellipse cx="13" cy="17" rx="3.5" ry="2" fill="#0f172a"/><ellipse cx="27" cy="17" rx="3.5" ry="2" fill="#0f172a"/></svg>`;
     default:
+      // none
       return `<svg viewBox="0 0 40 40" class="cc-preview-icon"><circle cx="20" cy="20" r="12" fill="none" stroke="#c4b89e" stroke-width="2"/><line x1="12" y1="12" x2="28" y2="28" stroke="#c4b89e" stroke-width="2"/></svg>`;
   }
 }

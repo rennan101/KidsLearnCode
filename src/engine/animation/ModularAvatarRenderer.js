@@ -478,6 +478,23 @@ export class ModularAvatarRenderer {
           ctx.stroke();
         });
 
+      } else if (bottomStyle === 'saia_longa') {
+        // Saia Longa fluida
+        ctx.beginPath();
+        ctx.moveTo(-195, 190);
+        ctx.lineTo(195, 190);
+        ctx.lineTo(290, 480);
+        ctx.lineTo(-290, 480);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(-280, 470);
+        ctx.quadraticCurveTo(0, 490, 280, 470);
+        ctx.stroke();
+
       } else if (bottomStyle === 'pants_cargo') {
         // Calça Cargo: Pelve e bolsos
         ctx.beginPath();
@@ -491,8 +508,86 @@ export class ModularAvatarRenderer {
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(-150, 205, 300, 22);
 
+      } else if (bottomStyle === 'calca_jogger') {
+        // Calça Jogger: Cós com cordão atlético
+        ctx.beginPath();
+        ctx.moveTo(-195, 190);
+        ctx.lineTo(195, 190);
+        ctx.lineTo(185, 320);
+        ctx.lineTo(-185, 320);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(-30, 210);
+        ctx.lineTo(0, 235);
+        ctx.lineTo(30, 210);
+        ctx.stroke();
+
+      } else if (bottomStyle === 'skinny_jeans' || bottomStyle === 'wide_leg') {
+        // Calça Skinny ou Wide Leg: Pelve jeans com botão central
+        ctx.beginPath();
+        ctx.moveTo(-195, 190);
+        ctx.lineTo(195, 190);
+        ctx.lineTo(185, 320);
+        ctx.lineTo(-185, 320);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(0, 215, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+      } else if (bottomStyle === 'shorts_bermuda') {
+        // Bermuda mais longa
+        ctx.beginPath();
+        ctx.moveTo(-195, 190);
+        ctx.lineTo(195, 190);
+        ctx.lineTo(185, 330);
+        ctx.lineTo(-185, 330);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(-180, 315);
+        ctx.lineTo(180, 315);
+        ctx.stroke();
+
+      } else if (bottomStyle === 'shorts_esporte') {
+        // Shorts Esporte com listras laterais
+        ctx.beginPath();
+        ctx.moveTo(-195, 190);
+        ctx.lineTo(195, 190);
+        ctx.lineTo(180, 300);
+        ctx.lineTo(-180, 300);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-195, 190, 16, 110);
+        ctx.fillRect(179, 190, 16, 110);
+
+      } else if (bottomStyle === 'shorts_praia') {
+        // Shorts de Praia com cós elástico
+        ctx.beginPath();
+        ctx.moveTo(-195, 190);
+        ctx.lineTo(195, 190);
+        ctx.lineTo(180, 295);
+        ctx.lineTo(-180, 295);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(-190, 192, 380, 18);
+
       } else {
-        // Shorts Jeans
+        // Shorts Jeans (padrão)
         ctx.beginPath();
         ctx.moveTo(-195, 190);
         ctx.lineTo(195, 190);
@@ -811,6 +906,63 @@ export class ModularAvatarRenderer {
       ctx.fillStyle = '#1d4ed8';
       const bx = side === 'left' ? -95 : 55;
       ctx.fillRect(bx, 150, 40, 100);
+
+    } else if (bottomStyle === 'skinny_jeans') {
+      // Calça justa até o tornozelo
+      ctx.fillStyle = bottomColor;
+      ctx.beginPath();
+      ctx.roundRect(-75, 0, 150, 435, 10);
+      ctx.fill();
+
+    } else if (bottomStyle === 'wide_leg') {
+      // Calça larga reta
+      ctx.fillStyle = bottomColor;
+      ctx.beginPath();
+      ctx.roundRect(-98, 0, 196, 445, 14);
+      ctx.fill();
+
+    } else if (bottomStyle === 'calca_jogger') {
+      // Calça jogger com punho elástico
+      ctx.fillStyle = bottomColor;
+      ctx.beginPath();
+      ctx.roundRect(-88, 0, 176, 420, 14);
+      ctx.fill();
+
+      // Punho escuro no tornozelo
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.roundRect(-75, 415, 150, 25, 6);
+      ctx.fill();
+
+    } else if (bottomStyle === 'shorts_bermuda') {
+      // Bermuda até o joelho
+      ctx.fillStyle = bottomColor;
+      ctx.beginPath();
+      ctx.roundRect(-85, 0, 170, 250, 10);
+      ctx.fill();
+
+    } else if (bottomStyle === 'shorts_esporte') {
+      // Shorts esportivo com listra atlética na lateral
+      ctx.fillStyle = bottomColor;
+      ctx.beginPath();
+      ctx.roundRect(-85, 0, 170, 140, 10);
+      ctx.fill();
+
+      // Listra lateral branca
+      ctx.fillStyle = '#ffffff';
+      const sx = side === 'left' ? -85 : 71;
+      ctx.fillRect(sx, 0, 14, 140);
+
+    } else if (bottomStyle === 'shorts_praia') {
+      // Shorts de praia leve
+      ctx.fillStyle = bottomColor;
+      ctx.beginPath();
+      ctx.roundRect(-86, 0, 172, 135, 12);
+      ctx.fill();
+
+    } else if (bottomStyle === 'saia_longa' || bottomStyle === 'skirt_pleated') {
+      // Saias deixam as pernas livres ou cobertas pela saia no tronco (pernas com meia/pele visíveis)
+      // Nenhuma sobreposição de perna grossa necessária além da pelve
 
     } else if (bottomStyle === 'shorts_denim') {
       // Shorts cobrindo parte superior da coxa
@@ -1536,63 +1688,257 @@ export class ModularAvatarRenderer {
   /* ========================================================================= */
 
   drawGlasses(ctx, cfg, dir) {
-    if (dir === 'north') return;
+    if (dir === 'north' || !cfg.glassesStyle || cfg.glassesStyle === 'none') return;
 
     ctx.save();
-    ctx.strokeStyle = cfg.glassesColor || '#5c3c26';
+    const frameColor = cfg.glassesColor || '#5c3c26';
+    const lensBase = cfg.glassesLensColor || (cfg.glassesStyle === 'sunglasses_cool' ? '#0f172a' : '#ffffff');
+    const opacityPct = (cfg.glassesLensOpacity !== undefined && cfg.glassesLensOpacity !== null)
+      ? Number(cfg.glassesLensOpacity)
+      : (cfg.glassesStyle === 'sunglasses_cool' ? 88 : 30);
+    const lensAlpha = Math.max(0, Math.min(100, opacityPct)) / 100;
+
+    // Helper para converter cor hex / rgb em rgba com lensAlpha
+    const getLensRgba = (hexOrRgb, alpha) => {
+      if (hexOrRgb.startsWith('#')) {
+        let hex = hexOrRgb.slice(1);
+        if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+        const num = parseInt(hex, 16);
+        const r = (num >> 16) & 255;
+        const g = (num >> 8) & 255;
+        const b = num & 255;
+        return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(2)})`;
+      }
+      return hexOrRgb;
+    };
+
+    const lensFill = getLensRgba(lensBase, lensAlpha);
+
+    ctx.strokeStyle = frameColor;
     ctx.lineWidth = 16;
 
     if (dir === 'east') {
-      if (cfg.glassesStyle === 'sunglasses_cool') {
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-        ctx.beginPath();
-        ctx.roundRect(80, -55, 175, 145, 28);
-        ctx.fill();
-        ctx.stroke();
+      // Perfil / Vista lateral (east)
+      switch (cfg.glassesStyle) {
+        case 'vr_headset': {
+          // Headset VR volumoso cobrindo a lateral da face
+          ctx.fillStyle = frameColor;
+          ctx.beginPath();
+          ctx.roundRect(70, -60, 200, 160, 30);
+          ctx.fill();
 
-        ctx.beginPath();
-        ctx.moveTo(80, 15);
-        ctx.lineTo(-90, 35);
-        ctx.stroke();
-      } else {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-        ctx.beginPath();
-        ctx.ellipse(155, 15, 80, 90, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
+          // Visor frontal brilhante com lente
+          ctx.fillStyle = lensFill;
+          ctx.beginPath();
+          ctx.roundRect(170, -45, 90, 130, 20);
+          ctx.fill();
 
-        ctx.beginPath();
-        ctx.moveTo(90, 15);
-        ctx.lineTo(-90, 35);
-        ctx.stroke();
+          // Tira lateral do headset
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = 22;
+          ctx.beginPath();
+          ctx.moveTo(80, 20);
+          ctx.lineTo(-120, 25);
+          ctx.stroke();
+          break;
+        }
+
+        case 'square_frame': {
+          ctx.fillStyle = lensFill;
+          ctx.beginPath();
+          ctx.roundRect(80, -45, 175, 140, 14);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(80, 15);
+          ctx.lineTo(-90, 35);
+          ctx.stroke();
+          break;
+        }
+
+        case 'monoculo': {
+          // No perfil, se o monóculo estiver do lado visível (olho direito/frente)
+          ctx.fillStyle = lensFill;
+          ctx.beginPath();
+          ctx.ellipse(155, 20, 80, 85, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Correntinha dourada descendo
+          ctx.strokeStyle = frameColor;
+          ctx.lineWidth = 8;
+          ctx.beginPath();
+          ctx.moveTo(155, 105);
+          ctx.quadraticCurveTo(130, 180, 90, 250);
+          ctx.stroke();
+          break;
+        }
+
+        case 'mask_persona': {
+          // Máscara estilizada tipo Persona 5 (arrojada pontuda)
+          ctx.fillStyle = frameColor;
+          ctx.beginPath();
+          ctx.moveTo(40, -40);
+          ctx.lineTo(260, -20);
+          ctx.lineTo(220, 90);
+          ctx.lineTo(70, 70);
+          ctx.closePath();
+          ctx.fill();
+
+          // Abertura do olho / lente
+          ctx.fillStyle = lensFill;
+          ctx.beginPath();
+          ctx.ellipse(150, 20, 50, 25, Math.PI / 8, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        }
+
+        case 'sunglasses_cool': {
+          ctx.fillStyle = lensFill;
+          ctx.beginPath();
+          ctx.roundRect(80, -55, 175, 145, 28);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(80, 15);
+          ctx.lineTo(-90, 35);
+          ctx.stroke();
+          break;
+        }
+
+        case 'round_wire':
+        default: {
+          ctx.fillStyle = lensFill;
+          ctx.beginPath();
+          ctx.ellipse(155, 15, 80, 90, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(90, 15);
+          ctx.lineTo(-90, 35);
+          ctx.stroke();
+          break;
+        }
       }
 
     } else {
       // Vista frontal (south)
-      if (cfg.glassesStyle === 'sunglasses_cool') {
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-        [-175, 185].forEach(gx => {
+      switch (cfg.glassesStyle) {
+        case 'vr_headset': {
+          // Headset VR frontal em bloco estilizado
+          ctx.fillStyle = frameColor;
           ctx.beginPath();
-          ctx.roundRect(gx - 90, -20, 180, 150, 36);
+          ctx.roundRect(-270, -35, 540, 175, 40);
+          ctx.fill();
+
+          // Visor / Lentes frontais tecnológicas
+          ctx.fillStyle = lensFill;
+          ctx.beginPath();
+          ctx.roundRect(-240, -15, 480, 135, 30);
+          ctx.fill();
+
+          // Led frontal suave
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+          ctx.lineWidth = 8;
+          ctx.beginPath();
+          ctx.moveTo(-180, 50);
+          ctx.lineTo(180, 50);
+          ctx.stroke();
+          break;
+        }
+
+        case 'square_frame': {
+          ctx.fillStyle = lensFill;
+          [-175, 185].forEach(gx => {
+            ctx.beginPath();
+            ctx.roundRect(gx - 90, -15, 180, 140, 16);
+            ctx.fill();
+            ctx.stroke();
+          });
+
+          // Ponte entre as lentes
+          ctx.beginPath();
+          ctx.moveTo(-85, 45);
+          ctx.lineTo(95, 45);
+          ctx.stroke();
+          break;
+        }
+
+        case 'monoculo': {
+          // Monóculo apenas no olho direito (x=185)
+          ctx.fillStyle = lensFill;
+          ctx.beginPath();
+          ctx.arc(185, 55, 95, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
-        });
-        ctx.beginPath();
-        ctx.moveTo(-80, 55);
-        ctx.lineTo(90, 55);
-        ctx.stroke();
-      } else {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-        [-175, 185].forEach(gx => {
+
+          // Corrente descendo do monóculo
+          ctx.strokeStyle = frameColor;
+          ctx.lineWidth = 8;
           ctx.beginPath();
-          ctx.arc(gx, 55, 100, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.moveTo(185, 150);
+          ctx.quadraticCurveTo(160, 240, 110, 310);
           ctx.stroke();
-        });
-        ctx.beginPath();
-        ctx.moveTo(-75, 55);
-        ctx.lineTo(85, 55);
-        ctx.stroke();
+          break;
+        }
+
+        case 'mask_persona': {
+          // Máscara estilizada pontiaguda Persona 5
+          ctx.fillStyle = frameColor;
+          ctx.beginPath();
+          ctx.moveTo(-290, -10);
+          ctx.quadraticCurveTo(-140, -45, 0, 30);
+          ctx.quadraticCurveTo(140, -45, 290, -10);
+          ctx.quadraticCurveTo(240, 135, 0, 95);
+          ctx.quadraticCurveTo(-240, 135, -290, -10);
+          ctx.closePath();
+          ctx.fill();
+
+          // Aberturas para os olhos
+          ctx.fillStyle = lensFill;
+          [-150, 150].forEach(mx => {
+            ctx.beginPath();
+            ctx.ellipse(mx, 45, 65, 32, (mx > 0 ? -1 : 1) * Math.PI / 12, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          break;
+        }
+
+        case 'sunglasses_cool': {
+          ctx.fillStyle = lensFill;
+          [-175, 185].forEach(gx => {
+            ctx.beginPath();
+            ctx.roundRect(gx - 90, -20, 180, 150, 36);
+            ctx.fill();
+            ctx.stroke();
+          });
+
+          ctx.beginPath();
+          ctx.moveTo(-80, 55);
+          ctx.lineTo(90, 55);
+          ctx.stroke();
+          break;
+        }
+
+        case 'round_wire':
+        default: {
+          ctx.fillStyle = lensFill;
+          [-175, 185].forEach(gx => {
+            ctx.beginPath();
+            ctx.arc(gx, 55, 100, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          });
+
+          ctx.beginPath();
+          ctx.moveTo(-75, 55);
+          ctx.lineTo(85, 55);
+          ctx.stroke();
+          break;
+        }
       }
     }
 
