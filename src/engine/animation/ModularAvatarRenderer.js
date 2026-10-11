@@ -314,8 +314,11 @@ export class ModularAvatarRenderer {
 
     ctx.restore();
 
-    // 4.1 Pescoço Frontal (cobre o cabelo que desce da cabeça, mas fica restrito abaixo da linha do queixo)
+    // 4.1 Pescoço Frontal (cobre o cabelo que desce da cabeça)
     this.drawNeckFront(ctx, cfg, pose);
+
+    // 4.2 Camisa na Frente do Pescoço (vista lateral/perfil)
+    this.drawTopOnTorsoFront(ctx, pose.root.rot, cfg, 'east');
 
     if (isCelebrating) {
       this.drawArms(ctx, pose, cfg, 'east');
@@ -425,12 +428,6 @@ export class ModularAvatarRenderer {
     ctx.translate(1250, 1450);
     if (pose && pose.root) ctx.rotate(pose.root.rot);
 
-    // Clip restringe o desenho à região do pescoço abaixo do queixo (y >= -290 local do tronco)
-    // evitando cobrir o queixo/crânio (linha do queixo em -290 relativo a (1250, 1450))
-    ctx.beginPath();
-    ctx.rect(-150, -290, 300, 150);
-    ctx.clip();
-
     ctx.fillStyle = skin;
     ctx.fillRect(-120, -370, 240, 180);
     ctx.restore();
@@ -438,10 +435,11 @@ export class ModularAvatarRenderer {
 
   drawTorsoAndNeck(ctx, rot, cfg, dir) {
     const skin = cfg.skinTone || '#f6dab9';
-    const primary = cfg.topColorPrimary || '#19c8b9';
-    const secondary = cfg.topColorSecondary || '#ffffff';
-    const bottomColor = cfg.bottomColor || '#2563eb';
     const topStyle = cfg.topStyle || 'top_tee';
+    const topDef = SVG_TOPS.find(t => t.id === topStyle || t.baseId === topStyle) || SVG_TOPS[0];
+    const primary = cfg.topColorPrimary || topDef.primaryColor || '#19c8b9';
+    const secondary = cfg.topColorSecondary || topDef.secondaryColor || '#ffffff';
+    const bottomColor = cfg.bottomColor || '#2563eb';
     const bottomStyle = cfg.bottomStyle || 'shorts_denim';
 
     ctx.save();
@@ -511,8 +509,8 @@ export class ModularAvatarRenderer {
       }
     }
 
-    // 4. ROUPAS SUPERIORES OFICIAIS (assets/Tops) - Na vista frontal (south), a camisa é desenhada em drawTopOnTorsoFront na frente do pescoço
-    if (dir !== 'south') {
+    // 4. ROUPAS SUPERIORES OFICIAIS (assets/Tops) - Nas vistas south e east, a camisa é desenhada em drawTopOnTorsoFront na frente do pescoço
+    if (dir === 'north') {
       this.renderTopOnTorso(ctx, topStyle, primary, secondary, skin, dir);
     }
 
@@ -567,7 +565,48 @@ export class ModularAvatarRenderer {
     const fullW = topDef.w * scale;
     const fullH = topDef.h * scale;
 
-    // Renderiza o SVG oficial da camisa (frente, perfil e costas com cor primária/secundária preservando o formato real)
+    // Na vista traseira (north), desenha cor flat na camisa inteira (sem detalhes do SVG)
+    if (dir === 'north') {
+      ctx.fillStyle = primary || topDef.primaryColor || '#19c8b9';
+      if (topStyle === 'top_cupcake_dress') {
+        ctx.beginPath();
+        ctx.moveTo(-95, -280);
+        ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
+        ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
+        ctx.bezierCurveTo(218, 130, 250, 260, 260, 360);
+        ctx.lineTo(-260, 360);
+        ctx.bezierCurveTo(-250, 260, -218, 130, -208, 10);
+        ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
+        ctx.closePath();
+        ctx.fill();
+      } else if (topStyle === 'top_crop_top' || topDef.sleeveType === 'none') {
+        ctx.beginPath();
+        ctx.moveTo(-95, -280);
+        ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
+        ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
+        ctx.bezierCurveTo(210, 50, 208, 80, 204, 100);
+        ctx.lineTo(-204, 100);
+        ctx.bezierCurveTo(-208, 80, -210, 50, -208, 10);
+        ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(-95, -280);
+        ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
+        ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
+        ctx.bezierCurveTo(215, 130, 185, 210, 180, 215);
+        ctx.lineTo(-180, 215);
+        ctx.bezierCurveTo(-185, 210, -215, 130, -208, 10);
+        ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+      return;
+    }
+
+    // Frente e perfil: renderiza o SVG oficial da camisa
     const img = this.getTintedTopImage(topPath, topDef, primary, secondary);
 
     if (img && img.complete && img.naturalWidth > 0) {

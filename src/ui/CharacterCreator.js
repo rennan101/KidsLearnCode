@@ -579,6 +579,9 @@ export class CharacterCreator {
         section.querySelectorAll('[data-top]').forEach(c => c.classList.remove('active'));
         card.classList.add('active');
         this.currentConfig.topStyle = card.dataset.top;
+        this.currentConfig.topColorPrimary = null;
+        this.currentConfig.topColorSecondary = null;
+        this.renderCategoryContent();
       });
     });
 
