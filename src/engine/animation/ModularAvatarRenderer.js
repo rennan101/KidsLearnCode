@@ -455,7 +455,8 @@ export class ModularAvatarRenderer {
     ctx.fill(torsoLocalPath);
 
     // 3. Shorts / Calça / Saia (Pelve) - Renderizada ANTES da camisa para a camisa ficar sempre por cima das calças
-    if (topStyle !== 'top_cupcake_dress') {
+    const isDress = topStyle === 'top_cupcake_dress' || topDef.baseId === 'top_cupcake_dress' || (topDef.id && topDef.id.startsWith('top_cupcake_dress'));
+    if (!isDress) {
       ctx.fillStyle = bottomColor;
 
       if (bottomStyle === 'skirt_pleated') {
@@ -565,10 +566,13 @@ export class ModularAvatarRenderer {
     const fullW = topDef.w * scale;
     const fullH = topDef.h * scale;
 
+    const isDress = topStyle === 'top_cupcake_dress' || topDef.baseId === 'top_cupcake_dress' || (topDef.id && topDef.id.startsWith('top_cupcake_dress'));
+    const isCropTop = topStyle === 'top_crop_top' || topDef.baseId === 'top_crop_top' || (topDef.id && topDef.id.startsWith('top_crop_top')) || topDef.sleeveType === 'none';
+
     // Na vista traseira (north), desenha cor flat na camisa inteira (sem detalhes do SVG)
     if (dir === 'north') {
       ctx.fillStyle = primary || topDef.primaryColor || '#19c8b9';
-      if (topStyle === 'top_cupcake_dress') {
+      if (isDress) {
         ctx.beginPath();
         ctx.moveTo(-95, -280);
         ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
@@ -579,7 +583,7 @@ export class ModularAvatarRenderer {
         ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
         ctx.closePath();
         ctx.fill();
-      } else if (topStyle === 'top_crop_top' || topDef.sleeveType === 'none') {
+      } else if (isCropTop) {
         ctx.beginPath();
         ctx.moveTo(-95, -280);
         ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
@@ -615,7 +619,7 @@ export class ModularAvatarRenderer {
     } else {
       // Fallback vetorial instantâneo com a cor oficial enquanto carrega
       ctx.fillStyle = primary || topDef.primaryColor;
-      if (topStyle === 'top_cupcake_dress') {
+      if (isDress) {
         ctx.beginPath();
         ctx.moveTo(-95, -280);
         ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
@@ -626,7 +630,7 @@ export class ModularAvatarRenderer {
         ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
         ctx.closePath();
         ctx.fill();
-      } else if (topStyle === 'top_crop_top' || topDef.sleeveType === 'none') {
+      } else if (isCropTop) {
         ctx.beginPath();
         ctx.moveTo(-95, -280);
         ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
