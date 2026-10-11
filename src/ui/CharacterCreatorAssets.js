@@ -7,7 +7,7 @@
  * - assets/characters/Eyes (20 olhos)
  * - assets/characters/Mouth (8 bocas)
  * - assets/characters/Nose (4 narizes)
- * - assets/characters/Blush (4 blushes)
+ * - assets/characters/Blush (2 blushes)
  * - Ícones visuais em SVG vetorial limpo (sem emojis).
  */
 

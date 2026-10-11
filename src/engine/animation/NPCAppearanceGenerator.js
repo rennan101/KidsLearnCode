@@ -150,7 +150,7 @@ export const MASTER_NPC_CONFIGS = {
     eyeColor: '#2563eb', // Safira
     noseShape: 'nariz_1',
     mouthShape: 'boca_5', // Sorriso entusiasmado
-    cheeksShape: 'blush_2',
+    cheeksShape: 'blush_1',
     cheeksColor: 'rgba(56, 189, 248, 0.4)',
     topStyle: 'top_sweater',
     topColorPrimary: '#0891b2', // Turquesa
@@ -518,7 +518,7 @@ export function generateNPCAppearance(npcId, role = 'villager') {
 
   const noseShapes = ['nariz_1', 'nariz_2', 'nariz_3', 'nariz_4'];
   const mouthShapes = ['boca_1', 'boca_2', 'boca_3', 'boca_4', 'boca_5', 'boca_6', 'boca_7', 'boca_8'];
-  const cheekShapes = ['blush_1', 'blush_2', 'blush_3', 'blush_4', 'none'];
+  const cheekShapes = ['blush_1', 'blush_3', 'none'];
 
   let topStyle = 'top_tee';
   let bottomStyle = 'pants_cargo';

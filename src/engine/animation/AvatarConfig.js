@@ -122,7 +122,7 @@ export function randomizeAvatarConfig(currentName) {
     'boca_1', 'boca_2', 'boca_3', 'boca_4',
     'boca_5', 'boca_6', 'boca_7', 'boca_8'
   ];
-  const cheekShapes = ['blush_1', 'blush_2', 'blush_3', 'blush_4', 'none'];
+  const cheekShapes = ['blush_1', 'blush_3', 'none'];
 
   const topStyles = [
     'top_tee', 'top_cupcake_dress', 'top_sweater',

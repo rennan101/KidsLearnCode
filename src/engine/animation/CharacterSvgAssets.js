@@ -5,7 +5,7 @@
  * - assets/characters/Eyes (20 pares de olhos)
  * - assets/characters/Mouth (8 bocas/expressoes)
  * - assets/characters/Nose (4 narizes)
- * - assets/characters/Blush (4 blushes/bochechas)
+ * - assets/characters/Blush (2 blushes/bochechas)
  */
 
 export const SVG_HEADS = [
@@ -565,28 +565,12 @@ export const SVG_BLUSHES = [
     svgContent: "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 145 21\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" xmlns:affinity=\"https://www.affinity.studio/\" style=\"fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;\">\n    <g transform=\"matrix(1,0,0,1,-706,-678)\">\n        <g id=\"Blush_1\" opacity=\"0.7\">\n            <ellipse cx=\"718.5\" cy=\"688.5\" rx=\"12.5\" ry=\"10.5\" style=\"fill:rgb(255,126,54);\"/>\n            <ellipse cx=\"838.5\" cy=\"688.5\" rx=\"12.5\" ry=\"10.5\" style=\"fill:rgb(255,126,54);\"/>\n        </g>\n    </g>\n</svg>"
   },
   {
-    id: "blush_2",
-    name: "Blush 2",
-    filename: "Blush_2.svg",
-    viewBox: "0 0 145 21",
-    innerSvg: "<g transform=\"matrix(1,0,0,1,-706,-578)\">\n        <g id=\"Blush_2\" opacity=\"0.7\">\n            <ellipse cx=\"718.5\" cy=\"588.5\" rx=\"12.5\" ry=\"10.5\" style=\"fill:rgb(255,126,54);\"/>\n            <ellipse cx=\"838.5\" cy=\"588.5\" rx=\"12.5\" ry=\"10.5\" style=\"fill:rgb(255,126,54);\"/>\n        </g>\n    </g>",
-    svgContent: "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 145 21\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" xmlns:affinity=\"https://www.affinity.studio/\" style=\"fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;\">\n    <g transform=\"matrix(1,0,0,1,-706,-578)\">\n        <g id=\"Blush_2\" opacity=\"0.7\">\n            <ellipse cx=\"718.5\" cy=\"588.5\" rx=\"12.5\" ry=\"10.5\" style=\"fill:rgb(255,126,54);\"/>\n            <ellipse cx=\"838.5\" cy=\"588.5\" rx=\"12.5\" ry=\"10.5\" style=\"fill:rgb(255,126,54);\"/>\n        </g>\n    </g>\n</svg>"
-  },
-  {
     id: "blush_3",
     name: "Blush 3",
     filename: "Blush_3.svg",
     viewBox: "0 0 145 21",
     innerSvg: "<g transform=\"matrix(1,0,0,1,-706,-628)\">\n        <g id=\"Blush_3\" opacity=\"0.7\">\n            <ellipse cx=\"718.5\" cy=\"638.5\" rx=\"12.5\" ry=\"10.5\" style=\"fill:rgb(255,186,165);\"/>\n            <ellipse cx=\"838.5\" cy=\"638.5\" rx=\"12.5\" ry=\"10.5\" style=\"fill:rgb(255,186,165);\"/>\n        </g>\n    </g>",
     svgContent: "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 145 21\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" xmlns:affinity=\"https://www.affinity.studio/\" style=\"fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;\">\n    <g transform=\"matrix(1,0,0,1,-706,-628)\">\n        <g id=\"Blush_3\" opacity=\"0.7\">\n            <ellipse cx=\"718.5\" cy=\"638.5\" rx=\"12.5\" ry=\"10.5\" style=\"fill:rgb(255,186,165);\"/>\n            <ellipse cx=\"838.5\" cy=\"638.5\" rx=\"12.5\" ry=\"10.5\" style=\"fill:rgb(255,186,165);\"/>\n        </g>\n    </g>\n</svg>"
-  },
-  {
-    id: "blush_4",
-    name: "Blush 4",
-    filename: "Blush_4.svg",
-    viewBox: "0 0 145 21",
-    innerSvg: "<g transform=\"matrix(1,0,0,1,-706,-528)\">\n        <g id=\"Blush_4\" opacity=\"0.7\">\n            <ellipse cx=\"718.5\" cy=\"538.5\" rx=\"12.5\" ry=\"10.5\" style=\"fill:rgb(255,186,165);\"/>\n            <ellipse cx=\"838.5\" cy=\"538.5\" rx=\"12.5\" ry=\"10.5\" style=\"fill:rgb(255,186,165);\"/>\n        </g>\n    </g>",
-    svgContent: "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 145 21\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" xmlns:affinity=\"https://www.affinity.studio/\" style=\"fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;\">\n    <g transform=\"matrix(1,0,0,1,-706,-528)\">\n        <g id=\"Blush_4\" opacity=\"0.7\">\n            <ellipse cx=\"718.5\" cy=\"538.5\" rx=\"12.5\" ry=\"10.5\" style=\"fill:rgb(255,186,165);\"/>\n            <ellipse cx=\"838.5\" cy=\"538.5\" rx=\"12.5\" ry=\"10.5\" style=\"fill:rgb(255,186,165);\"/>\n        </g>\n    </g>\n</svg>"
   },
 ];
 
