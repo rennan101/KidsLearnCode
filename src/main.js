@@ -1482,54 +1482,66 @@ class RPGApplication {
     });
 
     // Mouse events for editor and play mode interaction
+    const handleMouseMovePlayMode = (e) => {
+      if (this.mode !== 'play') return;
+      const rect = this.canvas.getBoundingClientRect();
+      const screenX = e.clientX - rect.left;
+      const screenY = e.clientY - rect.top;
+      const worldPos = this.camera.screenToWorld(screenX, screenY);
+      this.playModeInteraction.worldX = worldPos.x;
+      this.playModeInteraction.worldY = worldPos.y;
+      const targetTx = Math.floor(worldPos.x / this.tileMap.tileSize);
+      const targetTy = Math.floor(worldPos.y / this.tileMap.tileSize);
+
+      if (this.playModeInteraction.activeMode) {
+        if (this.playModeInteraction.isDragging && !this.playModeInteraction.hasDragged) {
+          const distDragged = Math.hypot(
+            screenX - (this.playModeInteraction.startScreenX ?? screenX),
+            screenY - (this.playModeInteraction.startScreenY ?? screenY)
+          );
+          if (distDragged > 5) {
+            this.playModeInteraction.hasDragged = true;
+          }
+        }
+
+        this.playModeInteraction.hoverTx = targetTx;
+        this.playModeInteraction.hoverTy = targetTy;
+        this.playModeInteraction.isValidPlacement = this.isPlacementTileValid(targetTx, targetTy);
+        // Cursor de mãozinha fechada (segurando) durante posicionamento / movimentação
+        this.canvas.style.cursor = 'var(--animal-cursor-grabbing), grabbing';
+      } else {
+        // Cursor dinâmico: se estiver sobre um objeto movível próximo, exibe mãozinha aberta
+        const movable = this.findMovableObjectAt(worldPos.x, worldPos.y);
+        if (movable) {
+          const pCenterX = this.player.x + 32;
+          const pCenterY = this.player.y + 32;
+          const targetCenterX = movable.tx * 64 + 32;
+          const targetCenterY = movable.ty * 64 + 32;
+          const pDist = Math.hypot(targetCenterX - pCenterX, targetCenterY - pCenterY);
+
+          if (pDist <= this.playModeInteraction.maxInteractionDistancePx) {
+            this.canvas.style.cursor = 'var(--animal-cursor-grab), grab';
+          } else {
+            this.canvas.style.cursor = 'var(--animal-cursor-default), default';
+          }
+        } else {
+          this.canvas.style.cursor = 'var(--animal-cursor-default), default';
+        }
+      }
+    };
+
     this.canvas.addEventListener('mousemove', (e) => {
       if (this.mode === 'edit') {
         this.editorController.handleMouseMove(e, this.canvas);
       } else if (this.mode === 'play') {
-        const rect = this.canvas.getBoundingClientRect();
-        const screenX = e.clientX - rect.left;
-        const screenY = e.clientY - rect.top;
-        const worldPos = this.camera.screenToWorld(screenX, screenY);
-        this.playModeInteraction.worldX = worldPos.x;
-        this.playModeInteraction.worldY = worldPos.y;
-        const targetTx = Math.floor(worldPos.x / this.tileMap.tileSize);
-        const targetTy = Math.floor(worldPos.y / this.tileMap.tileSize);
+        handleMouseMovePlayMode(e);
+      }
+    });
 
-        if (this.playModeInteraction.activeMode) {
-          if (this.playModeInteraction.isDragging && !this.playModeInteraction.hasDragged) {
-            const distDragged = Math.hypot(
-              screenX - (this.playModeInteraction.startScreenX ?? screenX),
-              screenY - (this.playModeInteraction.startScreenY ?? screenY)
-            );
-            if (distDragged > 8) {
-              this.playModeInteraction.hasDragged = true;
-            }
-          }
-
-          this.playModeInteraction.hoverTx = targetTx;
-          this.playModeInteraction.hoverTy = targetTy;
-          this.playModeInteraction.isValidPlacement = this.isPlacementTileValid(targetTx, targetTy);
-          // Cursor de mãozinha fechada (segurando) durante posicionamento / movimentação
-          this.canvas.style.cursor = 'var(--animal-cursor-grabbing), grabbing';
-        } else {
-          // Cursor dinâmico: se estiver sobre um objeto movível próximo, exibe mãozinha aberta
-          const movable = this.findMovableObjectAt(worldPos.x, worldPos.y);
-          if (movable) {
-            const pCenterX = this.player.x + 32;
-            const pCenterY = this.player.y + 32;
-            const targetCenterX = movable.tx * 64 + 32;
-            const targetCenterY = movable.ty * 64 + 32;
-            const pDist = Math.hypot(targetCenterX - pCenterX, targetCenterY - pCenterY);
-
-            if (pDist <= this.playModeInteraction.maxInteractionDistancePx) {
-              this.canvas.style.cursor = 'var(--animal-cursor-grab), grab';
-            } else {
-              this.canvas.style.cursor = 'var(--animal-cursor-default), default';
-            }
-          } else {
-            this.canvas.style.cursor = 'var(--animal-cursor-default), default';
-          }
-        }
+    // Listener global no window para garantir que o drag & drop continue suave e responsivo mesmo se o cursor passar sobre HUDs ou bordas
+    window.addEventListener('mousemove', (e) => {
+      if (this.mode === 'play' && this.playModeInteraction.activeMode && this.playModeInteraction.isDragging) {
+        handleMouseMovePlayMode(e);
       }
     });
 
@@ -3138,29 +3150,70 @@ class RPGApplication {
         const rot = cellData?.rotation || 0;
         const isFlipped = !!cellData?.flipX;
 
-        // 3a. Sombra leve nos pés do objeto acompanhando a renderização
-        if (currentStackUnderCursor > 0) {
-          ctx.save();
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.20)';
-          ctx.beginPath();
-          ctx.ellipse(renderX + rawW / 2, renderY + rawH - 4, rawW * 0.38, 6, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.restore();
-        }
+        // 3a. Sombra tátil nos pés do objeto acompanhando a renderização
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+        ctx.beginPath();
+        ctx.ellipse(renderX + rawW / 2, renderY + rawH - 2, rawW * 0.38, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
 
-        // 3b. Renderização do Sprite usando o motor do TileMap (garantia total de renderização de qualquer asset)
+        // Opacidade agradável de 85% para manter o objeto claramente visível e tátil enquanto arrasta
+        ctx.globalAlpha = 0.85;
+
+        // 3b. Resolução de imagem de alta confiabilidade (busca por src do meta, metadados do tileId, frames ou id direto)
         let drawn = false;
         const targetTileId = cellData?.tileId || meta.id;
-        const previewCell = {
-          tileId: targetTileId,
-          rotation: rot,
-          flipX: isFlipped,
-          isRoot: true,
-          ...(cellData || {})
-        };
+        const tileMetaResolved = (this.assetLoader?.getTileMetadata(targetTileId)) || meta;
 
-        if (this.tileMap && typeof this.tileMap.drawTileCell === 'function' && targetTileId) {
+        let img = null;
+        if (tileMetaResolved?.isAnimated && tileMetaResolved.frames) {
+          const frameIdx = (this.tileMap?.waterAnimFrame !== undefined) ? this.tileMap.waterAnimFrame : 0;
+          img = this.assetLoader?.getImage(tileMetaResolved.frames[frameIdx]) || this.assetLoader?.getImage(tileMetaResolved.frames[0]);
+        } else if (tileMetaResolved?.src) {
+          img = this.assetLoader?.getImage(tileMetaResolved.src);
+        } else if (meta?.src) {
+          img = this.assetLoader?.getImage(meta.src);
+        }
+        if (!img && targetTileId) {
+          img = this.assetLoader?.getImage(targetTileId);
+        }
+        if (!img && tileMetaResolved?.icon) {
+          img = this.assetLoader?.getImage(tileMetaResolved.icon);
+        }
+        if (!img && meta?.icon) {
+          img = this.assetLoader?.getImage(meta.icon);
+        }
+
+        // Se encontrou a imagem do sprite, desenha com escala, rotação e flip apropriados
+        if (img && img.complete && img.naturalWidth > 0) {
+          const scaleMultiplier = tileMetaResolved?.scale || 1.0;
+          const drawW = rawW * scaleMultiplier;
+          const drawH = rawH * scaleMultiplier;
+
+          if (rot !== 0 || isFlipped || scaleMultiplier !== 1.0) {
+            ctx.save();
+            ctx.translate(renderX + rawW / 2, renderY + rawH / 2);
+            if (rot !== 0) ctx.rotate((rot * Math.PI) / 180);
+            if (isFlipped) ctx.scale(-1, 1);
+            ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+            ctx.restore();
+          } else {
+            ctx.drawImage(img, renderX, renderY, drawW, drawH);
+          }
+          drawn = true;
+        }
+
+        // 3c. Fallback de renderização pelo motor TileMap se não foi desenhado diretamente
+        if (!drawn && this.tileMap && typeof this.tileMap.drawTileCell === 'function' && targetTileId) {
           try {
+            const previewCell = {
+              tileId: targetTileId,
+              rotation: rot,
+              flipX: isFlipped,
+              isRoot: true,
+              ...(cellData || {})
+            };
             ctx.save();
             ctx.translate(renderX, renderY);
             this.tileMap.drawTileCell(ctx, previewCell, 0, 0, this.assetLoader, false, false);
@@ -3171,55 +3224,32 @@ class RPGApplication {
           }
         }
 
-        // 3c. Fallback de imagem direta caso drawTileCell não tenha desenhado
-        if (!drawn) {
-          let img = null;
-          if (meta.isAnimated && meta.frames) {
-            img = this.assetLoader.getImage(meta.frames[0]);
-          } else if (meta.src) {
-            img = this.assetLoader.getImage(meta.src);
-          } else if (targetTileId) {
-            const m = this.assetLoader.getTileMetadata(targetTileId);
-            if (m?.src) img = this.assetLoader.getImage(m.src);
-          }
-          if (!img && targetTileId) {
-            img = this.assetLoader.getImage(targetTileId);
-          }
-          if (!img && meta.icon) {
-            img = this.assetLoader.getImage(meta.icon);
-          }
-
-          if (img) {
-            if (rot !== 0 || isFlipped) {
-              ctx.save();
-              ctx.translate(renderX + rawW / 2, renderY + rawH / 2);
-              if (rot !== 0) ctx.rotate((rot * Math.PI) / 180);
-              if (isFlipped) ctx.scale(-1, 1);
-              ctx.drawImage(img, -rawW / 2, -rawH / 2, rawW, rawH);
-              ctx.restore();
-            } else {
-              ctx.drawImage(img, renderX, renderY, rawW, rawH);
-            }
-            drawn = true;
-          }
-        }
-
-        // 3d. Fallback geométrico Animal Island UI (para nunca ficar invisível sob nenhuma circunstância)
+        // 3d. Fallback geométrico Animal Island UI com ícone estilizado (para NUNCA ficar invisível sob nenhuma hipótese)
         if (!drawn) {
           ctx.save();
-          ctx.fillStyle = isValid ? 'rgba(25, 200, 185, 0.45)' : 'rgba(239, 68, 68, 0.45)';
-          ctx.strokeStyle = isValid ? '#0f8e83' : '#b91c1c';
-          ctx.lineWidth = 2;
-          ctx.setLineDash([4, 4]);
+          ctx.fillStyle = isValid ? '#e6f9f6' : '#fee2e2';
+          ctx.strokeStyle = isValid ? '#19c8b9' : '#ef4444';
+          ctx.lineWidth = 2.5;
           if (typeof ctx.roundRect === 'function') {
             ctx.beginPath();
-            ctx.roundRect(renderX + 4, renderY + 4, rawW - 8, rawH - 8, 8);
+            ctx.roundRect(renderX + 2, renderY + 2, rawW - 4, rawH - 4, 12);
             ctx.fill();
             ctx.stroke();
           } else {
-            ctx.fillRect(renderX + 4, renderY + 4, rawW - 8, rawH - 8);
-            ctx.strokeRect(renderX + 4, renderY + 4, rawW - 8, rawH - 8);
+            ctx.fillRect(renderX + 2, renderY + 2, rawW - 4, rawH - 4);
+            ctx.strokeRect(renderX + 2, renderY + 2, rawW - 4, rawH - 4);
           }
+
+          // Ícone vetorial interno em SVG estilizado (caixa de madeira Animal Island UI)
+          ctx.strokeStyle = isValid ? '#0f8e83' : '#b91c1c';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(renderX + 12, renderY + 12, rawW - 24, rawH - 24);
+          ctx.beginPath();
+          ctx.moveTo(renderX + 12, renderY + 12);
+          ctx.lineTo(renderX + rawW - 12, renderY + rawH - 12);
+          ctx.moveTo(renderX + rawW - 12, renderY + 12);
+          ctx.lineTo(renderX + 12, renderY + rawH - 12);
+          ctx.stroke();
           ctx.restore();
         }
 

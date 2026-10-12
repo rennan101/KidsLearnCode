@@ -657,12 +657,14 @@ export class ModularAvatarRenderer {
 
     ctx.save();
 
-    const scale = 4.1;
-    const fullW = topDef.w * scale;
-    const fullH = topDef.h * scale;
-
     const isDress = topStyle === 'top_cupcake_dress' || topDef.baseId === 'top_cupcake_dress' || (topDef.id && topDef.id.startsWith('top_cupcake_dress'));
     const isCropTop = topStyle === 'top_crop_top' || topDef.baseId === 'top_crop_top' || (topDef.id && topDef.id.startsWith('top_crop_top')) || topDef.sleeveType === 'none';
+
+    const scaleX = 4.1;
+    // Para camisetas e mangas normais, escala Y de 4.8 assegura caimento natural sobre o cós da calça (y=215-228), cobrindo a pelve perfeitamente de frente
+    const scaleY = (isDress || isCropTop || topStyle.includes('sweater') || (topDef.id && topDef.id.includes('sweater'))) ? 4.1 : 4.8;
+    const fullW = topDef.w * scaleX;
+    const fullH = topDef.h * scaleY;
 
     // Na vista traseira (north), desenha cor flat na camisa inteira (sem detalhes do SVG)
     if (dir === 'north') {
@@ -694,8 +696,8 @@ export class ModularAvatarRenderer {
         ctx.moveTo(-95, -280);
         ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
         ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
-        ctx.bezierCurveTo(215, 130, 185, 210, 180, 215);
-        ctx.lineTo(-180, 215);
+        ctx.bezierCurveTo(215, 130, 185, 210, 180, 225);
+        ctx.lineTo(-180, 225);
         ctx.bezierCurveTo(-185, 210, -215, 130, -208, 10);
         ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
         ctx.closePath();
@@ -741,8 +743,8 @@ export class ModularAvatarRenderer {
         ctx.moveTo(-95, -280);
         ctx.bezierCurveTo(-50, -290, 50, -290, 95, -280);
         ctx.bezierCurveTo(160, -250, 205, -130, 208, 10);
-        ctx.bezierCurveTo(215, 130, 185, 210, 180, 215);
-        ctx.lineTo(-180, 215);
+        ctx.bezierCurveTo(215, 130, 185, 210, 180, 225);
+        ctx.lineTo(-180, 225);
         ctx.bezierCurveTo(-185, 210, -215, 130, -208, 10);
         ctx.bezierCurveTo(-205, -130, -160, -250, -95, -280);
         ctx.closePath();
