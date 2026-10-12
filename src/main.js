@@ -99,6 +99,10 @@ class RPGApplication {
       placingItem: null, // { inventoryItem, tileId, tileMeta }
       hoverTx: null,
       hoverTy: null,
+      offsetX: 0,
+      offsetY: 0,
+      worldX: 0,
+      worldY: 0,
       isValidPlacement: false,
       isDragging: false,
       maxInteractionDistancePx: 192 // ~3 tiles de alcance
@@ -1483,6 +1487,8 @@ class RPGApplication {
         const screenX = e.clientX - rect.left;
         const screenY = e.clientY - rect.top;
         const worldPos = this.camera.screenToWorld(screenX, screenY);
+        this.playModeInteraction.worldX = worldPos.x;
+        this.playModeInteraction.worldY = worldPos.y;
         const targetTx = Math.floor(worldPos.x / this.tileMap.tileSize);
         const targetTy = Math.floor(worldPos.y / this.tileMap.tileSize);
 
@@ -2874,8 +2880,16 @@ class RPGApplication {
     const cellData = popped.cellData;
     const meta = popped.meta || this.assetLoader?.getTileMetadata(popped.tileId) || { id: popped.tileId, gridW: 1, gridH: 1 };
 
+    const tileSize = this.tileMap.tileSize || 64;
+    const objTileX = tx * tileSize;
+    const objTileY = ty * tileSize;
+    const currentMouseWorldX = this.playModeInteraction.worldX || (objTileX + tileSize / 2);
+    const currentMouseWorldY = this.playModeInteraction.worldY || (objTileY + tileSize / 2);
+
     this.playModeInteraction.activeMode = 'move_object';
     this.playModeInteraction.isDragging = true;
+    this.playModeInteraction.offsetX = currentMouseWorldX - objTileX;
+    this.playModeInteraction.offsetY = currentMouseWorldY - objTileY;
     this.playModeInteraction.heldObject = {
       originTx: tx,
       originTy: ty,
@@ -2896,6 +2910,8 @@ class RPGApplication {
   startPlacingItemFromInventory(inventoryItem, tileId, tileMeta) {
     this.playModeInteraction.activeMode = 'place_inventory';
     this.playModeInteraction.isDragging = true;
+    this.playModeInteraction.offsetX = 0;
+    this.playModeInteraction.offsetY = 0;
     this.playModeInteraction.heldObject = null;
     this.playModeInteraction.placingItem = {
       inventoryItem,
@@ -2910,6 +2926,9 @@ class RPGApplication {
     const pTy = Math.floor((this.player.y + 32) / 64);
     this.playModeInteraction.hoverTx = pTx + delta.dx;
     this.playModeInteraction.hoverTy = pTy + delta.dy;
+    const tileSize = this.tileMap.tileSize || 64;
+    this.playModeInteraction.worldX = this.playModeInteraction.hoverTx * tileSize;
+    this.playModeInteraction.worldY = this.playModeInteraction.hoverTy * tileSize;
     this.playModeInteraction.isValidPlacement = this.isPlacementTileValid(this.playModeInteraction.hoverTx, this.playModeInteraction.hoverTy);
 
     this.canvas.style.cursor = 'var(--animal-cursor-grabbing), grabbing';
@@ -3073,7 +3092,11 @@ class RPGApplication {
       // Altura da pilha no tile de destino
       const currentStackUnderCursor = this.tileMap.getStackCount('solid', this.playModeInteraction.hoverTx, this.playModeInteraction.hoverTy);
       const stackOffsetY = -16 * currentStackUnderCursor;
-      const previewY = hy + stackOffsetY;
+
+      // Posição de renderização suave que acompanha o cursor sem snapping
+      const hasSmoothPos = this.playModeInteraction.worldX !== undefined && this.playModeInteraction.worldY !== undefined;
+      const renderX = hasSmoothPos ? (this.playModeInteraction.worldX - (this.playModeInteraction.offsetX || 0)) : hx;
+      const renderY = (hasSmoothPos ? (this.playModeInteraction.worldY - (this.playModeInteraction.offsetY || 0)) : hy) + stackOffsetY;
 
       if (meta) {
         ctx.save();
@@ -3086,12 +3109,12 @@ class RPGApplication {
         const rot = cellData?.rotation || 0;
         const isFlipped = !!cellData?.flipX;
 
-        // Sombra leve nos pés do objeto
+        // Sombra leve nos pés do objeto acompanhando a renderização
         if (currentStackUnderCursor > 0) {
           ctx.save();
           ctx.fillStyle = 'rgba(0, 0, 0, 0.20)';
           ctx.beginPath();
-          ctx.ellipse(hx + rawW / 2, previewY + rawH - 4, rawW * 0.38, 6, 0, 0, Math.PI * 2);
+          ctx.ellipse(renderX + rawW / 2, renderY + rawH - 4, rawW * 0.38, 6, 0, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }
@@ -3109,19 +3132,19 @@ class RPGApplication {
         if (img) {
           if (rot !== 0 || isFlipped) {
             ctx.save();
-            ctx.translate(hx + rawW / 2, previewY + rawH / 2);
+            ctx.translate(renderX + rawW / 2, renderY + rawH / 2);
             if (rot !== 0) ctx.rotate((rot * Math.PI) / 180);
             if (isFlipped) ctx.scale(-1, 1);
             ctx.drawImage(img, -rawW / 2, -rawH / 2, rawW, rawH);
             ctx.restore();
           } else {
-            ctx.drawImage(img, hx, previewY, rawW, rawH);
+            ctx.drawImage(img, renderX, renderY, rawW, rawH);
           }
         }
         ctx.restore();
       }
 
-      // 4. Badge flutuante de status Animal Island UI
+      // 4. Badge flutuante de status Animal Island UI acompanhando a posição do objeto
       ctx.save();
       let badgeText = '';
       if (isValid) {
@@ -3138,8 +3161,8 @@ class RPGApplication {
       const textMetrics = ctx.measureText(badgeText);
       const badgeW = textMetrics.width + 20;
       const badgeH = 24;
-      const badgeX = hx + 32 - badgeW / 2;
-      const badgeY = previewY - 32;
+      const badgeX = renderX + 32 - badgeW / 2;
+      const badgeY = renderY - 32;
 
       // Card pílula
       ctx.fillStyle = isValid ? '#fdfbf7' : '#fee2e2';
@@ -3158,7 +3181,7 @@ class RPGApplication {
       ctx.fillStyle = isValid ? '#15803d' : '#b91c1c';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(badgeText, hx + 32, badgeY + badgeH / 2);
+      ctx.fillText(badgeText, renderX + 32, badgeY + badgeH / 2);
       ctx.restore();
 
     } catch (e) {
