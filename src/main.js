@@ -103,6 +103,9 @@ class RPGApplication {
       offsetY: 0,
       worldX: 0,
       worldY: 0,
+      startClientX: 0,
+      startClientY: 0,
+      hasDragged: false,
       isValidPlacement: false,
       isDragging: false,
       maxInteractionDistancePx: 192 // ~3 tiles de alcance
@@ -1268,7 +1271,7 @@ class RPGApplication {
             const pDist = Math.hypot(targetCenterX - pCenterX, targetCenterY - pCenterY);
 
             if (pDist <= this.playModeInteraction.maxInteractionDistancePx) {
-              this.startMovingWorldObject(movable);
+              this.startMovingWorldObject(movable, screenX, screenY, worldPos);
               return;
             } else {
               this.showToast('Aproxime-se do objeto para movê-lo.');
@@ -1493,6 +1496,16 @@ class RPGApplication {
         const targetTy = Math.floor(worldPos.y / this.tileMap.tileSize);
 
         if (this.playModeInteraction.activeMode) {
+          if (this.playModeInteraction.isDragging && !this.playModeInteraction.hasDragged) {
+            const distDragged = Math.hypot(
+              e.clientX - (this.playModeInteraction.startClientX || e.clientX),
+              e.clientY - (this.playModeInteraction.startClientY || e.clientY)
+            );
+            if (distDragged > 6) {
+              this.playModeInteraction.hasDragged = true;
+            }
+          }
+
           this.playModeInteraction.hoverTx = targetTx;
           this.playModeInteraction.hoverTy = targetTy;
           this.playModeInteraction.isValidPlacement = this.isPlacementTileValid(targetTx, targetTy);
@@ -1525,13 +1538,20 @@ class RPGApplication {
         this.editorController.handleMouseUp();
       } else if (this.mode === 'play') {
         if (this.playModeInteraction.activeMode && this.playModeInteraction.isDragging) {
-          if (this.playModeInteraction.isValidPlacement) {
-            this.confirmPlayModePlacement();
+          // Se o usuário arrastou segurando o mouse (drag & drop ativo além da tolerância de clique)
+          if (this.playModeInteraction.hasDragged) {
+            if (this.playModeInteraction.isValidPlacement) {
+              this.confirmPlayModePlacement();
+            } else {
+              // Soltou em local inválido ou com colisor (tile vermelho): retorna o objeto ao local de origem
+              this.cancelPlayModeInteraction();
+            }
           } else {
-            // Soltou em local inválido ou com colisor (tile vermelho): retorna o objeto ao local de origem
-            this.cancelPlayModeInteraction();
+            // Foi apenas o soltar do clique inicial de pegar o objeto:
+            // Mantém o objeto segurado e preso ao cursor (modo click-to-pick), permitindo
+            // que o jogador continue movendo o mouse livremente e confirme a posição no próximo clique!
+            this.playModeInteraction.isDragging = false;
           }
-          this.playModeInteraction.isDragging = false;
         }
       }
     });
@@ -2857,7 +2877,7 @@ class RPGApplication {
     return true;
   }
 
-  startMovingWorldObject(movableObj) {
+  startMovingWorldObject(movableObj, screenX = null, screenY = null, worldPos = null) {
     const { tx, ty, layerName } = movableObj;
 
     // Trava de concorrência multiplayer: impede se outro jogador já estiver movendo
@@ -2883,11 +2903,17 @@ class RPGApplication {
     const tileSize = this.tileMap.tileSize || 64;
     const objTileX = tx * tileSize;
     const objTileY = ty * tileSize;
-    const currentMouseWorldX = this.playModeInteraction.worldX || (objTileX + tileSize / 2);
-    const currentMouseWorldY = this.playModeInteraction.worldY || (objTileY + tileSize / 2);
+
+    const currentMouseWorldX = worldPos ? worldPos.x : (this.playModeInteraction.worldX || (objTileX + tileSize / 2));
+    const currentMouseWorldY = worldPos ? worldPos.y : (this.playModeInteraction.worldY || (objTileY + tileSize / 2));
 
     this.playModeInteraction.activeMode = 'move_object';
     this.playModeInteraction.isDragging = true;
+    this.playModeInteraction.hasDragged = false;
+    this.playModeInteraction.startClientX = screenX !== null ? screenX : 0;
+    this.playModeInteraction.startClientY = screenY !== null ? screenY : 0;
+    this.playModeInteraction.worldX = currentMouseWorldX;
+    this.playModeInteraction.worldY = currentMouseWorldY;
     this.playModeInteraction.offsetX = currentMouseWorldX - objTileX;
     this.playModeInteraction.offsetY = currentMouseWorldY - objTileY;
     this.playModeInteraction.heldObject = {
@@ -2909,7 +2935,10 @@ class RPGApplication {
 
   startPlacingItemFromInventory(inventoryItem, tileId, tileMeta) {
     this.playModeInteraction.activeMode = 'place_inventory';
-    this.playModeInteraction.isDragging = true;
+    this.playModeInteraction.isDragging = false;
+    this.playModeInteraction.hasDragged = false;
+    this.playModeInteraction.startClientX = 0;
+    this.playModeInteraction.startClientY = 0;
     this.playModeInteraction.offsetX = 0;
     this.playModeInteraction.offsetY = 0;
     this.playModeInteraction.heldObject = null;
@@ -3120,16 +3149,20 @@ class RPGApplication {
         }
 
         let img = null;
+        const targetTileId = cellData?.tileId || meta.id;
         if (meta.isAnimated && meta.frames) {
           img = this.assetLoader.getImage(meta.frames[0]);
         } else if (meta.src) {
           img = this.assetLoader.getImage(meta.src);
-        } else if (meta.id) {
-          const m = this.assetLoader.getTileMetadata(meta.id);
+        } else if (targetTileId) {
+          const m = this.assetLoader.getTileMetadata(targetTileId);
           if (m?.src) img = this.assetLoader.getImage(m.src);
         }
-        if (!img && meta.id) {
-          img = this.assetLoader.getImage(meta.id);
+        if (!img && targetTileId) {
+          img = this.assetLoader.getImage(targetTileId);
+        }
+        if (!img && meta.icon) {
+          img = this.assetLoader.getImage(meta.icon);
         }
 
         if (img) {
@@ -3143,6 +3176,23 @@ class RPGApplication {
           } else {
             ctx.drawImage(img, renderX, renderY, rawW, rawH);
           }
+        } else {
+          // Fallback visual aconchegante estilizado se a textura da imagem não estiver na memória
+          ctx.save();
+          ctx.fillStyle = isValid ? 'rgba(25, 200, 185, 0.45)' : 'rgba(239, 68, 68, 0.45)';
+          ctx.strokeStyle = isValid ? '#0f8e83' : '#b91c1c';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([4, 4]);
+          if (typeof ctx.roundRect === 'function') {
+            ctx.beginPath();
+            ctx.roundRect(renderX + 4, renderY + 4, rawW - 8, rawH - 8, 8);
+            ctx.fill();
+            ctx.stroke();
+          } else {
+            ctx.fillRect(renderX + 4, renderY + 4, rawW - 8, rawH - 8);
+            ctx.strokeRect(renderX + 4, renderY + 4, rawW - 8, rawH - 8);
+          }
+          ctx.restore();
         }
         ctx.restore();
       }
