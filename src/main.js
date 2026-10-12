@@ -3127,6 +3127,9 @@ class RPGApplication {
         } else if (meta.id) {
           const m = this.assetLoader.getTileMetadata(meta.id);
           if (m?.src) img = this.assetLoader.getImage(m.src);
+        } else {
+          // fallback: try to get image by id directly
+          if (meta.id) img = this.assetLoader.getImage(meta.id);
         }
 
         if (img) {
