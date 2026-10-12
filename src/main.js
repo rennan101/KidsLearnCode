@@ -103,8 +103,8 @@ class RPGApplication {
       offsetY: 0,
       worldX: 0,
       worldY: 0,
-      startClientX: 0,
-      startClientY: 0,
+      startScreenX: 0,
+      startScreenY: 0,
       hasDragged: false,
       isValidPlacement: false,
       isDragging: false,
@@ -1498,10 +1498,10 @@ class RPGApplication {
         if (this.playModeInteraction.activeMode) {
           if (this.playModeInteraction.isDragging && !this.playModeInteraction.hasDragged) {
             const distDragged = Math.hypot(
-              e.clientX - (this.playModeInteraction.startClientX || e.clientX),
-              e.clientY - (this.playModeInteraction.startClientY || e.clientY)
+              screenX - (this.playModeInteraction.startScreenX ?? screenX),
+              screenY - (this.playModeInteraction.startScreenY ?? screenY)
             );
-            if (distDragged > 6) {
+            if (distDragged > 8) {
               this.playModeInteraction.hasDragged = true;
             }
           }
@@ -2910,8 +2910,8 @@ class RPGApplication {
     this.playModeInteraction.activeMode = 'move_object';
     this.playModeInteraction.isDragging = true;
     this.playModeInteraction.hasDragged = false;
-    this.playModeInteraction.startClientX = screenX !== null ? screenX : 0;
-    this.playModeInteraction.startClientY = screenY !== null ? screenY : 0;
+    this.playModeInteraction.startScreenX = screenX !== null ? screenX : 0;
+    this.playModeInteraction.startScreenY = screenY !== null ? screenY : 0;
     this.playModeInteraction.worldX = currentMouseWorldX;
     this.playModeInteraction.worldY = currentMouseWorldY;
     this.playModeInteraction.offsetX = currentMouseWorldX - objTileX;
@@ -2937,8 +2937,8 @@ class RPGApplication {
     this.playModeInteraction.activeMode = 'place_inventory';
     this.playModeInteraction.isDragging = false;
     this.playModeInteraction.hasDragged = false;
-    this.playModeInteraction.startClientX = 0;
-    this.playModeInteraction.startClientY = 0;
+    this.playModeInteraction.startScreenX = 0;
+    this.playModeInteraction.startScreenY = 0;
     this.playModeInteraction.offsetX = 0;
     this.playModeInteraction.offsetY = 0;
     this.playModeInteraction.heldObject = null;
@@ -3138,7 +3138,7 @@ class RPGApplication {
         const rot = cellData?.rotation || 0;
         const isFlipped = !!cellData?.flipX;
 
-        // Sombra leve nos pés do objeto acompanhando a renderização
+        // 3a. Sombra leve nos pés do objeto acompanhando a renderização
         if (currentStackUnderCursor > 0) {
           ctx.save();
           ctx.fillStyle = 'rgba(0, 0, 0, 0.20)';
@@ -3148,36 +3148,64 @@ class RPGApplication {
           ctx.restore();
         }
 
-        let img = null;
+        // 3b. Renderização do Sprite usando o motor do TileMap (garantia total de renderização de qualquer asset)
+        let drawn = false;
         const targetTileId = cellData?.tileId || meta.id;
-        if (meta.isAnimated && meta.frames) {
-          img = this.assetLoader.getImage(meta.frames[0]);
-        } else if (meta.src) {
-          img = this.assetLoader.getImage(meta.src);
-        } else if (targetTileId) {
-          const m = this.assetLoader.getTileMetadata(targetTileId);
-          if (m?.src) img = this.assetLoader.getImage(m.src);
-        }
-        if (!img && targetTileId) {
-          img = this.assetLoader.getImage(targetTileId);
-        }
-        if (!img && meta.icon) {
-          img = this.assetLoader.getImage(meta.icon);
+        const previewCell = {
+          tileId: targetTileId,
+          rotation: rot,
+          flipX: isFlipped,
+          isRoot: true,
+          ...(cellData || {})
+        };
+
+        if (this.tileMap && typeof this.tileMap.drawTileCell === 'function' && targetTileId) {
+          try {
+            ctx.save();
+            ctx.translate(renderX, renderY);
+            this.tileMap.drawTileCell(ctx, previewCell, 0, 0, this.assetLoader, false, false);
+            ctx.restore();
+            drawn = true;
+          } catch (tileErr) {
+            console.warn('drawTileCell preview fallback error:', tileErr);
+          }
         }
 
-        if (img) {
-          if (rot !== 0 || isFlipped) {
-            ctx.save();
-            ctx.translate(renderX + rawW / 2, renderY + rawH / 2);
-            if (rot !== 0) ctx.rotate((rot * Math.PI) / 180);
-            if (isFlipped) ctx.scale(-1, 1);
-            ctx.drawImage(img, -rawW / 2, -rawH / 2, rawW, rawH);
-            ctx.restore();
-          } else {
-            ctx.drawImage(img, renderX, renderY, rawW, rawH);
+        // 3c. Fallback de imagem direta caso drawTileCell não tenha desenhado
+        if (!drawn) {
+          let img = null;
+          if (meta.isAnimated && meta.frames) {
+            img = this.assetLoader.getImage(meta.frames[0]);
+          } else if (meta.src) {
+            img = this.assetLoader.getImage(meta.src);
+          } else if (targetTileId) {
+            const m = this.assetLoader.getTileMetadata(targetTileId);
+            if (m?.src) img = this.assetLoader.getImage(m.src);
           }
-        } else {
-          // Fallback visual aconchegante estilizado se a textura da imagem não estiver na memória
+          if (!img && targetTileId) {
+            img = this.assetLoader.getImage(targetTileId);
+          }
+          if (!img && meta.icon) {
+            img = this.assetLoader.getImage(meta.icon);
+          }
+
+          if (img) {
+            if (rot !== 0 || isFlipped) {
+              ctx.save();
+              ctx.translate(renderX + rawW / 2, renderY + rawH / 2);
+              if (rot !== 0) ctx.rotate((rot * Math.PI) / 180);
+              if (isFlipped) ctx.scale(-1, 1);
+              ctx.drawImage(img, -rawW / 2, -rawH / 2, rawW, rawH);
+              ctx.restore();
+            } else {
+              ctx.drawImage(img, renderX, renderY, rawW, rawH);
+            }
+            drawn = true;
+          }
+        }
+
+        // 3d. Fallback geométrico Animal Island UI (para nunca ficar invisível sob nenhuma circunstância)
+        if (!drawn) {
           ctx.save();
           ctx.fillStyle = isValid ? 'rgba(25, 200, 185, 0.45)' : 'rgba(239, 68, 68, 0.45)';
           ctx.strokeStyle = isValid ? '#0f8e83' : '#b91c1c';
@@ -3194,6 +3222,7 @@ class RPGApplication {
           }
           ctx.restore();
         }
+
         ctx.restore();
       }
 
