@@ -1499,7 +1499,11 @@ class RPGApplication {
             screenX - (this.playModeInteraction.startScreenX ?? screenX),
             screenY - (this.playModeInteraction.startScreenY ?? screenY)
           );
-          if (distDragged > 5) {
+          const hasTileChanged = (
+            this.playModeInteraction.heldObject &&
+            (targetTx !== this.playModeInteraction.heldObject.originTx || targetTy !== this.playModeInteraction.heldObject.originTy)
+          );
+          if (distDragged > 4 || hasTileChanged) {
             this.playModeInteraction.hasDragged = true;
           }
         }
@@ -1550,18 +1554,17 @@ class RPGApplication {
         this.editorController.handleMouseUp();
       } else if (this.mode === 'play') {
         if (this.playModeInteraction.activeMode && this.playModeInteraction.isDragging) {
-          // Se o usuário arrastou segurando o mouse (drag & drop ativo além da tolerância de clique)
+          // No Modo Play, funciona igual ao Modo Editor:
+          // Ao soltar o mouse após arrastar, confirma o posicionamento se o local for válido
           if (this.playModeInteraction.hasDragged) {
             if (this.playModeInteraction.isValidPlacement) {
               this.confirmPlayModePlacement();
             } else {
-              // Soltou em local inválido ou com colisor (tile vermelho): retorna o objeto ao local de origem
+              // Soltou em local inválido ou fora do alcance: cancela e devolve para onde estava
               this.cancelPlayModeInteraction();
             }
           } else {
-            // Foi apenas o soltar do clique inicial de pegar o objeto:
-            // Mantém o objeto segurado e preso ao cursor (modo click-to-pick), permitindo
-            // que o jogador continue movendo o mouse livremente e confirme a posição no próximo clique!
+            // Se o usuário clicou e soltou sem arrastar (micro-clique), mantém segurado no cursor para modo click-and-place
             this.playModeInteraction.isDragging = false;
           }
         }
@@ -2810,6 +2813,17 @@ class RPGApplication {
       return false;
     }
 
+    // Se estiver movendo um objeto e o destino for exatamente a origem onde ele já estava, é sempre válido!
+    const isMovingSameOrigin = (
+      this.playModeInteraction.activeMode === 'move_object' &&
+      this.playModeInteraction.heldObject &&
+      this.playModeInteraction.heldObject.originTx === tx &&
+      this.playModeInteraction.heldObject.originTy === ty
+    );
+    if (isMovingSameOrigin) {
+      return true;
+    }
+
     // 2. Não pode ser no mesmo tile exato onde o jogador está pisando
     const playerTx = Math.floor((this.player.x + 16) / 64);
     const playerTy = Math.floor((this.player.y + 32) / 64);
@@ -3105,27 +3119,14 @@ class RPGApplication {
       ctx.stroke();
       ctx.restore();
 
-      // 2. Caixa de destaque na grade: Borda Verde (se válido) ou Borda Vermelha (se inválido/colisor)
-      ctx.save();
-      if (isValid) {
-        ctx.fillStyle = 'rgba(34, 197, 94, 0.22)';
-        ctx.strokeStyle = '#22c55e'; // Verde vibrante
-      } else {
-        ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
-        ctx.strokeStyle = '#ef4444'; // Vermelho vibrante
-      }
-      ctx.lineWidth = 3;
-      ctx.fillRect(hx, hy, tileSize, tileSize);
-      ctx.strokeRect(hx, hy, tileSize, tileSize);
-      ctx.restore();
-
-      // 3. Renderização do Objeto preso diretamente na mãozinha (Cursor Grip)
       let meta = null;
       let cellData = null;
+      let isMoveObject = false;
 
       if (this.playModeInteraction.activeMode === 'move_object') {
         meta = this.playModeInteraction.heldObject?.tileMeta;
         cellData = this.playModeInteraction.heldObject?.cellData;
+        isMoveObject = true;
       } else if (this.playModeInteraction.activeMode === 'place_inventory') {
         meta = this.playModeInteraction.placingItem?.tileMeta;
       }
@@ -3135,21 +3136,49 @@ class RPGApplication {
       const rawW = gridW * tileSize;
       const rawH = gridH * tileSize;
 
-      // Posição de renderização perfeitamente grudada na mãozinha/cursor:
-      // O objeto é centralizado na ponta do cursor com uma leve elevação flutuante (6px) para dar sensação tátil 3D de estar erguido
+      // 2a. Caixa de destaque de origem (onde o objeto estava no mapa, igual ao Modo Editor)
+      if (isMoveObject && this.playModeInteraction.heldObject) {
+        const sx = this.playModeInteraction.heldObject.originTx * tileSize;
+        const sy = this.playModeInteraction.heldObject.originTy * tileSize;
+        ctx.save();
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.14)';
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 1.6;
+        ctx.setLineDash([4, 4]);
+        ctx.fillRect(sx, sy, rawW, rawH);
+        ctx.strokeRect(sx, sy, rawW, rawH);
+        ctx.restore();
+      }
+
+      // 2b. Caixa de destaque do destino na grade (igual ao Modo Editor)
+      ctx.save();
+      if (isValid) {
+        ctx.fillStyle = 'rgba(25, 200, 185, 0.25)';
+        ctx.strokeStyle = '#19c8b9'; // Verde Menta / Teal Animal Island UI
+      } else {
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.24)';
+        ctx.strokeStyle = '#ef4444'; // Vermelho vibrante de bloqueio
+      }
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([6, 4]);
+      ctx.fillRect(hx, hy, rawW, rawH);
+      ctx.strokeRect(hx, hy, rawW, rawH);
+      ctx.restore();
+
+      // 3. Renderização do Objeto arrastado preso à mãozinha (Cursor Grip)
       const hasSmoothPos = typeof this.playModeInteraction.worldX === 'number' && !isNaN(this.playModeInteraction.worldX);
       const isDraggingActive = !!this.playModeInteraction.isDragging;
-      
+
       let renderX = hx;
       let renderY = hy;
 
       if (hasSmoothPos) {
         if (isDraggingActive) {
-          // Quando está ativamente arrastando com o botão pressionado: fixado exatamente na ponta da mão
+          // Quando está ativamente arrastando segurando o mouse: preso diretamente ao cursor
           renderX = this.playModeInteraction.worldX - (rawW / 2);
           renderY = this.playModeInteraction.worldY - (rawH / 2) - 8;
         } else {
-          // Quando está em modo de posicionamento (click-to-move): acompanha o mouse com snap suave ao tile alvo
+          // Modo click-to-pick / posicionamento livre: snap suave no tile de hover
           renderX = hx;
           renderY = hy - 4;
         }
@@ -3160,18 +3189,18 @@ class RPGApplication {
         const rot = cellData?.rotation || 0;
         const isFlipped = !!cellData?.flipX;
 
-        // 3a. Sombra tátil suave logo abaixo do objeto carregado
+        // 3a. Sombra tátil suave abaixo do objeto
         ctx.save();
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
         ctx.beginPath();
-        ctx.ellipse(renderX + rawW / 2, renderY + rawH + 2, rawW * 0.36, 7, 0, 0, Math.PI * 2);
+        ctx.ellipse(renderX + rawW / 2, renderY + rawH + 2, rawW * 0.38, 7, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
 
-        // Opacidade alta (92%) para que o objeto fique nítido e perfeitamente visível na mão
-        ctx.globalAlpha = 0.92;
+        // Opacidade alta (88%) mantendo o objeto bem visível e nítido
+        ctx.globalAlpha = 0.88;
 
-        // 3b. Resolução de imagem de máxima confiabilidade (busca por todas as variações de chave)
+        // 3b. Resolução de imagem rápida e direta (padrão robusto do EditorController)
         let drawn = false;
         const targetTileId = cellData?.tileId || meta?.id;
         const tileMetaResolved = (targetTileId ? this.assetLoader?.getTileMetadata(targetTileId) : null) || meta;
@@ -3181,7 +3210,6 @@ class RPGApplication {
           const frameIdx = (this.tileMap?.waterAnimFrame !== undefined) ? this.tileMap.waterAnimFrame : 0;
           img = this.assetLoader?.getImage(tileMetaResolved.frames[frameIdx % tileMetaResolved.frames.length]) || this.assetLoader?.getImage(tileMetaResolved.frames[0]);
         }
-        
         if (!img && tileMetaResolved?.src) {
           img = this.assetLoader?.getImage(tileMetaResolved.src);
         }
@@ -3201,7 +3229,7 @@ class RPGApplication {
           img = this.assetLoader?.getImage(meta.icon);
         }
 
-        // Se encontrou a imagem do sprite carregada, desenha com escala, rotação e flip apropriados
+        // Desenha a imagem do sprite com rotação e escala
         if (img && (img.complete || img.naturalWidth > 0)) {
           const scaleMultiplier = tileMetaResolved?.scale || 1.0;
           const drawW = rawW * scaleMultiplier;
@@ -3220,7 +3248,7 @@ class RPGApplication {
           drawn = true;
         }
 
-        // 3c. Fallback direto através do motor TileMap se a imagem não veio pelo loader simples
+        // 3c. Fallback direto através do TileMap
         if (!drawn && this.tileMap && typeof this.tileMap.drawTileCell === 'function' && targetTileId) {
           try {
             const previewCell = {
@@ -3240,7 +3268,7 @@ class RPGApplication {
           }
         }
 
-        // 3d. Fallback visual Animal Island UI com ícone vetorial nítido (NUNCA fica invisível)
+        // 3d. Fallback geométrico Animal Island UI de madeira se a textura ainda não carregou
         if (!drawn) {
           ctx.save();
           ctx.fillStyle = isValid ? '#e6f9f6' : '#fee2e2';
@@ -3256,7 +3284,6 @@ class RPGApplication {
             ctx.strokeRect(renderX + 2, renderY + 2, rawW - 4, rawH - 4);
           }
 
-          // Caixa estilizada Animal Island UI de madeira com tiras
           ctx.strokeStyle = isValid ? '#0f8e83' : '#b91c1c';
           ctx.lineWidth = 2;
           ctx.strokeRect(renderX + 12, renderY + 12, rawW - 24, rawH - 24);
@@ -3272,28 +3299,28 @@ class RPGApplication {
         ctx.restore();
       }
 
-      // 4. Badge flutuante de status Animal Island UI acompanhando a posição do objeto
+      // 4. Badge flutuante de status Animal Island UI (Estilo Editor)
       ctx.save();
       const currentStackUnderCursor = this.tileMap.getStackCount('solid', this.playModeInteraction.hoverTx, this.playModeInteraction.hoverTy);
       let badgeText = '';
       if (isValid) {
         if (currentStackUnderCursor > 0) {
-          badgeText = `Solte para empilhar (Altura ${currentStackUnderCursor + 1})`;
+          badgeText = `Empilhar [${this.playModeInteraction.hoverTx}, ${this.playModeInteraction.hoverTy}] (Altura ${currentStackUnderCursor + 1})`;
         } else {
-          badgeText = 'Solte para posicionar aqui';
+          badgeText = `Mover para [${this.playModeInteraction.hoverTx}, ${this.playModeInteraction.hoverTy}]`;
         }
       } else {
-        badgeText = 'Local com obstáculo ou colisor (inválido)';
+        badgeText = 'Local bloqueado ou com colisor';
       }
 
       ctx.font = 'bold 11.5px "Nunito", sans-serif';
       const textMetrics = ctx.measureText(badgeText);
       const badgeW = textMetrics.width + 20;
       const badgeH = 24;
-      const badgeX = renderX + 32 - badgeW / 2;
+      const badgeX = renderX + rawW / 2 - badgeW / 2;
       const badgeY = renderY - 32;
 
-      // Card pílula
+      // Card pílula acolhedor
       ctx.fillStyle = isValid ? '#fdfbf7' : '#fee2e2';
       ctx.strokeStyle = isValid ? '#22c55e' : '#ef4444';
       ctx.lineWidth = 1.8;
@@ -3306,11 +3333,11 @@ class RPGApplication {
       ctx.fill();
       ctx.stroke();
 
-      // Texto
+      // Texto de status
       ctx.fillStyle = isValid ? '#15803d' : '#b91c1c';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(badgeText, renderX + 32, badgeY + badgeH / 2);
+      ctx.fillText(badgeText, renderX + rawW / 2, badgeY + badgeH / 2);
       ctx.restore();
 
     } catch (e) {
