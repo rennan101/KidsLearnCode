@@ -1540,7 +1540,7 @@ class RPGApplication {
 
     // Listener global no window para garantir que o drag & drop continue suave e responsivo mesmo se o cursor passar sobre HUDs ou bordas
     window.addEventListener('mousemove', (e) => {
-      if (this.mode === 'play' && this.playModeInteraction.activeMode && this.playModeInteraction.isDragging) {
+      if (this.mode === 'play' && this.playModeInteraction.activeMode) {
         handleMouseMovePlayMode(e);
       }
     });
@@ -3119,7 +3119,7 @@ class RPGApplication {
       ctx.strokeRect(hx, hy, tileSize, tileSize);
       ctx.restore();
 
-      // 3. Renderização do Objeto com Transparência de 60% (globalAlpha = 0.60)
+      // 3. Renderização do Objeto preso diretamente na mãozinha (Cursor Grip)
       let meta = null;
       let cellData = null;
 
@@ -3130,53 +3130,69 @@ class RPGApplication {
         meta = this.playModeInteraction.placingItem?.tileMeta;
       }
 
-      // Altura da pilha no tile de destino
-      const currentStackUnderCursor = this.tileMap.getStackCount('solid', this.playModeInteraction.hoverTx, this.playModeInteraction.hoverTy);
-      const stackOffsetY = -16 * currentStackUnderCursor;
+      const gridW = meta?.gridW || 1;
+      const gridH = meta?.gridH || 1;
+      const rawW = gridW * tileSize;
+      const rawH = gridH * tileSize;
 
-      // Posição de renderização suave que acompanha o cursor sem snapping
-      const hasSmoothPos = this.playModeInteraction.worldX !== undefined && this.playModeInteraction.worldY !== undefined;
-      const renderX = hasSmoothPos ? (this.playModeInteraction.worldX - (this.playModeInteraction.offsetX || 0)) : hx;
-      const renderY = (hasSmoothPos ? (this.playModeInteraction.worldY - (this.playModeInteraction.offsetY || 0)) : hy) + stackOffsetY;
+      // Posição de renderização perfeitamente grudada na mãozinha/cursor:
+      // O objeto é centralizado na ponta do cursor com uma leve elevação flutuante (6px) para dar sensação tátil 3D de estar erguido
+      const hasSmoothPos = typeof this.playModeInteraction.worldX === 'number' && !isNaN(this.playModeInteraction.worldX);
+      const isDraggingActive = !!this.playModeInteraction.isDragging;
+      
+      let renderX = hx;
+      let renderY = hy;
 
-      if (meta) {
+      if (hasSmoothPos) {
+        if (isDraggingActive) {
+          // Quando está ativamente arrastando com o botão pressionado: fixado exatamente na ponta da mão
+          renderX = this.playModeInteraction.worldX - (rawW / 2);
+          renderY = this.playModeInteraction.worldY - (rawH / 2) - 8;
+        } else {
+          // Quando está em modo de posicionamento (click-to-move): acompanha o mouse com snap suave ao tile alvo
+          renderX = hx;
+          renderY = hy - 4;
+        }
+      }
+
+      if (meta || cellData) {
         ctx.save();
-        // Exatamente 60% de transparência conforme solicitado
-        ctx.globalAlpha = 0.60;
-        const gridW = meta.gridW || 1;
-        const gridH = meta.gridH || 1;
-        const rawW = gridW * tileSize;
-        const rawH = gridH * tileSize;
         const rot = cellData?.rotation || 0;
         const isFlipped = !!cellData?.flipX;
 
-        // 3a. Sombra tátil nos pés do objeto acompanhando a renderização
+        // 3a. Sombra tátil suave logo abaixo do objeto carregado
         ctx.save();
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
         ctx.beginPath();
-        ctx.ellipse(renderX + rawW / 2, renderY + rawH - 2, rawW * 0.38, 7, 0, 0, Math.PI * 2);
+        ctx.ellipse(renderX + rawW / 2, renderY + rawH + 2, rawW * 0.36, 7, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
 
-        // Opacidade agradável de 85% para manter o objeto claramente visível e tátil enquanto arrasta
-        ctx.globalAlpha = 0.85;
+        // Opacidade alta (92%) para que o objeto fique nítido e perfeitamente visível na mão
+        ctx.globalAlpha = 0.92;
 
-        // 3b. Resolução de imagem de alta confiabilidade (busca por src do meta, metadados do tileId, frames ou id direto)
+        // 3b. Resolução de imagem de máxima confiabilidade (busca por todas as variações de chave)
         let drawn = false;
-        const targetTileId = cellData?.tileId || meta.id;
-        const tileMetaResolved = (this.assetLoader?.getTileMetadata(targetTileId)) || meta;
+        const targetTileId = cellData?.tileId || meta?.id;
+        const tileMetaResolved = (targetTileId ? this.assetLoader?.getTileMetadata(targetTileId) : null) || meta;
 
         let img = null;
-        if (tileMetaResolved?.isAnimated && tileMetaResolved.frames) {
+        if (tileMetaResolved?.isAnimated && Array.isArray(tileMetaResolved.frames) && tileMetaResolved.frames.length > 0) {
           const frameIdx = (this.tileMap?.waterAnimFrame !== undefined) ? this.tileMap.waterAnimFrame : 0;
-          img = this.assetLoader?.getImage(tileMetaResolved.frames[frameIdx]) || this.assetLoader?.getImage(tileMetaResolved.frames[0]);
-        } else if (tileMetaResolved?.src) {
+          img = this.assetLoader?.getImage(tileMetaResolved.frames[frameIdx % tileMetaResolved.frames.length]) || this.assetLoader?.getImage(tileMetaResolved.frames[0]);
+        }
+        
+        if (!img && tileMetaResolved?.src) {
           img = this.assetLoader?.getImage(tileMetaResolved.src);
-        } else if (meta?.src) {
+        }
+        if (!img && meta?.src) {
           img = this.assetLoader?.getImage(meta.src);
         }
         if (!img && targetTileId) {
           img = this.assetLoader?.getImage(targetTileId);
+        }
+        if (!img && cellData?.src) {
+          img = this.assetLoader?.getImage(cellData.src);
         }
         if (!img && tileMetaResolved?.icon) {
           img = this.assetLoader?.getImage(tileMetaResolved.icon);
@@ -3185,26 +3201,26 @@ class RPGApplication {
           img = this.assetLoader?.getImage(meta.icon);
         }
 
-        // Se encontrou a imagem do sprite, desenha com escala, rotação e flip apropriados
-        if (img && img.complete && img.naturalWidth > 0) {
+        // Se encontrou a imagem do sprite carregada, desenha com escala, rotação e flip apropriados
+        if (img && (img.complete || img.naturalWidth > 0)) {
           const scaleMultiplier = tileMetaResolved?.scale || 1.0;
           const drawW = rawW * scaleMultiplier;
           const drawH = rawH * scaleMultiplier;
 
+          ctx.save();
           if (rot !== 0 || isFlipped || scaleMultiplier !== 1.0) {
-            ctx.save();
             ctx.translate(renderX + rawW / 2, renderY + rawH / 2);
             if (rot !== 0) ctx.rotate((rot * Math.PI) / 180);
             if (isFlipped) ctx.scale(-1, 1);
             ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
-            ctx.restore();
           } else {
             ctx.drawImage(img, renderX, renderY, drawW, drawH);
           }
+          ctx.restore();
           drawn = true;
         }
 
-        // 3c. Fallback de renderização pelo motor TileMap se não foi desenhado diretamente
+        // 3c. Fallback direto através do motor TileMap se a imagem não veio pelo loader simples
         if (!drawn && this.tileMap && typeof this.tileMap.drawTileCell === 'function' && targetTileId) {
           try {
             const previewCell = {
@@ -3216,7 +3232,7 @@ class RPGApplication {
             };
             ctx.save();
             ctx.translate(renderX, renderY);
-            this.tileMap.drawTileCell(ctx, previewCell, 0, 0, this.assetLoader, false, false);
+            this.tileMap.drawTileCell(ctx, previewCell, 0, 0, this.assetLoader, true, false);
             ctx.restore();
             drawn = true;
           } catch (tileErr) {
@@ -3224,7 +3240,7 @@ class RPGApplication {
           }
         }
 
-        // 3d. Fallback geométrico Animal Island UI com ícone estilizado (para NUNCA ficar invisível sob nenhuma hipótese)
+        // 3d. Fallback visual Animal Island UI com ícone vetorial nítido (NUNCA fica invisível)
         if (!drawn) {
           ctx.save();
           ctx.fillStyle = isValid ? '#e6f9f6' : '#fee2e2';
@@ -3240,7 +3256,7 @@ class RPGApplication {
             ctx.strokeRect(renderX + 2, renderY + 2, rawW - 4, rawH - 4);
           }
 
-          // Ícone vetorial interno em SVG estilizado (caixa de madeira Animal Island UI)
+          // Caixa estilizada Animal Island UI de madeira com tiras
           ctx.strokeStyle = isValid ? '#0f8e83' : '#b91c1c';
           ctx.lineWidth = 2;
           ctx.strokeRect(renderX + 12, renderY + 12, rawW - 24, rawH - 24);
@@ -3258,6 +3274,7 @@ class RPGApplication {
 
       // 4. Badge flutuante de status Animal Island UI acompanhando a posição do objeto
       ctx.save();
+      const currentStackUnderCursor = this.tileMap.getStackCount('solid', this.playModeInteraction.hoverTx, this.playModeInteraction.hoverTy);
       let badgeText = '';
       if (isValid) {
         if (currentStackUnderCursor > 0) {
