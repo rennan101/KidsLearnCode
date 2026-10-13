@@ -3153,11 +3153,11 @@ class RPGApplication {
       // 2b. Caixa de destaque do destino na grade (igual ao Modo Editor)
       ctx.save();
       if (isValid) {
-        ctx.fillStyle = 'rgba(25, 200, 185, 0.25)';
+        ctx.fillStyle = 'rgba(25, 200, 185, 0.28)';
         ctx.strokeStyle = '#19c8b9'; // Verde Menta / Teal Animal Island UI
       } else {
         ctx.fillStyle = 'rgba(239, 68, 68, 0.24)';
-        ctx.strokeStyle = '#ef4444'; // Vermelho vibrante de bloqueio
+        ctx.strokeStyle = '#ef4444'; // Vermelho de bloqueio
       }
       ctx.lineWidth = 2.5;
       ctx.setLineDash([6, 4]);
@@ -3165,90 +3165,54 @@ class RPGApplication {
       ctx.strokeRect(hx, hy, rawW, rawH);
       ctx.restore();
 
-      // 3. Renderização do Objeto arrastado preso à mãozinha (Cursor Grip)
-      const hasSmoothPos = typeof this.playModeInteraction.worldX === 'number' && !isNaN(this.playModeInteraction.worldX);
-      const isDraggingActive = !!this.playModeInteraction.isDragging;
-
-      let renderX = hx;
-      let renderY = hy;
-
-      if (hasSmoothPos) {
-        if (isDraggingActive) {
-          // Quando está ativamente arrastando segurando o mouse: preso diretamente ao cursor
-          renderX = this.playModeInteraction.worldX - (rawW / 2);
-          renderY = this.playModeInteraction.worldY - (rawH / 2) - 8;
-        } else {
-          // Modo click-to-pick / posicionamento livre: snap suave no tile de hover
-          renderX = hx;
-          renderY = hy - 4;
-        }
+      // 3. Resolução robusta de imagem e metadados (idêntico ao EditorController)
+      const targetTileId = cellData?.tileId || meta?.id;
+      const resolvedMeta = (targetTileId ? this.assetLoader?.getTileMetadata(targetTileId) : null) || meta;
+      let img = null;
+      if (resolvedMeta?.isAnimated && Array.isArray(resolvedMeta.frames) && resolvedMeta.frames.length > 0) {
+        const frameIdx = (this.tileMap?.waterAnimFrame !== undefined) ? this.tileMap.waterAnimFrame : 0;
+        img = this.assetLoader?.getImage(resolvedMeta.frames[frameIdx % resolvedMeta.frames.length]) || this.assetLoader?.getImage(resolvedMeta.frames[0]);
       }
+      if (!img && resolvedMeta?.src) img = this.assetLoader?.getImage(resolvedMeta.src);
+      if (!img && meta?.src) img = this.assetLoader?.getImage(meta.src);
+      if (!img && targetTileId) img = this.assetLoader?.getImage(targetTileId);
+      if (!img && cellData?.src) img = this.assetLoader?.getImage(cellData.src);
+      if (!img && resolvedMeta?.icon) img = this.assetLoader?.getImage(resolvedMeta.icon);
+      if (!img && meta?.icon) img = this.assetLoader?.getImage(meta.icon);
 
-      if (meta || cellData) {
+      const rot = cellData?.rotation || 0;
+      const isFlipped = !!cellData?.flipX;
+
+      // Helper para desenhar o sprite ou fallback em qualquer coordenada
+      const drawObjectSprite = (drawX, drawY, alpha = 0.75, drawShadow = false) => {
         ctx.save();
-        const rot = cellData?.rotation || 0;
-        const isFlipped = !!cellData?.flipX;
+        ctx.globalAlpha = alpha;
 
-        // 3a. Sombra tátil suave abaixo do objeto
-        ctx.save();
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
-        ctx.beginPath();
-        ctx.ellipse(renderX + rawW / 2, renderY + rawH + 2, rawW * 0.38, 7, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-
-        // Opacidade alta (88%) mantendo o objeto bem visível e nítido
-        ctx.globalAlpha = 0.88;
-
-        // 3b. Resolução de imagem rápida e direta (padrão robusto do EditorController)
-        let drawn = false;
-        const targetTileId = cellData?.tileId || meta?.id;
-        const tileMetaResolved = (targetTileId ? this.assetLoader?.getTileMetadata(targetTileId) : null) || meta;
-
-        let img = null;
-        if (tileMetaResolved?.isAnimated && Array.isArray(tileMetaResolved.frames) && tileMetaResolved.frames.length > 0) {
-          const frameIdx = (this.tileMap?.waterAnimFrame !== undefined) ? this.tileMap.waterAnimFrame : 0;
-          img = this.assetLoader?.getImage(tileMetaResolved.frames[frameIdx % tileMetaResolved.frames.length]) || this.assetLoader?.getImage(tileMetaResolved.frames[0]);
-        }
-        if (!img && tileMetaResolved?.src) {
-          img = this.assetLoader?.getImage(tileMetaResolved.src);
-        }
-        if (!img && meta?.src) {
-          img = this.assetLoader?.getImage(meta.src);
-        }
-        if (!img && targetTileId) {
-          img = this.assetLoader?.getImage(targetTileId);
-        }
-        if (!img && cellData?.src) {
-          img = this.assetLoader?.getImage(cellData.src);
-        }
-        if (!img && tileMetaResolved?.icon) {
-          img = this.assetLoader?.getImage(tileMetaResolved.icon);
-        }
-        if (!img && meta?.icon) {
-          img = this.assetLoader?.getImage(meta.icon);
-        }
-
-        // Desenha a imagem do sprite com rotação e escala
-        if (img && (img.complete || img.naturalWidth > 0)) {
-          const scaleMultiplier = tileMetaResolved?.scale || 1.0;
-          const drawW = rawW * scaleMultiplier;
-          const drawH = rawH * scaleMultiplier;
-
+        if (drawShadow) {
           ctx.save();
-          if (rot !== 0 || isFlipped || scaleMultiplier !== 1.0) {
-            ctx.translate(renderX + rawW / 2, renderY + rawH / 2);
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.30)';
+          ctx.beginPath();
+          ctx.ellipse(drawX + rawW / 2, drawY + rawH + 3, rawW * 0.38, 7, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        let drawn = false;
+        if (img) {
+          ctx.save();
+          if (rot !== 0 || isFlipped) {
+            ctx.translate(drawX + rawW / 2, drawY + rawH / 2);
             if (rot !== 0) ctx.rotate((rot * Math.PI) / 180);
             if (isFlipped) ctx.scale(-1, 1);
-            ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+            ctx.drawImage(img, -rawW / 2, -rawH / 2, rawW, rawH);
           } else {
-            ctx.drawImage(img, renderX, renderY, drawW, drawH);
+            ctx.drawImage(img, drawX, drawY, rawW, rawH);
           }
           ctx.restore();
           drawn = true;
         }
 
-        // 3c. Fallback direto através do TileMap
+        // Fallback através do TileMap
         if (!drawn && this.tileMap && typeof this.tileMap.drawTileCell === 'function' && targetTileId) {
           try {
             const previewCell = {
@@ -3259,16 +3223,14 @@ class RPGApplication {
               ...(cellData || {})
             };
             ctx.save();
-            ctx.translate(renderX, renderY);
+            ctx.translate(drawX, drawY);
             this.tileMap.drawTileCell(ctx, previewCell, 0, 0, this.assetLoader, true, false);
             ctx.restore();
             drawn = true;
-          } catch (tileErr) {
-            console.warn('drawTileCell preview fallback error:', tileErr);
-          }
+          } catch (_) {}
         }
 
-        // 3d. Fallback geométrico Animal Island UI de madeira se a textura ainda não carregou
+        // Fallback geométrico Animal Island UI se imagem não carregou
         if (!drawn) {
           ctx.save();
           ctx.fillStyle = isValid ? '#e6f9f6' : '#fee2e2';
@@ -3276,30 +3238,44 @@ class RPGApplication {
           ctx.lineWidth = 2.5;
           if (typeof ctx.roundRect === 'function') {
             ctx.beginPath();
-            ctx.roundRect(renderX + 2, renderY + 2, rawW - 4, rawH - 4, 12);
+            ctx.roundRect(drawX + 2, drawY + 2, rawW - 4, rawH - 4, 12);
             ctx.fill();
             ctx.stroke();
           } else {
-            ctx.fillRect(renderX + 2, renderY + 2, rawW - 4, rawH - 4);
-            ctx.strokeRect(renderX + 2, renderY + 2, rawW - 4, rawH - 4);
+            ctx.fillRect(drawX + 2, drawY + 2, rawW - 4, rawH - 4);
+            ctx.strokeRect(drawX + 2, drawY + 2, rawW - 4, rawH - 4);
           }
-
           ctx.strokeStyle = isValid ? '#0f8e83' : '#b91c1c';
           ctx.lineWidth = 2;
-          ctx.strokeRect(renderX + 12, renderY + 12, rawW - 24, rawH - 24);
+          ctx.strokeRect(drawX + 12, drawY + 12, rawW - 24, rawH - 24);
           ctx.beginPath();
-          ctx.moveTo(renderX + 12, renderY + 12);
-          ctx.lineTo(renderX + rawW - 12, renderY + rawH - 12);
-          ctx.moveTo(renderX + rawW - 12, renderY + 12);
-          ctx.lineTo(renderX + 12, renderY + rawH - 12);
+          ctx.moveTo(drawX + 12, drawY + 12);
+          ctx.lineTo(drawX + rawW - 12, drawY + rawH - 12);
+          ctx.moveTo(drawX + rawW - 12, drawY + 12);
+          ctx.lineTo(drawX + 12, drawY + rawH - 12);
           ctx.stroke();
           ctx.restore();
         }
 
         ctx.restore();
+      };
+
+      // 4. GHOST NO DESTINO NA GRADE (Exatamente igual ao Modo Editor!)
+      // Permite que o jogador sempre veja exatamente onde a peça vai encaixar na grade
+      drawObjectSprite(hx, hy, 0.70, false);
+
+      // 5. OBJETO ATRELADO DIRETAMENTE À MÃOZINHA (Cursor Grip)
+      // Enquanto estiver arrastando com o botão do mouse pressionado, renderiza o sprite acompanhando o cursor do mouse
+      const isDraggingActive = !!this.playModeInteraction.isDragging;
+      const hasWorldMouse = typeof this.playModeInteraction.worldX === 'number' && !isNaN(this.playModeInteraction.worldX);
+
+      if (isDraggingActive && hasWorldMouse) {
+        const cursorX = this.playModeInteraction.worldX - (rawW / 2);
+        const cursorY = this.playModeInteraction.worldY - (rawH / 2) - 8;
+        drawObjectSprite(cursorX, cursorY, 0.92, true);
       }
 
-      // 4. Badge flutuante de status Animal Island UI (Estilo Editor)
+      // 6. Floating Banner Badge "Mover para [X, Y]" (Animal Island UI, idêntico ao Editor)
       ctx.save();
       const currentStackUnderCursor = this.tileMap.getStackCount('solid', this.playModeInteraction.hoverTx, this.playModeInteraction.hoverTy);
       let badgeText = '';
@@ -3313,31 +3289,29 @@ class RPGApplication {
         badgeText = 'Local bloqueado ou com colisor';
       }
 
-      ctx.font = 'bold 11.5px "Nunito", sans-serif';
+      ctx.fillStyle = '#794f27';
+      ctx.strokeStyle = '#f8f8f0';
+      ctx.lineWidth = 1.5;
+      ctx.font = 'bold 11px Nunito, Outfit, sans-serif';
       const textMetrics = ctx.measureText(badgeText);
-      const badgeW = textMetrics.width + 20;
-      const badgeH = 24;
-      const badgeX = renderX + rawW / 2 - badgeW / 2;
-      const badgeY = renderY - 32;
+      const badgeW = textMetrics.width + 24;
+      const badgeH = 22;
+      const badgeX = hx + rawW / 2 - badgeW / 2;
+      const badgeY = hy - 28;
 
-      // Card pílula acolhedor
-      ctx.fillStyle = isValid ? '#fdfbf7' : '#fee2e2';
-      ctx.strokeStyle = isValid ? '#22c55e' : '#ef4444';
-      ctx.lineWidth = 1.8;
       ctx.beginPath();
       if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 12);
+        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 11);
       } else {
         ctx.rect(badgeX, badgeY, badgeW, badgeH);
       }
       ctx.fill();
       ctx.stroke();
 
-      // Texto de status
-      ctx.fillStyle = isValid ? '#15803d' : '#b91c1c';
+      ctx.fillStyle = isValid ? '#fdfbf7' : '#fee2e2';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(badgeText, renderX + rawW / 2, badgeY + badgeH / 2);
+      ctx.fillText(badgeText, hx + rawW / 2, badgeY + badgeH / 2);
       ctx.restore();
 
     } catch (e) {
