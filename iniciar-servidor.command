@@ -60,10 +60,11 @@ echo ""
 echo "🖥️  Painel Administrativo Local: http://localhost:8080/admin"
 echo ""
 echo "========================================================"
-echo "🌐 CONECTANDO JOGADORES PELA INTERNET (CLOUDFLARE)..."
-echo "Aguarde alguns segundos enquanto seu link público é gerado:"
+echo "🌐 CONECTANDO TÚNEL PERMANENTE CLOUDFLARE ZERO TRUST..."
+echo "Túnel ID: 60315d95-5910-4ebe-b6de-884a7a3a9e55 (Fixo e Vitalício)"
+echo "Zero portas abertas no roteador, proteção DDoS e SSL ativo."
 echo "========================================================"
 echo ""
 
-# 3. Executar o Cloudflare Tunnel exibindo o link público na tela
-./cloudflared tunnel --url http://localhost:8080
+# 6. Executar o Túnel Permanente com o Token Oficial da Cloudflare
+./cloudflared tunnel run --token eyJhIjoiMGQzZTRlZWE2YzhlZWJjODMzYTE2NzNmN2YzMDM1MGYiLCJ0IjoiNjAzMTVkOTUtNTkxMC00ZWJlLWI2ZGUtODg0YTdhM2E5ZTU1IiwicyI6Ill6WmhPRGs1WVRRdFptRmtOQzAwTlRNekxUaG1NREV0TUdZd09EZGlNV05tWWpNeCJ9
