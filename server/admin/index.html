@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KidsLearnCode - Painel do Servidor & Banco de Dados</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-cream: #f8f8f0;
+      --bg-parchment: #fdfbf7;
+      --bg-card: #f7f3df;
+      --text-brown: #794f27;
+      --text-muted: #725d42;
+      --border-wood: #7a583e;
+      --shadow-wood: #5c3c26;
+      --accent-teal: #19c8b9;
+      --accent-teal-dark: #0f8e83;
+      --accent-orange: #ea580c;
+      --accent-orange-dark: #9a3412;
+      --accent-gold: #f59e0b;
+      --accent-gold-dark: #b45309;
+      --danger: #dc2626;
+      --danger-dark: #991b1b;
+      --mono-font: 'JetBrains Mono', monospace;
+      --body-font: 'Nunito', sans-serif;
+      --title-font: 'Cinzel', serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-cream);
+      color: var(--text-brown);
+      font-family: var(--body-font);
+      padding: 24px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Header */
+    .header {
+      background: var(--bg-parchment);
+      border: 3px solid var(--border-wood);
+      border-radius: 24px;
+      padding: 20px 28px;
+      box-shadow: 0 6px 0 var(--shadow-wood);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-title h1 {
+      font-family: var(--title-font);
+      font-size: 24px;
+      color: var(--text-brown);
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 800;
+      background: #e6f9f6;
+      color: var(--accent-teal-dark);
+      border: 2px solid var(--accent-teal);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-teal);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Metric Cards */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .metric-card {
+      background: var(--bg-parchment);
+      border: 2px solid var(--border-wood);
+      border-radius: 20px;
+      padding: 18px 20px;
+      box-shadow: 0 4px 0 var(--shadow-wood);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .metric-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-brown);
+      font-family: var(--mono-font);
+    }
+
+    .metric-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Buttons (Animal Island UI Tactile 3D Pills) */
+    .btn {
+      font-family: var(--body-font);
+      font-size: 14px;
+      font-weight: 800;
+      border: none;
+      cursor: pointer;
+      padding: 10px 22px;
+      border-radius: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.1s ease;
+      text-decoration: none;
+    }
+
+    .btn-teal {
+      background: var(--accent-teal);
+      color: #fff;
+      box-shadow: 0 4px 0 var(--accent-teal-dark);
+    }
+
+    .btn-teal:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--accent-teal-dark);
+    }
+
+    .btn-orange {
+      background: var(--accent-orange);
+      color: #fff;
+      box-shadow: 0 4px 0 var(--accent-orange-dark);
+    }
+
+    .btn-orange:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--accent-orange-dark);
+    }
+
+    .btn-gold {
+      background: var(--accent-gold);
+      color: #fff;
+      box-shadow: 0 4px 0 var(--accent-gold-dark);
+    }
+
+    .btn-gold:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--accent-gold-dark);
+    }
+
+    .btn-sm {
+      padding: 6px 14px;
+      font-size: 12px;
+      border-radius: 50px;
+    }
+
+    /* Tabs Navigation */
+    .tabs-bar {
+      display: flex;
+      gap: 12px;
+      border-bottom: 2px solid #e0d7c3;
+      padding-bottom: 12px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: var(--bg-card);
+      border: 2px solid var(--border-wood);
+      color: var(--text-brown);
+      padding: 8px 20px;
+      border-radius: 50px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 3px 0 var(--shadow-wood);
+      transition: all 0.1s;
+    }
+
+    .tab-btn.active {
+      background: var(--accent-teal);
+      color: #fff;
+      border-color: var(--accent-teal-dark);
+      box-shadow: 0 3px 0 var(--accent-teal-dark);
+    }
+
+    /* Tab Panes */
+    .tab-pane {
+      display: none;
+      background: var(--bg-parchment);
+      border: 3px solid var(--border-wood);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 6px 0 var(--shadow-wood);
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    .pane-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .pane-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-brown);
+    }
+
+    /* Tables */
+    .table-wrapper {
+      overflow-x: auto;
+      border: 2px solid #e0d7c3;
+      border-radius: 16px;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    th {
+      background: var(--bg-card);
+      color: var(--text-brown);
+      padding: 12px 16px;
+      font-weight: 800;
+      border-bottom: 2px solid var(--border-wood);
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee6d3;
+      color: var(--text-muted);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: #faf7eb;
+    }
+
+    .badge-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 50px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+    .badge-blue { background: #e0f2fe; color: #075985; }
+
+    /* SQL Console */
+    .sql-box {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    textarea.sql-input {
+      width: 100%;
+      min-height: 140px;
+      background: #2b231d;
+      color: #a7f3d0;
+      font-family: var(--mono-font);
+      font-size: 14px;
+      padding: 16px;
+      border-radius: 16px;
+      border: 2px solid var(--border-wood);
+      resize: vertical;
+      outline: none;
+    }
+
+    .sql-result {
+      background: #1c1815;
+      color: #fdfbf7;
+      font-family: var(--mono-font);
+      font-size: 13px;
+      padding: 16px;
+      border-radius: 16px;
+      max-height: 320px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+
+    /* SVGs */
+    .ui-icon {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2.2;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-title">
+        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+          <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+          <line x1="6" y1="6" x2="6.01" y2="6"></line>
+          <line x1="6" y1="18" x2="6.01" y2="18"></line>
+        </svg>
+        <h1>KidsLearnCode Servidor & Banco de Dados</h1>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <div class="badge-status">
+          <span class="status-dot"></span>
+          <span>ONLINE NO MAC MINI</span>
+        </div>
+        <button class="btn btn-teal btn-sm" onclick="fetchServerStats()">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          Atualizar
+        </button>
+      </div>
+    </header>
+
+    <!-- Metrics Bar -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-title">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          Jogadores Conectados
+        </div>
+        <div class="metric-value" id="val-players-online">0</div>
+        <div class="metric-desc">Ao vivo no mundo MMORPG (20Hz)</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-title">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          </svg>
+          Contas Cadastradas
+        </div>
+        <div class="metric-value" id="val-profiles-count">-</div>
+        <div class="metric-desc">Perfis salvos no PostgreSQL local</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-title">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          Memória RAM Usada
+        </div>
+        <div class="metric-value" id="val-ram-usage">-</div>
+        <div class="metric-desc">Mac mini Intel (8 GB Total)</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-title">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          Uptime do Servidor
+        </div>
+        <div class="metric-value" id="val-uptime">-</div>
+        <div class="metric-desc">Tempo contínuo em execução</div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="switchTab('tab-users')">Jogadores & Contas</button>
+      <button class="tab-btn" onclick="switchTab('tab-saves')">Saves & Mapas Globais</button>
+      <button class="tab-btn" onclick="switchTab('tab-sql')">Console SQL</button>
+      <button class="tab-btn" onclick="switchTab('tab-backup')">Backups & Manutenção</button>
+    </div>
+
+    <!-- Pane 1: Jogadores -->
+    <div id="tab-users" class="tab-pane active">
+      <div class="pane-header">
+        <div class="pane-title">Lista de Aventureiros Registrados</div>
+        <button class="btn btn-teal btn-sm" onclick="loadUsers()">Recarregar Tabela</button>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Nickname</th>
+              <th>E-mail</th>
+              <th>Status / Idade</th>
+              <th>Nível / Ouro</th>
+              <th>Posição (X, Y)</th>
+              <th>Último Online</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-users">
+            <tr><td colspan="7" style="text-align: center;">Carregando usuários...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pane 2: Saves & Mapas -->
+    <div id="tab-saves" class="tab-pane">
+      <div class="pane-header">
+        <div class="pane-title">Saves Globais e Mundos Sincronizados</div>
+        <button class="btn btn-teal btn-sm" onclick="loadSaves()">Recarregar Saves</button>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ID do Usuário / Nome</th>
+              <th>Última Atualização</th>
+              <th>Camadas do Mapa</th>
+              <th>Progresso de Código</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-saves">
+            <tr><td colspan="5" style="text-align: center;">Carregando saves do banco...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pane 3: SQL Console -->
+    <div id="tab-sql" class="tab-pane">
+      <div class="pane-header">
+        <div class="pane-title">Console SQL Direto (PostgreSQL Local)</div>
+        <button class="btn btn-orange btn-sm" onclick="runSql()">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          Executar Query
+        </button>
+      </div>
+      <div class="sql-box">
+        <textarea id="sql-query" class="sql-input" spellcheck="false">SELECT p.nickname, p.level, p.gold, p.hero_id, u.email, u.email_confirmed 
+FROM profiles p 
+JOIN auth_users u ON u.id = p.id 
+ORDER BY p.last_online DESC LIMIT 10;</textarea>
+        <div class="sql-result" id="sql-result">Clique em "Executar Query" para consultar o banco nativo.</div>
+      </div>
+    </div>
+
+    <!-- Pane 4: Backup -->
+    <div id="tab-backup" class="tab-pane">
+      <div class="pane-header">
+        <div class="pane-title">Gestão de Backups no Armazenamento Externo</div>
+      </div>
+      <p style="margin-bottom: 20px; font-size: 15px; color: var(--text-muted); line-height: 1.6;">
+        Os dados do banco estão configurados para gravação física direta no seu SSD de 500 GB. Você pode gerar snapshots instantâneos e restaurá-los com 1 clique a qualquer momento:
+      </p>
+      <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+        <button class="btn btn-teal" onclick="createBackup()">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          Criar Novo Backup Agora
+        </button>
+        <button class="btn btn-gold" onclick="importSupabaseMigration()">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Reimportar Dados do Supabase
+        </button>
+      </div>
+      <div style="margin-top: 24px;" class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Arquivo de Backup</th>
+              <th>Tamanho</th>
+              <th>Data de Criação</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-backups">
+            <tr>
+              <td><code>supabase_backup_2026.json</code></td>
+              <td>856 KB</td>
+              <td>14/10/2026 10:27</td>
+              <td><span class="badge-pill badge-green">Salvo no SSD</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      
+      const targetPane = document.getElementById(tabId);
+      if (targetPane) targetPane.classList.add('active');
+      
+      event.target.classList.add('active');
+
+      if (tabId === 'tab-users') loadUsers();
+      if (tabId === 'tab-saves') loadSaves();
+    }
+
+    async function fetchServerStats() {
+      try {
+        const res = await fetch('/api/admin/stats');
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('val-players-online').innerText = data.playersOnline || 0;
+          document.getElementById('val-profiles-count').innerText = data.profilesCount || 0;
+          document.getElementById('val-ram-usage').innerText = data.memoryUsage || '120 MB';
+          document.getElementById('val-uptime').innerText = data.uptime || '0m';
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar estatísticas:', err);
+      }
+    }
+
+    async function loadUsers() {
+      const tbody = document.getElementById('tbody-users');
+      try {
+        const res = await fetch('/api/admin/users');
+        const list = await res.json();
+        if (!Array.isArray(list) || list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhum usuário encontrado.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = list.map(u => `
+          <tr>
+            <td><strong>${u.nickname}</strong></td>
+            <td><code>${u.email}</code></td>
+            <td>
+              <span class="badge-pill ${u.email_confirmed ? 'badge-green' : 'badge-yellow'}">
+                ${u.email_confirmed ? 'Confirmado' : 'Pendente'}
+              </span>
+              ${u.is_minor ? '<span class="badge-pill badge-blue" style="margin-left: 4px;">Menor (ECA)</span>' : ''}
+            </td>
+            <td>Lvl ${u.level} | 🪙 ${u.gold}</td>
+            <td>(${u.x}, ${u.y})</td>
+            <td>${new Date(u.last_online).toLocaleString('pt-BR')}</td>
+            <td>
+              <button class="btn btn-teal btn-sm" onclick="confirmAccount('${u.id}')">Ativar</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="color: var(--danger);">Falha: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function loadSaves() {
+      const tbody = document.getElementById('tbody-saves');
+      try {
+        const res = await fetch('/api/admin/saves');
+        const list = await res.json();
+        if (!Array.isArray(list) || list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhum save registrado.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = list.map(s => `
+          <tr>
+            <td><strong>${s.nickname || s.user_id}</strong></td>
+            <td>${new Date(s.updated_at).toLocaleString('pt-BR')}</td>
+            <td>${s.layersCount || 'Camadas ativas'}</td>
+            <td>${s.codeCount || 0} desafios concluídos</td>
+            <td>
+              <button class="btn btn-teal btn-sm" onclick="exportSave('${s.id}')">Baixar JSON</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" style="color: var(--danger);">Falha: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function runSql() {
+      const query = document.getElementById('sql-query').value;
+      const resBox = document.getElementById('sql-result');
+      resBox.innerText = 'Executando query no PostgreSQL...';
+      try {
+        const res = await fetch('/api/admin/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        });
+        const data = await res.json();
+        resBox.innerText = JSON.stringify(data, null, 2);
+      } catch (err) {
+        resBox.innerText = 'Erro na query: ' + err.message;
+      }
+    }
+
+    async function confirmAccount(id) {
+      if (!confirm('Deseja ativar manualmente esta conta sem exigir validação de e-mail?')) return;
+      try {
+        const res = await fetch('/api/admin/confirm-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        const data = await res.json();
+        alert(data.message || 'Conta ativada com sucesso!');
+        loadUsers();
+      } catch (err) {
+        alert('Erro: ' + err.message);
+      }
+    }
+
+    async function createBackup() {
+      try {
+        const res = await fetch('/api/admin/create-backup', { method: 'POST' });
+        const data = await res.json();
+        alert(data.message || 'Backup gerado com sucesso no SSD externo!');
+      } catch (err) {
+        alert('Erro ao gerar backup: ' + err.message);
+      }
+    }
+
+    async function importSupabaseMigration() {
+      if (!confirm('Deseja reimportar os dados exportados do Supabase?')) return;
+      try {
+        const res = await fetch('/api/admin/import-supabase', { method: 'POST' });
+        const data = await res.json();
+        alert(data.message || 'Migração aplicada com sucesso!');
+        fetchServerStats();
+        loadUsers();
+      } catch (err) {
+        alert('Erro ao importar: ' + err.message);
+      }
+    }
+
+    // Inicialização
+    fetchServerStats();
+    loadUsers();
+    setInterval(fetchServerStats, 10000);
+  </script>
+</body>
+</html>
