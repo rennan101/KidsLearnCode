@@ -50,12 +50,49 @@ if ! pgrep -f "auto-watcher.sh" >/dev/null 2>&1; then
   ./server/scripts/auto-watcher.sh > /dev/null 2>&1 &
 fi
 
-echo ""
-echo "========================================================"
-echo "🌐 CONECTANDO TÚNEL CLOUDFLARE..."
-echo "Acesse o painel: http://localhost:8080/admin"
-echo "========================================================"
-echo ""
+# 5. Executar o Cloudflare Tunnel oficial com protocolo http2 (TCP 443 sem bloqueio UDP)
+mkdir -p server
+rm -f server/cloudflared.log
+touch server/cloudflared.log
 
-# 5. Executar o Cloudflare Tunnel oficial
-./cloudflared tunnel --url http://localhost:8080
+# Monitor do log do túnel em segundo plano: extrai a URL e publica no DuckDNS
+(
+  LAST_TUNNEL=""
+  while true; do
+    if [ -f server/cloudflared.log ]; then
+      FOUND_URL=$(grep -oE "https://[a-zA-Z0-9.-]+\.trycloudflare\.com" server/cloudflared.log | tail -n 1)
+      if [ -n "$FOUND_URL" ] && [ "$FOUND_URL" != "$LAST_TUNNEL" ]; then
+        LAST_TUNNEL="$FOUND_URL"
+        echo "$FOUND_URL" > server/active_tunnel.txt
+        echo ""
+        echo "========================================================"
+        echo "🎉 NOVO TÚNEL CLOUDFLARE DETECTADO!"
+        echo "🌐 URL: $FOUND_URL"
+        echo "📡 Atualizando DuckDNS TXT (kidslearncode.duckdns.org)..."
+        UPDATE_RES=$(curl -s "https://www.duckdns.org/update?domains=kidslearncode&token=8d1cfee6-b6f4-40cd-8f68-725e85ebc171&txt=${FOUND_URL}&verbose=true")
+        echo "✅ Resposta DuckDNS: $UPDATE_RES"
+        echo "========================================================"
+        echo "🏰 JOGO 100% ONLINE PARA O MUNDO INTEIRO!"
+        echo "👉 Jogar agora: https://kids-learn-code.vercel.app"
+        echo "🖥️  Painel Admin: http://localhost:8080/admin"
+        echo "========================================================"
+        echo "ℹ️  Mantenha esta janela aberta para manter o servidor online."
+        echo ""
+      fi
+    fi
+    sleep 2
+  done
+) &
+TUNNEL_MONITOR_PID=$!
+
+cleanup() {
+  echo ""
+  echo "🛑 Encerrando monitor de túnel..."
+  kill $TUNNEL_MONITOR_PID 2>/dev/null || true
+  exit 0
+}
+trap cleanup SIGINT SIGTERM EXIT
+
+# Executa o cloudflared com protocolo http2 resiliente (TCP 443)
+./cloudflared tunnel --protocol http2 --url http://127.0.0.1:8080 2>&1 | tee -a server/cloudflared.log
+

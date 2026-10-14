@@ -8,27 +8,19 @@ import { ModularAvatarRenderer } from './animation/ModularAvatarRenderer.js';
 import { MASTER_NPC_CONFIGS } from './animation/NPCAppearanceGenerator.js';
 import { DEFAULT_AVATAR_CONFIG } from './animation/AvatarConfig.js';
 import { DRAGON_CATALOG } from './DragonManager.js';
+import { getActiveServerUrl } from '../config/supabase.js';
 
 export class MultiplayerClient {
   constructor(serverUrl = null) {
-    if (!serverUrl) {
-      if (typeof window !== 'undefined' && window.location) {
-        // Host ativo Cloudflare WSS
-        const cloudflareHost = 'baltimore-ste-rod-loves.trycloudflare.com';
-        this.serverUrl = (window.location.protocol === 'https:' || !window.location.hostname.includes('localhost'))
-          ? `wss://${cloudflareHost}`
-          : 'ws://localhost:8080';
-      } else {
-        this.serverUrl = 'ws://localhost:8080';
-      }
-    } else {
-      this.serverUrl = serverUrl;
-    }
+    this.serverUrl = serverUrl;
     this.ws = null;
     this.isConnected = false;
     this.playerId = null;
     this.remotePlayers = new Map();
     this.avatarRenderer = new ModularAvatarRenderer();
+    this.reconnectAttempts = 0;
+    this.reconnectTimer = null;
+    this.isDestroyed = false;
 
     // Simulated offline bots list (empty by default - only real players and editor-placed entities exist)
     this.simulatedBots = [];
@@ -216,12 +208,28 @@ export class MultiplayerClient {
     }
   }
 
-  connect() {
+  async connect() {
+    if (this.isDestroyed) return;
+
     try {
-      this.ws = new WebSocket(this.serverUrl);
+      let targetUrl = this.serverUrl;
+      if (!targetUrl) {
+        if (typeof window !== 'undefined' && window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+          targetUrl = 'ws://localhost:8080';
+        } else {
+          const httpUrl = await getActiveServerUrl();
+          const cleanHost = httpUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+          targetUrl = `wss://${cleanHost}`;
+        }
+      }
+
+      this.currentConnectedUrl = targetUrl;
+      this.ws = new WebSocket(targetUrl);
 
       this.ws.onopen = () => {
         this.isConnected = true;
+        this.reconnectAttempts = 0;
+        console.log('[MultiplayerClient] Conectado ao servidor:', targetUrl);
       };
 
       this.ws.onmessage = (event) => {
@@ -235,6 +243,10 @@ export class MultiplayerClient {
             if (this.onChatReceived) {
               this.onChatReceived(data);
             }
+          } else if (data.type === 'MAP_BROADCAST') {
+            if (this.onMapUpdatedCallback) {
+              this.onMapUpdatedCallback(data.mapData);
+            }
           } else if (data.type === 'PLAYER_DISCONNECT') {
             this.remotePlayers.delete(data.playerId);
           }
@@ -245,6 +257,7 @@ export class MultiplayerClient {
 
       this.ws.onclose = () => {
         this.isConnected = false;
+        this.scheduleReconnect();
       };
 
       this.ws.onerror = () => {
@@ -252,7 +265,37 @@ export class MultiplayerClient {
       };
     } catch {
       this.isConnected = false;
+      this.scheduleReconnect();
     }
+  }
+
+  scheduleReconnect() {
+    if (this.isDestroyed || this.reconnectTimer) return;
+    this.reconnectAttempts = (this.reconnectAttempts || 0) + 1;
+    const delay = Math.min(10000, 2000 * Math.pow(1.3, Math.min(this.reconnectAttempts, 5)));
+
+    this.reconnectTimer = setTimeout(async () => {
+      this.reconnectTimer = null;
+      if (!this.serverUrl) {
+        await getActiveServerUrl(true);
+      }
+      this.connect();
+    }, delay);
+  }
+
+  disconnect() {
+    this.isDestroyed = true;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    if (this.ws) {
+      try {
+        this.ws.close();
+      } catch (_) {}
+      this.ws = null;
+    }
+    this.isConnected = false;
   }
 
   handleWorldTick(playerList) {

@@ -411,6 +411,17 @@ app.get('/api/saves/me', async (req, res) => {
   }
 });
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    server: 'KidsLearnCode Native Dedicated Mac mini',
+    playersOnline: activePlayers.size,
+    uptimeSeconds: Math.floor((Date.now() - startTime) / 1000),
+    timestamp: Date.now()
+  });
+});
+
 // Mapa Global Compartilhado Mais Recente
 app.get('/api/world/global-map', async (req, res) => {
   try {
@@ -426,6 +437,42 @@ app.get('/api/world/global-map', async (req, res) => {
       map: result.rows[0].map_data,
       updatedAt: new Date(result.rows[0].updated_at).getTime()
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Salvar Mapa Global Compartilhado
+app.post('/api/world/global-map', async (req, res) => {
+  const { map } = req.body;
+  if (!map) return res.status(400).json({ error: 'Dados do mapa ausentes' });
+
+  const userId = req.user?.id || '00000000-0000-0000-0000-000000000001';
+
+  try {
+    await db.query(
+      `INSERT INTO game_saves (user_id, map_data, updated_at)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (user_id) DO UPDATE SET
+         map_data = EXCLUDED.map_data,
+         updated_at = NOW()`,
+      [userId, map]
+    );
+
+    const broadcast = JSON.stringify({
+      type: 'MAP_BROADCAST',
+      mapData: map,
+      senderId: userId,
+      timestamp: Date.now()
+    });
+
+    for (const client of wss.clients) {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(broadcast);
+      }
+    }
+
+    res.json({ success: true, message: 'Mapa global salvo com sucesso!' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

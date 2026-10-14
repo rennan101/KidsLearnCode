@@ -8,19 +8,20 @@
 # 4. Mantém o túnel Cloudflare sempre vivo e ativo!
 # =============================================================================
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )"
 cd "$DIR"
 
 echo "========================================================"
 echo "🤖 KIDSLEARNCODE AUTO-WATCHER ATIVO NO MAC MINI"
 echo "Monitorando repositório GitHub para auto-deploy..."
+echo "Diretório do projeto: $DIR"
 echo "========================================================"
 
 while true; do
-  # 1. Garante que o PostgreSQL e Node.js estão vivos
+  # 1. Garante que o Node.js está vivo na porta 8080
   if ! lsof -i :8080 >/dev/null 2>&1; then
     echo "⚠️ Servidor Node.js offline. Reiniciando na porta 8080..."
-    (npm --prefix server start) > server/server.log 2>&1 &
+    (cd "$DIR/server" && node index.js) >> "$DIR/server/server.log" 2>&1 &
     sleep 3
   fi
 
@@ -34,19 +35,19 @@ while true; do
     git pull origin main
     
     # Atualiza dependências se package.json mudou
-    if git diff --name-only "$LOCAL" "$REMOTE" | grep -q "server/package.json"; then
+    if git diff --name-only "$LOCAL" "$REMOTE" 2>/dev/null | grep -q "server/package.json"; then
       echo "📦 Atualizando dependências npm do servidor..."
-      npm --prefix server install --silent
+      npm --prefix "$DIR/server" install --silent
     fi
 
     # Reinicia o servidor Node.js com o código atualizado
     echo "🔄 Reiniciando servidor KidsLearnCode com o novo código..."
     kill $(lsof -t -i:8080) 2>/dev/null || true
-    sleep 1
-    (cd "$DIR/server" && node index.js) > "$DIR/server/server.log" 2>&1 &
+    sleep 2
+    (cd "$DIR/server" && node index.js) >> "$DIR/server/server.log" 2>&1 &
     echo "✅ Servidor atualizado e rodando com sucesso!"
   fi
 
-  # Intervalo otimizado de 15 segundos: resposta quase instantânea sem risco de bloqueio de IP pelo GitHub
+  # Intervalo otimizado de 15 segundos
   sleep 15
 done

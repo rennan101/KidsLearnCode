@@ -4,15 +4,15 @@
  * e Sincronização em Tempo Real (Supabase Realtime Broadcast & Presence).
  */
 
-import { SUPABASE_CONFIG } from '../config/supabase.js';
+import { SUPABASE_CONFIG, getActiveServerUrl } from '../config/supabase.js';
 
 export class SupabaseClient {
   constructor() {
     const storedUrl = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_supabase_url')) || '';
     const storedKey = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_supabase_key')) || '';
 
-    // Se a URL salva no navegador for a do Supabase antigo, limpa para usar a nova do servidor Mac mini
-    if (storedUrl && storedUrl.includes('supabase.co')) {
+    // Se a URL salva no navegador for do Supabase antigo ou túnel efêmero anterior, limpa
+    if (storedUrl && (storedUrl.includes('supabase.co') || storedUrl.includes('trycloudflare.com'))) {
       if (typeof localStorage !== 'undefined') {
         localStorage.removeItem('kidslearn_supabase_url');
         localStorage.removeItem('kidslearn_supabase_key');
@@ -35,6 +35,12 @@ export class SupabaseClient {
     this.onRemotePlayerUpdateCallback = null;
     this.onChatMessageCallback = null;
     this.onMapUpdatedCallback = null;
+  }
+
+  async getServerUrl(forceRefresh = false) {
+    const url = await getActiveServerUrl(forceRefresh);
+    if (url) this.url = url;
+    return url || this.url || SUPABASE_CONFIG.url;
   }
 
   async init() {
@@ -185,15 +191,29 @@ export class SupabaseClient {
 
   async signUp(email, password, nickname = 'Aventureiro', extraData = {}) {
     try {
-      const activeUrl = this.url || 'https://size-anime-pursuit-professional.trycloudflare.com';
+      let activeUrl = await this.getServerUrl();
       const isMinor = extraData.isOver18 === false;
       const parentEmail = extraData.parentEmail || null;
 
-      const res = await fetch(`${activeUrl}/api/auth/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, nickname, isOver18: extraData.isOver18 ?? true, parentEmail })
-      });
+      let res;
+      try {
+        res = await fetch(`${activeUrl}/api/auth/signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, nickname, isOver18: extraData.isOver18 ?? true, parentEmail })
+        });
+        if (!res.ok && (res.status === 502 || res.status === 503 || res.status === 504)) {
+          throw new Error('gateway_error');
+        }
+      } catch (_) {
+        activeUrl = await this.getServerUrl(true);
+        res = await fetch(`${activeUrl}/api/auth/signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, nickname, isOver18: extraData.isOver18 ?? true, parentEmail })
+        });
+      }
+
       const data = await res.json();
       if (res.ok && data.success && data.user) {
         if (!data.requiresConfirmation) {
@@ -252,7 +272,7 @@ export class SupabaseClient {
       if (error) {
         let msg = error.message;
         if (msg.includes('rate limit') || msg.includes('over quota') || msg.includes('Email rate limit')) {
-          msg = 'Limite temporário de e-mails do Supabase atingido. Para permitir cadastros ilimitados sem bloqueios, desative a opção "Confirm email" no painel do Supabase.';
+          msg = 'Limite temporário de e-mails atingido. Tente novamente em instantes.';
         } else if (msg.includes('already registered') || msg.includes('already exists')) {
           msg = 'Este e-mail já está cadastrado na Ilha Lua! Tente entrar ou recupere sua senha.';
         } else if (msg.includes('Password should be at least')) {
@@ -291,12 +311,26 @@ export class SupabaseClient {
 
   async signIn(email, password) {
     try {
-      const activeUrl = this.url || 'https://size-anime-pursuit-professional.trycloudflare.com';
-      const res = await fetch(`${activeUrl}/api/auth/signin`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
+      let activeUrl = await this.getServerUrl();
+      let res;
+      try {
+        res = await fetch(`${activeUrl}/api/auth/signin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        if (!res.ok && (res.status === 502 || res.status === 503 || res.status === 504)) {
+          throw new Error('gateway_error');
+        }
+      } catch (_) {
+        activeUrl = await this.getServerUrl(true);
+        res = await fetch(`${activeUrl}/api/auth/signin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+      }
+
       const data = await res.json();
       if (res.ok && data.success && data.user) {
         this.user = data.user;
@@ -350,13 +384,26 @@ export class SupabaseClient {
 
   async resetPassword(email) {
     try {
-      const activeUrl = this.url || 'https://size-anime-pursuit-professional.trycloudflare.com';
-      // 1. Tenta envio direto para o servidor Mac mini
-      const res = await fetch(`${activeUrl}/api/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
+      let activeUrl = await this.getServerUrl();
+      let res;
+      try {
+        res = await fetch(`${activeUrl}/api/auth/forgot-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        if (!res.ok && (res.status === 502 || res.status === 503 || res.status === 504)) {
+          throw new Error('gateway_error');
+        }
+      } catch (_) {
+        activeUrl = await this.getServerUrl(true);
+        res = await fetch(`${activeUrl}/api/auth/forgot-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+      }
+
       const data = await res.json();
       if (data.success || res.ok) {
         return {
@@ -395,17 +442,34 @@ export class SupabaseClient {
 
   async updatePassword(newPassword) {
     try {
-      const activeUrl = this.url || '';
+      let activeUrl = await this.getServerUrl();
       const authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_auth_token')) || '';
       
-      const res = await fetch(`${activeUrl}/api/auth/update-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': authToken ? `Bearer ${authToken}` : ''
-        },
-        body: JSON.stringify({ newPassword })
-      });
+      let res;
+      try {
+        res = await fetch(`${activeUrl}/api/auth/update-password`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': authToken ? `Bearer ${authToken}` : ''
+          },
+          body: JSON.stringify({ newPassword })
+        });
+        if (!res.ok && (res.status === 502 || res.status === 503 || res.status === 504)) {
+          throw new Error('gateway_error');
+        }
+      } catch (_) {
+        activeUrl = await this.getServerUrl(true);
+        res = await fetch(`${activeUrl}/api/auth/update-password`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': authToken ? `Bearer ${authToken}` : ''
+          },
+          body: JSON.stringify({ newPassword })
+        });
+      }
+
       const data = await res.json();
       if (res.ok && data.success) {
         return { success: true, message: data.message || 'Sua senha foi redefinida com sucesso!' };
@@ -441,6 +505,9 @@ export class SupabaseClient {
   }
 
   async signOut() {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('kidslearn_auth_token');
+    }
     if (this.client && !this.user?.isGuest) {
       await this.client.auth.signOut();
     }
@@ -456,6 +523,27 @@ export class SupabaseClient {
   // ==========================================
 
   async getUserProfile() {
+    if (this.user?.isGuest) return null;
+    const authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_auth_token')) || '';
+
+    // 1. Tenta API Nativa do Mac mini
+    if (authToken) {
+      try {
+        const baseUrl = await this.getServerUrl();
+        const res = await fetch(`${baseUrl}/api/profiles/me`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data) {
+            this.profile = data;
+            return data;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 2. Fallback Supabase SDK
     await this.ensureClient();
     if (!this.client || this.user?.isGuest) return null;
 
@@ -467,7 +555,6 @@ export class SupabaseClient {
         .single();
 
       if (error) {
-        // Se ainda não existir registro de perfil, cria um novo
         return await this.syncUserProfile({
           nickname: this.user.user_metadata?.nickname || this.user.email.split('@')[0],
           heroId: 'char_wolf_hunter_m'
@@ -481,6 +568,40 @@ export class SupabaseClient {
   }
 
   async syncUserProfile(profileData = {}) {
+    if (this.user?.isGuest) return null;
+    const authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_auth_token')) || '';
+
+    // 1. Tenta API Nativa do Mac mini
+    if (authToken) {
+      try {
+        const baseUrl = await this.getServerUrl();
+        const res = await fetch(`${baseUrl}/api/profiles/sync`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            nickname: profileData.nickname || this.user.user_metadata?.nickname || this.user.email?.split('@')[0],
+            heroId: profileData.heroId || 'char_wolf_hunter_m',
+            x: profileData.x || 320,
+            y: profileData.y || 320,
+            level: profileData.level || 1,
+            xp: profileData.xp || 0,
+            gold: profileData.gold || 100
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data) {
+            this.profile = data;
+            return data;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 2. Fallback Supabase SDK
     await this.ensureClient();
     if (!this.client || this.user?.isGuest) return null;
 
@@ -517,7 +638,6 @@ export class SupabaseClient {
   // Saves na Nuvem (PostgreSQL game_saves & Global World Map)
   // ==========================================
 
-  // Global map uses a fixed UUID to comply with Postgres UUID constraints
   static GLOBAL_MAP_UUID = '00000000-0000-0000-0000-000000000001';
 
   isValidUUID(id) {
@@ -526,17 +646,34 @@ export class SupabaseClient {
   }
 
   async saveGlobalWorldMap(mapData) {
+    if (!mapData) return { success: false, reason: 'offline_or_invalid_map' };
+
+    // 1. Dispara broadcast em tempo real para todos os jogadores conectados
+    this.broadcastMapUpdate(mapData);
+
+    const authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_auth_token')) || '';
+
+    // 2. Tenta API Nativa do Mac mini
+    try {
+      const baseUrl = await this.getServerUrl();
+      const res = await fetch(`${baseUrl}/api/world/global-map`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authToken ? `Bearer ${authToken}` : ''
+        },
+        body: JSON.stringify({ map: mapData })
+      });
+      if (res.ok) return { success: true };
+    } catch (_) {}
+
+    // 3. Fallback Supabase SDK
     await this.ensureClient();
-    if (!this.client || !mapData) {
+    if (!this.client) {
       return { success: false, reason: 'offline_or_invalid_map' };
     }
 
     try {
-      // 1. Dispara broadcast em tempo real para todos os jogadores conectados
-      this.broadcastMapUpdate(mapData);
-
-      // 2. Salva no banco compartilhado
-      // Se autenticado com UUID válido (admin ou jogador), atualiza a tabela game_saves
       if (this.user && !this.user.isGuest && this.isValidUUID(this.user.id)) {
         const payload = {
           user_id: this.user.id,
@@ -562,19 +699,27 @@ export class SupabaseClient {
   }
 
   async loadGlobalWorldMap() {
+    // 1. Tenta API Nativa do Mac mini
+    try {
+      const baseUrl = await this.getServerUrl();
+      const res = await fetch(`${baseUrl}/api/world/global-map`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.map) {
+          return {
+            map: data.map,
+            updatedAt: data.updatedAt || Date.now()
+          };
+        }
+      }
+    } catch (_) {}
+
+    // 2. Fallback Supabase SDK
     await this.ensureClient();
     if (!this.client) return null;
 
     try {
-      // 1. Tenta buscar prioritariamente o save do administrador rennancr93@gmail.com ou eduardasa@proton.me
-      // Busca profiles correspondentes para obter os user_ids dos administradores
       try {
-        const { data: adminProfiles } = await this.client
-          .from('profiles')
-          .select('id, nickname')
-          .limit(50);
-
-        // Busca nos game_saves o mapa mais recente
         const { data: savesList, error: savesErr } = await this.client
           .from('game_saves')
           .select('user_id, map_data, updated_at')
@@ -583,7 +728,6 @@ export class SupabaseClient {
           .limit(10);
 
         if (!savesErr && Array.isArray(savesList) && savesList.length > 0) {
-          // Se o usuário atual for o admin ou se houver um save recente, utiliza o mais atualizado
           const latestSave = savesList[0];
           if (latestSave && latestSave.map_data) {
             return {
@@ -593,10 +737,9 @@ export class SupabaseClient {
           }
         }
       } catch (errAdmin) {
-        console.warn('[SupabaseClient] Consulta a saves de admin:', errAdmin);
+        console.warn('[SupabaseClient] Consulta a saves:', errAdmin);
       }
 
-      // 2. Fallback geral: busca o mapa mais recente salvo globalmente no banco por qualquer usuário
       const { data, error } = await this.client
         .from('game_saves')
         .select('map_data, updated_at')
@@ -617,8 +760,36 @@ export class SupabaseClient {
   }
 
   async saveCloudGame(payload) {
+    if (!this.user || this.user.isGuest) {
+      return { success: false, reason: 'guest_or_offline' };
+    }
+    const authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_auth_token')) || '';
+
+    // 1. Tenta API Nativa do Mac mini
+    if (authToken) {
+      try {
+        const baseUrl = await this.getServerUrl();
+        const res = await fetch(`${baseUrl}/api/saves`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            map: payload.map || {},
+            player: payload.player || {},
+            inventory: payload.inventory || {},
+            dragons: payload.dragons || {},
+            codingProgress: payload.codingProgress || {}
+          })
+        });
+        if (res.ok) return { success: true };
+      } catch (_) {}
+    }
+
+    // 2. Fallback Supabase SDK
     await this.ensureClient();
-    if (!this.client || !this.user || this.user.isGuest || !this.isValidUUID(this.user.id)) {
+    if (!this.client || !this.isValidUUID(this.user.id)) {
       return { success: false, reason: 'guest_or_offline' };
     }
 
@@ -631,7 +802,7 @@ export class SupabaseClient {
           player_data: payload.player || {},
           inventory_data: payload.inventory || {},
           dragons_data: payload.dragons || {},
-          coding_progress: payload.codingProgress || {},
+          codingProgress: payload.codingProgress || {},
           updated_at: new Date().toISOString()
         }, { onConflict: 'user_id' });
 
@@ -643,8 +814,26 @@ export class SupabaseClient {
   }
 
   async loadCloudGame() {
+    if (!this.user || this.user.isGuest) return null;
+    const authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_auth_token')) || '';
+
+    // 1. Tenta API Nativa do Mac mini
+    if (authToken) {
+      try {
+        const baseUrl = await this.getServerUrl();
+        const res = await fetch(`${baseUrl}/api/saves/me`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data) return data;
+        }
+      } catch (_) {}
+    }
+
+    // 2. Fallback Supabase SDK
     await this.ensureClient();
-    if (!this.client || !this.user || this.user.isGuest || !this.isValidUUID(this.user.id)) {
+    if (!this.client || !this.isValidUUID(this.user.id)) {
       return null;
     }
 
@@ -658,7 +847,7 @@ export class SupabaseClient {
       if (error || !data) return null;
 
       return {
-        id: 'active_save',
+        id: data.id,
         map: data.map_data,
         player: data.player_data,
         inventory: data.inventory_data,
