@@ -13,10 +13,10 @@ export class MultiplayerClient {
   constructor(serverUrl = null) {
     if (!serverUrl) {
       if (typeof window !== 'undefined' && window.location) {
-        // Host permanente DuckDNS (nunca mais muda)
-        const permanentHost = 'kidslearncode.duckdns.org:8080';
+        // Host ativo Cloudflare WSS
+        const cloudflareHost = 'tap-strip-rows-conversation.trycloudflare.com';
         this.serverUrl = (window.location.protocol === 'https:' || !window.location.hostname.includes('localhost'))
-          ? `ws://${permanentHost}`
+          ? `wss://${cloudflareHost}`
           : 'ws://localhost:8080';
       } else {
         this.serverUrl = 'ws://localhost:8080';

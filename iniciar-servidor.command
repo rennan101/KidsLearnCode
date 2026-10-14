@@ -36,7 +36,7 @@ fi
 # 3. Iniciar o servidor Node.js em segundo plano (se já não estiver rodando)
 if ! lsof -i :8080 >/dev/null 2>&1; then
   echo "🚀 Iniciando Servidor Node.js (MMORPG + REST + Banco)..."
-  (npm --prefix server start) > server/server.log 2>&1 &
+  (cd "$DIR/server" && node index.js) > "$DIR/server/server.log" 2>&1 &
   SERVER_PID=$!
   echo "✅ Servidor Node.js ativo (PID: $SERVER_PID)"
   sleep 3
