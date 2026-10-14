@@ -39,11 +39,11 @@ while true; do
       npm --prefix server install --silent
     fi
 
-    # Reinicia o servidor Node.js para aplicar o código novo
+    # Reinicia o servidor Node.js com o código atualizado
     echo "🔄 Reiniciando servidor KidsLearnCode com o novo código..."
     kill $(lsof -t -i:8080) 2>/dev/null || true
-    sleep 2
-    (npm --prefix server start) > server/server.log 2>&1 &
+    sleep 1
+    (cd "$DIR/server" && node index.js) > "$DIR/server/server.log" 2>&1 &
     echo "✅ Servidor atualizado e rodando com sucesso!"
   fi
 

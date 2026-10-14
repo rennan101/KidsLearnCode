@@ -643,6 +643,15 @@ wss.on('connection', (ws) => {
   });
 });
 
+// Tratadores globais para nunca derrubar o processo por exceções não tratadas
+process.on('uncaughtException', (err) => {
+  console.error('[CRITICAL] Exceção não capturada (servidor continua vivo):', err.message, err.stack);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[CRITICAL] Rejeição de Promise não tratada (servidor continua vivo):', reason);
+});
+
 // Iniciar Servidor
 server.listen(PORT, () => {
   console.log('========================================================');
