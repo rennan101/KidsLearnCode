@@ -280,6 +280,47 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   }
 });
 
+// Atualizar Senha (com usuário autenticado ou via token)
+app.post('/api/auth/update-password', async (req, res) => {
+  const { newPassword, token } = req.body;
+  if (!newPassword || newPassword.length < 6) {
+    return res.status(400).json({ error: 'A nova senha deve ter pelo menos 6 caracteres.' });
+  }
+
+  try {
+    let userId = req.user?.id;
+
+    // Se veio token de recuperação
+    if (!userId && token) {
+      const userRes = await db.query(
+        'SELECT id FROM auth_users WHERE reset_token = $1 AND reset_token_expires_at > NOW()',
+        [token]
+      );
+      if (userRes.rows.length === 0) {
+        return res.status(400).json({ error: 'Token de recuperação expirado ou inválido.' });
+      }
+      userId = userRes.rows[0].id;
+    }
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Não autenticado para alterar a senha.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    await db.query(
+      'UPDATE auth_users SET password_hash = $1, reset_token = NULL, reset_token_expires_at = NULL, updated_at = NOW() WHERE id = $2',
+      [passwordHash, userId]
+    );
+
+    res.json({ success: true, message: 'Sua senha foi redefinida com sucesso!' });
+  } catch (err) {
+    console.error('[API Auth] Erro ao atualizar senha:', err);
+    res.status(500).json({ error: 'Erro interno ao redefinir a senha.' });
+  }
+});
+
 // ==========================================
 // 2. ROTAS DE DADOS DO JOGO (Profiles & Saves)
 // ==========================================

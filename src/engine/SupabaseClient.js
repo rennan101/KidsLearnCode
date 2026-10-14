@@ -394,6 +394,28 @@ export class SupabaseClient {
   }
 
   async updatePassword(newPassword) {
+    try {
+      const activeUrl = this.url || '';
+      const authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_auth_token')) || '';
+      
+      const res = await fetch(`${activeUrl}/api/auth/update-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authToken ? `Bearer ${authToken}` : ''
+        },
+        body: JSON.stringify({ newPassword })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        return { success: true, message: data.message || 'Sua senha foi redefinida com sucesso!' };
+      } else if (!res.ok && data.error) {
+        return { success: false, error: data.error };
+      }
+    } catch (_) {
+      // Fallback
+    }
+
     await this.ensureClient();
     if (!this.client) {
       return { 
