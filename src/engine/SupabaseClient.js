@@ -11,8 +11,18 @@ export class SupabaseClient {
     const storedUrl = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_supabase_url')) || '';
     const storedKey = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_supabase_key')) || '';
 
-    this.url = (storedUrl && storedUrl.startsWith('https://')) ? storedUrl.trim() : (SUPABASE_CONFIG.url || '');
-    this.anonKey = (storedKey && storedKey.length > 20) ? storedKey.trim() : (SUPABASE_CONFIG.anonKey || '');
+    // Se a URL salva no navegador for a do Supabase antigo, limpa para usar a nova do servidor Mac mini
+    if (storedUrl && storedUrl.includes('supabase.co')) {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('kidslearn_supabase_url');
+        localStorage.removeItem('kidslearn_supabase_key');
+      }
+      this.url = SUPABASE_CONFIG.url || '';
+      this.anonKey = SUPABASE_CONFIG.anonKey || '';
+    } else {
+      this.url = (storedUrl && storedUrl.startsWith('https://')) ? storedUrl.trim() : (SUPABASE_CONFIG.url || '');
+      this.anonKey = (storedKey && storedKey.length > 20) ? storedKey.trim() : (SUPABASE_CONFIG.anonKey || '');
+    }
     this.client = null;
     this.user = null;
     this.profile = null;
@@ -174,6 +184,44 @@ export class SupabaseClient {
   // ==========================================
 
   async signUp(email, password, nickname = 'Aventureiro', extraData = {}) {
+    try {
+      const activeUrl = this.url || 'https://size-anime-pursuit-professional.trycloudflare.com';
+      const isMinor = extraData.isOver18 === false;
+      const parentEmail = extraData.parentEmail || null;
+
+      const res = await fetch(`${activeUrl}/api/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, nickname, isOver18: extraData.isOver18 ?? true, parentEmail })
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.user) {
+        if (!data.requiresConfirmation) {
+          this.user = data.user;
+          if (typeof localStorage !== 'undefined' && data.token) {
+            localStorage.setItem('kidslearn_auth_token', data.token);
+          }
+          await this.syncUserProfile({ nickname, heroId: 'char_wolf_hunter_m', level: 1, xp: 0, gold: 100 });
+          this.notifyAuthChange('SIGNED_IN', { user: this.user, token: data.token });
+          this.setupRealtimeChannel();
+          return { success: true, user: data.user, requiresConfirmation: false };
+        } else {
+          return {
+            success: true,
+            user: data.user,
+            requiresConfirmation: true,
+            isMinor,
+            confirmTarget: isMinor && parentEmail ? parentEmail : email,
+            message: data.message
+          };
+        }
+      } else if (!res.ok && data.error) {
+        return { success: false, error: data.error };
+      }
+    } catch (_) {
+      // Fallback
+    }
+
     await this.ensureClient();
     if (!this.client) {
       return { 
@@ -242,6 +290,30 @@ export class SupabaseClient {
   }
 
   async signIn(email, password) {
+    try {
+      const activeUrl = this.url || 'https://size-anime-pursuit-professional.trycloudflare.com';
+      const res = await fetch(`${activeUrl}/api/auth/signin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.user) {
+        this.user = data.user;
+        this.profile = data.profile || await this.getUserProfile();
+        if (typeof localStorage !== 'undefined' && data.token) {
+          localStorage.setItem('kidslearn_auth_token', data.token);
+        }
+        this.notifyAuthChange('SIGNED_IN', { user: this.user, token: data.token });
+        this.setupRealtimeChannel();
+        return { success: true, user: data.user, profile: this.profile };
+      } else if (!res.ok && data.error) {
+        return { success: false, error: data.error };
+      }
+    } catch (_) {
+      // Fallback para biblioteca supabase se disponível
+    }
+
     await this.ensureClient();
     if (!this.client) {
       return { 
@@ -261,7 +333,7 @@ export class SupabaseClient {
         if (msg.includes('Invalid login credentials')) {
           msg = 'E-mail ou senha incorretos. Verifique os dados digitados.';
         } else if (msg.includes('Email not confirmed')) {
-          msg = 'Este e-mail ainda não foi confirmado. Acesse sua caixa de entrada ou solicite a liberação imediata ao administrador desmarcando "Confirm email" no Supabase.';
+          msg = 'Este e-mail ainda não foi confirmado. Acesse sua caixa de entrada ou solicite a liberação imediata ao administrador.';
         }
         return { success: false, error: msg };
       }
@@ -277,6 +349,25 @@ export class SupabaseClient {
   }
 
   async resetPassword(email) {
+    try {
+      const activeUrl = this.url || 'https://size-anime-pursuit-professional.trycloudflare.com';
+      // 1. Tenta envio direto para o servidor Mac mini
+      const res = await fetch(`${activeUrl}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (data.success || res.ok) {
+        return {
+          success: true,
+          message: data.message || `Instruções de recuperação foram enviadas para ${email}.`
+        };
+      }
+    } catch (_) {
+      // Fallback para o cliente padrão
+    }
+
     await this.ensureClient();
     if (!this.client) {
       return { 
