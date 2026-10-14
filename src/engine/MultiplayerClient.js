@@ -10,8 +10,20 @@ import { DEFAULT_AVATAR_CONFIG } from './animation/AvatarConfig.js';
 import { DRAGON_CATALOG } from './DragonManager.js';
 
 export class MultiplayerClient {
-  constructor(serverUrl = 'ws://localhost:8080') {
-    this.serverUrl = serverUrl;
+  constructor(serverUrl = null) {
+    if (!serverUrl) {
+      if (typeof window !== 'undefined' && window.location) {
+        // Usa o host do Cloudflare em WSS seguro se configurado
+        const cloudflareHost = 'size-anime-pursuit-professional.trycloudflare.com';
+        this.serverUrl = (window.location.protocol === 'https:' || !window.location.hostname.includes('localhost'))
+          ? `wss://${cloudflareHost}`
+          : 'ws://localhost:8080';
+      } else {
+        this.serverUrl = 'ws://localhost:8080';
+      }
+    } else {
+      this.serverUrl = serverUrl;
+    }
     this.ws = null;
     this.isConnected = false;
     this.playerId = null;

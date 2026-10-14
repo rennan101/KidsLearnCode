@@ -34,5 +34,11 @@ Geralt/
 src/config/supabase.local.js
 *.local.js
 
+# Node Modules & Server Binaries
+node_modules/
+server/node_modules/
+cloudflared
+cloudflared.tgz
+
 # Exported Map Dumps (Raw Exports)
 world-map-*.json
