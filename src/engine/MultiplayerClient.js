@@ -14,7 +14,7 @@ export class MultiplayerClient {
     if (!serverUrl) {
       if (typeof window !== 'undefined' && window.location) {
         // Usa o host do Cloudflare em WSS seguro se configurado
-        const cloudflareHost = 'size-anime-pursuit-professional.trycloudflare.com';
+        const cloudflareHost = 'drilling-nottingham-influences-italiano.trycloudflare.com';
         this.serverUrl = (window.location.protocol === 'https:' || !window.location.hostname.includes('localhost'))
           ? `wss://${cloudflareHost}`
           : 'ws://localhost:8080';
