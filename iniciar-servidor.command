@@ -44,6 +44,12 @@ else
   echo "ℹ️ Servidor Node.js já estava ativo na porta 8080."
 fi
 
+# 4. Iniciar o Auto-Watcher em segundo plano (Auto-Deploy a cada 15 segundos)
+if ! pgrep -f "auto-watcher.sh" >/dev/null 2>&1; then
+  echo "🤖 Ativando Auto-Watcher (Atualização automática via Git a cada 15s)..."
+  ./server/scripts/auto-watcher.sh > server/watcher.log 2>&1 &
+fi
+
 echo ""
 echo "🖥️  Painel Administrativo Local: http://localhost:8080/admin"
 echo ""

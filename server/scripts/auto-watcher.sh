@@ -47,5 +47,6 @@ while true; do
     echo "✅ Servidor atualizado e rodando com sucesso!"
   fi
 
-  sleep 60
+  # Intervalo otimizado de 15 segundos: resposta quase instantânea sem risco de bloqueio de IP pelo GitHub
+  sleep 15
 done
