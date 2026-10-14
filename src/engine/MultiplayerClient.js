@@ -13,10 +13,10 @@ export class MultiplayerClient {
   constructor(serverUrl = null) {
     if (!serverUrl) {
       if (typeof window !== 'undefined' && window.location) {
-        // Usa o host do Cloudflare em WSS seguro se configurado
-        const cloudflareHost = 'drilling-nottingham-influences-italiano.trycloudflare.com';
+        // Host permanente DuckDNS (nunca mais muda)
+        const permanentHost = 'kidslearncode.duckdns.org:8080';
         this.serverUrl = (window.location.protocol === 'https:' || !window.location.hostname.includes('localhost'))
-          ? `wss://${cloudflareHost}`
+          ? `ws://${permanentHost}`
           : 'ws://localhost:8080';
       } else {
         this.serverUrl = 'ws://localhost:8080';

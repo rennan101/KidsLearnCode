@@ -50,6 +50,12 @@ if ! pgrep -f "auto-watcher.sh" >/dev/null 2>&1; then
   ./server/scripts/auto-watcher.sh > server/watcher.log 2>&1 &
 fi
 
+# 5. Iniciar o DuckDNS Updater em segundo plano (Atualiza IP a cada 5 minutos)
+if ! pgrep -f "duckdns-updater.sh" >/dev/null 2>&1; then
+  echo "🦆 Ativando DuckDNS Updater (kidslearncode.duckdns.org)..."
+  ./server/scripts/duckdns-updater.sh > server/duckdns.log 2>&1 &
+fi
+
 echo ""
 echo "🖥️  Painel Administrativo Local: http://localhost:8080/admin"
 echo ""
