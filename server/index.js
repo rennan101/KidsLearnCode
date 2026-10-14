@@ -864,14 +864,22 @@ app.post('/api/admin/backups/restore', async (req, res) => {
 });
 
 // DISPARO AUTOMÁTICO:
-// 1. Gera um backup imediato na inicialização do servidor
-setTimeout(() => {
-  performFullBackup('startup_auto');
+// 1. Gera um backup após inicialização com guarda contra falha de banco
+setTimeout(async () => {
+  try {
+    await performFullBackup('startup_auto');
+  } catch (err) {
+    console.warn('[Backup Automático] Tentativa de inicialização ignorada (banco ocupado ou conectando):', err.message);
+  }
 }, 5000);
 
 // 2. Executa backup automático a cada 6 horas (4 vezes por dia)
-setInterval(() => {
-  performFullBackup('scheduled_6h');
+setInterval(async () => {
+  try {
+    await performFullBackup('scheduled_6h');
+  } catch (err) {
+    console.warn('[Backup Automático] Tentativa periódica ignorada:', err.message);
+  }
 }, 6 * 60 * 60 * 1000);
 
 // ==========================================
