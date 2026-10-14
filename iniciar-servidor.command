@@ -27,13 +27,19 @@ if [ ! -f "./cloudflared" ] || [ ! -s "./cloudflared" ] || grep -q "Not Found" "
   echo "✅ Cloudflared pronto!"
 fi
 
-# 2. Iniciar o servidor Node.js em segundo plano (se já não estiver rodando)
+# 2. Verificar dependências do servidor Node.js
+if [ ! -d "server/node_modules" ]; then
+  echo "📦 Instalando dependências do servidor (express, pg, ws, etc)..."
+  npm --prefix server install
+fi
+
+# 3. Iniciar o servidor Node.js em segundo plano (se já não estiver rodando)
 if ! lsof -i :8080 >/dev/null 2>&1; then
   echo "🚀 Iniciando Servidor Node.js (MMORPG + REST + Banco)..."
-  (cd server && node index.js) > server/server.log 2>&1 &
+  (npm --prefix server start) > server/server.log 2>&1 &
   SERVER_PID=$!
   echo "✅ Servidor Node.js ativo (PID: $SERVER_PID)"
-  sleep 2
+  sleep 3
 else
   echo "ℹ️ Servidor Node.js já estava ativo na porta 8080."
 fi
