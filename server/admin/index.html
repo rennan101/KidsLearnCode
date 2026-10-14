@@ -516,9 +516,16 @@ ORDER BY p.last_online DESC LIMIT 10;</textarea>
       <div class="pane-header">
         <div class="pane-title">Gestão de Backups no Armazenamento Externo</div>
       </div>
-      <p style="margin-bottom: 20px; font-size: 15px; color: var(--text-muted); line-height: 1.6;">
-        Os dados do banco estão configurados para gravação física direta no seu SSD de 500 GB. Você pode gerar snapshots instantâneos e restaurá-los com 1 clique a qualquer momento:
-      </p>
+      <div style="background: #e6f9f6; border: 2px solid #19c8b9; border-radius: 16px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div class="status-dot"></div>
+          <div>
+            <strong style="color: #0f8e83; font-size: 15px;">Backup Automático Ativo no Servidor</strong>
+            <p style="margin: 2px 0 0; font-size: 13px; color: #725d42;">Snapshots automáticos a cada 6 horas salvos diretamente no SSD externo.</p>
+          </div>
+        </div>
+        <span class="badge-status" id="badge-auto-backup">Proteção 100% Ativa</span>
+      </div>
       <div style="display: flex; gap: 16px; flex-wrap: wrap;">
         <button class="btn btn-teal" onclick="createBackup()">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -526,7 +533,7 @@ ORDER BY p.last_online DESC LIMIT 10;</textarea>
             <polyline points="17 21 17 13 7 13 7 21"></polyline>
             <polyline points="7 3 7 8 15 8"></polyline>
           </svg>
-          Criar Novo Backup Agora
+          Criar Novo Snapshot Manual Agora
         </button>
         <button class="btn btn-gold" onclick="importSupabaseMigration()">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -542,6 +549,7 @@ ORDER BY p.last_online DESC LIMIT 10;</textarea>
           <thead>
             <tr>
               <th>Arquivo de Backup</th>
+              <th>Origem</th>
               <th>Tamanho</th>
               <th>Data de Criação</th>
               <th>Ações</th>
@@ -549,10 +557,7 @@ ORDER BY p.last_online DESC LIMIT 10;</textarea>
           </thead>
           <tbody id="tbody-backups">
             <tr>
-              <td><code>supabase_backup_2026.json</code></td>
-              <td>856 KB</td>
-              <td>14/10/2026 10:27</td>
-              <td><span class="badge-pill badge-green">Salvo no SSD</span></td>
+              <td colspan="5" style="text-align: center; color: var(--text-muted);">Carregando histórico de backups...</td>
             </tr>
           </tbody>
         </table>
@@ -572,6 +577,7 @@ ORDER BY p.last_online DESC LIMIT 10;</textarea>
 
       if (tabId === 'tab-users') loadUsers();
       if (tabId === 'tab-saves') loadSaves();
+      if (tabId === 'tab-backup') loadBackups();
     }
 
     async function fetchServerStats() {
@@ -681,11 +687,65 @@ ORDER BY p.last_online DESC LIMIT 10;</textarea>
       }
     }
 
+    async function loadBackups() {
+      const tbody = document.getElementById('tbody-backups');
+      try {
+        const res = await fetch('/api/admin/backups');
+        const list = await res.json();
+        if (!Array.isArray(list) || list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum backup gerado ainda. O sistema gera automaticamente a cada 6h.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = list.map(b => {
+          const kb = (parseInt(b.size_bytes || '0', 10) / 1024).toFixed(1);
+          const dateStr = new Date(b.created_at).toLocaleString('pt-BR');
+          const isAuto = b.created_by?.includes('auto') || b.created_by?.includes('scheduled');
+          return `
+            <tr>
+              <td><code>${b.filename}</code></td>
+              <td>
+                <span class="badge-pill ${isAuto ? 'badge-blue' : 'badge-green'}">
+                  ${isAuto ? 'Automático' : 'Manual'}
+                </span>
+              </td>
+              <td>${kb} KB</td>
+              <td>${dateStr}</td>
+              <td style="display: flex; gap: 8px;">
+                <a href="/api/admin/backups/download/${encodeURIComponent(b.filename)}" class="btn btn-teal btn-sm" style="text-decoration: none;">Download</a>
+                <button class="btn btn-gold btn-sm" onclick="restoreBackup('${b.filename}')">Restaurar</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" style="color: var(--danger);">Falha ao carregar backups: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function restoreBackup(filename) {
+      if (!confirm('Deseja realmente restaurar os dados a partir do backup ' + filename + '? Os dados atuais de perfil e saves serão atualizados.')) return;
+      try {
+        const res = await fetch('/api/admin/backups/restore', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename })
+        });
+        const data = await res.json();
+        alert(data.message || 'Backup restaurado com sucesso!');
+        loadUsers();
+        loadSaves();
+      } catch (err) {
+        alert('Erro ao restaurar: ' + err.message);
+      }
+    }
+
     async function createBackup() {
       try {
         const res = await fetch('/api/admin/create-backup', { method: 'POST' });
         const data = await res.json();
-        alert(data.message || 'Backup gerado com sucesso no SSD externo!');
+        alert(data.message || 'Snapshot gerado com sucesso no SSD!');
+        loadBackups();
       } catch (err) {
         alert('Erro ao gerar backup: ' + err.message);
       }
@@ -699,6 +759,7 @@ ORDER BY p.last_online DESC LIMIT 10;</textarea>
         alert(data.message || 'Migração aplicada com sucesso!');
         fetchServerStats();
         loadUsers();
+        loadBackups();
       } catch (err) {
         alert('Erro ao importar: ' + err.message);
       }
@@ -707,6 +768,7 @@ ORDER BY p.last_online DESC LIMIT 10;</textarea>
     // Inicialização
     fetchServerStats();
     loadUsers();
+    loadBackups();
     setInterval(fetchServerStats, 10000);
   </script>
 </body>

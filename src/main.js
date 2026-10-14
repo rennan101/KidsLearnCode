@@ -3501,6 +3501,18 @@ class RPGApplication {
       const res = await this.supabaseClient.resetPassword(email);
       submitResetBtn.disabled = false;
       if (res.success) {
+        if (res.resetLink) {
+          // Se o link foi gerado diretamente pelo servidor, abre imediatamente a tela de nova senha
+          const token = new URL(res.resetLink).searchParams.get('token');
+          if (token && newPasswordContainer) {
+            this.showToast('Link de recuperação validado! Digite sua nova senha abaixo.', 6000);
+            if (resetContainer) resetContainer.style.display = 'none';
+            newPasswordContainer.style.display = 'flex';
+            this.supabaseClient._activeResetToken = token;
+            newPasswordInput?.focus();
+            return;
+          }
+        }
         this.showToast(res.message, 6000);
         if (resetContainer) resetContainer.style.display = 'none';
         if (formContainer) formContainer.style.display = 'flex';

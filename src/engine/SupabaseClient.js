@@ -408,7 +408,9 @@ export class SupabaseClient {
       if (data.success || res.ok) {
         return {
           success: true,
-          message: data.message || `Instruções de recuperação foram enviadas para ${email}.`
+          message: data.message || `Instruções de recuperação foram enviadas para ${email}.`,
+          resetLink: data.resetLink || null,
+          simulated: !!data.simulated
         };
       }
     } catch (_) {
@@ -445,6 +447,7 @@ export class SupabaseClient {
       let activeUrl = await this.getServerUrl();
       const authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_auth_token')) || '';
       
+      const token = this._activeResetToken || null;
       let res;
       try {
         res = await fetch(`${activeUrl}/api/auth/update-password`, {
@@ -453,7 +456,7 @@ export class SupabaseClient {
             'Content-Type': 'application/json',
             'Authorization': authToken ? `Bearer ${authToken}` : ''
           },
-          body: JSON.stringify({ newPassword })
+          body: JSON.stringify({ newPassword, token })
         });
         if (!res.ok && (res.status === 502 || res.status === 503 || res.status === 504)) {
           throw new Error('gateway_error');

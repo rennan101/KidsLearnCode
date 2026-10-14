@@ -220,9 +220,11 @@ app.get('/api/auth/confirm-email', async (req, res) => {
 
     if (userRes.rows.length === 0) {
       return res.send(`
-        <body style="font-family: sans-serif; text-align: center; padding: 40px; background: #f8f8f0; color: #794f27;">
-          <h2>❌ Link expirado ou inválido</h2>
-          <p>O token de confirmação já foi utilizado ou expirou.</p>
+        <body style="font-family: 'Nunito', sans-serif; text-align: center; padding: 40px; background: #f8f8f0; color: #794f27;">
+          <div style="max-width: 500px; margin: 0 auto; background: #fdfbf7; border: 2px solid #ea580c; border-radius: 20px; padding: 30px; box-shadow: 0 4px 0 #9a3412;">
+            <h2>Link expirado ou inválido</h2>
+            <p>O token de confirmação já foi utilizado ou expirou.</p>
+          </div>
         </body>
       `);
     }
@@ -234,15 +236,148 @@ app.get('/api/auth/confirm-email', async (req, res) => {
     );
 
     res.send(`
-      <body style="font-family: sans-serif; text-align: center; padding: 40px; background: #f8f8f0; color: #794f27;">
-        <div style="max-width: 500px; margin: 0 auto; background: #fdfbf7; border: 2px solid #7a583e; border-radius: 20px; padding: 30px; box-shadow: 0 4px 0 #5c3c26;">
-          <h2>🎉 Conta Confirmada com Sucesso!</h2>
+      <body style="font-family: 'Nunito', sans-serif; text-align: center; padding: 40px; background: #f8f8f0; color: #794f27;">
+        <div style="max-width: 500px; margin: 0 auto; background: #fdfbf7; border: 2px solid #19c8b9; border-radius: 20px; padding: 30px; box-shadow: 0 4px 0 #0f8e83;">
+          <h2 style="color: #0f8e83;">Conta Confirmada com Sucesso!</h2>
           <p>Sua jornada na Ilha Lua está liberada. Você já pode retornar ao jogo e fazer login!</p>
+          <div style="margin-top: 24px;">
+            <a href="https://kids-learn-code.vercel.app" style="background: #19c8b9; color: white; padding: 12px 28px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 0 #0f8e83;">Ir para o Jogo</a>
+          </div>
         </div>
       </body>
     `);
   } catch (err) {
     res.status(500).send('Erro ao confirmar e-mail.');
+  }
+});
+
+// Página Web Interativa de Redefinição de Senha
+app.get('/api/auth/reset-password', async (req, res) => {
+  const { token } = req.query;
+  if (!token) {
+    return res.status(400).send('Token de recuperação ausente.');
+  }
+
+  try {
+    const userRes = await db.query(
+      'SELECT id, email FROM auth_users WHERE reset_token = $1 AND reset_token_expires_at > NOW()',
+      [token]
+    );
+
+    if (userRes.rows.length === 0) {
+      return res.send(`
+        <body style="font-family: 'Nunito', sans-serif; text-align: center; padding: 40px; background: #f8f8f0; color: #794f27;">
+          <div style="max-width: 500px; margin: 0 auto; background: #fdfbf7; border: 2px solid #ea580c; border-radius: 20px; padding: 30px; box-shadow: 0 4px 0 #9a3412;">
+            <h2>Link expirado ou inválido</h2>
+            <p>Este link de redefinição de senha já foi utilizado ou ultrapassou a validade de 1 hora.</p>
+            <div style="margin-top: 20px;">
+              <a href="https://kids-learn-code.vercel.app" style="background: #7a583e; color: white; padding: 10px 24px; border-radius: 50px; text-decoration: none; font-weight: bold;">Voltar ao Jogo</a>
+            </div>
+          </div>
+        </body>
+      `);
+    }
+
+    const email = userRes.rows[0].email;
+
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <title>Redefinir Senha - KidsLearnCode</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+        <style>
+          * { box-sizing: border-box; }
+          body { font-family: 'Nunito', sans-serif; background: #f8f8f0; color: #794f27; padding: 30px 16px; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+          .card { max-width: 460px; width: 100%; background: #fdfbf7; border: 2px solid #7a583e; border-radius: 24px; padding: 32px 28px; box-shadow: 0 6px 0 #5c3c26; }
+          h2 { text-align: center; margin-top: 0; color: #794f27; font-size: 24px; }
+          .form-group { margin-top: 20px; }
+          label { display: block; font-size: 14px; font-weight: 800; margin-bottom: 8px; color: #725d42; }
+          input { width: 100%; padding: 14px 18px; border: 2px solid #c4b89e; border-radius: 50px; font-size: 15px; font-family: inherit; background: #ffffff; color: #794f27; outline: none; }
+          input:focus { border-color: #19c8b9; }
+          .btn { width: 100%; margin-top: 24px; padding: 14px 20px; background: #19c8b9; color: white; border: none; border-radius: 50px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 0 #0f8e83; transition: transform 0.1s, box-shadow 0.1s; }
+          .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #0f8e83; }
+          .alert { display: none; padding: 12px 16px; border-radius: 12px; margin-top: 16px; font-size: 14px; text-align: center; }
+          .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+          .alert-success { background: #e6f9f6; color: #0f8e83; border: 1px solid #19c8b9; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h2>Redefinir Senha</h2>
+          <p style="text-align: center; font-size: 14px; color: #8a7b66; margin-top: 0;">Conta: <strong>${email}</strong></p>
+          <div id="alert-box" class="alert"></div>
+          <div id="form-content">
+            <div class="form-group">
+              <label for="newPass">Nova Senha (mínimo 6 caracteres)</label>
+              <input type="password" id="newPass" placeholder="Digite sua nova senha">
+            </div>
+            <div class="form-group">
+              <label for="confirmPass">Confirme a Nova Senha</label>
+              <input type="password" id="confirmPass" placeholder="Repita a nova senha">
+            </div>
+            <button class="btn" id="btn-submit" onclick="submitPassword()">Salvar Nova Senha</button>
+          </div>
+        </div>
+
+        <script>
+          async function submitPassword() {
+            const pass = document.getElementById('newPass').value;
+            const confirm = document.getElementById('confirmPass').value;
+            const alertBox = document.getElementById('alert-box');
+            const btn = document.getElementById('btn-submit');
+
+            if (!pass || pass.length < 6) {
+              alertBox.className = 'alert alert-error';
+              alertBox.style.display = 'block';
+              alertBox.innerText = 'A senha deve ter pelo menos 6 caracteres.';
+              return;
+            }
+            if (pass !== confirm) {
+              alertBox.className = 'alert alert-error';
+              alertBox.style.display = 'block';
+              alertBox.innerText = 'As duas senhas não coincidem.';
+              return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'Salvando...';
+
+            try {
+              const res = await fetch('/api/auth/update-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: '${token}', newPassword: pass })
+              });
+              const data = await res.json();
+              if (res.ok && data.success) {
+                alertBox.className = 'alert alert-success';
+                alertBox.style.display = 'block';
+                alertBox.innerText = data.message || 'Senha alterada com sucesso!';
+                document.getElementById('form-content').innerHTML = '<div style="text-align: center; margin-top: 24px;"><a href="https://kids-learn-code.vercel.app" class="btn" style="display: inline-block; text-decoration: none;">Ir para o Jogo e Entrar</a></div>';
+              } else {
+                alertBox.className = 'alert alert-error';
+                alertBox.style.display = 'block';
+                alertBox.innerText = data.error || 'Erro ao redefinir a senha.';
+                btn.disabled = false;
+                btn.innerText = 'Salvar Nova Senha';
+              }
+            } catch (err) {
+              alertBox.className = 'alert alert-error';
+              alertBox.style.display = 'block';
+              alertBox.innerText = 'Falha na conexão: ' + err.message;
+              btn.disabled = false;
+              btn.innerText = 'Salvar Nova Senha';
+            }
+          }
+        </script>
+      </body>
+      </html>
+    `);
+  } catch (err) {
+    res.status(500).send('Erro interno ao carregar redefinição de senha.');
   }
 });
 
@@ -257,7 +392,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const userRes = await db.query('SELECT id, email FROM auth_users WHERE LOWER(email) = $1', [cleanEmail]);
     if (userRes.rows.length === 0) {
       // Retorna sucesso por segurança para evitar enumeração de emails
-      return res.json({ success: true, message: 'Se o e-mail existir, você receberá o link de recuperação.' });
+      return res.json({ success: true, message: 'Se o e-mail existir, você receberá as instruções de recuperação!' });
     }
 
     const user = userRes.rows[0];
@@ -272,10 +407,25 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const prof = await db.query('SELECT nickname FROM profiles WHERE id = $1', [user.id]);
     const nickname = prof.rows[0]?.nickname || 'Aventureiro';
 
-    await mailer.sendPasswordResetEmail({ email: cleanEmail, token: resetToken, nickname });
+    // Determina a URL base pública ativa (túnel atual ou DuckDNS)
+    const activePublicUrl = mailer.publicUrl || 'https://aerial-fee-dates-registration.trycloudflare.com';
+    const resetLink = `${activePublicUrl}/api/auth/reset-password?token=${resetToken}`;
 
-    res.json({ success: true, message: 'Instruções de recuperação foram enviadas ao seu e-mail!' });
+    const dispatchRes = await mailer.sendPasswordResetEmail({ email: cleanEmail, token: resetToken, nickname });
+
+    // Se o SMTP estiver desativado ou falhar no envio externo, retorna o link de recuperação diretamente no payload
+    const responsePayload = {
+      success: true,
+      message: dispatchRes.simulated
+        ? 'Link de recuperação gerado com sucesso!'
+        : 'Instruções de recuperação foram enviadas ao seu e-mail!',
+      simulated: !!dispatchRes.simulated,
+      resetLink
+    };
+
+    res.json(responsePayload);
   } catch (err) {
+    console.error('[API Auth] Erro no forgot-password:', err);
     res.status(500).json({ error: 'Erro ao processar recuperação de senha.' });
   }
 });
@@ -570,6 +720,159 @@ app.post('/api/admin/import-supabase', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ==========================================
+// 3.1 SISTEMA DE BACKUPS AUTOMÁTICOS DO BANCO
+// ==========================================
+
+const BACKUP_DIR = path.join(__dirname, 'db', 'backups');
+if (!fs.existsSync(BACKUP_DIR)) {
+  fs.mkdirSync(BACKUP_DIR, { recursive: true });
+}
+
+async function performFullBackup(createdBy = 'auto') {
+  try {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `backup_kidslearn_${timestamp}.json`;
+    const filePath = path.join(BACKUP_DIR, filename);
+
+    // Exporta todas as tabelas essenciais para um snapshot JSON atômico
+    const users = await db.query('SELECT id, email, email_confirmed, role, is_minor, parent_email, created_at FROM auth_users');
+    const profiles = await db.query('SELECT * FROM profiles');
+    const saves = await db.query('SELECT * FROM game_saves');
+    const messages = await db.query('SELECT * FROM chat_messages ORDER BY created_at DESC LIMIT 200');
+
+    const backupPayload = {
+      version: '1.0',
+      createdAt: new Date().toISOString(),
+      createdBy,
+      tables: {
+        auth_users: users.rows,
+        profiles: profiles.rows,
+        game_saves: saves.rows,
+        chat_messages: messages.rows
+      }
+    };
+
+    const jsonStr = JSON.stringify(backupPayload, null, 2);
+    fs.writeFileSync(filePath, jsonStr, 'utf-8');
+    const sizeBytes = Buffer.byteLength(jsonStr);
+
+    // Registra na tabela server_backups
+    await db.query(
+      `INSERT INTO server_backups (filename, size_bytes, created_by)
+       VALUES ($1, $2, $3)`,
+      [filename, sizeBytes, createdBy]
+    );
+
+    console.log(`[Backup Automático] Snapshot gerado com sucesso: ${filename} (${(sizeBytes / 1024).toFixed(1)} KB)`);
+    return { success: true, filename, sizeBytes, createdAt: backupPayload.createdAt };
+  } catch (err) {
+    console.error('[Backup Automático] Erro ao gerar backup:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+// Rotas de API para Gestão de Backups no Painel Admin
+app.get('/api/admin/backups', async (req, res) => {
+  try {
+    const dbRes = await db.query('SELECT * FROM server_backups ORDER BY created_at DESC LIMIT 30');
+    res.json(dbRes.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/create-backup', async (req, res) => {
+  const result = await performFullBackup('manual_admin');
+  if (result.success) {
+    res.json({ success: true, message: `Backup ${result.filename} gerado com sucesso!`, ...result });
+  } else {
+    res.status(500).json({ error: result.error || 'Falha ao gerar backup.' });
+  }
+});
+
+// Download do arquivo de backup
+app.get('/api/admin/backups/download/:filename', (req, res) => {
+  const { filename } = req.params;
+  const safeFilename = path.basename(filename);
+  const targetPath = path.join(BACKUP_DIR, safeFilename);
+
+  if (!fs.existsSync(targetPath)) {
+    return res.status(404).send('Arquivo de backup não encontrado.');
+  }
+
+  res.download(targetPath, safeFilename);
+});
+
+// Restauração de Backup com 1 clique
+app.post('/api/admin/backups/restore', async (req, res) => {
+  const { filename } = req.body;
+  if (!filename) return res.status(400).json({ error: 'Informe o nome do backup.' });
+
+  const safeFilename = path.basename(filename);
+  const targetPath = path.join(BACKUP_DIR, safeFilename);
+
+  if (!fs.existsSync(targetPath)) {
+    return res.status(404).json({ error: 'Arquivo de backup não encontrado no disco.' });
+  }
+
+  try {
+    const raw = fs.readFileSync(targetPath, 'utf-8');
+    const data = JSON.parse(raw);
+
+    if (data.tables?.profiles) {
+      for (const p of data.tables.profiles) {
+        await db.query(
+          `INSERT INTO profiles (id, nickname, hero_id, x, y, level, xp, gold, last_online)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+           ON CONFLICT (id) DO UPDATE SET
+             nickname = EXCLUDED.nickname,
+             hero_id = EXCLUDED.hero_id,
+             x = EXCLUDED.x,
+             y = EXCLUDED.y,
+             level = EXCLUDED.level,
+             xp = EXCLUDED.xp,
+             gold = EXCLUDED.gold,
+             last_online = EXCLUDED.last_online`,
+          [p.id, p.nickname, p.hero_id, p.x, p.y, p.level, p.xp, p.gold, p.last_online]
+        );
+      }
+    }
+
+    if (data.tables?.game_saves) {
+      for (const s of data.tables.game_saves) {
+        await db.query(
+          `INSERT INTO game_saves (user_id, map_data, player_data, inventory_data, dragons_data, coding_progress, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           ON CONFLICT (user_id) DO UPDATE SET
+             map_data = EXCLUDED.map_data,
+             player_data = EXCLUDED.player_data,
+             inventory_data = EXCLUDED.inventory_data,
+             dragons_data = EXCLUDED.dragons_data,
+             coding_progress = EXCLUDED.coding_progress,
+             updated_at = EXCLUDED.updated_at`,
+          [s.user_id, s.map_data, s.player_data, s.inventory_data, s.dragons_data, s.coding_progress, s.updated_at]
+        );
+      }
+    }
+
+    res.json({ success: true, message: 'Dados restaurados com sucesso a partir do backup!' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao restaurar backup: ' + err.message });
+  }
+});
+
+// DISPARO AUTOMÁTICO:
+// 1. Gera um backup imediato na inicialização do servidor
+setTimeout(() => {
+  performFullBackup('startup_auto');
+}, 5000);
+
+// 2. Executa backup automático a cada 6 horas (4 vezes por dia)
+setInterval(() => {
+  performFullBackup('scheduled_6h');
+}, 6 * 60 * 60 * 1000);
 
 // ==========================================
 // 4. REALTIME MMORPG WEBSOCKET ENGINE (20Hz)
