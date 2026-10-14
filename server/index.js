@@ -416,10 +416,15 @@ app.get('/api/admin/stats', async (req, res) => {
 app.get('/api/admin/users', async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT p.id, p.nickname, p.hero_id, p.x, p.y, p.level, p.gold, p.last_online,
+      `SELECT p.id, p.nickname, p.hero_id, p.x, p.y,
+              COALESCE((s.coding_progress->>'playerXP')::int / 200 + 1, p.level) AS level,
+              COALESCE((s.coding_progress->>'playerGold')::int, p.gold) AS gold,
+              COALESCE((s.coding_progress->>'playerXP')::int, p.xp) AS xp,
+              p.last_online,
               u.email, u.email_confirmed, u.is_minor, u.role
        FROM profiles p
        JOIN auth_users u ON u.id = p.id
+       LEFT JOIN game_saves s ON s.user_id = p.id
        ORDER BY p.last_online DESC LIMIT 50`
     );
     res.json(result.rows);
