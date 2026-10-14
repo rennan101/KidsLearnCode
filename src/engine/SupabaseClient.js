@@ -783,7 +783,9 @@ export class SupabaseClient {
             player: payload.player || {},
             inventory: payload.inventory || {},
             dragons: payload.dragons || {},
-            codingProgress: payload.codingProgress || {}
+            codingProgress: payload.codingProgress || {},
+            customAvatar: payload.customAvatar || payload.player?.customAvatar || null,
+            activeHero: payload.activeHero || payload.player?.activeHero || 'char_wolf_hunter_m'
           })
         });
         if (res.ok) return { success: true };
@@ -802,10 +804,14 @@ export class SupabaseClient {
         .upsert({
           user_id: this.user.id,
           map_data: payload.map || {},
-          player_data: payload.player || {},
+          player_data: {
+            ...(payload.player || {}),
+            customAvatar: payload.customAvatar || payload.player?.customAvatar || null,
+            activeHero: payload.activeHero || payload.player?.activeHero || 'char_wolf_hunter_m'
+          },
           inventory_data: payload.inventory || {},
           dragons_data: payload.dragons || {},
-          codingProgress: payload.codingProgress || {},
+          coding_progress: payload.codingProgress || {},
           updated_at: new Date().toISOString()
         }, { onConflict: 'user_id' });
 
@@ -829,7 +835,14 @@ export class SupabaseClient {
         });
         if (res.ok) {
           const data = await res.json();
-          if (data) return data;
+          if (data) {
+            const pData = data.player || {};
+            return {
+              ...data,
+              customAvatar: data.customAvatar || pData.customAvatar || null,
+              activeHero: data.activeHero || pData.activeHero || pData.heroId || 'char_wolf_hunter_m'
+            };
+          }
         }
       } catch (_) {}
     }
@@ -849,13 +862,16 @@ export class SupabaseClient {
 
       if (error || !data) return null;
 
+      const pData = data.player_data || {};
       return {
         id: data.id,
         map: data.map_data,
-        player: data.player_data,
+        player: pData,
         inventory: data.inventory_data,
         dragons: data.dragons_data,
         codingProgress: data.coding_progress,
+        customAvatar: pData.customAvatar || null,
+        activeHero: pData.activeHero || pData.heroId || 'char_wolf_hunter_m',
         savedAt: new Date(data.updated_at).getTime()
       };
     } catch (err) {

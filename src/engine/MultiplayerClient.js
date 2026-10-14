@@ -315,15 +315,20 @@ export class MultiplayerClient {
     const currentDragonMode = extraData.dragonMode || (player.isMounted ? 'mounted' : (activeDragonId ? 'follow' : 'none'));
     const currentAltitude = Math.round(extraData.flightAltitude || 0);
 
-    // Detecção de mudança de estado crítico (início/fim de movimento, virar de direção, montar, trocar dragão)
+    const currentAvatarConfig = player.customAvatarConfig || extraData.avatarConfig || null;
+    const currentName = name || player.heroData?.name || player.name || 'Aventureiro';
+
+    // Detecção de mudança de estado crítico (início/fim de movimento, virar de direção, montar, trocar dragão, trocar de roupa/avatar, trocar de nome)
     const isMovingChanged = this.lastSentState.isMoving !== Boolean(player.isMoving);
     const directionChanged = this.lastSentState.direction !== player.direction;
     const mountChanged = this.lastSentState.isMounted !== Boolean(player.isMounted);
     const dragonChanged = this.lastSentState.activeDragonId !== activeDragonId || this.lastSentState.dragonMode !== currentDragonMode;
     const sprintChanged = this.lastSentState.isSprinting !== Boolean(player.isSprinting);
     const altitudeChanged = Math.abs((this.lastSentState.flightAltitude || 0) - currentAltitude) > 4;
+    const nameChanged = this.lastSentState.name !== currentName;
+    const avatarChanged = Boolean(currentAvatarConfig && JSON.stringify(currentAvatarConfig) !== this.lastSentState.avatarConfigJson);
 
-    const isCriticalStateChange = isMovingChanged || directionChanged || mountChanged || dragonChanged || sprintChanged || altitudeChanged;
+    const isCriticalStateChange = isMovingChanged || directionChanged || mountChanged || dragonChanged || sprintChanged || altitudeChanged || nameChanged || avatarChanged;
 
     const hasMoved = this.lastSentState.x !== currentX || this.lastSentState.y !== currentY;
     const timeSinceLastSend = now - this.lastBroadcastTime;
@@ -347,6 +352,7 @@ export class MultiplayerClient {
 
     const fullExtraData = {
       ...extraData,
+      avatarConfig: currentAvatarConfig,
       vx,
       vy,
       dragonMode: currentDragonMode,
@@ -363,6 +369,8 @@ export class MultiplayerClient {
     this.lastSentState.activeDragonId = activeDragonId;
     this.lastSentState.dragonMode = currentDragonMode;
     this.lastSentState.flightAltitude = currentAltitude;
+    this.lastSentState.name = currentName;
+    this.lastSentState.avatarConfigJson = currentAvatarConfig ? JSON.stringify(currentAvatarConfig) : null;
 
     if (shouldSendPeriodicIdle) {
       this.lastSentState.idleHeartbeatTime = now;

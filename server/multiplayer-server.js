@@ -30,7 +30,13 @@ setInterval(() => {
     isMoving: p.isMoving,
     isSprinting: p.isSprinting,
     isMounted: p.isMounted,
-    activeDragonId: p.activeDragonId
+    activeDragonId: p.activeDragonId,
+    avatarConfig: p.avatarConfig || null,
+    scale: p.scale || 1.0,
+    dragonMode: p.dragonMode || 'none',
+    flightAltitude: p.flightAltitude || 0,
+    dragonX: p.dragonX !== undefined ? p.dragonX : null,
+    dragonY: p.dragonY !== undefined ? p.dragonY : null
   }));
 
   const payload = JSON.stringify({
@@ -60,7 +66,13 @@ wss.on('connection', (ws) => {
     isMoving: false,
     isSprinting: false,
     isMounted: false,
-    activeDragonId: 'dragon_fly_zephyr'
+    activeDragonId: 'dragon_fly_zephyr',
+    avatarConfig: null,
+    scale: 1.0,
+    dragonMode: 'none',
+    flightAltitude: 0,
+    dragonX: null,
+    dragonY: null
   });
 
   // Welcome packet
@@ -86,6 +98,12 @@ wss.on('connection', (ws) => {
           player.heroId = data.heroId || player.heroId;
           player.name = data.name || player.name;
           player.activeDragonId = data.activeDragonId || player.activeDragonId;
+          if (data.avatarConfig !== undefined) player.avatarConfig = data.avatarConfig;
+          if (data.scale !== undefined) player.scale = data.scale;
+          if (data.dragonMode !== undefined) player.dragonMode = data.dragonMode;
+          if (data.flightAltitude !== undefined) player.flightAltitude = data.flightAltitude;
+          if (data.dragonX !== undefined) player.dragonX = data.dragonX;
+          if (data.dragonY !== undefined) player.dragonY = data.dragonY;
         }
       } else if (data.type === 'CHAT_MESSAGE') {
         // Broadcast speech bubble to all connected players

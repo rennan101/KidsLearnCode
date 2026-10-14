@@ -2387,22 +2387,21 @@ class RPGApplication {
           if (data.player.scale) {
             this.player.setScale(data.player.scale);
           }
-          if (data.customAvatar) {
-            this.player.customAvatarConfig = data.customAvatar;
+          const loadedCustomAvatar = data.customAvatar || data.player.customAvatar || null;
+          if (loadedCustomAvatar) {
+            this.player.customAvatarConfig = loadedCustomAvatar;
             try {
-              localStorage.setItem('kidslearn_custom_avatar', JSON.stringify(data.customAvatar));
+              localStorage.setItem('kidslearn_custom_avatar', JSON.stringify(loadedCustomAvatar));
             } catch (e) {}
           }
-          if (data.player.heroId || data.activeHero) {
-            const hId = data.player.heroId || data.activeHero;
-            if (hId === 'custom_avatar' && this.player.customAvatarConfig) {
-              this.player.setCustomAvatar(this.player.customAvatarConfig);
-            } else {
-              this.player.setHero(hId);
-            }
-            if (this.updateHeroHeaderBadge) {
-              this.updateHeroHeaderBadge(hId);
-            }
+          const hId = data.activeHero || data.player.heroId || (this.player.customAvatarConfig ? 'custom_avatar' : 'char_wolf_hunter_m');
+          if (hId === 'custom_avatar' && this.player.customAvatarConfig) {
+            this.player.setCustomAvatar(this.player.customAvatarConfig);
+          } else {
+            this.player.setHero(hId);
+          }
+          if (this.updateHeroHeaderBadge) {
+            this.updateHeroHeaderBadge(hId);
           }
         }
 
@@ -3857,10 +3856,11 @@ class RPGApplication {
         this.multiplayerClient.update(deltaTime, this.dialogueSystem);
         const isMounted = Boolean(this.player.isMounted && this.dragonManager?.isMounted());
         const activeDragonId = this.dragonManager?.getActiveDragon()?.id || null;
+        const localPlayerName = this.getLocalPlayerName();
         this.multiplayerClient.sendLocalPlayerUpdate(
           this.player,
           this.player.heroId,
-          this.player.heroData?.name || 'Aventureiro',
+          localPlayerName,
           activeDragonId,
           {
             avatarConfig: this.player.customAvatarConfig,
@@ -4149,6 +4149,60 @@ class RPGApplication {
           this.multiplayerClient.render(this.ctx, this.assetLoader, this.camera);
         } catch (mpErr) {
           console.error('Error rendering multiplayer entities:', mpErr);
+        }
+      }
+
+      // Render Local Player Overhead Name Badge (Animal Island UI 3D)
+      if (this.mode === 'play' && this.player) {
+        try {
+          const s = this.player.scale || 1.0;
+          const drawX = Math.round(this.player.x);
+          const drawY = Math.round(this.player.y);
+          const isMounted = Boolean(this.player.isMounted && this.dragonManager?.isMounted());
+          const alt = (isMounted && this.dragonManager) ? (this.dragonManager.flightAltitude || 0) : 0;
+          const nameText = this.getLocalPlayerName ? this.getLocalPlayerName() : (this.player.heroData?.name || 'Aventureiro');
+
+          this.ctx.save();
+          this.ctx.font = 'bold 10.5px "Nunito", sans-serif';
+          const textMetrics = this.ctx.measureText(nameText);
+          const badgeW = Math.max(44, textMetrics.width + 16);
+          const badgeH = 18;
+          const badgeX = drawX + (32 * s) - badgeW / 2;
+          const badgeY = drawY - 58 - (isMounted ? alt : 0);
+
+          // Badge shadow 3D
+          this.ctx.fillStyle = '#7a583e';
+          this.ctx.beginPath();
+          if (this.ctx.roundRect) {
+            this.ctx.roundRect(badgeX, badgeY + 2.5, badgeW, badgeH, 9);
+          } else {
+            this.ctx.rect(badgeX, badgeY + 2.5, badgeW, badgeH);
+          }
+          this.ctx.fill();
+
+          // Badge body (Parchment)
+          this.ctx.fillStyle = '#fdfbf7';
+          this.ctx.beginPath();
+          if (this.ctx.roundRect) {
+            this.ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 9);
+          } else {
+            this.ctx.rect(badgeX, badgeY, badgeW, badgeH);
+          }
+          this.ctx.fill();
+
+          // Badge border mint (Teal)
+          this.ctx.strokeStyle = '#19c8b9';
+          this.ctx.lineWidth = 1.8;
+          this.ctx.stroke();
+
+          // Badge text (Warm Earth Brown)
+          this.ctx.fillStyle = '#794f27';
+          this.ctx.textAlign = 'center';
+          this.ctx.textBaseline = 'middle';
+          this.ctx.fillText(nameText, drawX + (32 * s), badgeY + badgeH / 2);
+          this.ctx.restore();
+        } catch (badgeErr) {
+          console.error('Error rendering local player name badge:', badgeErr);
         }
       }
 
@@ -4571,7 +4625,7 @@ class RPGApplication {
         const playerDrawY = this.player.y - playerAlt;
         this.dialogueSystem.addSpeechBubble('player', text, { x: this.player.x, y: playerDrawY }, true);
         if (this.multiplayerClient) {
-          this.multiplayerClient.sendChatMessage(text, this.player, this.player.heroData?.name || 'Aventureiro');
+          this.multiplayerClient.sendChatMessage(text, this.player, this.getLocalPlayerName());
         }
         chatInput.value = '';
         chatBar.style.display = 'none';
@@ -5268,6 +5322,26 @@ class RPGApplication {
       this.openAuthModal?.('login');
     });
 
+    this.getLocalPlayerName = () => {
+      const cfg = this.player?.customAvatarConfig;
+      const user = this.supabaseClient?.user;
+      const profile = this.supabaseClient?.profile;
+      if (cfg && cfg.name && cfg.name.trim().length > 0 && cfg.name.trim() !== 'Aventureiro') {
+        return cfg.name.trim();
+      }
+      if (profile && profile.nickname && profile.nickname.trim().length > 0) {
+        return profile.nickname.trim();
+      }
+      if (user && !user.isGuest) {
+        if (user.nickname && user.nickname.trim().length > 0) return user.nickname.trim();
+        if (user.user_metadata?.nickname && user.user_metadata.nickname.trim().length > 0) return user.user_metadata.nickname.trim();
+      }
+      if (cfg && cfg.name && cfg.name.trim().length > 0) {
+        return cfg.name.trim();
+      }
+      return this.player?.heroData?.name || 'Aventureiro';
+    };
+
     this.handleCustomAvatarSave = (config) => {
       this.player.setCustomAvatar(config);
       localStorage.setItem('kidslearn_custom_avatar', JSON.stringify(config));
@@ -5275,6 +5349,28 @@ class RPGApplication {
       this.updateHeroHeaderBadge();
       this.triggerAutoSave();
       this.player.spawnCraftPoof();
+      
+      // Imediatamente sincroniza com todos os outros jogadores conectados no multiplayer
+      if (this.multiplayerClient) {
+        const isMounted = Boolean(this.player.isMounted && this.dragonManager?.isMounted());
+        const activeDragonId = this.dragonManager?.getActiveDragon()?.id || null;
+        this.multiplayerClient.sendLocalPlayerUpdate(
+          this.player,
+          this.player.heroId,
+          this.getLocalPlayerName(),
+          activeDragonId,
+          {
+            avatarConfig: config,
+            scale: this.player.scale || 1.0,
+            dragonMode: this.dragonManager?.mode || (isMounted ? 'mounted' : (activeDragonId ? 'follow' : 'none')),
+            flightAltitude: (isMounted && this.dragonManager) ? (this.dragonManager.flightAltitude || 0) : 0,
+            dragonX: this.dragonManager ? this.dragonManager.x : null,
+            dragonY: this.dragonManager ? this.dragonManager.y : null
+          },
+          true // Forçar envio imediato ignorando rate limit
+        );
+      }
+
       this.showToast(`Seu personagem ${config.name || 'Aventureiro'} foi atualizado!`);
     };
 

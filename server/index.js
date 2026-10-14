@@ -517,7 +517,7 @@ app.post('/api/profiles/sync', async (req, res) => {
 // Salvar / Carregar Game Save Unificado
 app.post('/api/saves', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Não autenticado' });
-  const { map, player, inventory, dragons, codingProgress } = req.body;
+  const { map, player, inventory, dragons, codingProgress, customAvatar, activeHero } = req.body;
 
   try {
     await db.query(
@@ -530,7 +530,14 @@ app.post('/api/saves', async (req, res) => {
          dragons_data = EXCLUDED.dragons_data,
          coding_progress = EXCLUDED.coding_progress,
          updated_at = NOW()`,
-      [req.user.id, map || {}, player || {}, inventory || {}, dragons || {}, codingProgress || {}]
+      [
+        req.user.id,
+        map || {},
+        { ...(player || {}), customAvatar: customAvatar || player?.customAvatar || null, activeHero: activeHero || player?.activeHero || null },
+        inventory || {},
+        dragons || {},
+        codingProgress || {}
+      ]
     );
 
     res.json({ success: true });
@@ -547,13 +554,16 @@ app.get('/api/saves/me', async (req, res) => {
     if (result.rows.length === 0) return res.json(null);
 
     const row = result.rows[0];
+    const playerData = row.player_data || {};
     res.json({
       id: row.id,
       map: row.map_data,
-      player: row.player_data,
+      player: playerData,
       inventory: row.inventory_data,
       dragons: row.dragons_data,
       codingProgress: row.coding_progress,
+      customAvatar: playerData.customAvatar || null,
+      activeHero: playerData.activeHero || playerData.heroId || 'char_wolf_hunter_m',
       savedAt: new Date(row.updated_at).getTime()
     });
   } catch (err) {
@@ -899,7 +909,13 @@ setInterval(() => {
     isMoving: p.isMoving,
     isSprinting: p.isSprinting,
     isMounted: p.isMounted,
-    activeDragonId: p.activeDragonId
+    activeDragonId: p.activeDragonId,
+    avatarConfig: p.avatarConfig || null,
+    scale: p.scale || 1.0,
+    dragonMode: p.dragonMode || 'none',
+    flightAltitude: p.flightAltitude || 0,
+    dragonX: p.dragonX !== undefined ? p.dragonX : null,
+    dragonY: p.dragonY !== undefined ? p.dragonY : null
   }));
 
   const payload = JSON.stringify({
@@ -928,7 +944,13 @@ wss.on('connection', (ws) => {
     isMoving: false,
     isSprinting: false,
     isMounted: false,
-    activeDragonId: 'dragon_fly_zephyr'
+    activeDragonId: 'dragon_fly_zephyr',
+    avatarConfig: null,
+    scale: 1.0,
+    dragonMode: 'none',
+    flightAltitude: 0,
+    dragonX: null,
+    dragonY: null
   });
 
   ws.send(JSON.stringify({
@@ -953,6 +975,12 @@ wss.on('connection', (ws) => {
           p.heroId = data.heroId || p.heroId;
           p.name = data.name || p.name;
           p.activeDragonId = data.activeDragonId || p.activeDragonId;
+          if (data.avatarConfig !== undefined) p.avatarConfig = data.avatarConfig;
+          if (data.scale !== undefined) p.scale = data.scale;
+          if (data.dragonMode !== undefined) p.dragonMode = data.dragonMode;
+          if (data.flightAltitude !== undefined) p.flightAltitude = data.flightAltitude;
+          if (data.dragonX !== undefined) p.dragonX = data.dragonX;
+          if (data.dragonY !== undefined) p.dragonY = data.dragonY;
         }
       } else if (data.type === 'CHAT_MESSAGE') {
         const broadcast = JSON.stringify({
