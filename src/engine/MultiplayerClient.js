@@ -14,7 +14,7 @@ export class MultiplayerClient {
     if (!serverUrl) {
       if (typeof window !== 'undefined' && window.location) {
         // Host ativo Cloudflare WSS
-        const cloudflareHost = 'replaced-enlargement-simply-about.trycloudflare.com';
+        const cloudflareHost = 'baltimore-ste-rod-loves.trycloudflare.com';
         this.serverUrl = (window.location.protocol === 'https:' || !window.location.hostname.includes('localhost'))
           ? `wss://${cloudflareHost}`
           : 'ws://localhost:8080';
