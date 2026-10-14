@@ -15,10 +15,13 @@ echo "========================================================"
 echo "Pasta do Projeto: $DIR"
 echo ""
 
-# 1. Verificar se cloudflared local existe, se não existir faz o download rápido
-if [ ! -f "./cloudflared" ]; then
-  echo "📥 Baixando utilitário de conexão Cloudflare Tunnel..."
-  curl -s -L -o ./cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64
+# 1. Verificar se cloudflared local existe e é executável
+if [ ! -f "./cloudflared" ] || [ ! -s "./cloudflared" ] || grep -q "Not Found" "./cloudflared" 2>/dev/null; then
+  echo "📥 Baixando utilitário de conexão Cloudflare Tunnel (macOS Intel)..."
+  rm -f ./cloudflared ./cloudflared.tgz
+  curl -s -L -o ./cloudflared.tgz https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz
+  tar -xzf ./cloudflared.tgz
+  rm -f ./cloudflared.tgz
   chmod +x ./cloudflared
   xattr -d com.apple.quarantine ./cloudflared 2>/dev/null || true
   echo "✅ Cloudflared pronto!"
