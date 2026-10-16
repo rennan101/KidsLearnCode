@@ -73,41 +73,84 @@ export class Mailer {
   async sendPasswordResetEmail({ email, token, nickname = 'Aventureiro', publicUrl = null }) {
     const rootUrl = publicUrl || this.publicUrl || 'http://localhost:8080';
     const resetLink = `${rootUrl.replace(/\/$/, '')}/api/auth/reset-password?token=${encodeURIComponent(token)}`;
-    const subject = `[Ilha Lua] Recuperação de Senha`;
+    const text = `Ola, ${nickname}!\n\nRecebemos um pedido para redefinir a senha da sua conta na Ilha Lua.\nPara cadastrar uma nova senha, acesse o link abaixo (valido por 1 hora):\n\n${resetLink}\n\nSe voce nao solicitou isso, desconsidere este e-mail.`;
 
     const html = `
-      <div style="font-family: 'Nunito', Arial, sans-serif; background-color: #f8f8f0; padding: 30px; color: #794f27;">
-        <div style="max-width: 540px; margin: 0 auto; background: #fdfbf7; border: 2px solid #7a583e; border-radius: 20px; padding: 28px 24px; box-shadow: 0 6px 0 #5c3c26;">
-          <h2 style="color: #794f27; margin-top: 0; text-align: center; font-size: 24px;">Recuperação de Senha</h2>
-          <p style="font-size: 16px; line-height: 1.6;">Olá, <strong>${nickname}</strong>!</p>
-          <p style="font-size: 15px; line-height: 1.6;">
-            Recebemos um pedido para redefinir a senha da sua conta na Ilha Lua. Se foi você, clique no botão abaixo para cadastrar uma nova senha:
-          </p>
-          <div style="text-align: center; margin: 28px 0;">
-            <a href="${resetLink}" style="background-color: #ea580c; color: #ffffff; text-decoration: none; padding: 14px 32px; font-size: 16px; font-weight: bold; border-radius: 50px; display: inline-block; box-shadow: 0 4px 0 #9a3412;">
-              Redefinir Minha Senha
-            </a>
-          </div>
-          <p style="font-size: 13px; color: #725d42;">Este link é válido por <strong>1 hora</strong>. Se você não pediu a redefinição, apenas desconsidere esta mensagem.</p>
-          <p style="font-size: 12px; color: #8a7b66; text-align: center;">
-            Link direto: <br><a href="${resetLink}" style="color: #ea580c;">${resetLink}</a>
-          </p>
-        </div>
-      </div>
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="margin: 0; padding: 0; background-color: #f8f8f0; font-family: 'Nunito', Arial, sans-serif;">
+        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8f8f0; padding: 30px 10px;">
+          <tr>
+            <td align="center">
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 540px; background-color: #fdfbf7; border: 2px solid #7a583e; border-radius: 20px; box-shadow: 0 6px 0 #5c3c26; padding: 28px 24px;">
+                <tr>
+                  <td align="center" style="padding-bottom: 15px;">
+                    <h2 style="color: #794f27; margin: 0; font-size: 24px; font-weight: 800;">Recuperação de Senha</h2>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="color: #794f27; font-size: 16px; line-height: 1.6; padding-bottom: 12px;">
+                    Olá, <strong>${nickname}</strong>!
+                  </td>
+                </tr>
+                <tr>
+                  <td style="color: #794f27; font-size: 15px; line-height: 1.6; padding-bottom: 24px;">
+                    Recebemos um pedido para redefinir a senha da sua conta na <strong>Ilha Lua</strong>. Se foi você, clique no botão abaixo para cadastrar uma nova senha:
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding: 10px 0 26px 0;">
+                    <!-- Botao Bulletproof compativel com todos os clientes de email -->
+                    <table role="presentation" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td align="center" bgcolor="#ea580c" style="border-radius: 50px; box-shadow: 0 4px 0 #9a3412;">
+                          <a href="${resetLink}" target="_blank" rel="noopener noreferrer" style="font-size: 16px; font-family: 'Nunito', Arial, sans-serif; font-weight: bold; color: #ffffff; text-decoration: none; padding: 14px 34px; border-radius: 50px; display: inline-block; border: 1px solid #ea580c;">
+                            Redefinir Minha Senha
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="color: #725d42; font-size: 13px; line-height: 1.5; padding-bottom: 16px;">
+                    Este link é válido por <strong>1 hora</strong>. Se você não pediu a redefinição, apenas desconsidere esta mensagem.
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="border-top: 1px dashed #c4b89e; padding-top: 16px; font-size: 12px; color: #8a7b66;">
+                    Se o botão não abrir, clique diretamente no link abaixo:<br>
+                    <a href="${resetLink}" target="_blank" rel="noopener noreferrer" style="color: #ea580c; word-break: break-all; font-weight: 600;">${resetLink}</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
     `;
 
-    return this._dispatchEmail(email, subject, html, resetLink);
+    return this._dispatchEmail(email, subject, html, resetLink, text);
   }
 
-  async _dispatchEmail(to, subject, html, directLink) {
+  async _dispatchEmail(to, subject, html, directLink, text = null) {
     if (this.transporter && this.enabled) {
       try {
-        const info = await this.transporter.sendMail({
+        const mailOptions = {
           from: this.from,
           to,
           subject,
           html
-        });
+        };
+        if (text) {
+          mailOptions.text = text;
+        }
+        const info = await this.transporter.sendMail(mailOptions);
         console.log(`[Mailer] E-mail enviado com sucesso para ${to}: ${info.messageId}`);
         return { success: true, messageId: info.messageId };
       } catch (err) {

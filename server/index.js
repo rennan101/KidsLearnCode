@@ -504,6 +504,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         publicUrl: activePublicUrl
       });
       addServerLog(`Link de recuperação de senha solicitado para ${user.email} (${dispatchRes.success ? 'E-mail enviado' : 'Aviso: ' + dispatchRes.error})`, 'AUTH');
+    } else {
+      addServerLog(`Tentativa de recuperação para e-mail/nick não cadastrado: "${cleanInput}"`, 'AUTH');
     }
 
     res.json({
