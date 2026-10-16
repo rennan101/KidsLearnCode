@@ -214,14 +214,10 @@ export class MultiplayerClient {
     try {
       let targetUrl = this.serverUrl;
       if (!targetUrl) {
-        if (typeof window !== 'undefined' && window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-          targetUrl = 'ws://localhost:8080';
-        } else {
-          const httpUrl = await getActiveServerUrl(this.reconnectAttempts > 0);
-          const isHttps = httpUrl.startsWith('https://');
-          const cleanHost = httpUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
-          targetUrl = `${isHttps ? 'wss' : 'ws'}://${cleanHost}`;
-        }
+        const httpUrl = await getActiveServerUrl(this.reconnectAttempts > 0);
+        const isHttps = httpUrl.startsWith('https://');
+        const cleanHost = httpUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        targetUrl = `${isHttps ? 'wss' : 'ws'}://${cleanHost}`;
       }
 
       this.currentConnectedUrl = targetUrl;
@@ -308,7 +304,7 @@ export class MultiplayerClient {
     }
   }
 
-  sendLocalPlayerUpdate(player, heroId, name = 'Aventureiro', activeDragonId = null, extraData = {}) {
+  sendLocalPlayerUpdate(player, heroId, name = 'Aventureiro', activeDragonId = null, extraData = {}, force = false) {
     const now = performance.now();
     const currentX = Math.round(player.x);
     const currentY = Math.round(player.y);
@@ -338,8 +334,9 @@ export class MultiplayerClient {
     // Intervalo adaptativo: 33ms em WebSockets dedicados, 66ms no Supabase Realtime
     const targetInterval = (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) ? 33 : this.broadcastIntervalMs;
 
-    // Disparo imediato se houve mudança crítica (com debounce mínimo de 20ms) OU se atingiu o intervalo de movimento regular
-    const shouldSend = (isCriticalStateChange && timeSinceLastSend >= 20) ||
+    // Disparo imediato se forçado, houve mudança crítica OU se atingiu o intervalo de movimento regular
+    const shouldSend = force ||
+      (isCriticalStateChange && timeSinceLastSend >= 15) ||
       (timeSinceLastSend >= targetInterval && (hasMoved || player.isMoving)) ||
       shouldSendPeriodicIdle;
 
@@ -380,6 +377,7 @@ export class MultiplayerClient {
     if (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({
         type: 'PLAYER_UPDATE',
+        userId: this.supabaseClient?.user?.id || null,
         x: currentX,
         y: currentY,
         vx,
@@ -389,9 +387,9 @@ export class MultiplayerClient {
         isSprinting: Boolean(player.isSprinting),
         isMounted: Boolean(player.isMounted),
         heroId: currentHeroId,
-        name,
+        name: currentName,
         activeDragonId,
-        avatarConfig: player.customAvatarConfig || extraData.avatarConfig || null,
+        avatarConfig: currentAvatarConfig,
         scale: player.scale || 1.0,
         dragonMode: currentDragonMode,
         flightAltitude: currentAltitude,
@@ -401,7 +399,7 @@ export class MultiplayerClient {
     }
 
     if (this.supabaseClient) {
-      this.supabaseClient.broadcastPlayerPosition(player, currentHeroId, name, activeDragonId, fullExtraData);
+      this.supabaseClient.broadcastPlayerPosition(player, currentHeroId, currentName, activeDragonId, fullExtraData);
     }
   }
 

@@ -99,8 +99,125 @@ export class Database {
       this.bootstrapDefaultMap();
     }
 
+    // 5. Normaliza e repara e-mails (@gmail.com) e roupas (customAvatar) caso estivessem nulos na migração
+    this.normalizeAndHealData();
+
     // Sincroniza lista de arquivos físicos de backup existentes na pasta
     this.syncBackupsListFromDisk();
+  }
+
+  createDefaultCustomAvatar(nickname = 'Aventureiro') {
+    const clean = (nickname || 'Aventureiro').toLowerCase().trim();
+    const isDuda = clean === 'duda' || clean.includes('eduarda');
+    if (isDuda) {
+      return {
+        version: 2,
+        name: nickname || 'duda',
+        gender: 'female',
+        skinTone: '#ffdfc4',
+        skinShadow: '#e5be9e',
+        headStyle: 'head_06',
+        hairColor: '#684022',
+        hairShadow: '#452611',
+        eyeShape: 'olhos_2',
+        eyeColor: '#8C501D',
+        noseShape: 'nariz_1',
+        mouthShape: 'boca_2',
+        cheeksShape: 'blush_1',
+        cheeksColor: 'rgba(255, 126, 54, 0.7)',
+        topStyle: 'top_cupcake_dress',
+        topColorPrimary: '#f472b6',
+        topColorSecondary: '#ffffff',
+        bottomStyle: 'skirt_pleated',
+        bottomColor: '#db2777',
+        shoesStyle: 'sneakers_classic',
+        shoesColor: '#f472b6',
+        shoesTrim: '#ffffff',
+        glassesStyle: 'none',
+        glassesColor: '#5c3c26',
+        glassesLensColor: '#0f172a',
+        glassesLensOpacity: 85
+      };
+    }
+
+    return {
+      version: 2,
+      name: nickname || 'Rennan',
+      gender: 'neutral',
+      skinTone: '#ffd0a8',
+      skinShadow: '#e0ae82',
+      headStyle: 'head_01',
+      hairColor: '#3d2314',
+      hairShadow: '#241208',
+      eyeShape: 'olhos_1',
+      eyeColor: '#8C501D',
+      noseShape: 'nariz_1',
+      mouthShape: 'boca_1',
+      cheeksShape: 'blush_1',
+      cheeksColor: 'rgba(255, 126, 54, 0.7)',
+      topStyle: 'top_sweater',
+      topColorPrimary: '#19c8b9',
+      topColorSecondary: '#ffffff',
+      bottomStyle: 'pants_cargo',
+      bottomColor: '#1e3a8a',
+      shoesStyle: 'sneakers_classic',
+      shoesColor: '#ea580c',
+      shoesTrim: '#ffffff',
+      glassesStyle: 'none',
+      glassesColor: '#5c3c26',
+      glassesLensColor: '#0f172a',
+      glassesLensOpacity: 85
+    };
+  }
+
+  normalizeAndHealData() {
+    let changed = false;
+
+    for (const user of this.state.auth_users) {
+      const profile = this.state.profiles.find(p => p.id === user.id);
+      const cleanNick = (profile?.nickname || '').toLowerCase().trim();
+
+      // Restaura os e-mails @gmail.com originais dos jogadores
+      if (cleanNick === 'rennan' && (user.email.endsWith('@kidslearncode.local') || user.email === 'rennan@gmail.com')) {
+        user.email = 'rennancr93@gmail.com';
+        user.role = 'admin';
+        changed = true;
+      } else if (cleanNick === 'duda' && (user.email.endsWith('@kidslearncode.local') || user.email === 'eduardasa@proton.me')) {
+        user.email = 'eduardasa@gmail.com';
+        user.role = 'admin';
+        changed = true;
+      } else if (user.email && user.email.endsWith('@kidslearncode.local')) {
+        const prefix = user.email.split('@')[0] || cleanNick || 'jogador';
+        user.email = `${prefix}@gmail.com`;
+        changed = true;
+      }
+    }
+
+    for (const save of this.state.game_saves) {
+      const profile = this.state.profiles.find(p => p.id === save.user_id);
+      const nick = profile?.nickname || 'Aventureiro';
+      if (!save.player_data) {
+        save.player_data = { x: profile?.x ?? 320, y: profile?.y ?? 320, scale: 1, heroId: 'custom_avatar' };
+        changed = true;
+      }
+      if (!save.player_data.customAvatar || typeof save.player_data.customAvatar !== 'object') {
+        save.player_data.customAvatar = this.createDefaultCustomAvatar(nick);
+        save.player_data.heroId = 'custom_avatar';
+        save.player_data.activeHero = 'custom_avatar';
+        if (profile) profile.hero_id = 'custom_avatar';
+        changed = true;
+      } else if (!save.player_data.customAvatar.name || save.player_data.customAvatar.name === 'Aventureiro') {
+        if (nick && nick !== 'Aventureiro') {
+          save.player_data.customAvatar.name = nick;
+          changed = true;
+        }
+      }
+    }
+
+    if (changed) {
+      this.saveState();
+      console.log('[EmbeddedDB] E-mails (@gmail.com) e Roupas/Customização (customAvatar) sincronizados no banco.');
+    }
   }
 
   /**
@@ -178,7 +295,12 @@ export class Database {
 
       for (const p of profiles) {
         const cleanNick = (p.nickname || 'aventureiro').toLowerCase().replace(/[^a-z0-9]/g, '');
-        const email = p.email || `${cleanNick || 'player'}@kidslearncode.local`;
+        let email = p.email;
+        if (!email) {
+          if (cleanNick === 'rennan') email = 'rennancr93@gmail.com';
+          else if (cleanNick === 'duda') email = 'eduardasa@gmail.com';
+          else email = `${cleanNick || 'player'}@gmail.com`;
+        }
 
         if (!this.state.auth_users.find(u => u.id === p.id)) {
           this.state.auth_users.push({
@@ -192,7 +314,7 @@ export class Database {
             reset_token_expires_at: null,
             parent_email: null,
             is_minor: false,
-            role: cleanNick === 'rennan' ? 'admin' : 'player',
+            role: (cleanNick === 'rennan' || cleanNick === 'duda') ? 'admin' : 'player',
             created_at: p.created_at || new Date().toISOString(),
             updated_at: new Date().toISOString()
           });
@@ -206,7 +328,7 @@ export class Database {
         this.state.profiles.push({
           id: p.id,
           nickname: p.nickname || 'Aventureiro',
-          hero_id: saveForUser?.player_data?.heroId || p.hero_id || 'char_wolf_hunter_m',
+          hero_id: saveForUser?.player_data?.heroId || p.hero_id || 'custom_avatar',
           x: saveForUser?.player_data?.x ?? p.x ?? 320,
           y: saveForUser?.player_data?.y ?? p.y ?? 320,
           level,
@@ -227,10 +349,16 @@ export class Database {
           newestMapTime = savedTime;
         }
 
+        const prof = this.state.profiles.find(p => p.id === s.user_id);
+        const pData = s.player_data || { x: 320, y: 320, scale: 1, heroId: 'custom_avatar' };
+        if (!pData.customAvatar || typeof pData.customAvatar !== 'object') {
+          pData.customAvatar = this.createDefaultCustomAvatar(prof?.nickname || 'Aventureiro');
+        }
+
         this.state.game_saves.push({
           id: s.id || crypto.randomUUID(),
           user_id: s.user_id,
-          player_data: s.player_data || { x: 320, y: 320, scale: 1, heroId: 'char_wolf_hunter_m' },
+          player_data: pData,
           inventory_data: s.inventory_data || { items: [], tools: [], eggs: [], equippedToolId: null },
           dragons_data: s.dragons_data || { party: [], formation: [], activeDragonId: null, mode: 'none' },
           coding_progress: s.coding_progress || { playerXP: 0, playerGold: 100, completedLessons: [], unlockedAssets: [], unlockedRecipes: [] },
@@ -311,7 +439,24 @@ export class Database {
   getUserByEmail(email) {
     if (!email) return null;
     const clean = email.toLowerCase().trim();
-    return this.state.auth_users.find(u => u.email.toLowerCase() === clean) || null;
+    const direct = this.state.auth_users.find(u => u.email.toLowerCase() === clean);
+    if (direct) return direct;
+
+    // Suporte a aliases conhecidos (@gmail.com / @proton.me / nickname)
+    const localPart = clean.split('@')[0];
+    if (clean === 'rennan@gmail.com' || clean === 'rennancr93@gmail.com' || localPart === 'rennan') {
+      const rennanProf = this.state.profiles.find(p => p.nickname.toLowerCase() === 'rennan');
+      if (rennanProf) return this.getUserById(rennanProf.id);
+    }
+    if (clean === 'duda@gmail.com' || clean === 'eduardasa@gmail.com' || clean === 'eduardasa@proton.me' || localPart === 'duda' || localPart === 'eduardasa') {
+      const dudaProf = this.state.profiles.find(p => p.nickname.toLowerCase() === 'duda');
+      if (dudaProf) return this.getUserById(dudaProf.id);
+    }
+
+    const byPrefix = this.state.auth_users.find(u => u.email.toLowerCase().split('@')[0] === localPart);
+    if (byPrefix) return byPrefix;
+
+    return null;
   }
 
   getUserById(id) {
@@ -321,6 +466,9 @@ export class Database {
   createUser({ email, passwordHash, emailConfirmed = true, confirmationToken = null, tokenExpires = null, isMinor = false, parentEmail = null, nickname = 'Aventureiro', role = 'player' }) {
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
+    const cleanNick = (nickname || 'Aventureiro').trim();
+    const defaultAvatar = this.createDefaultCustomAvatar(cleanNick);
+
     const newUser = {
       id,
       email: email.toLowerCase().trim(),
@@ -339,8 +487,8 @@ export class Database {
 
     const newProfile = {
       id,
-      nickname: (nickname || 'Aventureiro').trim(),
-      hero_id: 'char_wolf_hunter_m',
+      nickname: cleanNick,
+      hero_id: 'custom_avatar',
       x: 320,
       y: 320,
       level: 1,
@@ -353,7 +501,7 @@ export class Database {
     const newSave = {
       id: crypto.randomUUID(),
       user_id: id,
-      player_data: { x: 320, y: 320, scale: 1.0, heroId: 'char_wolf_hunter_m', customAvatar: null, activeHero: 'char_wolf_hunter_m' },
+      player_data: { x: 320, y: 320, scale: 1.0, heroId: 'custom_avatar', customAvatar: defaultAvatar, activeHero: 'custom_avatar' },
       inventory_data: { items: [], tools: [], eggs: [], equippedToolId: null },
       dragons_data: { party: [], formation: [], activeDragonId: null, mode: 'none' },
       coding_progress: { playerXP: 0, playerGold: 100, completedLessons: [], unlockedAssets: [], unlockedRecipes: [] },
@@ -387,7 +535,7 @@ export class Database {
       profile = {
         id,
         nickname: data.nickname || 'Aventureiro',
-        hero_id: data.heroId || data.hero_id || 'char_wolf_hunter_m',
+        hero_id: data.heroId || data.hero_id || 'custom_avatar',
         x: data.x ?? 320,
         y: data.y ?? 320,
         level: data.level ?? 1,
@@ -423,18 +571,25 @@ export class Database {
   upsertGameSave(userId, { map, player, inventory, dragons, codingProgress, customAvatar, activeHero }) {
     const now = new Date().toISOString();
     let save = this.state.game_saves.find(s => s.user_id === userId);
+    const profile = this.getProfile(userId);
 
-    const resolvedCustomAvatar = customAvatar !== undefined
+    // Nunca sobrescreve customAvatar válido existente com null
+    const incomingAvatar = (customAvatar && typeof customAvatar === 'object')
       ? customAvatar
-      : (player?.customAvatar !== undefined ? player.customAvatar : save?.player_data?.customAvatar || null);
+      : ((player?.customAvatar && typeof player.customAvatar === 'object') ? player.customAvatar : null);
 
-    const resolvedActiveHero = activeHero || player?.activeHero || player?.heroId || save?.player_data?.activeHero || 'char_wolf_hunter_m';
+    const resolvedCustomAvatar = incomingAvatar
+      || (save?.player_data?.customAvatar && typeof save.player_data.customAvatar === 'object' ? save.player_data.customAvatar : null)
+      || this.createDefaultCustomAvatar(profile?.nickname || 'Aventureiro');
+
+    const resolvedActiveHero = activeHero || player?.activeHero || player?.heroId || save?.player_data?.activeHero || 'custom_avatar';
 
     const mergedPlayerData = {
       ...(save?.player_data || { x: 320, y: 320, scale: 1.0 }),
       ...(player || {}),
       customAvatar: resolvedCustomAvatar,
-      activeHero: resolvedActiveHero
+      activeHero: resolvedActiveHero,
+      heroId: resolvedActiveHero
     };
 
     if (!save) {
@@ -457,7 +612,6 @@ export class Database {
     }
 
     // Sincroniza perfil automaticamente (nickname do customAvatar, posição, XP, Ouro)
-    const profile = this.getProfile(userId);
     if (profile) {
       if (resolvedCustomAvatar?.name && resolvedCustomAvatar.name.trim() !== 'Aventureiro') {
         profile.nickname = resolvedCustomAvatar.name.trim();
@@ -603,11 +757,15 @@ export class Database {
     if (payload.player_data) {
       save.player_data = { ...save.player_data, ...payload.player_data };
     }
-    if (payload.customAvatar !== undefined) {
+    if (payload.customAvatar && typeof payload.customAvatar === 'object') {
       save.player_data.customAvatar = payload.customAvatar;
-      if (payload.customAvatar?.name) {
+      if (payload.nickname !== undefined) {
+        save.player_data.customAvatar.name = String(payload.nickname).trim() || save.player_data.customAvatar.name;
+      } else if (payload.customAvatar?.name) {
         profile.nickname = payload.customAvatar.name;
       }
+    } else if (!save.player_data.customAvatar) {
+      save.player_data.customAvatar = this.createDefaultCustomAvatar(profile.nickname);
     }
     if (payload.x !== undefined) save.player_data.x = Number(payload.x);
     if (payload.y !== undefined) save.player_data.y = Number(payload.y);

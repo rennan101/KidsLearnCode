@@ -2244,18 +2244,18 @@ class RPGApplication {
         this.supabaseClient.saveGlobalWorldMap(mapData);
       }
 
-      // Sincroniza com a Nuvem Supabase com throttling inteligente para economizar quota (Free Tier)
+      // Sincroniza com o Banco de Dados Dedicado (Sem limite de cota)
       if (this.supabaseClient && !this.supabaseClient.user?.isGuest && this.supabaseClient.isValidUUID?.(this.supabaseClient.user?.id)) {
         clearTimeout(this.cloudSaveDebounceTimer);
         const timeSinceLastCloudSave = Date.now() - (this.lastCloudSaveTime || 0);
-        if (instant || timeSinceLastCloudSave >= 15000) {
+        if (instant || timeSinceLastCloudSave >= 1500) {
           this.lastCloudSaveTime = Date.now();
           this.supabaseClient.saveCloudGame(payload);
         } else {
           this.cloudSaveDebounceTimer = setTimeout(() => {
             this.lastCloudSaveTime = Date.now();
             this.supabaseClient?.saveCloudGame(payload);
-          }, 15000 - timeSinceLastCloudSave);
+          }, 1500 - timeSinceLastCloudSave);
         }
       }
     } catch (err) {
@@ -2375,7 +2375,7 @@ class RPGApplication {
           }
         }
 
-        // 2. Restaurar Player
+        // 2. Restaurar Player & Roupas (customAvatar)
         if (data.player) {
           if (data.player.x !== undefined && data.player.y !== undefined && !isNaN(data.player.x) && !isNaN(data.player.y)) {
             this.player.x = data.player.x;
@@ -2387,7 +2387,13 @@ class RPGApplication {
           if (data.player.scale) {
             this.player.setScale(data.player.scale);
           }
-          const loadedCustomAvatar = data.customAvatar || data.player.customAvatar || null;
+          let localStoredAvatar = null;
+          try {
+            const rawLocal = localStorage.getItem('kidslearn_custom_avatar');
+            if (rawLocal) localStoredAvatar = JSON.parse(rawLocal);
+          } catch (_) {}
+
+          const loadedCustomAvatar = data.customAvatar || data.player.customAvatar || localStoredAvatar || null;
           if (loadedCustomAvatar) {
             this.player.customAvatarConfig = loadedCustomAvatar;
             try {
@@ -2482,8 +2488,9 @@ class RPGApplication {
   }
 
   isAdminUser() {
+    if (this.supabaseClient?.user?.role === 'admin') return true;
     const email = this.supabaseClient?.user?.email?.toLowerCase().trim();
-    const adminEmails = ['rennancr93@gmail.com', 'eduardasa@proton.me'];
+    const adminEmails = ['rennancr93@gmail.com', 'rennan@gmail.com', 'eduardasa@gmail.com', 'duda@gmail.com', 'eduardasa@proton.me'];
     return Boolean(email && adminEmails.includes(email));
   }
 
@@ -5347,7 +5354,7 @@ class RPGApplication {
       localStorage.setItem('kidslearn_custom_avatar', JSON.stringify(config));
       localStorage.setItem('kidslearn_active_hero', 'custom_avatar');
       this.updateHeroHeaderBadge();
-      this.triggerAutoSave();
+      this.saveGameToStorage(true);
       this.player.spawnCraftPoof();
       
       // Imediatamente sincroniza com todos os outros jogadores conectados no multiplayer

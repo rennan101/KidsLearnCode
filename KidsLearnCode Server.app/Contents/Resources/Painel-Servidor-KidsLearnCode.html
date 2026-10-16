@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KidsLearnCode - Central do Servidor & Banco de Dados</title>
+  <title>KidsLearnCode — Servidor & Banco de Dados (Animal Island Studio)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Nunito:wght@500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=JetBrains+Mono:wght@400;600;700&family=Nunito:wght@500;600;700;800;900&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-cream: #f8f8f0;
@@ -14,24 +14,23 @@
       --bg-card: #f7f3df;
       --bg-mint-soft: #e6f9f6;
       --text-brown: #794f27;
-      --text-muted: #725d42;
-      --text-light: #8a7b66;
-      --border-wood: #7a583e;
-      --border-soft: #c4b89e;
-      --shadow-wood: #5c3c26;
+      --text-earth: #725d42;
+      --text-muted: #8a7b66;
       --accent-teal: #19c8b9;
       --accent-teal-dark: #0f8e83;
-      --accent-orange: #ea580c;
-      --accent-orange-dark: #9a3412;
+      --accent-teal-light: #3dd4c6;
+      --border-wood: #7a583e;
+      --shadow-wood: #5c3c26;
+      --border-soft: #c4b89e;
       --accent-gold: #f59e0b;
       --accent-gold-dark: #b45309;
+      --accent-orange: #ea580c;
+      --accent-orange-dark: #9a3412;
       --danger: #dc2626;
       --danger-dark: #991b1b;
       --mono-font: 'JetBrains Mono', monospace;
-      --body-font: 'Nunito', sans-serif;
+      --body-font: 'Nunito', 'Outfit', sans-serif;
       --title-font: 'Cinzel', serif;
-      --animal-cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M5 3 L22 11 L15 14 L19 22 L15 24 L11 16 L6 20 Z' fill='%23fdfbf7' stroke='%23794f27' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E") 4 2, auto;
-      --animal-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='10' fill='%2319c8b9' stroke='%23794f27' stroke-width='2.2'/%3E%3Ccircle cx='14' cy='14' r='4' fill='%23fdfbf7'/%3E%3C/svg%3E") 14 14, pointer;
     }
 
     * {
@@ -43,51 +42,63 @@
     body {
       background-color: var(--bg-cream);
       background-image: radial-gradient(#e5dec9 1.2px, transparent 1.2px);
-      background-size: 24px 24px;
+      background-size: 22px 22px;
       color: var(--text-brown);
       font-family: var(--body-font);
-      padding: 20px;
       min-height: 100vh;
-      cursor: var(--animal-cursor-default);
+      padding: 20px;
     }
 
-    button, a, select, input[type="file"], .clickable {
-      cursor: var(--animal-cursor-pointer);
+    .ui-icon {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      flex-shrink: 0;
     }
+    .icon-sm { width: 16px; height: 16px; }
+    .icon-lg { width: 26px; height: 26px; }
 
     .container {
-      max-width: 1320px;
+      max-width: 1440px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
       gap: 20px;
     }
 
-    .ui-icon {
-      width: 20px;
-      height: 20px;
-      stroke-width: 2.2;
-      stroke: currentColor;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      flex-shrink: 0;
+    /* Visibilidade Modo DEV vs Modo No-Code */
+    .dev-only {
+      display: none !important;
+    }
+    body.dev-mode .dev-only {
+      display: revert !important;
+    }
+    body.dev-mode div.dev-only,
+    body.dev-mode section.dev-only {
+      display: block !important;
+    }
+    body.dev-mode .form-grid.dev-only {
+      display: grid !important;
+    }
+    body.dev-mode .flex-dev.dev-only {
+      display: flex !important;
     }
 
-    .icon-sm { width: 16px; height: 16px; }
-    .icon-lg { width: 26px; height: 26px; }
-
-    /* Header Principal */
+    /* Top Header */
     .header {
       background: var(--bg-parchment);
       border: 3px solid var(--border-wood);
       border-radius: 24px;
-      padding: 20px 26px;
+      padding: 18px 26px;
       box-shadow: 0 6px 0 var(--shadow-wood);
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
       gap: 16px;
     }
 
@@ -95,7 +106,6 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      flex-wrap: wrap;
     }
 
     .brand-emblem {
@@ -103,7 +113,7 @@
       height: 52px;
       border-radius: 18px;
       background: var(--bg-mint-soft);
-      border: 2.5px solid var(--accent-teal);
+      border: 2.5px solid var(--accent-teal-dark);
       box-shadow: 0 4px 0 var(--accent-teal-dark);
       display: flex;
       align-items: center;
@@ -113,63 +123,22 @@
 
     .header-title h1 {
       font-family: var(--title-font);
-      font-size: 22px;
+      font-size: 23px;
       color: var(--text-brown);
-      letter-spacing: 0.3px;
+      letter-spacing: 0.4px;
     }
 
     .header-subtitle {
-      font-size: 13px;
-      font-weight: 700;
+      font-size: 13.5px;
       color: var(--text-muted);
+      font-weight: 700;
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-top: 3px;
+      margin-top: 2px;
     }
 
-    .badge-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 16px;
-      border-radius: 50px;
-      font-size: 13px;
-      font-weight: 800;
-      background: var(--bg-mint-soft);
-      color: var(--accent-teal-dark);
-      border: 2px solid var(--accent-teal);
-      box-shadow: 0 3px 0 var(--accent-teal-dark);
-    }
-
-    .badge-status.paused {
-      background: #fef3c7;
-      color: var(--accent-gold-dark);
-      border-color: var(--accent-gold);
-      box-shadow: 0 3px 0 var(--accent-gold-dark);
-    }
-
-    .badge-status.offline {
-      background: #fee2e2;
-      color: var(--danger-dark);
-      border-color: var(--danger);
-      box-shadow: 0 3px 0 var(--danger-dark);
-    }
-
-    .status-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: currentColor;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.45; transform: scale(0.85); }
-    }
-
-    /* Botões 3D Táteis Animal Island */
+    /* 3D Tactile Pill Buttons */
     .btn {
       display: inline-flex;
       align-items: center;
@@ -180,59 +149,151 @@
       font-family: var(--body-font);
       font-weight: 800;
       font-size: 14px;
+      cursor: pointer;
       border: 2px solid var(--border-wood);
       background: var(--bg-card);
       color: var(--text-brown);
-      box-shadow: 0 4px 0 var(--shadow-wood);
-      transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.12s;
+      box-shadow: 0 4px 0 0 var(--shadow-wood);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
       text-decoration: none;
-      white-space: nowrap;
+      user-select: none;
     }
 
-    .btn:hover { filter: brightness(1.03); }
+    .btn:hover {
+      background: #f2ebd4;
+    }
+
     .btn:active {
       transform: translateY(3px);
-      box-shadow: 0 1px 0 var(--shadow-wood);
+      box-shadow: 0 1px 0 0 var(--shadow-wood);
     }
+
+    .btn-teal {
+      background: var(--accent-teal);
+      color: #ffffff;
+      border-color: var(--accent-teal-dark);
+      box-shadow: 0 4px 0 0 var(--accent-teal-dark);
+    }
+    .btn-teal:hover { background: var(--accent-teal-light); }
+    .btn-teal:active { box-shadow: 0 1px 0 0 var(--accent-teal-dark); }
+
+    .btn-gold {
+      background: var(--accent-gold);
+      color: #ffffff;
+      border-color: var(--accent-gold-dark);
+      box-shadow: 0 4px 0 0 var(--accent-gold-dark);
+    }
+    .btn-gold:hover { background: #fbbf24; }
+    .btn-gold:active { box-shadow: 0 1px 0 0 var(--accent-gold-dark); }
+
+    .btn-orange {
+      background: var(--accent-orange);
+      color: #ffffff;
+      border-color: var(--accent-orange-dark);
+      box-shadow: 0 4px 0 0 var(--accent-orange-dark);
+    }
+    .btn-orange:hover { background: #f97316; }
+    .btn-orange:active { box-shadow: 0 1px 0 0 var(--accent-orange-dark); }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: var(--danger-dark);
+      border-color: var(--danger);
+      box-shadow: 0 4px 0 0 var(--danger-dark);
+    }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-danger:active { box-shadow: 0 1px 0 0 var(--danger-dark); }
 
     .btn-sm {
       padding: 6px 14px;
       font-size: 12.5px;
     }
 
-    .btn-teal {
+    .btn-xs {
+      padding: 4px 10px;
+      font-size: 12px;
+      box-shadow: 0 2px 0 0 var(--shadow-wood);
+    }
+    .btn-xs:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 0 var(--shadow-wood);
+    }
+
+    /* Mode Switch Pill (No-Code vs DEV) */
+    .mode-switch-pill {
+      display: inline-flex;
+      align-items: center;
+      background: var(--bg-card);
+      border: 2px solid var(--border-wood);
+      border-radius: 50px;
+      padding: 3px;
+      box-shadow: 0 3px 0 var(--shadow-wood);
+      gap: 4px;
+    }
+
+    .mode-switch-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--text-earth);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-family: var(--body-font);
+      transition: all 0.12s ease;
+    }
+
+    .mode-switch-option.active {
       background: var(--accent-teal);
-      color: #fdfbf7;
-      border-color: var(--accent-teal-dark);
-      box-shadow: 0 4px 0 var(--accent-teal-dark);
+      color: #ffffff;
+      box-shadow: 0 2px 0 var(--accent-teal-dark);
     }
-    .btn-teal:active { box-shadow: 0 1px 0 var(--accent-teal-dark); }
 
-    .btn-gold {
-      background: var(--accent-gold);
-      color: #fdfbf7;
-      border-color: var(--accent-gold-dark);
-      box-shadow: 0 4px 0 var(--accent-gold-dark);
-    }
-    .btn-gold:active { box-shadow: 0 1px 0 var(--accent-gold-dark); }
-
-    .btn-orange {
+    .mode-switch-option.dev-active {
       background: var(--accent-orange);
-      color: #fdfbf7;
-      border-color: var(--accent-orange-dark);
-      box-shadow: 0 4px 0 var(--accent-orange-dark);
+      color: #ffffff;
+      box-shadow: 0 2px 0 var(--accent-orange-dark);
     }
-    .btn-orange:active { box-shadow: 0 1px 0 var(--accent-orange-dark); }
 
-    .btn-danger {
-      background: var(--danger);
-      color: #fdfbf7;
-      border-color: var(--danger-dark);
-      box-shadow: 0 4px 0 var(--danger-dark);
+    /* Status Pill */
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-weight: 800;
+      font-size: 13px;
+      background: var(--bg-mint-soft);
+      color: var(--accent-teal-dark);
+      border: 2px solid var(--accent-teal);
     }
-    .btn-danger:active { box-shadow: 0 1px 0 var(--danger-dark); }
+    .badge-status.paused {
+      background: #fef3c7;
+      color: var(--accent-gold-dark);
+      border-color: var(--accent-gold);
+    }
+    .badge-status.offline {
+      background: #fee2e2;
+      color: var(--danger-dark);
+      border-color: #f87171;
+    }
 
-    /* Barra de Controle Remoto Rápido */
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-teal);
+      box-shadow: 0 0 0 3px rgba(25, 200, 185, 0.25);
+    }
+    .badge-status.paused .status-dot { background: var(--accent-gold); }
+    .badge-status.offline .status-dot { background: var(--danger); }
+
+    /* Remote Server Control Strip */
     .control-strip {
       background: var(--bg-parchment);
       border: 2.5px solid var(--border-wood);
@@ -240,17 +301,17 @@
       padding: 16px 22px;
       box-shadow: 0 5px 0 var(--shadow-wood);
       display: flex;
-      justify-content: space-between;
-      align-items: center;
       flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
       gap: 14px;
     }
 
     .control-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
       align-items: center;
+      gap: 10px;
     }
 
     .connection-bar {
@@ -275,19 +336,19 @@
       border-color: var(--accent-teal);
     }
 
-    /* Cards de Métricas */
+    /* Metrics Grid */
     .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
     }
 
     .metric-card {
       background: var(--bg-parchment);
-      border: 2.5px solid var(--border-wood);
+      border: 2.5px solid var(--border-soft);
       border-radius: 20px;
-      padding: 16px 20px;
-      box-shadow: 0 4px 0 var(--shadow-wood);
+      padding: 18px 20px;
+      box-shadow: 0 4px 0 #d8ccb4;
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -295,33 +356,33 @@
 
     .metric-header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      font-size: 12px;
-      font-weight: 800;
+      align-items: center;
       color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
     .metric-value {
-      font-size: 26px;
+      font-size: 28px;
       font-weight: 900;
       color: var(--text-brown);
       font-family: var(--mono-font);
     }
 
     .metric-sub {
-      font-size: 12px;
+      font-size: 12.5px;
+      color: var(--text-earth);
       font-weight: 700;
-      color: var(--text-light);
     }
 
-    /* Abas de Navegação */
+    /* Navigation Tabs */
     .tabs-nav {
       display: flex;
-      gap: 10px;
       flex-wrap: wrap;
+      gap: 10px;
     }
 
     .tab-btn {
@@ -330,51 +391,43 @@
       gap: 8px;
       padding: 11px 22px;
       border-radius: 50px;
-      border: 2.5px solid var(--border-wood);
-      background: var(--bg-card);
-      color: var(--text-muted);
+      border: 2.5px solid var(--border-soft);
+      background: var(--bg-parchment);
+      color: var(--text-earth);
+      font-family: var(--body-font);
       font-weight: 800;
       font-size: 14px;
-      box-shadow: 0 4px 0 var(--shadow-wood);
-      transition: all 0.1s;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #d8ccb4;
+      transition: all 0.1s ease;
     }
 
     .tab-btn.active {
       background: var(--accent-teal);
-      color: #fdfbf7;
+      color: #ffffff;
       border-color: var(--accent-teal-dark);
       box-shadow: 0 4px 0 var(--accent-teal-dark);
     }
 
-    .tab-pane {
-      display: none;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .tab-pane.active {
-      display: flex;
-    }
-
-    /* Painéis de Conteúdo */
+    /* Main Panels */
     .panel {
       background: var(--bg-parchment);
       border: 2.5px solid var(--border-wood);
-      border-radius: 22px;
-      padding: 22px 24px;
-      box-shadow: 0 5px 0 var(--shadow-wood);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 6px 0 var(--shadow-wood);
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 18px;
     }
 
     .panel-header {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
       gap: 12px;
-      padding-bottom: 12px;
+      padding-bottom: 14px;
       border-bottom: 2px dashed var(--border-soft);
     }
 
@@ -382,16 +435,25 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      font-family: var(--title-font);
       font-size: 18px;
+      font-weight: 900;
       color: var(--text-brown);
     }
 
-    /* Tabelas */
+    .tab-pane {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .tab-pane.active {
+      display: flex;
+    }
+
+    /* Tables */
     .table-wrap {
       overflow-x: auto;
-      border: 2px solid var(--border-soft);
       border-radius: 16px;
+      border: 2px solid var(--border-soft);
       background: #ffffff;
     }
 
@@ -424,10 +486,10 @@
     .pill-badge {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      padding: 3px 10px;
+      gap: 6px;
+      padding: 4px 11px;
       border-radius: 50px;
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 800;
       background: var(--bg-card);
       border: 1.5px solid var(--border-soft);
@@ -444,6 +506,15 @@
       background: #fef3c7;
       border-color: var(--accent-gold);
       color: var(--accent-gold-dark);
+    }
+
+    .color-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      display: inline-block;
+      border: 1.5px solid rgba(121, 79, 39, 0.45);
+      flex-shrink: 0;
     }
 
     /* Modal de Edição Completa do Jogador & Save */
@@ -467,21 +538,23 @@
       border: 3px solid var(--border-wood);
       border-radius: 24px;
       box-shadow: 0 8px 0 var(--shadow-wood);
-      max-width: 960px;
+      max-width: 1080px;
       width: 100%;
-      max-height: 90vh;
+      max-height: 92vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
 
     .modal-header {
-      padding: 18px 24px;
+      padding: 16px 24px;
       background: var(--bg-card);
       border-bottom: 2px solid var(--border-soft);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .modal-body {
@@ -489,7 +562,7 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 20px;
     }
 
     .modal-footer {
@@ -503,9 +576,39 @@
       gap: 12px;
     }
 
+    /* No-Code Visual Section Cards inside Modal */
+    .nocode-section {
+      background: var(--bg-card);
+      border: 2px solid var(--border-soft);
+      border-radius: 20px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .nocode-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1.5px dashed var(--border-soft);
+    }
+
+    .nocode-section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--text-brown);
+    }
+
     .form-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
       gap: 14px;
     }
 
@@ -518,12 +621,145 @@
     .form-group label {
       font-size: 12.5px;
       font-weight: 800;
+      color: var(--text-earth);
+    }
+
+    .color-picker-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #ffffff;
+      border: 2px solid var(--border-soft);
+      border-radius: 50px;
+      padding: 4px 12px 4px 6px;
+    }
+
+    .color-picker-wrap input[type="color"] {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 50%;
+      background: none;
+      cursor: pointer;
+    }
+
+    .color-picker-wrap span {
+      font-family: var(--mono-font);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-brown);
+    }
+
+    /* Visual Cards for Items, Eggs, Dragons */
+    .visual-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 12px;
+    }
+
+    .visual-item-card {
+      background: var(--bg-parchment);
+      border: 2px solid var(--border-soft);
+      border-radius: 16px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: 0 3px 0 #dfd5be;
+    }
+
+    .visual-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .visual-item-name {
+      font-weight: 900;
+      font-size: 13.5px;
+      color: var(--text-brown);
+    }
+
+    .visual-item-sub {
+      font-size: 11.5px;
       color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .visual-item-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .qty-stepper {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-soft);
+      border-radius: 50px;
+      padding: 2px 6px;
+    }
+
+    .qty-input {
+      width: 54px;
+      text-align: center;
+      border: none;
+      background: transparent;
+      font-family: var(--mono-font);
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--text-brown);
+      outline: none;
+    }
+
+    .add-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-parchment);
+      border: 1.5px dashed var(--border-wood);
+      border-radius: 16px;
+      padding: 10px 14px;
+    }
+
+    .tools-pills-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tool-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 50px;
+      font-size: 12.5px;
+      font-weight: 800;
+      cursor: pointer;
+      border: 2px solid var(--border-soft);
+      background: var(--bg-parchment);
+      color: var(--text-earth);
+      user-select: none;
+      transition: all 0.1s ease;
+    }
+
+    .tool-pill.equipped {
+      background: var(--bg-mint-soft);
+      border-color: var(--accent-teal);
+      color: var(--accent-teal-dark);
+      box-shadow: 0 2px 0 var(--accent-teal-dark);
     }
 
     .code-area {
       width: 100%;
-      min-height: 180px;
+      min-height: 150px;
       padding: 14px;
       border-radius: 16px;
       border: 2px solid var(--border-soft);
@@ -597,16 +833,37 @@
         <div class="header-title">
           <h1>KidsLearnCode — Servidor & Banco de Dados</h1>
           <div class="header-subtitle">
-            <span>Motor 100% Independente (Zero PostgreSQL / Zero Supabase / Zero Cloudflare)</span>
+            <span>Estúdio No-Code Visual & Controle Remoto Total (Mac mini)</span>
           </div>
         </div>
       </div>
 
       <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <!-- Seletor Modo No-Code vs Modo DEV -->
+        <div class="mode-switch-pill" title="Alterne entre o Modo Visual No-Code e o Modo Desenvolvedor (Sessões Técnicas & JSON)">
+          <button type="button" id="btn-mode-nocode" class="mode-switch-option active" onclick="setViewMode(false)">
+            <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+              <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+            </svg>
+            <span>Modo Visual (No-Code)</span>
+          </button>
+          <button type="button" id="btn-mode-dev" class="mode-switch-option" onclick="setViewMode(true)">
+            <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+              <polyline points="16 18 22 12 16 6"></polyline>
+              <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+            <span>Modo DEV</span>
+          </button>
+        </div>
+
         <div id="status-badge" class="badge-status">
           <span class="status-dot"></span>
           <span id="status-text">CONECTANDO AO SERVIDOR...</span>
         </div>
+
         <a id="btn-open-game" href="/" target="_blank" class="btn btn-teal">
           <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
             <polygon points="5 3 19 12 5 21 5 3"></polygon>
@@ -648,7 +905,7 @@
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
-          <span>Atualizar Código (Git Pull)</span>
+          <span>Atualizar Jogo (Git Pull)</span>
         </button>
 
         <button class="btn" onclick="createManualBackup()">
@@ -657,12 +914,12 @@
             <polyline points="17 21 17 13 7 13 7 21"></polyline>
             <polyline points="7 3 7 8 15 8"></polyline>
           </svg>
-          <span>Backup Agora</span>
+          <span>Salvar Backup Agora</span>
         </button>
       </div>
 
-      <div class="connection-bar">
-        <input type="text" id="server-url-input" class="input-pill" style="width: 270px;" placeholder="Auto-descoberta de Servidor...">
+      <div class="connection-bar dev-only flex-dev">
+        <input type="text" id="server-url-input" class="input-pill" style="width: 260px;" placeholder="Auto-descoberta de Servidor...">
         <button class="btn btn-sm" onclick="connectCustomUrl()">Conectar</button>
         <button class="btn btn-sm" onclick="autoDiscoverServer(true)">Auto-Detectar</button>
       </div>
@@ -681,12 +938,12 @@
           </svg>
         </div>
         <div class="metric-value" id="metric-online">0</div>
-        <div class="metric-sub" id="metric-online-sub">Sincronização 20Hz ativa</div>
+        <div class="metric-sub" id="metric-online-sub">Mundo compartilhado ativo</div>
       </div>
 
       <div class="metric-card">
         <div class="metric-header">
-          <span>Contas & Saves no Banco</span>
+          <span>Contas & Personagens</span>
           <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
             <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
             <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
@@ -694,7 +951,7 @@
           </svg>
         </div>
         <div class="metric-value" id="metric-users">0</div>
-        <div class="metric-sub">Armazenamento atômico em disco</div>
+        <div class="metric-sub">Roupas, ovos, itens e dragões salvos</div>
       </div>
 
       <div class="metric-card">
@@ -705,12 +962,12 @@
           </svg>
         </div>
         <div class="metric-value" id="metric-backups">0</div>
-        <div class="metric-sub">Boot + 6 em 6h + Pré-Update</div>
+        <div class="metric-sub">Proteção automática a cada 6h</div>
       </div>
 
       <div class="metric-card">
         <div class="metric-header">
-          <span>Memória RAM & Uptime</span>
+          <span>Saúde do Servidor</span>
           <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
           </svg>
@@ -724,11 +981,10 @@
     <nav class="tabs-nav">
       <button class="tab-btn active" onclick="switchTab('tab-db', this)">
         <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
-          <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
         </svg>
-        <span>Banco de Dados (Jogadores, Roupas, Ovos, Dragões)</span>
+        <span>Jogadores, Roupas, Ovos, Itens & Dragões</span>
       </button>
 
       <button class="tab-btn" onclick="switchTab('tab-backups', this)">
@@ -745,19 +1001,19 @@
           <line x1="2" y1="12" x2="22" y2="12"></line>
           <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
         </svg>
-        <span>Conexões & Jogadores ao Vivo</span>
+        <span>Jogadores Online & Rede</span>
       </button>
 
-      <button class="tab-btn" onclick="switchTab('tab-logs', this)">
+      <button class="tab-btn dev-only" onclick="switchTab('tab-logs', this)">
         <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
           <polyline points="4 17 10 11 4 5"></polyline>
           <line x1="12" y1="19" x2="20" y2="19"></line>
         </svg>
-        <span>Logs em Tempo Real & Console</span>
+        <span>Sessões & Console de Logs (DEV)</span>
       </button>
     </nav>
 
-    <!-- ABA 1: EXPLORADOR E EDITOR DO BANCO DE DADOS -->
+    <!-- ABA 1: EXPLORADOR E EDITOR VISUAL DO BANCO DE DADOS -->
     <div id="tab-db" class="tab-pane active">
       <div class="panel">
         <div class="panel-header">
@@ -766,18 +1022,18 @@
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
               <circle cx="9" cy="7" r="4"></circle>
             </svg>
-            <span>Jogadores Salvos no Banco de Dados Nativo</span>
+            <span>Jogadores Salvos no Banco de Dados</span>
           </div>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <input type="text" id="user-search" class="input-pill" placeholder="Buscar por nome ou e-mail..." oninput="renderUsersTable()">
+            <input type="text" id="user-search" class="input-pill" placeholder="Buscar por nome ou @gmail.com..." oninput="renderUsersTable()">
             <button class="btn btn-teal btn-sm" onclick="openNewUserModal()">
               <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
-              <span>Nova Conta</span>
+              <span>Novo Jogador</span>
             </button>
-            <button class="btn btn-sm" onclick="refreshAll()">Atualizar Dados</button>
+            <button class="btn btn-sm" onclick="refreshAll()">Atualizar</button>
           </div>
         </div>
 
@@ -785,15 +1041,15 @@
           <table>
             <thead>
               <tr>
-                <th>Jogador (Nickname)</th>
-                <th>E-mail / Login</th>
-                <th>Cargo</th>
-                <th>Nível / XP / Ouro</th>
-                <th>Roupas (Avatar)</th>
-                <th>Mochila (Itens & Ovos)</th>
+                <th>Jogador</th>
+                <th>E-mail (@gmail)</th>
+                <th>Acesso</th>
+                <th>Nível & Moedas</th>
+                <th>Roupas & Customização</th>
+                <th>Mochila & Ovos</th>
                 <th>Dragões</th>
-                <th>Posição</th>
-                <th>Ações</th>
+                <th class="dev-only">Posição (DEV)</th>
+                <th>Gerenciar</th>
               </tr>
             </thead>
             <tbody id="users-tbody">
@@ -812,12 +1068,12 @@
             <svg class="ui-icon" viewBox="0 0 24 24">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             </svg>
-            <span>Snapshots Automáticos do Banco de Dados (server/data/backups)</span>
+            <span>Histórico de Backups Automáticos</span>
           </div>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <button class="btn btn-teal btn-sm" onclick="createManualBackup()">Gerar Novo Backup Agora</button>
+            <button class="btn btn-teal btn-sm" onclick="createManualBackup()">Criar Novo Backup Agora</button>
             <label class="btn btn-sm">
-              <span>Importar Arquivo de Backup (.json)</span>
+              <span>Restaurar de Arquivo (.json)</span>
               <input type="file" accept=".json" style="display: none;" onchange="importBackupFile(event)">
             </label>
           </div>
@@ -827,8 +1083,8 @@
           <table>
             <thead>
               <tr>
-                <th>Arquivo de Snapshot</th>
-                <th>Origem</th>
+                <th>Snapshot</th>
+                <th>Tipo</th>
                 <th>Tamanho</th>
                 <th>Data e Hora</th>
                 <th>Ações</th>
@@ -848,59 +1104,21 @@
         <div class="panel-header">
           <div class="panel-title">
             <svg class="ui-icon" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="2" y1="12" x2="22" y2="12"></line>
-            </svg>
-            <span>Endereços Automáticos de Conexão (Zero Configuração Manual)</span>
-          </div>
-        </div>
-
-        <div class="form-grid" id="network-cards">
-          <div class="metric-card">
-            <div class="metric-header"><span>Link Público Principal (Internet)</span></div>
-            <div style="font-family: var(--mono-font); font-size: 13px; font-weight: 700; word-break: break-all;" id="net-public-url">--</div>
-            <div style="margin-top: 8px;">
-              <button class="btn btn-sm" onclick="copyText('net-public-url')">Copiar Endereço</button>
-            </div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-header"><span>Rede Local Wi-Fi / Cabo (LAN 0ms)</span></div>
-            <div style="font-family: var(--mono-font); font-size: 13px; font-weight: 700; word-break: break-all;" id="net-lan-url">--</div>
-            <div style="margin-top: 8px;">
-              <button class="btn btn-sm" onclick="copyText('net-lan-url')">Copiar IP LAN</button>
-            </div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-header"><span>Acesso Local (Mesmo Mac)</span></div>
-            <div style="font-family: var(--mono-font); font-size: 13px; font-weight: 700;" id="net-local-url">http://localhost:8080</div>
-            <div style="margin-top: 8px;">
-              <button class="btn btn-sm" onclick="copyText('net-local-url')">Copiar Localhost</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">
-            <svg class="ui-icon" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="9"></circle>
               <polyline points="12 7 12 12 15 15"></polyline>
             </svg>
-            <span>Jogadores Conectados Agora no Mundo (WebSocket 20Hz)</span>
+            <span>Jogadores Conectados Agora na Ilha</span>
           </div>
         </div>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>ID de Sessão</th>
-                <th>Nome no Crachá</th>
-                <th>Avatar / Roupas</th>
-                <th>Dragão Ativo / Modo</th>
-                <th>Coordenadas (X, Y)</th>
+                <th class="dev-only">ID de Sessão (DEV)</th>
+                <th>Nome do Jogador</th>
+                <th>Roupas / Aparência</th>
+                <th>Dragão Companheiro</th>
+                <th class="dev-only">Coordenadas X, Y (DEV)</th>
               </tr>
             </thead>
             <tbody id="online-players-tbody">
@@ -909,9 +1127,55 @@
           </table>
         </div>
       </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg class="ui-icon" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+            </svg>
+            <span>Endereços Automáticos de Conexão</span>
+          </div>
+        </div>
+
+        <div class="form-grid" id="network-cards">
+          <div class="metric-card">
+            <div class="metric-header"><span>Acesso no Vercel (Público)</span></div>
+            <div style="font-family: var(--mono-font); font-size: 13px; font-weight: 700; word-break: break-all;">https://kids-learn-code.vercel.app</div>
+            <div style="margin-top: 8px;">
+              <a class="btn btn-teal btn-sm" href="https://kids-learn-code.vercel.app" target="_blank">Abrir no Vercel</a>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header"><span>Ponte Pública Ativa (Túnel Automático)</span></div>
+            <div style="font-family: var(--mono-font); font-size: 13px; font-weight: 700; word-break: break-all;" id="net-public-url">--</div>
+            <div style="margin-top: 8px;">
+              <button class="btn btn-sm" onclick="copyText('net-public-url')">Copiar Link</button>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header"><span>Rede Wi-Fi / Casa (LAN 0ms)</span></div>
+            <div style="font-family: var(--mono-font); font-size: 13px; font-weight: 700; word-break: break-all;" id="net-lan-url">--</div>
+            <div style="margin-top: 8px;">
+              <button class="btn btn-sm" onclick="copyText('net-lan-url')">Copiar IP Local</button>
+            </div>
+          </div>
+
+          <div class="metric-card dev-only">
+            <div class="metric-header"><span>Endpoint Localhost (DEV)</span></div>
+            <div style="font-family: var(--mono-font); font-size: 13px; font-weight: 700;" id="net-local-url">http://localhost:8080</div>
+            <div style="margin-top: 8px;">
+              <button class="btn btn-sm" onclick="copyText('net-local-url')">Copiar Localhost</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- ABA 4: LOGS EM TEMPO REAL -->
+    <!-- ABA 4: SESSÕES TÉCNICAS E LOGS EM TEMPO REAL (MODO DEV) -->
     <div id="tab-logs" class="tab-pane">
       <div class="panel">
         <div class="panel-header">
@@ -920,9 +1184,9 @@
               <polyline points="4 17 10 11 4 5"></polyline>
               <line x1="12" y1="19" x2="20" y2="19"></line>
             </svg>
-            <span>Eventos e Logs do Servidor em Tempo Real</span>
+            <span>Console de Sessões e Logs do Servidor em Tempo Real (Modo DEV)</span>
           </div>
-          <button class="btn btn-sm" onclick="refreshLogs()">Atualizar Logs</button>
+          <button class="btn btn-sm" onclick="refreshLogs()">Atualizar Console</button>
         </div>
         <div id="server-logs-box" class="log-box">
           <div>Aguardando logs do servidor...</div>
@@ -931,7 +1195,7 @@
     </div>
   </div>
 
-  <!-- MODAL: INSPECIONAR E EDITAR JOGADOR COMPLETO (ROUPAS, OVOS, ITENS, DRAGÕES, CONTA) -->
+  <!-- MODAL: GERENCIAR JOGADOR (MODO VISUAL NO-CODE + ALTERNÂNCIA MODO DEV) -->
   <div id="user-modal" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-header">
@@ -940,68 +1204,358 @@
             <path d="M12 20h9"></path>
             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
           </svg>
-          <span id="modal-user-title">Gerenciar Jogador</span>
+          <span id="modal-user-title">Editar Jogador</span>
         </div>
-        <button class="btn btn-sm" onclick="closeUserModal()">Fechar</button>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="mode-switch-pill">
+            <button type="button" id="modal-btn-nocode" class="mode-switch-option active" onclick="setViewMode(false)">
+              <span>Visual (No-Code)</span>
+            </button>
+            <button type="button" id="modal-btn-dev" class="mode-switch-option" onclick="setViewMode(true)">
+              <span>Modo DEV (JSON)</span>
+            </button>
+          </div>
+          <button class="btn btn-sm" onclick="closeUserModal()">Fechar</button>
+        </div>
       </div>
 
       <div class="modal-body">
         <input type="hidden" id="edit-user-id">
 
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Nome do Personagem / Nickname</label>
-            <input type="text" id="edit-nickname" class="input-pill">
+        <!-- 1. CONTA & PROGRESSO -->
+        <div class="nocode-section">
+          <div class="nocode-section-header">
+            <div class="nocode-section-title">
+              <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <span>Dados da Conta, E-mail & Nível</span>
+            </div>
           </div>
-          <div class="form-group">
-            <label>E-mail de Login</label>
-            <input type="email" id="edit-email" class="input-pill">
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Nome do Personagem (Nickname)</label>
+              <input type="text" id="edit-nickname" class="input-pill" oninput="syncVisualAvatarFromInputs()">
+            </div>
+            <div class="form-group">
+              <label>E-mail do Jogador (@gmail.com)</label>
+              <input type="email" id="edit-email" class="input-pill">
+            </div>
+            <div class="form-group">
+              <label>Permissão na Ilha</label>
+              <select id="edit-role" class="input-pill">
+                <option value="player">Jogador</option>
+                <option value="admin">Administrador (Editor do Mapa)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Alterar Senha (Opcional)</label>
+              <input type="password" id="edit-password" class="input-pill" placeholder="Deixe vazio para manter">
+            </div>
+            <div class="form-group">
+              <label>Moedas de Ouro (Bells)</label>
+              <input type="number" id="edit-gold" class="input-pill">
+            </div>
+            <div class="form-group">
+              <label>Experiência (XP Total)</label>
+              <input type="number" id="edit-xp" class="input-pill">
+            </div>
+            <div class="form-group dev-only">
+              <label>Coordenada X (DEV)</label>
+              <input type="number" id="edit-x" class="input-pill">
+            </div>
+            <div class="form-group dev-only">
+              <label>Coordenada Y (DEV)</label>
+              <input type="number" id="edit-y" class="input-pill">
+            </div>
           </div>
+        </div>
+
+        <!-- 2. ROUPAS & CUSTOMIZAÇÃO DO AVATAR (NO-CODE VISUAL) -->
+        <div class="nocode-section">
+          <div class="nocode-section-header">
+            <div class="nocode-section-title">
+              <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+                <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path>
+              </svg>
+              <span>Roupas & Aparência do Personagem (Salvo no Banco)</span>
+            </div>
+            <div id="avatar-live-summary" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Tom de Pele</label>
+              <select id="av-skinTone" class="input-pill" onchange="syncVisualAvatarFromInputs()">
+                <option value="#ffdfc4">Muito Clara (#ffdfc4)</option>
+                <option value="#ffd0a8">Clara Quente (#ffd0a8)</option>
+                <option value="#f8b88b">Pêssego (#f8b88b)</option>
+                <option value="#e59e6d">Bronzeada (#e59e6d)</option>
+                <option value="#c97d4c">Morena (#c97d4c)</option>
+                <option value="#9e5932">Castanha (#9e5932)</option>
+                <option value="#6e381b">Escura (#6e381b)</option>
+                <option value="#4a2511">Ébano (#4a2511)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Cabelo / Penteado</label>
+              <select id="av-headStyle" class="input-pill" onchange="syncVisualAvatarFromInputs()">
+                <option value="head_01">Penteado 01 (Aventureiro)</option>
+                <option value="head_02">Penteado 02 (Curto Moderno)</option>
+                <option value="head_03">Penteado 03 (Ondulado)</option>
+                <option value="head_04">Penteado 04 (Espetado)</option>
+                <option value="head_05">Penteado 05 (Franja Suave)</option>
+                <option value="head_06">Penteado 06 (Longo Solto)</option>
+                <option value="head_07">Penteado 07 (Maria-Chiquinha)</option>
+                <option value="head_08">Penteado 08 (Coque Duplo)</option>
+                <option value="head_09">Penteado 09 (Chanel)</option>
+                <option value="head_10">Penteado 10 (Rabo de Cavalo)</option>
+                <option value="head_11">Penteado 11 (Cacheado)</option>
+                <option value="head_12">Penteado 12 (Tranças)</option>
+                <option value="head_13">Penteado 13 (Longo Real)</option>
+                <option value="head_14">Penteado 14 (explorador)</option>
+                <option value="head_15">Penteado 15 (Samurai)</option>
+                <option value="head_16">Penteado 16 (Afro Puff)</option>
+                <option value="head_17">Penteado 17 (Longo Franja)</option>
+                <option value="head_18">Penteado 18 (Surfista)</option>
+                <option value="head_19">Penteado 19 (Princesa)</option>
+                <option value="head_20">Penteado 20 (Mestre Mago)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Cor do Cabelo</label>
+              <div class="color-picker-wrap">
+                <input type="color" id="av-hairColor" value="#3d2314" oninput="syncVisualAvatarFromInputs()">
+                <span id="av-hairColor-hex">#3d2314</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Estilo dos Olhos</label>
+              <select id="av-eyeShape" class="input-pill" onchange="syncVisualAvatarFromInputs()">
+                <option value="olhos_1">Olhos 01 (Brilhantes)</option>
+                <option value="olhos_2">Olhos 02 (Cílios Longos)</option>
+                <option value="olhos_3">Olhos 03 (Alegres)</option>
+                <option value="olhos_4">Olhos 04 (Determinados)</option>
+                <option value="olhos_5">Olhos 05 (Fofos)</option>
+                <option value="olhos_6">Olhos 06 (Serenos)</option>
+                <option value="olhos_7">Olhos 07 (Curiosos)</option>
+                <option value="olhos_8">Olhos 08 (Estrelados)</option>
+                <option value="olhos_9">Olhos 09 (Sorrisinho)</option>
+                <option value="olhos_10">Olhos 10 (Clássicos)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Cor dos Olhos</label>
+              <div class="color-picker-wrap">
+                <input type="color" id="av-eyeColor" value="#8C501D" oninput="syncVisualAvatarFromInputs()">
+                <span id="av-eyeColor-hex">#8C501D</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Camisa / Vestido / Casaco</label>
+              <select id="av-topStyle" class="input-pill" onchange="syncVisualAvatarFromInputs()">
+                <option value="top_tee">Camiseta Clássica</option>
+                <option value="top_sweater">Suéter Aconchegante</option>
+                <option value="top_cupcake_dress">Vestido Cupcake</option>
+                <option value="top_long_sleeve">Blusa Manga Longa</option>
+                <option value="top_puffy_sleeve">Blusa Manga Bufante</option>
+                <option value="top_sleeveless">Regata Esportiva</option>
+                <option value="top_crop_top">Crop Top Verão</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Cor Principal da Roupa de Cima</label>
+              <div class="color-picker-wrap">
+                <input type="color" id="av-topColorPrimary" value="#19c8b9" oninput="syncVisualAvatarFromInputs()">
+                <span id="av-topColorPrimary-hex">#19c8b9</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Cor Detalhe da Roupa de Cima</label>
+              <div class="color-picker-wrap">
+                <input type="color" id="av-topColorSecondary" value="#ffffff" oninput="syncVisualAvatarFromInputs()">
+                <span id="av-topColorSecondary-hex">#ffffff</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Calça / Shorts / Saia</label>
+              <select id="av-bottomStyle" class="input-pill" onchange="syncVisualAvatarFromInputs()">
+                <option value="shorts_denim">Shorts Jeans</option>
+                <option value="pants_cargo">Calça Cargo Aventureiro</option>
+                <option value="skirt_pleated">Saia Plissada</option>
+                <option value="shorts_bermuda">Bermuda Passeio</option>
+                <option value="shorts_esporte">Shorts Esportivo</option>
+                <option value="skinny_jeans">Calça Jeans</option>
+                <option value="wide_leg">Calça Wide Leg</option>
+                <option value="saia_longa">Saia Longa</option>
+                <option value="calca_jogger">Calça Jogger</option>
+                <option value="shorts_praia">Shorts de Praia</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Cor da Calça / Saia</label>
+              <div class="color-picker-wrap">
+                <input type="color" id="av-bottomColor" value="#2563eb" oninput="syncVisualAvatarFromInputs()">
+                <span id="av-bottomColor-hex">#2563eb</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Calçados</label>
+              <select id="av-shoesStyle" class="input-pill" onchange="syncVisualAvatarFromInputs()">
+                <option value="sneakers_classic">Tênis Clássico</option>
+                <option value="boots_hunter">Botas de Explorador</option>
+                <option value="sandals_beach">Sandálias da Ilha</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Cor do Calçado</label>
+              <div class="color-picker-wrap">
+                <input type="color" id="av-shoesColor" value="#ea580c" oninput="syncVisualAvatarFromInputs()">
+                <span id="av-shoesColor-hex">#ea580c</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Óculos / Acessório de Rosto</label>
+              <select id="av-glassesStyle" class="input-pill" onchange="syncVisualAvatarFromInputs()">
+                <option value="none">Sem Óculos</option>
+                <option value="round_wire">Óculos Redondo</option>
+                <option value="sunglasses_cool">Óculos de Sol</option>
+                <option value="square_frame">Armação Quadrada</option>
+                <option value="vr_headset">Visor Futurista VR</option>
+                <option value="monoculo">Monóculo Elegante</option>
+                <option value="mask_persona">Máscara Misteriosa</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group dev-only" style="margin-top: 8px;">
+            <label>JSON Técnico do Avatar (customAvatar — Modo DEV)</label>
+            <textarea id="edit-avatar-json" class="code-area" style="min-height: 110px;" oninput="syncFromRawJsonEditors()"></textarea>
+          </div>
+        </div>
+
+        <!-- 3. MOCHILA: OVOS, ITENS, OBJETOS E FERRAMENTAS (NO-CODE VISUAL) -->
+        <div class="nocode-section">
+          <div class="nocode-section-header">
+            <div class="nocode-section-title">
+              <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <path d="M16 10a4 4 0 0 1-8 0"></path>
+              </svg>
+              <span>Mochila do Jogador: Ovos, Itens, Objetos & Ferramentas</span>
+            </div>
+          </div>
+
+          <!-- Ovos -->
           <div class="form-group">
-            <label>Cargo no Jogo</label>
-            <select id="edit-role" class="input-pill">
-              <option value="player">Jogador (player)</option>
-              <option value="admin">Administrador (admin)</option>
+            <label>Ovos de Dragão na Mochila</label>
+            <div id="visual-eggs-list" class="visual-cards-grid"></div>
+            <div class="add-bar" style="margin-top: 6px;">
+              <select id="add-egg-select" class="input-pill">
+                <option value="egg_solar">Ovo Solar da Aurora (Ignis)</option>
+                <option value="egg_frost">Ovo Glacial dos Icebergs (Glacius)</option>
+                <option value="egg_storm">Ovo Elétrico da Tempestade (Volt)</option>
+                <option value="egg_zephyr">Ovo Zéfiro dos Ventos (Zephyr)</option>
+                <option value="egg_boulder">Ovo Rocha Ancestral (Boulder)</option>
+              </select>
+              <button type="button" class="btn btn-teal btn-sm" onclick="addEggVisually()">+ Adicionar Ovo</button>
+            </div>
+          </div>
+
+          <!-- Ferramentas -->
+          <div class="form-group" style="margin-top: 6px;">
+            <label>Ferramentas Equipáveis (Clique para ativar/desativar na mochila)</label>
+            <div id="visual-tools-list" class="tools-pills-wrap"></div>
+          </div>
+
+          <!-- Itens e Objetos -->
+          <div class="form-group" style="margin-top: 6px;">
+            <label>Itens, Recursos e Objetos Construíveis na Mochila</label>
+            <div id="visual-items-list" class="visual-cards-grid"></div>
+            <div class="add-bar" style="margin-top: 6px;">
+              <select id="add-item-select" class="input-pill">
+                <option value="wood|Madeira Maciça|resource|wood">Madeira Maciça (Recurso)</option>
+                <option value="stone|Pedra Polida|resource|stone">Pedra Polida (Recurso)</option>
+                <option value="iron_ore|Minério de Ferro|resource|iron_ore">Minério de Ferro (Recurso)</option>
+                <option value="gold_coin|Moedas da Ilha|currency|coin">Moedas da Ilha (Ouro)</option>
+                <option value="magic_flower|Flor Astral|nature|flower">Flor Astral (Planta)</option>
+                <option value="sea_bass|Robalo Prateado|fish|fish">Robalo Prateado (Peixe)</option>
+                <option value="pumpkin_seed|Semente de Abóbora|seed|seed">Semente de Abóbora (Plantio)</option>
+                <option value="seed_wheat_packet|Saco de Sementes de Trigo|seed|seed">Saco de Sementes de Trigo</option>
+                <option value="prop_chair_wood|Cadeira de Madeira Rústica|furniture|furniture">Cadeira de Madeira Rústica (Objeto)</option>
+                <option value="struct_fence_wood_segment|Cerca de Madeira Rústica|structure|structure">Cerca de Madeira Rústica (Objeto)</option>
+                <option value="struct_fence_wood_gate|Portão de Cerca de Madeira|structure|structure">Portão de Cerca de Madeira (Objeto)</option>
+                <option value="struct_bridge_wood_vert|Ponte de Madeira|structure|structure">Ponte de Madeira (Objeto)</option>
+                <option value="nature_oak_tree|Árvore de Carvalho|nature|package">Árvore de Carvalho (Objeto)</option>
+                <option value="nature_pine_tree|Pinheiro Nórdico|nature|package">Pinheiro Nórdico (Objeto)</option>
+                <option value="nature_berry_bush|Arbusto com Frutas Vermelhas|nature|package">Arbusto com Frutas Vermelhas (Objeto)</option>
+                <option value="tile_animated_water_flow|Ladrilho de Água Cristalina|misc|package">Ladrilho de Água Cristalina (Objeto)</option>
+              </select>
+              <input type="number" id="add-item-qty" class="input-pill" value="5" min="1" style="width: 90px;">
+              <button type="button" class="btn btn-teal btn-sm" onclick="addItemVisually()">+ Adicionar à Mochila</button>
+            </div>
+          </div>
+
+          <div class="form-group dev-only" style="margin-top: 8px;">
+            <label>JSON Técnico da Mochila (inventory_data — Modo DEV)</label>
+            <textarea id="edit-inventory-json" class="code-area" style="min-height: 120px;" oninput="syncFromRawJsonEditors()"></textarea>
+          </div>
+        </div>
+
+        <!-- 4. DRAGÕES ADOTADOS (NO-CODE VISUAL) -->
+        <div class="nocode-section">
+          <div class="nocode-section-header">
+            <div class="nocode-section-title">
+              <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                <path d="M2 17l10 5 10-5"></path>
+                <path d="M2 12l10 5 10-5"></path>
+              </svg>
+              <span>Dragões Adotados & Companheiro Ativo</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <label style="font-size: 12.5px; font-weight: 800; color: var(--text-earth);">Modo do Dragão:</label>
+              <select id="visual-dragon-mode" class="input-pill" onchange="updateDragonModeVisually(this.value)">
+                <option value="none">Guardado</option>
+                <option value="follow">Seguindo o Jogador</option>
+                <option value="mounted">Montado / Voando</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="visual-dragons-list" class="visual-cards-grid"></div>
+
+          <div class="add-bar">
+            <select id="add-dragon-select" class="input-pill">
+              <option value="dragon_fly_zephyr">Zephyr — Dragão dos Ventos (Voo Rápido)</option>
+              <option value="dragon_fly_storm">Volt — Dragão da Tempestade (Raio)</option>
+              <option value="dragon_fly_solar">Ignis — Dragão Solar da Aurora (Fogo)</option>
+              <option value="dragon_water_frost">Glacius — Dragão Glacial (Gelo & Água)</option>
+              <option value="dragon_land_boulder">Boulder — Dragão Rocha Ancestral (Terra)</option>
             </select>
+            <button type="button" class="btn btn-teal btn-sm" onclick="addDragonVisually()">+ Adicionar Dragão ao Time</button>
           </div>
-          <div class="form-group">
-            <label>Definir Nova Senha (Opcional)</label>
-            <input type="password" id="edit-password" class="input-pill" placeholder="Deixe em branco para manter">
-          </div>
-        </div>
 
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Ouro (Moedas)</label>
-            <input type="number" id="edit-gold" class="input-pill">
+          <div class="form-group dev-only" style="margin-top: 8px;">
+            <label>JSON Técnico dos Dragões (dragons_data — Modo DEV)</label>
+            <textarea id="edit-dragons-json" class="code-area" style="min-height: 120px;" oninput="syncFromRawJsonEditors()"></textarea>
           </div>
-          <div class="form-group">
-            <label>Experiência (XP Total)</label>
-            <input type="number" id="edit-xp" class="input-pill">
-          </div>
-          <div class="form-group">
-            <label>Posição X no Mapa</label>
-            <input type="number" id="edit-x" class="input-pill">
-          </div>
-          <div class="form-group">
-            <label>Posição Y no Mapa</label>
-            <input type="number" id="edit-y" class="input-pill">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Roupas & Customização do Avatar (customAvatar JSON)</label>
-          <textarea id="edit-avatar-json" class="code-area" style="min-height: 110px;"></textarea>
-        </div>
-
-        <div class="form-group">
-          <label>Mochila: Itens, Ferramentas e Ovos (inventory_data JSON)</label>
-          <textarea id="edit-inventory-json" class="code-area" style="min-height: 130px;"></textarea>
-        </div>
-
-        <div class="form-group">
-          <label>Dragões Adotados e Modo de Voo (dragons_data JSON)</label>
-          <textarea id="edit-dragons-json" class="code-area" style="min-height: 130px;"></textarea>
         </div>
       </div>
 
@@ -1028,8 +1582,8 @@
           <input type="text" id="new-nickname" class="input-pill" placeholder="Ex: Lucas">
         </div>
         <div class="form-group">
-          <label>E-mail de Acesso</label>
-          <input type="email" id="new-email" class="input-pill" placeholder="Ex: lucas@email.com">
+          <label>E-mail (@gmail.com)</label>
+          <input type="email" id="new-email" class="input-pill" placeholder="Ex: lucas@gmail.com">
         </div>
         <div class="form-group">
           <label>Senha Inicial (mínimo 6 caracteres)</label>
@@ -1062,6 +1616,85 @@
     let API_BASE = '';
     let cachedUsers = [];
     let cachedOverview = null;
+    let isDevMode = localStorage.getItem('klc_admin_dev_mode') === 'true';
+
+    // Estado em memória do jogador aberto no modal (sincronizado entre No-Code e DEV JSON)
+    let activeModalAvatar = {};
+    let activeModalInventory = { items: [], tools: [], eggs: [], equippedToolId: null };
+    let activeModalDragons = { party: [], formation: [], activeDragonId: null, mode: 'none' };
+
+    const TOP_NAMES = {
+      top_tee: 'Camiseta',
+      top_sweater: 'Suéter',
+      top_cupcake_dress: 'Vestido',
+      top_long_sleeve: 'Manga Longa',
+      top_puffy_sleeve: 'Manga Bufante',
+      top_sleeveless: 'Regata',
+      top_crop_top: 'Crop Top'
+    };
+
+    const BOTTOM_NAMES = {
+      shorts_denim: 'Shorts Jeans',
+      pants_cargo: 'Calça Cargo',
+      skirt_pleated: 'Saia Plissada',
+      shorts_bermuda: 'Bermuda',
+      shorts_esporte: 'Shorts Esporte',
+      skinny_jeans: 'Calça Jeans',
+      wide_leg: 'Wide Leg',
+      saia_longa: 'Saia Longa',
+      calca_jogger: 'Calça Jogger',
+      shorts_praia: 'Shorts Praia'
+    };
+
+    const EGG_PRESETS = {
+      egg_solar: { id: 'egg_solar_01', name: 'Ovo Solar da Aurora', desc: 'Ovo quente e radiante.', warmth: 60, maxWarmth: 100, iconKey: 'egg_solar', speciesId: 'dragon_fly_solar' },
+      egg_frost: { id: 'egg_frost_01', name: 'Ovo Glacial dos Icebergs', desc: 'Ovo cristalino que emite vapor gelado.', warmth: 50, maxWarmth: 100, iconKey: 'egg_frost', speciesId: 'dragon_water_frost' },
+      egg_storm: { id: 'egg_storm_01', name: 'Ovo Elétrico da Tempestade', desc: 'Ovo vibrante com faíscas azuis.', warmth: 70, maxWarmth: 100, iconKey: 'egg_storm', speciesId: 'dragon_fly_storm' },
+      egg_zephyr: { id: 'egg_zephyr_01', name: 'Ovo Zéfiro dos Ventos', desc: 'Ovo leve rodeado por brisas suaves.', warmth: 80, maxWarmth: 100, iconKey: 'egg_zephyr', speciesId: 'dragon_fly_zephyr' },
+      egg_boulder: { id: 'egg_boulder_01', name: 'Ovo Rocha Ancestral', desc: 'Ovo mineral super resistente.', warmth: 65, maxWarmth: 100, iconKey: 'egg_boulder', speciesId: 'dragon_land_boulder' }
+    };
+
+    const TOOL_CATALOG = [
+      { id: 'fishing_rod', name: 'Vara de Pescar', iconKey: 'tool_fishing_rod' },
+      { id: 'bug_net', name: 'Rede de Captura', iconKey: 'tool_bug_net' },
+      { id: 'axe', name: 'Machado da Ilha', iconKey: 'axe' },
+      { id: 'pickaxe', name: 'Picareta de Rocha', iconKey: 'pickaxe' },
+      { id: 'watering_can', name: 'Regador Florido', iconKey: 'watering_can' },
+      { id: 'shovel', name: 'Pá de Jardinagem', iconKey: 'shovel' }
+    ];
+
+    const DRAGON_PRESETS = {
+      dragon_fly_zephyr: { id: 'dragon_fly_zephyr', name: 'Zephyr (Dragão do Vento)', element: 'Vento Celeste', category: 'fly', level: 5, hp: 140, maxHp: 140, energy: 100, maxEnergy: 100, color: '#0d9488', secondaryColor: '#5eead4', status: 'ready' },
+      dragon_fly_storm: { id: 'dragon_fly_storm', name: 'Volt (Dragão da Tempestade)', element: 'Raio Astral', category: 'fly', level: 5, hp: 135, maxHp: 135, energy: 110, maxEnergy: 110, color: '#3b82f6', secondaryColor: '#fef08a', status: 'ready' },
+      dragon_fly_solar: { id: 'dragon_fly_solar', name: 'Ignis (Dragão Solar)', element: 'Chama Solar', category: 'fly', level: 5, hp: 150, maxHp: 150, energy: 100, maxEnergy: 100, color: '#ea580c', secondaryColor: '#fde047', status: 'ready' },
+      dragon_water_frost: { id: 'dragon_water_frost', name: 'Glacius (Dragão Glacial)', element: 'Gelo Glacial', category: 'water', level: 5, hp: 155, maxHp: 155, energy: 100, maxEnergy: 100, color: '#0284c7', secondaryColor: '#38bdf8', status: 'ready' },
+      dragon_land_boulder: { id: 'dragon_land_boulder', name: 'Boulder (Dragão Rocha)', element: 'Rocha Ancestral', category: 'land', level: 5, hp: 190, maxHp: 190, energy: 90, maxEnergy: 90, color: '#b45309', secondaryColor: '#fcd34d', status: 'ready' }
+    };
+
+    function setViewMode(dev) {
+      isDevMode = Boolean(dev);
+      localStorage.setItem('klc_admin_dev_mode', isDevMode ? 'true' : 'false');
+      document.body.classList.toggle('dev-mode', isDevMode);
+
+      const btnNoCode = document.getElementById('btn-mode-nocode');
+      const btnDev = document.getElementById('btn-mode-dev');
+      const mBtnNoCode = document.getElementById('modal-btn-nocode');
+      const mBtnDev = document.getElementById('modal-btn-dev');
+
+      if (btnNoCode) btnNoCode.className = 'mode-switch-option' + (!isDevMode ? ' active' : '');
+      if (btnDev) btnDev.className = 'mode-switch-option' + (isDevMode ? ' dev-active' : '');
+      if (mBtnNoCode) mBtnNoCode.className = 'mode-switch-option' + (!isDevMode ? ' active' : '');
+      if (mBtnDev) mBtnDev.className = 'mode-switch-option' + (isDevMode ? ' dev-active' : '');
+
+      // Se sair do Modo DEV enquanto estiver na aba de logs, volta para a aba principal
+      const logsTab = document.getElementById('tab-logs');
+      if (!isDevMode && logsTab && logsTab.classList.contains('active')) {
+        const firstTabBtn = document.querySelector('.tab-btn');
+        if (firstTabBtn) switchTab('tab-db', firstTabBtn);
+      }
+
+      renderUsersTable();
+    }
 
     function showToast(msg) {
       const t = document.getElementById('toast');
@@ -1072,23 +1705,24 @@
     }
 
     function getHeaders() {
-      return {
-        'Content-Type': 'application/json',
-        'Bypass-Tunnel-Reminder': 'true'
-      };
+      const h = { 'Content-Type': 'application/json' };
+      if (API_BASE && API_BASE.includes('.loca.lt')) {
+        h['Bypass-Tunnel-Reminder'] = 'true';
+      }
+      return h;
     }
 
-    async function probeEndpoint(url, timeoutMs = 2200) {
+    async function probeEndpoint(url, timeoutMs = 2000) {
       if (!url) return false;
       const clean = url.replace(/\/$/, '');
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), timeoutMs);
       try {
-        const res = await fetch(`${clean}/health?t=${Date.now()}`, {
-          headers: { 'Bypass-Tunnel-Reminder': 'true' },
-          signal: ctrl.signal,
-          cache: 'no-store'
-        });
+        const opts = { signal: ctrl.signal, cache: 'no-store' };
+        if (clean.includes('.loca.lt')) {
+          opts.headers = { 'Bypass-Tunnel-Reminder': 'true' };
+        }
+        const res = await fetch(`${clean}/health?t=${Date.now()}`, opts);
         clearTimeout(timer);
         if (res.ok) {
           const data = await res.json();
@@ -1104,39 +1738,35 @@
       const input = document.getElementById('server-url-input');
       const candidates = [];
 
-      // 1. Se aberto via HTTP/HTTPS direto do servidor
       if (window.location.protocol.startsWith('http')) {
         candidates.push(window.location.origin);
       }
 
-      // 2. Localhost (caso aberto no próprio Mac mini via .app ou .html)
       candidates.push('http://localhost:8080');
 
-      // 3. URL salva anteriormente pelo usuário
       const saved = localStorage.getItem('klc_admin_server_url');
       if (saved) candidates.push(saved);
 
-      // 4. Registro instantâneo GitHub (branch server-status)
       try {
-        const ghRes = await fetch(`https://raw.githubusercontent.com/rennan101/KidsLearnCode/server-status/live-server.json?t=${Date.now()}`, {
+        const apiRes = await fetch(`https://api.github.com/repos/rennan101/KidsLearnCode/contents/live-server.json?ref=server-status&t=${Date.now()}`, {
           cache: 'no-store'
         });
-        if (ghRes.ok) {
-          const info = await ghRes.json();
-          if (info.lanUrl) candidates.push(info.lanUrl);
-          if (info.sshUrl) candidates.push(info.sshUrl);
-          if (info.url) candidates.push(info.url);
-          if (info.ltUrl) candidates.push(info.ltUrl);
+        if (apiRes.ok) {
+          const meta = await apiRes.json();
+          if (meta && meta.content) {
+            const info = JSON.parse(atob(meta.content.replace(/\s/g, '')));
+            if (info.lanUrl) candidates.push(info.lanUrl);
+            if (info.sshUrl) candidates.push(info.sshUrl);
+            if (info.url) candidates.push(info.url);
+            if (info.ltUrl) candidates.push(info.ltUrl);
+          }
         }
       } catch (_) {}
-
-      // 5. Subdomínio fixo nativo
-      candidates.push('https://kidslearncode-mmorpg.loca.lt');
 
       for (const candidate of candidates) {
         if (await probeEndpoint(candidate)) {
           API_BASE = candidate.replace(/\/$/, '');
-          input.value = API_BASE;
+          if (input) input.value = API_BASE;
           localStorage.setItem('klc_admin_server_url', API_BASE);
           document.getElementById('btn-open-game').href = API_BASE;
           if (manualTrigger) showToast(`Conectado automaticamente a ${API_BASE}`);
@@ -1215,6 +1845,28 @@
       }
     }
 
+    function describeAvatarBadge(avatar, fallbackHero) {
+      if (!avatar || typeof avatar !== 'object') {
+        return `<span class="pill-badge">${escapeHtml(fallbackHero || 'Padrão')}</span>`;
+      }
+      const topLabel = TOP_NAMES[avatar.topStyle] || 'Roupa';
+      const bottomLabel = BOTTOM_NAMES[avatar.bottomStyle] || 'Calça';
+      const skinColor = avatar.skinTone || '#ffd0a8';
+      const topColor = avatar.topColorPrimary || '#19c8b9';
+      const bottomColor = avatar.bottomColor || '#2563eb';
+
+      return `
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+          <span class="pill-badge mint" title="Pele, Camisa e Calça salvas no banco">
+            <span class="color-dot" style="background:${escapeHtml(skinColor)}"></span>
+            <span class="color-dot" style="background:${escapeHtml(topColor)}"></span>
+            <span class="color-dot" style="background:${escapeHtml(bottomColor)}"></span>
+            <span>${escapeHtml(topLabel)} + ${escapeHtml(bottomLabel)}</span>
+          </span>
+        </div>
+      `;
+    }
+
     function renderUsersTable() {
       const tbody = document.getElementById('users-tbody');
       const query = (document.getElementById('user-search').value || '').toLowerCase().trim();
@@ -1231,9 +1883,7 @@
 
       tbody.innerHTML = filtered.map(u => {
         const avatar = u.save?.customAvatar;
-        const avatarLabel = avatar
-          ? `<span class="pill-badge mint">Custom (${avatar.name || u.nickname})</span>`
-          : `<span class="pill-badge">${u.hero_id}</span>`;
+        const avatarBadge = describeAvatarBadge(avatar, u.hero_id);
 
         const itemsCount = u.save?.inventory_data?.items?.length || 0;
         const eggsCount = u.save?.inventory_data?.eggs?.length || 0;
@@ -1242,15 +1892,18 @@
         return `
           <tr>
             <td><strong>${escapeHtml(u.nickname)}</strong></td>
-            <td style="font-family: var(--mono-font); font-size: 12.5px;">${escapeHtml(u.email)}</td>
-            <td><span class="pill-badge ${u.role === 'admin' ? 'gold' : ''}">${u.role}</span></td>
-            <td>Nv. <strong>${u.level}</strong> (${u.xp} XP) • <strong>${u.gold}</strong> Ouro</td>
-            <td>${avatarLabel}</td>
-            <td>${itemsCount} itens • <strong>${eggsCount} ovos</strong></td>
-            <td><strong>${dragonsCount}</strong> dragões</td>
-            <td style="font-family: var(--mono-font); font-size: 12px;">(${Math.round(u.x)}, ${Math.round(u.y)})</td>
+            <td style="font-weight: 800; color: var(--accent-teal-dark);">${escapeHtml(u.email)}</td>
+            <td><span class="pill-badge ${u.role === 'admin' ? 'gold' : ''}">${u.role === 'admin' ? 'Admin' : 'Jogador'}</span></td>
+            <td>Nv. <strong>${u.level}</strong> (${u.xp} XP) • <strong>${u.gold}</strong> Moedas</td>
+            <td>${avatarBadge}</td>
             <td>
-              <button class="btn btn-teal btn-sm" onclick="openUserModal('${u.id}')">Inspecionar / Editar</button>
+              <span class="pill-badge">${itemsCount} tipos de itens</span>
+              <span class="pill-badge ${eggsCount > 0 ? 'gold' : ''}">${eggsCount} ovos</span>
+            </td>
+            <td><span class="pill-badge mint">${dragonsCount} dragões</span></td>
+            <td class="dev-only" style="font-family: var(--mono-font); font-size: 12px;">(${Math.round(u.x)}, ${Math.round(u.y)})</td>
+            <td>
+              <button class="btn btn-teal btn-sm" onclick="openUserModal('${u.id}')">Editar Tudo</button>
             </td>
           </tr>
         `;
@@ -1274,7 +1927,7 @@
             <td style="font-family: var(--mono-font);">${kb} KB</td>
             <td>${dt}</td>
             <td style="display: flex; gap: 8px;">
-              <a class="btn btn-sm" href="${API_BASE}/api/admin/backups/download/${encodeURIComponent(b.filename)}" target="_blank">Baixar (.json)</a>
+              <a class="btn btn-sm" href="${API_BASE}/api/admin/backups/download/${encodeURIComponent(b.filename)}" target="_blank">Baixar</a>
               <button class="btn btn-gold btn-sm" onclick="restoreBackup('${escapeHtml(b.filename)}')">Restaurar</button>
             </td>
           </tr>
@@ -1295,11 +1948,11 @@
 
       tbody.innerHTML = onlinePlayers.map(p => `
         <tr>
-          <td style="font-family: var(--mono-font); font-size: 12px;">${escapeHtml(p.id)}</td>
+          <td class="dev-only" style="font-family: var(--mono-font); font-size: 12px;">${escapeHtml(p.id)}</td>
           <td><strong>${escapeHtml(p.name || 'Aventureiro')}</strong></td>
-          <td><span class="pill-badge mint">${p.avatarConfig ? 'Roupas Customizadas' : escapeHtml(p.heroId)}</span></td>
-          <td>${escapeHtml(p.activeDragonId || 'Nenhum')} (${escapeHtml(p.dragonMode || 'none')})</td>
-          <td style="font-family: var(--mono-font);">X: ${Math.round(p.x)}, Y: ${Math.round(p.y)}</td>
+          <td>${describeAvatarBadge(p.avatarConfig, p.heroId)}</td>
+          <td><span class="pill-badge mint">${escapeHtml(p.activeDragonId || 'Nenhum')} (${escapeHtml(p.dragonMode || 'none')})</span></td>
+          <td class="dev-only" style="font-family: var(--mono-font);">X: ${Math.round(p.x)}, Y: ${Math.round(p.y)}</td>
         </tr>
       `).join('');
     }
@@ -1316,7 +1969,7 @@
 
     async function refreshLogs() {
       await refreshAll();
-      showToast('Logs atualizados!');
+      showToast('Console atualizado!');
     }
 
     async function controlServer(action) {
@@ -1408,6 +2061,10 @@
       reader.readAsText(file);
     }
 
+    // =========================================================================
+    // EDITOR VISUAL NO-CODE (ROUPAS, OVOS, ITENS, FERRAMENTAS & DRAGÕES)
+    // =========================================================================
+
     function openUserModal(userId) {
       const u = cachedUsers.find(item => item.id === userId);
       if (!u) return;
@@ -1423,11 +2080,366 @@
       document.getElementById('edit-x').value = Math.round(u.x ?? 320);
       document.getElementById('edit-y').value = Math.round(u.y ?? 320);
 
-      document.getElementById('edit-avatar-json').value = JSON.stringify(u.save?.customAvatar || null, null, 2);
-      document.getElementById('edit-inventory-json').value = JSON.stringify(u.save?.inventory_data || { items: [], tools: [], eggs: [] }, null, 2);
-      document.getElementById('edit-dragons-json').value = JSON.stringify(u.save?.dragons_data || { party: [], formation: [] }, null, 2);
+      activeModalAvatar = JSON.parse(JSON.stringify(u.save?.customAvatar || {
+        version: 2,
+        name: u.nickname || 'Aventureiro',
+        gender: 'neutral',
+        skinTone: '#ffd0a8',
+        skinShadow: '#e0ae82',
+        headStyle: 'head_01',
+        hairColor: '#3d2314',
+        hairShadow: '#241208',
+        eyeShape: 'olhos_1',
+        eyeColor: '#8C501D',
+        noseShape: 'nariz_1',
+        mouthShape: 'boca_1',
+        cheeksShape: 'blush_1',
+        cheeksColor: 'rgba(255, 126, 54, 0.7)',
+        topStyle: 'top_sweater',
+        topColorPrimary: '#19c8b9',
+        topColorSecondary: '#ffffff',
+        bottomStyle: 'pants_cargo',
+        bottomColor: '#1e3a8a',
+        shoesStyle: 'sneakers_classic',
+        shoesColor: '#ea580c',
+        shoesTrim: '#ffffff',
+        glassesStyle: 'none',
+        glassesColor: '#5c3c26',
+        glassesLensColor: '#0f172a',
+        glassesLensOpacity: 85
+      }));
+
+      activeModalInventory = JSON.parse(JSON.stringify(u.save?.inventory_data || { items: [], tools: [], eggs: [], equippedToolId: null }));
+      if (!Array.isArray(activeModalInventory.items)) activeModalInventory.items = [];
+      if (!Array.isArray(activeModalInventory.tools)) activeModalInventory.tools = [];
+      if (!Array.isArray(activeModalInventory.eggs)) activeModalInventory.eggs = [];
+
+      activeModalDragons = JSON.parse(JSON.stringify(u.save?.dragons_data || { party: [], formation: [], activeDragonId: null, mode: 'none' }));
+      if (!Array.isArray(activeModalDragons.party)) activeModalDragons.party = [];
+      if (!Array.isArray(activeModalDragons.formation)) activeModalDragons.formation = [];
+
+      populateVisualAvatarInputs();
+      renderVisualInventory();
+      renderVisualDragons();
+      updateRawJsonTextareas();
 
       document.getElementById('user-modal').classList.add('open');
+    }
+
+    function populateVisualAvatarInputs() {
+      const av = activeModalAvatar;
+      setSelectOrAdd('av-skinTone', av.skinTone || '#ffd0a8');
+      setSelectOrAdd('av-headStyle', av.headStyle || 'head_01');
+      setSelectOrAdd('av-eyeShape', av.eyeShape || 'olhos_1');
+      setSelectOrAdd('av-topStyle', av.topStyle || 'top_tee');
+      setSelectOrAdd('av-bottomStyle', av.bottomStyle || 'shorts_denim');
+      setSelectOrAdd('av-shoesStyle', av.shoesStyle || 'sneakers_classic');
+      setSelectOrAdd('av-glassesStyle', av.glassesStyle || 'none');
+
+      setColorInput('av-hairColor', av.hairColor || '#3d2314');
+      setColorInput('av-eyeColor', av.eyeColor || '#8C501D');
+      setColorInput('av-topColorPrimary', av.topColorPrimary || '#19c8b9');
+      setColorInput('av-topColorSecondary', av.topColorSecondary || '#ffffff');
+      setColorInput('av-bottomColor', av.bottomColor || '#2563eb');
+      setColorInput('av-shoesColor', av.shoesColor || '#ea580c');
+
+      document.getElementById('avatar-live-summary').innerHTML = describeAvatarBadge(av, 'custom_avatar');
+    }
+
+    function setSelectOrAdd(selectId, val) {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      if (!Array.from(sel.options).some(o => o.value === val)) {
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = val;
+        sel.appendChild(opt);
+      }
+      sel.value = val;
+    }
+
+    function setColorInput(inputId, hexVal) {
+      const el = document.getElementById(inputId);
+      const label = document.getElementById(inputId + '-hex');
+      const validHex = /^#[0-9a-fA-F]{6}$/.test(hexVal) ? hexVal : '#19c8b9';
+      if (el) el.value = validHex;
+      if (label) label.textContent = validHex;
+    }
+
+    function syncVisualAvatarFromInputs() {
+      activeModalAvatar.name = document.getElementById('edit-nickname').value.trim() || activeModalAvatar.name || 'Aventureiro';
+      activeModalAvatar.skinTone = document.getElementById('av-skinTone').value;
+      activeModalAvatar.headStyle = document.getElementById('av-headStyle').value;
+      activeModalAvatar.hairColor = document.getElementById('av-hairColor').value;
+      activeModalAvatar.eyeShape = document.getElementById('av-eyeShape').value;
+      activeModalAvatar.eyeColor = document.getElementById('av-eyeColor').value;
+      activeModalAvatar.topStyle = document.getElementById('av-topStyle').value;
+      activeModalAvatar.topColorPrimary = document.getElementById('av-topColorPrimary').value;
+      activeModalAvatar.topColorSecondary = document.getElementById('av-topColorSecondary').value;
+      activeModalAvatar.bottomStyle = document.getElementById('av-bottomStyle').value;
+      activeModalAvatar.bottomColor = document.getElementById('av-bottomColor').value;
+      activeModalAvatar.shoesStyle = document.getElementById('av-shoesStyle').value;
+      activeModalAvatar.shoesColor = document.getElementById('av-shoesColor').value;
+      activeModalAvatar.glassesStyle = document.getElementById('av-glassesStyle').value;
+
+      ['av-hairColor', 'av-eyeColor', 'av-topColorPrimary', 'av-topColorSecondary', 'av-bottomColor', 'av-shoesColor'].forEach(id => {
+        const lbl = document.getElementById(id + '-hex');
+        const inp = document.getElementById(id);
+        if (lbl && inp) lbl.textContent = inp.value;
+      });
+
+      document.getElementById('avatar-live-summary').innerHTML = describeAvatarBadge(activeModalAvatar, 'custom_avatar');
+      updateRawJsonTextareas();
+    }
+
+    function renderVisualInventory() {
+      // 1. Ovos
+      const eggsWrap = document.getElementById('visual-eggs-list');
+      const eggs = activeModalInventory.eggs || [];
+      if (eggs.length === 0) {
+        eggsWrap.innerHTML = '<div style="font-size: 13px; color: var(--text-muted); padding: 6px 0;">Nenhum ovo na incubadora ainda. Use o botão abaixo para adicionar!</div>';
+      } else {
+        eggsWrap.innerHTML = eggs.map((egg, idx) => `
+          <div class="visual-item-card">
+            <div class="visual-item-top">
+              <div>
+                <div class="visual-item-name">${escapeHtml(egg.name || egg.id)}</div>
+                <div class="visual-item-sub">Espécie: ${escapeHtml(egg.speciesId || 'Dragão')}</div>
+              </div>
+              <button type="button" class="btn btn-danger btn-xs" onclick="removeEggVisually(${idx})">Remover</button>
+            </div>
+            <div class="visual-item-controls">
+              <span style="font-size: 12px; font-weight: 800;">Aquecimento:</span>
+              <div class="qty-stepper">
+                <input type="number" class="qty-input" value="${egg.warmth ?? 50}" min="0" max="100" onchange="updateEggWarmth(${idx}, this.value)">
+                <span style="font-size: 12px; font-weight: 800;">%</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // 2. Ferramentas
+      const toolsWrap = document.getElementById('visual-tools-list');
+      const currentTools = activeModalInventory.tools || [];
+      toolsWrap.innerHTML = TOOL_CATALOG.map(t => {
+        const hasTool = currentTools.some(ct => (typeof ct === 'string' ? ct === t.id : ct.id === t.id));
+        return `
+          <button type="button" class="tool-pill ${hasTool ? 'equipped' : ''}" onclick="toggleToolVisually('${t.id}', '${escapeHtml(t.name)}', '${t.iconKey}')">
+            <span>${hasTool ? 'Ativo:' : 'Bloqueado:'}</span>
+            <strong>${escapeHtml(t.name)}</strong>
+          </button>
+        `;
+      }).join('');
+
+      // 3. Itens e Objetos
+      const itemsWrap = document.getElementById('visual-items-list');
+      const items = activeModalInventory.items || [];
+      if (items.length === 0) {
+        itemsWrap.innerHTML = '<div style="font-size: 13px; color: var(--text-muted); padding: 6px 0;">Mochila vazia. Adicione itens ou objetos abaixo!</div>';
+      } else {
+        itemsWrap.innerHTML = items.map((item, idx) => `
+          <div class="visual-item-card">
+            <div class="visual-item-top">
+              <div>
+                <div class="visual-item-name">${escapeHtml(item.name || item.id)}</div>
+                <div class="visual-item-sub">${escapeHtml(item.category || 'item')} • ID: ${escapeHtml(item.id)}</div>
+              </div>
+              <button type="button" class="btn btn-danger btn-xs" onclick="removeItemVisually(${idx})">Excluir</button>
+            </div>
+            <div class="visual-item-controls">
+              <div class="qty-stepper">
+                <button type="button" class="btn btn-xs" onclick="changeItemQty(${idx}, -1)">-</button>
+                <input type="number" class="qty-input" value="${item.count ?? 1}" min="1" onchange="setItemQty(${idx}, this.value)">
+                <button type="button" class="btn btn-xs" onclick="changeItemQty(${idx}, 1)">+</button>
+                <button type="button" class="btn btn-xs" onclick="changeItemQty(${idx}, 10)">+10</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function addEggVisually() {
+      const key = document.getElementById('add-egg-select').value;
+      const preset = EGG_PRESETS[key];
+      if (!preset) return;
+      activeModalInventory.eggs.push({
+        ...preset,
+        id: `${key}_${Math.random().toString(36).slice(2, 6)}`
+      });
+      renderVisualInventory();
+      updateRawJsonTextareas();
+    }
+
+    function removeEggVisually(idx) {
+      activeModalInventory.eggs.splice(idx, 1);
+      renderVisualInventory();
+      updateRawJsonTextareas();
+    }
+
+    function updateEggWarmth(idx, val) {
+      if (activeModalInventory.eggs[idx]) {
+        activeModalInventory.eggs[idx].warmth = Math.max(0, Math.min(100, Number(val) || 0));
+        updateRawJsonTextareas();
+      }
+    }
+
+    function toggleToolVisually(toolId, toolName, iconKey) {
+      const idx = activeModalInventory.tools.findIndex(ct => (typeof ct === 'string' ? ct === toolId : ct.id === toolId));
+      if (idx >= 0) {
+        activeModalInventory.tools.splice(idx, 1);
+      } else {
+        activeModalInventory.tools.push({ id: toolId, name: toolName, iconKey, unlocked: true });
+      }
+      renderVisualInventory();
+      updateRawJsonTextareas();
+    }
+
+    function addItemVisually() {
+      const raw = document.getElementById('add-item-select').value;
+      const qty = Math.max(1, Number(document.getElementById('add-item-qty').value) || 1);
+      const [id, name, category, iconKey] = raw.split('|');
+
+      const existing = activeModalInventory.items.find(i => i.id === id);
+      if (existing) {
+        existing.count = (Number(existing.count) || 0) + qty;
+      } else {
+        activeModalInventory.items.push({
+          id,
+          name,
+          desc: 'Item ou objeto da Ilha Lua.',
+          count: qty,
+          category: category || 'misc',
+          iconKey: iconKey || 'package'
+        });
+      }
+      renderVisualInventory();
+      updateRawJsonTextareas();
+    }
+
+    function changeItemQty(idx, delta) {
+      const item = activeModalInventory.items[idx];
+      if (!item) return;
+      item.count = Math.max(1, (Number(item.count) || 1) + delta);
+      renderVisualInventory();
+      updateRawJsonTextareas();
+    }
+
+    function setItemQty(idx, val) {
+      const item = activeModalInventory.items[idx];
+      if (!item) return;
+      item.count = Math.max(1, Number(val) || 1);
+      renderVisualInventory();
+      updateRawJsonTextareas();
+    }
+
+    function removeItemVisually(idx) {
+      activeModalInventory.items.splice(idx, 1);
+      renderVisualInventory();
+      updateRawJsonTextareas();
+    }
+
+    function renderVisualDragons() {
+      const wrap = document.getElementById('visual-dragons-list');
+      const party = activeModalDragons.party || [];
+      const activeId = activeModalDragons.activeDragonId || party[0]?.id || null;
+      document.getElementById('visual-dragon-mode').value = activeModalDragons.mode || 'none';
+
+      if (party.length === 0) {
+        wrap.innerHTML = '<div style="font-size: 13px; color: var(--text-muted); padding: 6px 0;">Nenhum dragão adotado ainda. Escolha um dragão abaixo para adicionar!</div>';
+        return;
+      }
+
+      wrap.innerHTML = party.map((d, idx) => {
+        const isActive = d.id === activeId;
+        return `
+          <div class="visual-item-card" style="${isActive ? 'border-color: var(--accent-teal); background: var(--bg-mint-soft);' : ''}">
+            <div class="visual-item-top">
+              <div>
+                <div class="visual-item-name">${escapeHtml(d.name || d.id)}</div>
+                <div class="visual-item-sub">${escapeHtml(d.element || 'Elemental')}</div>
+              </div>
+              <button type="button" class="btn btn-danger btn-xs" onclick="removeDragonVisually(${idx})">Remover</button>
+            </div>
+            <div class="visual-item-controls">
+              <div class="qty-stepper">
+                <span style="font-size: 11.5px; font-weight: 800; padding-left: 4px;">Nv.</span>
+                <input type="number" class="qty-input" style="width: 44px;" value="${d.level ?? 1}" min="1" max="99" onchange="updateDragonLevel(${idx}, this.value)">
+              </div>
+              <button type="button" class="btn ${isActive ? 'btn-teal' : ''} btn-xs" onclick="setActiveDragonVisually('${escapeHtml(d.id)}')">
+                ${isActive ? 'Principal Ativo' : 'Tornar Principal'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addDragonVisually() {
+      const key = document.getElementById('add-dragon-select').value;
+      const preset = DRAGON_PRESETS[key];
+      if (!preset) return;
+      if (!activeModalDragons.party.some(d => d.id === preset.id)) {
+        activeModalDragons.party.push({ ...preset });
+      }
+      if (!activeModalDragons.formation.includes(preset.id)) {
+        activeModalDragons.formation.push(preset.id);
+      }
+      if (!activeModalDragons.activeDragonId) {
+        activeModalDragons.activeDragonId = preset.id;
+      }
+      renderVisualDragons();
+      updateRawJsonTextareas();
+    }
+
+    function removeDragonVisually(idx) {
+      const removed = activeModalDragons.party.splice(idx, 1)[0];
+      if (removed) {
+        activeModalDragons.formation = (activeModalDragons.formation || []).filter(id => id !== removed.id);
+        if (activeModalDragons.activeDragonId === removed.id) {
+          activeModalDragons.activeDragonId = activeModalDragons.party[0]?.id || null;
+        }
+      }
+      renderVisualDragons();
+      updateRawJsonTextareas();
+    }
+
+    function updateDragonLevel(idx, val) {
+      if (activeModalDragons.party[idx]) {
+        activeModalDragons.party[idx].level = Math.max(1, Number(val) || 1);
+        updateRawJsonTextareas();
+      }
+    }
+
+    function setActiveDragonVisually(dragonId) {
+      activeModalDragons.activeDragonId = dragonId;
+      renderVisualDragons();
+      updateRawJsonTextareas();
+    }
+
+    function updateDragonModeVisually(mode) {
+      activeModalDragons.mode = mode;
+      updateRawJsonTextareas();
+    }
+
+    function updateRawJsonTextareas() {
+      document.getElementById('edit-avatar-json').value = JSON.stringify(activeModalAvatar, null, 2);
+      document.getElementById('edit-inventory-json').value = JSON.stringify(activeModalInventory, null, 2);
+      document.getElementById('edit-dragons-json').value = JSON.stringify(activeModalDragons, null, 2);
+    }
+
+    function syncFromRawJsonEditors() {
+      try {
+        activeModalAvatar = JSON.parse(document.getElementById('edit-avatar-json').value);
+        activeModalInventory = JSON.parse(document.getElementById('edit-inventory-json').value);
+        activeModalDragons = JSON.parse(document.getElementById('edit-dragons-json').value);
+        populateVisualAvatarInputs();
+        renderVisualInventory();
+        renderVisualDragons();
+      } catch (_) {
+        // Ignora enquanto o desenvolvedor está digitando JSON no modo DEV
+      }
     }
 
     function closeUserModal() {
@@ -1438,17 +2450,23 @@
       const userId = document.getElementById('edit-user-id').value;
       if (!userId) return;
 
-      let customAvatar, inventory_data, dragons_data;
-      try {
-        customAvatar = JSON.parse(document.getElementById('edit-avatar-json').value);
-        inventory_data = JSON.parse(document.getElementById('edit-inventory-json').value);
-        dragons_data = JSON.parse(document.getElementById('edit-dragons-json').value);
-      } catch (err) {
-        return showToast('Erro de sintaxe em um dos campos JSON. Verifique as chaves e aspas.');
+      if (isDevMode) {
+        try {
+          activeModalAvatar = JSON.parse(document.getElementById('edit-avatar-json').value);
+          activeModalInventory = JSON.parse(document.getElementById('edit-inventory-json').value);
+          activeModalDragons = JSON.parse(document.getElementById('edit-dragons-json').value);
+        } catch (err) {
+          return showToast('Erro de sintaxe em um dos campos JSON do Modo DEV.');
+        }
+      }
+
+      const nick = document.getElementById('edit-nickname').value.trim();
+      if (activeModalAvatar && typeof activeModalAvatar === 'object' && nick) {
+        activeModalAvatar.name = nick;
       }
 
       const payload = {
-        nickname: document.getElementById('edit-nickname').value.trim(),
+        nickname: nick,
         email: document.getElementById('edit-email').value.trim(),
         role: document.getElementById('edit-role').value,
         newPassword: document.getElementById('edit-password').value,
@@ -1456,9 +2474,9 @@
         xp: Number(document.getElementById('edit-xp').value),
         x: Number(document.getElementById('edit-x').value),
         y: Number(document.getElementById('edit-y').value),
-        customAvatar,
-        inventory_data,
-        dragons_data
+        customAvatar: activeModalAvatar,
+        inventory_data: activeModalInventory,
+        dragons_data: activeModalDragons
       };
 
       try {
@@ -1556,7 +2574,8 @@
         .replace(/"/g, '&quot;');
     }
 
-    // Inicializa auto-descoberta e polling a cada 4 segundos
+    // Aplica o modo visual (No-Code por padrão) e inicia auto-descoberta
+    setViewMode(isDevMode);
     autoDiscoverServer(false);
     setInterval(refreshAll, 4000);
   </script>

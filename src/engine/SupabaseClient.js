@@ -34,9 +34,11 @@ export class SupabaseClient {
 
   getDefaultHeaders(authToken = '') {
     const headers = {
-      'Content-Type': 'application/json',
-      'Bypass-Tunnel-Reminder': 'true'
+      'Content-Type': 'application/json'
     };
+    if (this.url && this.url.includes('.loca.lt')) {
+      headers['Bypass-Tunnel-Reminder'] = 'true';
+    }
     if (authToken) {
       headers['Authorization'] = `Bearer ${authToken}`;
     }
@@ -64,10 +66,13 @@ export class SupabaseClient {
         const profile = await this.getUserProfile();
         if (profile && profile.id) {
           this.profile = profile;
+          const cleanNick = (profile.nickname || 'aventureiro').toLowerCase();
+          const defaultEmail = cleanNick === 'rennan' ? 'rennancr93@gmail.com' : (cleanNick === 'duda' ? 'eduardasa@gmail.com' : `${cleanNick}@gmail.com`);
+          const resolvedEmail = profile.email || (this.user?.email && !this.user.email.endsWith('@kidslearncode.local') ? this.user.email : defaultEmail);
           this.user = {
             id: profile.id,
-            email: this.user?.email || `${profile.nickname.toLowerCase()}@kidslearncode.local`,
-            role: this.user?.role || 'player',
+            email: resolvedEmail,
+            role: profile.role || this.user?.role || ((cleanNick === 'rennan' || cleanNick === 'duda') ? 'admin' : 'player'),
             nickname: profile.nickname,
             isGuest: false
           };
@@ -101,7 +106,7 @@ export class SupabaseClient {
     const guestName = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_guest_name')) || 'Aventureiro';
     return {
       id: guestId,
-      email: `${guestId}@kidslearncode.local`,
+      email: `${guestId}@gmail.com`,
       isGuest: true,
       nickname: guestName
     };

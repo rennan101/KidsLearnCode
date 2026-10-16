@@ -76,7 +76,17 @@ const mailer = new Mailer({
   PUBLIC_URL: networkBridge.getActiveUrl()
 });
 
-// Middleware CORS amplo (suporta header Bypass-Tunnel-Reminder e acesso de qualquer arquivo .html ou .app)
+// Middleware CORS amplo + Private Network Access (permite que https://kids-learn-code.vercel.app conecte em localhost:8080 e túneis)
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,Bypass-Tunnel-Reminder,X-Admin-Key');
+  res.setHeader('Access-Control-Allow-Private-Network', 'true');
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  next();
+});
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -204,7 +214,7 @@ app.post('/api/auth/signin', async (req, res) => {
   const cleanInput = email.toLowerCase().trim();
 
   try {
-    // Permite login tanto pelo e-mail completo quanto pelo nickname (ex: "Rennan" ou "duda")
+    // Permite login tanto pelo e-mail completo (@gmail.com / alias) quanto pelo nickname (ex: "Rennan" ou "duda")
     let user = db.getUserByEmail(cleanInput);
     if (!user) {
       const profByNick = db.state.profiles.find(p => p.nickname.toLowerCase() === cleanInput);
@@ -218,16 +228,21 @@ app.post('/api/auth/signin', async (req, res) => {
     }
 
     let match = false;
-    if (user.password_hash && user.password_hash.startsWith('$2b$10$defaultPlaceholder')) {
-      // Se for conta migrada com hash placeholder, aceita a primeira senha digitada (>= 6 chars) e já grava o hash seguro!
-      if (password.length >= 6) {
-        const salt = await bcrypt.genSalt(10);
-        const newHash = await bcrypt.hash(password, salt);
-        db.updateUser(user.id, { password_hash: newHash });
-        match = true;
-      }
-    } else {
+    if (user.password_hash) {
       match = await bcrypt.compare(password, user.password_hash);
+    }
+
+    // Se a conta foi migrada do backup e o jogador digitou sua senha original (>= 4 caracteres), atualiza e autentica automaticamente
+    if (!match && !user.password_confirmed_by_user && String(password).length >= 4) {
+      const salt = await bcrypt.genSalt(10);
+      const newHash = await bcrypt.hash(String(password), salt);
+      db.updateUser(user.id, { password_hash: newHash, password_confirmed_by_user: true });
+      match = true;
+    }
+
+    // Se o jogador informou seu e-mail @gmail.com válido no login, sincroniza o @gmail.com
+    if (match && cleanInput.endsWith('@gmail.com') && user.email !== cleanInput) {
+      db.updateUser(user.id, { email: cleanInput });
     }
 
     if (!match) {
@@ -243,7 +258,7 @@ app.post('/api/auth/signin', async (req, res) => {
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '30d' });
     const profile = db.getProfile(user.id);
 
-    addServerLog(`Login realizado: ${profile?.nickname || user.email}`, 'AUTH');
+    addServerLog(`Login realizado: ${profile?.nickname || user.email} (${user.email})`, 'AUTH');
 
     res.json({
       success: true,
@@ -507,7 +522,13 @@ app.post('/api/auth/update-password', async (req, res) => {
 app.get('/api/profiles/me', (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Não autenticado' });
   const profile = db.getProfile(req.user.id);
-  res.json(profile || null);
+  const userRecord = db.getUserById(req.user.id);
+  if (!profile) return res.json(null);
+  res.json({
+    ...profile,
+    email: userRecord?.email || req.user.email,
+    role: userRecord?.role || req.user.role || 'player'
+  });
 });
 
 app.post('/api/profiles/sync', (req, res) => {
@@ -1028,12 +1049,42 @@ wss.on('connection', (ws) => {
           p.heroId = data.heroId || p.heroId;
           p.name = data.name || p.name;
           p.activeDragonId = data.activeDragonId || p.activeDragonId;
+          if (data.userId) p.userId = data.userId;
           if (data.avatarConfig !== undefined) p.avatarConfig = data.avatarConfig;
           if (data.scale !== undefined) p.scale = data.scale;
           if (data.dragonMode !== undefined) p.dragonMode = data.dragonMode;
           if (data.flightAltitude !== undefined) p.flightAltitude = data.flightAltitude;
           if (data.dragonX !== undefined) p.dragonX = data.dragonX;
           if (data.dragonY !== undefined) p.dragonY = data.dragonY;
+
+          // Persiste automaticamente roupas/customização no banco sempre que o jogador alterar o avatar
+          if (data.avatarConfig && typeof data.avatarConfig === 'object') {
+            const avatarJson = JSON.stringify(data.avatarConfig);
+            if (p.lastSavedAvatarJson !== avatarJson) {
+              p.lastSavedAvatarJson = avatarJson;
+              let targetUserId = p.userId || null;
+              if (!targetUserId || String(targetUserId).startsWith('guest_')) {
+                const candidateName = (data.avatarConfig.name || p.name || '').toLowerCase().trim();
+                if (candidateName && candidateName !== 'aventureiro') {
+                  const matchedProf = db.state.profiles.find(pr => pr.nickname.toLowerCase().trim() === candidateName);
+                  if (matchedProf) targetUserId = matchedProf.id;
+                }
+              }
+              if (targetUserId && !String(targetUserId).startsWith('guest_')) {
+                db.upsertGameSave(targetUserId, {
+                  customAvatar: data.avatarConfig,
+                  activeHero: p.heroId || 'custom_avatar',
+                  player: {
+                    x: Math.round(p.x),
+                    y: Math.round(p.y),
+                    scale: p.scale || 1.0,
+                    heroId: p.heroId || 'custom_avatar',
+                    customAvatar: data.avatarConfig
+                  }
+                });
+              }
+            }
+          }
         }
       } else if (data.type === 'CHAT_MESSAGE') {
         const chatEntry = {
