@@ -43,7 +43,7 @@ export class Mailer {
     const html = `
       <div style="font-family: 'Nunito', Arial, sans-serif; background-color: #f8f8f0; padding: 30px; color: #794f27;">
         <div style="max-width: 540px; margin: 0 auto; background: #fdfbf7; border: 2px solid #7a583e; border-radius: 20px; padding: 24px; box-shadow: 0 6px 0 #5c3c26;">
-          <h2 style="color: #794f27; margin-top: 0; text-align: center;">🌴 Bem-vindo à Ilha Lua! 🐉</h2>
+          <h2 style="color: #794f27; margin-top: 0; text-align: center; font-size: 24px;">Bem-vindo à Ilha Lua!</h2>
           <p style="font-size: 16px; line-height: 1.6;">Olá, <strong>${nickname}</strong>!</p>
           ${isMinor ? `
             <div style="background: #e6f9f6; border-left: 4px solid #19c8b9; padding: 12px; border-radius: 8px; margin: 16px 0;">
@@ -76,8 +76,8 @@ export class Mailer {
 
     const html = `
       <div style="font-family: 'Nunito', Arial, sans-serif; background-color: #f8f8f0; padding: 30px; color: #794f27;">
-        <div style="max-width: 540px; margin: 0 auto; background: #fdfbf7; border: 2px solid #7a583e; border-radius: 20px; padding: 24px; box-shadow: 0 6px 0 #5c3c26;">
-          <h2 style="color: #794f27; margin-top: 0; text-align: center;">🔑 Recuperação de Senha</h2>
+        <div style="max-width: 540px; margin: 0 auto; background: #fdfbf7; border: 2px solid #7a583e; border-radius: 20px; padding: 28px 24px; box-shadow: 0 6px 0 #5c3c26;">
+          <h2 style="color: #794f27; margin-top: 0; text-align: center; font-size: 24px;">Recuperação de Senha</h2>
           <p style="font-size: 16px; line-height: 1.6;">Olá, <strong>${nickname}</strong>!</p>
           <p style="font-size: 15px; line-height: 1.6;">
             Recebemos um pedido para redefinir a senha da sua conta na Ilha Lua. Se foi você, clique no botão abaixo para cadastrar uma nova senha:

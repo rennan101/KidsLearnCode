@@ -14,6 +14,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
@@ -447,29 +448,23 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       if (profByNick) user = db.getUserById(profByNick.id);
     }
 
-    if (!user) {
-      return res.json({ success: true, message: 'Se a conta existir, o link de recuperação foi gerado!' });
+    if (user) {
+      // Token criptográfico seguro de 64 caracteres hexadecimais (impossível de adivinhar)
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const expires = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 minutos de validade estrita
+
+      db.updateUser(user.id, { reset_token: resetToken, reset_token_expires_at: expires });
+
+      const prof = db.getProfile(user.id);
+      const nickname = prof?.nickname || 'Aventureiro';
+
+      const dispatchRes = await mailer.sendPasswordResetEmail({ email: user.email, token: resetToken, nickname });
+      addServerLog(`Link de recuperação de senha solicitado para ${user.email} (${dispatchRes.success ? 'E-mail enviado' : 'Aviso: ' + dispatchRes.error})`, 'AUTH');
     }
-
-    const resetToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
-    const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-
-    db.updateUser(user.id, { reset_token: resetToken, reset_token_expires_at: expires });
-
-    const prof = db.getProfile(user.id);
-    const nickname = prof?.nickname || 'Aventureiro';
-    const activePublicUrl = networkBridge.getActiveUrl();
-    const resetLink = `${activePublicUrl}/api/auth/reset-password?token=${resetToken}`;
-
-    const dispatchRes = await mailer.sendPasswordResetEmail({ email: user.email, token: resetToken, nickname });
 
     res.json({
       success: true,
-      message: dispatchRes.simulated
-        ? 'Link de recuperação gerado com sucesso!'
-        : 'Instruções de recuperação enviadas!',
-      simulated: !!dispatchRes.simulated,
-      resetLink
+      message: 'Instruções para redefinir sua senha foram enviadas para o seu e-mail!'
     });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao processar recuperação de senha.' });
