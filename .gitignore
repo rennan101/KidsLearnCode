@@ -2,9 +2,7 @@
 .DS_Store
 Thumbs.db
 
-# Private Game Design Documents, GDDs, Second Brain Vault & Prompt Catalogs
-Brain/
-brain/
+# Documentation & Catalogs (Brain is tracked on GitHub)
 HIGH_CONCEPT.md
 CATALOG_CHARACTERS_AND_NPCS.md
 CATALOG_DRAGONS_PROMPTS.md
