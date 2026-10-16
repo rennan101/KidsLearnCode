@@ -143,7 +143,12 @@ class RPGApplication {
   }
 
   async init() {
+    let forceHideTimer = null;
     const hideLoader = () => {
+      if (forceHideTimer) {
+        clearTimeout(forceHideTimer);
+        forceHideTimer = null;
+      }
       const loadingScreen = document.getElementById('loading-screen');
       if (loadingScreen && loadingScreen.style.display !== 'none') {
         loadingScreen.style.opacity = '0';
@@ -153,8 +158,8 @@ class RPGApplication {
       }
     };
 
-    // Failsafe: hide loader after 2s under any circumstances
-    const forceHideTimer = setTimeout(hideLoader, 2000);
+    // Failsafe: hide loader após 10s em caso de timeout extremo de rede
+    forceHideTimer = setTimeout(hideLoader, 10000);
 
     try {
       const safeCall = (fn, name) => {
@@ -224,22 +229,24 @@ class RPGApplication {
       const progressText = document.getElementById('progress-text');
 
       await this.assetLoader.loadAll((progress) => {
-        const pct = Math.round(progress * 100);
+        const pct = Math.min(92, Math.round(progress * 92));
         if (progressFill) progressFill.style.width = `${pct}%`;
         if (progressText) progressText.innerText = `${pct}%`;
       }).catch(e => console.warn('AssetLoader loadAll:', e));
 
-      if (progressFill) progressFill.style.width = '100%';
-      if (progressText) progressText.innerText = '100%';
+      if (progressFill) progressFill.style.width = '95%';
+      if (progressText) progressText.innerText = '95%';
     } catch (err) {
       console.error('Error during init/asset preloading:', err);
-    } finally {
-      clearTimeout(forceHideTimer);
-      hideLoader();
     }
 
-    // Load saved map & game state from IndexedDB (with multi-key migration/fallback)
+    // Load saved map & game state from IndexedDB + Servidor Dedicado antes de exibir o canvas
     await this.loadGameFromStorage().catch(e => console.warn('loadGameFromStorage error:', e));
+
+    const progressFillDone = document.getElementById('progress-fill');
+    const progressTextDone = document.getElementById('progress-text');
+    if (progressFillDone) progressFillDone.style.width = '100%';
+    if (progressTextDone) progressTextDone.innerText = '100%';
 
     // Ativa e sincroniza imediatamente as inteligências autônomas dos NPCs e Heróis no mundo vivo
     if (this.npcManager) {
@@ -265,8 +272,8 @@ class RPGApplication {
     // Sincroniza visibilidade de controles admin e modo
     this.updateAdminAndModeUI();
 
-    // Periodic background auto-save (every 4 seconds) non-blocking via IndexedDB
-    setInterval(() => this.saveGameToStorage(true), 4000);
+    // Periodic background auto-save (every 4 seconds) non-blocking via IndexedDB + deduplicated Cloud Save
+    setInterval(() => this.saveGameToStorage(false), 4000);
 
     // Auto-save on page unload/close/hide
     window.addEventListener('beforeunload', () => this.saveGameToStorage(true));
@@ -2293,14 +2300,21 @@ class RPGApplication {
     try {
       let data = await this.storageManager.loadGame();
 
-      // 1. Se autenticado na nuvem, carrega dados de inventário, dragões e progresso pessoal do jogador
-      if (this.supabaseClient && !this.supabaseClient.user?.isGuest) {
-        const cloudData = await this.supabaseClient.loadCloudGame();
+      // Executa carregamento pessoal do jogador e do Mapa Global em paralelo para inicialização ultrarrápida
+      if (this.supabaseClient) {
+        const isUserLoggedIn = !this.supabaseClient.user?.isGuest;
+        const [cloudDataResult, globalMapResult] = await Promise.allSettled([
+          isUserLoggedIn ? this.supabaseClient.loadCloudGame() : Promise.resolve(null),
+          this.supabaseClient.loadGlobalWorldMap()
+        ]);
+
+        const cloudData = cloudDataResult.status === 'fulfilled' ? cloudDataResult.value : null;
+        const globalOnlineMap = globalMapResult.status === 'fulfilled' ? globalMapResult.value : null;
+
         if (cloudData) {
           if (!data) {
             data = cloudData;
           } else {
-            // Atualiza progresso pessoal
             if (cloudData.player) data.player = cloudData.player;
             if (cloudData.inventory) data.inventory = cloudData.inventory;
             if (cloudData.dragons) data.dragons = cloudData.dragons;
@@ -2309,11 +2323,8 @@ class RPGApplication {
             if (cloudData.customAvatar) data.customAvatar = cloudData.customAvatar;
           }
         }
-      }
 
-      // 2. REGRA DE OURO DO MMO: O Mapa, Construções, Objetos e Terreno são SEMPRE o Mapa Global Oficial Compartilhado
-      if (this.supabaseClient) {
-        const globalOnlineMap = await this.supabaseClient.loadGlobalWorldMap();
+        // REGRA DE OURO DO MMO: O Mapa Global Oficial Compartilhado tem prioridade máxima
         if (globalOnlineMap && globalOnlineMap.map) {
           console.log('[MMO] Mapa Global Oficial sincronizado da nuvem com sucesso!');
           if (!data) {
@@ -2325,7 +2336,6 @@ class RPGApplication {
               savedAt: globalOnlineMap.updatedAt || Date.now()
             };
           } else {
-            // O mapa global substitui SEMPRE o mapa do jogador
             data.map = globalOnlineMap.map;
             data.savedAt = Math.max(data.savedAt || 0, globalOnlineMap.updatedAt || Date.now());
           }

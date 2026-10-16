@@ -2,8 +2,8 @@
  * Server Configuration & Instant Zero-DNS Discovery - KidsLearnCode Dedicated Server
  * - Zero Cloudflare / Zero DuckDNS / Zero Supabase Cloud
  * - Funciona 100% tanto em localhost quanto no Vercel (https://kids-learn-code.vercel.app)
- * - Fast-path direto para localhost:8080 quando aberto no próprio Mac mini (mesmo pelo link do Vercel)
- * - Descoberta instantânea via GitHub Contents API (0s de cache CDN) para outros computadores/celulares
+ * - Nunca faz chamadas http:// em páginas https:// (elimina bloqueio Mixed Content do Safari)
+ * - Descoberta instantânea em paralelo via GitHub Contents API (0s de cache CDN)
  */
 
 export const SUPABASE_CONFIG = {
@@ -13,15 +13,23 @@ export const SUPABASE_CONFIG = {
 
 let cachedServerUrl = null;
 let lastResolvedTime = 0;
-const CACHE_TTL_MS = 20 * 1000; // 20 segundos
+let inFlightDiscoveryPromise = null;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos (só renova antes se forceRefresh=true)
 
 /**
  * Testa se um endpoint de servidor está respondendo /health rapidamente.
- * Não envia headers customizados em .lhr.life ou localhost para evitar preflight CORS OPTIONS.
+ * Não envia headers customizados em .serveousercontent.com ou .lhr.life para evitar preflight CORS OPTIONS.
  */
-async function probeServerHealth(baseUrl, timeoutMs = 2200) {
+async function probeServerHealth(baseUrl, timeoutMs = 2400) {
   if (!baseUrl) return false;
   const clean = baseUrl.replace(/\/$/, '');
+
+  // Proteção estrita contra Mixed Content no Safari/macOS:
+  // Páginas HTTPS (como https://kids-learn-code.vercel.app) nunca devem requisitar endpoints HTTP.
+  if (typeof window !== 'undefined' && window.location?.protocol === 'https:' && clean.startsWith('http://')) {
+    return false;
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -77,28 +85,32 @@ async function fetchLiveServerRegistry(now) {
   return null;
 }
 
-/**
- * Resolve a URL ativa do servidor dedicado dinamicamente:
- * 1. Localhost direto se estiver em localhost / 127.0.0.1
- * 2. Origin direta se aberto pelo próprio servidor (:8080 / .lhr.life / .loca.lt)
- * 3. Fast-path para http://localhost:8080 mesmo quando aberto pelo Vercel no próprio Mac mini!
- * 4. Descoberta instantânea via GitHub API (branch server-status) para acesso remoto no Vercel
- */
-export async function getActiveServerUrl(forceRefresh = false) {
+async function resolveServerUrlInternal() {
+  const now = Date.now();
+  const isHttpsPage = typeof window !== 'undefined' && window.location?.protocol === 'https:';
+
   if (typeof window !== 'undefined' && window.location) {
     const host = window.location.hostname;
     if (host === 'localhost' || host === '127.0.0.1') {
       return 'http://localhost:8080';
     }
-    if (window.location.port === '8080' || host.endsWith('.loca.lt') || host.endsWith('.lhr.life')) {
+    if (
+      window.location.port === '8080' ||
+      host.endsWith('.serveousercontent.com') ||
+      host.endsWith('.lhr.life') ||
+      host.endsWith('.loca.lt')
+    ) {
       return window.location.origin;
     }
 
-    // Se houver override manual salvo, valida se ainda está ativo; se estiver morto, limpa automaticamente
+    // Se houver override manual salvo (apenas HTTPS se a página for HTTPS), valida se está ativo
     const customOverride = localStorage.getItem('kidslearn_custom_server_url');
     if (customOverride && customOverride.startsWith('http')) {
       const cleanCustom = customOverride.replace(/\/$/, '');
-      if (await probeServerHealth(cleanCustom, 1500)) {
+      if ((!isHttpsPage || cleanCustom.startsWith('https://')) && await probeServerHealth(cleanCustom, 1500)) {
+        cachedServerUrl = cleanCustom;
+        lastResolvedTime = now;
+        SUPABASE_CONFIG.url = cleanCustom;
         return cleanCustom;
       } else {
         localStorage.removeItem('kidslearn_custom_server_url');
@@ -106,14 +118,8 @@ export async function getActiveServerUrl(forceRefresh = false) {
     }
   }
 
-  const now = Date.now();
-  if (!forceRefresh && cachedServerUrl && (now - lastResolvedTime < CACHE_TTL_MS)) {
-    return cachedServerUrl;
-  }
-
-  // Fast-path: Mesmo abrindo pelo Vercel (https://kids-learn-code.vercel.app),
-  // se o jogador estiver no próprio Mac onde o servidor roda, conecta direto em localhost:8080 (0ms)!
-  if (await probeServerHealth('http://localhost:8080', 900)) {
+  // Somente tenta localhost:8080 se a página NÃO for HTTPS (evita erro Mixed Content no Safari)
+  if (!isHttpsPage && await probeServerHealth('http://localhost:8080', 800)) {
     cachedServerUrl = 'http://localhost:8080';
     lastResolvedTime = now;
     SUPABASE_CONFIG.url = 'http://localhost:8080';
@@ -123,31 +129,65 @@ export async function getActiveServerUrl(forceRefresh = false) {
   // Consulta o Registro Instantâneo no GitHub (branch server-status)
   const info = await fetchLiveServerRegistry(now);
   if (info) {
-    const candidates = [info.sshUrl, info.url, info.ltUrl].filter(Boolean);
-    for (const candidate of candidates) {
-      const clean = candidate.replace(/\/$/, '');
-      if (await probeServerHealth(clean, 2800)) {
-        cachedServerUrl = clean;
-        lastResolvedTime = now;
-        SUPABASE_CONFIG.url = clean;
-        return clean;
-      }
-    }
-    if (info.sshUrl || info.url) {
-      const fallbackClean = (info.sshUrl || info.url).replace(/\/$/, '');
-      cachedServerUrl = fallbackClean;
-      lastResolvedTime = now;
-      SUPABASE_CONFIG.url = fallbackClean;
-      return fallbackClean;
+    const rawCandidates = [info.serveoUrl, info.sshUrl, info.url, info.ltUrl]
+      .filter(Boolean)
+      .map(u => u.replace(/\/$/, ''))
+      .filter(u => !isHttpsPage || u.startsWith('https://'));
+
+    const uniqueCandidates = Array.from(new Set(rawCandidates));
+
+    if (uniqueCandidates.length > 0) {
+      // Testa os túneis candidatos em paralelo: o primeiro que responder /health vence imediatamente!
+      try {
+        const winner = await Promise.any(
+          uniqueCandidates.map(async (candidate) => {
+            const ok = await probeServerHealth(candidate, 2500);
+            if (!ok) throw new Error('unhealthy');
+            return candidate;
+          })
+        );
+        if (winner) {
+          cachedServerUrl = winner;
+          lastResolvedTime = Date.now();
+          SUPABASE_CONFIG.url = winner;
+          return winner;
+        }
+      } catch (_) {}
+
+      // Se o probe falhou por latência momentânea, usa o endereço primário publicado
+      const primaryClean = uniqueCandidates[0];
+      cachedServerUrl = primaryClean;
+      lastResolvedTime = Date.now();
+      SUPABASE_CONFIG.url = primaryClean;
+      return primaryClean;
     }
   }
 
-  // Fallback para o Subdomínio Fixo Nativo
-  const deterministicUrl = 'https://kidslearncode-mmorpg.loca.lt';
-  cachedServerUrl = deterministicUrl;
-  lastResolvedTime = now;
-  SUPABASE_CONFIG.url = deterministicUrl;
-  return deterministicUrl;
+  const fallbackUrl = cachedServerUrl || 'https://kidslearncode-mmorpg.loca.lt';
+  cachedServerUrl = fallbackUrl;
+  lastResolvedTime = Date.now();
+  SUPABASE_CONFIG.url = fallbackUrl;
+  return fallbackUrl;
+}
+
+/**
+ * Resolve a URL ativa do servidor dedicado dinamicamente com deduplicação de chamadas concorrentes
+ */
+export async function getActiveServerUrl(forceRefresh = false) {
+  const now = Date.now();
+  if (!forceRefresh && cachedServerUrl && (now - lastResolvedTime < CACHE_TTL_MS)) {
+    return cachedServerUrl;
+  }
+
+  if (inFlightDiscoveryPromise && !forceRefresh) {
+    return inFlightDiscoveryPromise;
+  }
+
+  inFlightDiscoveryPromise = resolveServerUrlInternal().finally(() => {
+    inFlightDiscoveryPromise = null;
+  });
+
+  return inFlightDiscoveryPromise;
 }
 
 export default SUPABASE_CONFIG;

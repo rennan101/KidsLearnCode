@@ -379,61 +379,80 @@ export class SupabaseClient {
     if (!mapData) return { success: false, reason: 'offline_or_invalid_map' };
     const authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_auth_token')) || '';
 
-    try {
-      const baseUrl = await this.getServerUrl();
-      const res = await fetch(`${baseUrl}/api/world/global-map`, {
-        method: 'POST',
-        headers: this.getDefaultHeaders(authToken),
-        body: JSON.stringify({ map: mapData })
-      });
-      if (res.ok) return { success: true };
-    } catch (_) {}
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const baseUrl = await this.getServerUrl(attempt > 0);
+        const res = await fetch(`${baseUrl}/api/world/global-map`, {
+          method: 'POST',
+          headers: this.getDefaultHeaders(authToken),
+          body: JSON.stringify({ map: mapData })
+        });
+        if (res.ok) return { success: true };
+        if (res.status < 500) break;
+      } catch (_) {}
+    }
     return { success: false, reason: 'offline_or_invalid_map' };
   }
 
   async loadGlobalWorldMap() {
-    try {
-      const baseUrl = await this.getServerUrl();
-      const res = await fetch(`${baseUrl}/api/world/global-map`, {
-        headers: this.getDefaultHeaders()
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.map) {
-          return {
-            map: data.map,
-            updatedAt: data.updatedAt || Date.now()
-          };
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const baseUrl = await this.getServerUrl(attempt > 0);
+        const headers = {};
+        if (baseUrl.includes('.loca.lt')) headers['Bypass-Tunnel-Reminder'] = 'true';
+        const res = await fetch(`${baseUrl}/api/world/global-map`, { headers });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.map) {
+            return {
+              map: data.map,
+              updatedAt: data.updatedAt || Date.now()
+            };
+          }
         }
-      }
-    } catch (_) {}
+        if (res.status < 500) break;
+      } catch (_) {}
+    }
     return null;
   }
 
-  async saveCloudGame(payload) {
+  async saveCloudGame(payload, force = false) {
     if (!this.user || this.user.isGuest) {
       return { success: false, reason: 'guest_or_offline' };
     }
     const authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_auth_token')) || '';
     if (!authToken) return { success: false, reason: 'no_token' };
 
-    try {
-      const baseUrl = await this.getServerUrl();
-      const res = await fetch(`${baseUrl}/api/saves`, {
-        method: 'POST',
-        headers: this.getDefaultHeaders(authToken),
-        body: JSON.stringify({
-          map: payload.map || {},
-          player: payload.player || {},
-          inventory: payload.inventory || {},
-          dragons: payload.dragons || {},
-          codingProgress: payload.codingProgress || {},
-          customAvatar: payload.customAvatar || payload.player?.customAvatar || null,
-          activeHero: payload.activeHero || payload.player?.activeHero || 'char_wolf_hunter_m'
-        })
-      });
-      if (res.ok) return { success: true };
-    } catch (_) {}
+    // Envia apenas os dados pessoais do jogador (~1.8 KB), NUNCA o mapa global de 809 KB
+    const saveBodyObj = {
+      player: payload.player || {},
+      inventory: payload.inventory || {},
+      dragons: payload.dragons || {},
+      codingProgress: payload.codingProgress || {},
+      customAvatar: payload.customAvatar || payload.player?.customAvatar || null,
+      activeHero: payload.activeHero || payload.player?.activeHero || 'char_wolf_hunter_m'
+    };
+
+    const bodyString = JSON.stringify(saveBodyObj);
+    if (!force && this.lastSavedFingerprint === bodyString) {
+      return { success: true, cached: true };
+    }
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const baseUrl = await this.getServerUrl(attempt > 0);
+        const res = await fetch(`${baseUrl}/api/saves`, {
+          method: 'POST',
+          headers: this.getDefaultHeaders(authToken),
+          body: bodyString
+        });
+        if (res.ok) {
+          this.lastSavedFingerprint = bodyString;
+          return { success: true };
+        }
+        if (res.status < 500) break;
+      } catch (_) {}
+    }
     return { success: false, reason: 'network_error' };
   }
 
@@ -442,23 +461,26 @@ export class SupabaseClient {
     const authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_auth_token')) || '';
     if (!authToken) return null;
 
-    try {
-      const baseUrl = await this.getServerUrl();
-      const res = await fetch(`${baseUrl}/api/saves/me`, {
-        headers: this.getDefaultHeaders(authToken)
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data) {
-          const pData = data.player || {};
-          return {
-            ...data,
-            customAvatar: data.customAvatar || pData.customAvatar || null,
-            activeHero: data.activeHero || pData.activeHero || pData.heroId || 'char_wolf_hunter_m'
-          };
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const baseUrl = await this.getServerUrl(attempt > 0);
+        const res = await fetch(`${baseUrl}/api/saves/me`, {
+          headers: this.getDefaultHeaders(authToken)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data) {
+            const pData = data.player || {};
+            return {
+              ...data,
+              customAvatar: data.customAvatar || pData.customAvatar || null,
+              activeHero: data.activeHero || pData.activeHero || pData.heroId || 'char_wolf_hunter_m'
+            };
+          }
         }
-      }
-    } catch (_) {}
+        if (res.status < 500) break;
+      } catch (_) {}
+    }
     return null;
   }
 

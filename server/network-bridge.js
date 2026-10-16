@@ -25,12 +25,14 @@ export class NetworkBridge {
     this.onLog = options.onLog || ((msg) => console.log(msg));
 
     this.primaryUrl = `https://${this.preferredSubdomain}.loca.lt`;
+    this.serveoUrl = null;
     this.sshBackupUrl = null;
     this.lanIp = this.detectLanIp();
     this.localUrl = `http://localhost:${this.port}`;
     this.lanUrl = this.lanIp ? `http://${this.lanIp}:${this.port}` : this.localUrl;
 
     this.ltProcess = null;
+    this.serveoProcess = null;
     this.sshProcess = null;
     this.isStopped = false;
     this.lastPublishedUrl = null;
@@ -57,8 +59,9 @@ export class NetworkBridge {
     this.lanUrl = this.lanIp ? `http://${this.lanIp}:${this.port}` : this.localUrl;
 
     this.saveLiveStatus();
-    this.startLocaltunnel();
+    this.startServeoBridge();
     this.startSshBridge();
+    this.startLocaltunnel();
   }
 
   stop() {
@@ -67,6 +70,10 @@ export class NetworkBridge {
       try { this.ltProcess.kill('SIGTERM'); } catch (_) {}
       this.ltProcess = null;
     }
+    if (this.serveoProcess) {
+      try { this.serveoProcess.kill('SIGTERM'); } catch (_) {}
+      this.serveoProcess = null;
+    }
     if (this.sshProcess) {
       try { this.sshProcess.kill('SIGTERM'); } catch (_) {}
       this.sshProcess = null;
@@ -74,7 +81,56 @@ export class NetworkBridge {
   }
 
   /**
-   * Canal 1: Subdomínio Fixo determinístico via Localtunnel (loca.lt)
+   * Canal 1: Ponte SSH Estável Contínua (serveo.net - HTTP/2 + WSS sem rotação de 15 minutos)
+   */
+  startServeoBridge() {
+    if (this.isStopped) return;
+
+    try {
+      this.serveoProcess = spawn(
+        '/usr/bin/ssh',
+        [
+          '-o', 'StrictHostKeyChecking=no',
+          '-o', 'UserKnownHostsFile=/dev/null',
+          '-o', 'ServerAliveInterval=25',
+          '-o', 'ExitOnForwardFailure=yes',
+          '-R', `80:127.0.0.1:${this.port}`,
+          'serveo.net'
+        ],
+        { stdio: ['ignore', 'pipe', 'pipe'] }
+      );
+
+      const handleServeoOutput = (chunk) => {
+        const text = chunk.toString();
+        const match = text.match(/https:\/\/[a-zA-Z0-9.-]+\.serveousercontent\.com/);
+        if (match && match[0]) {
+          const detectedUrl = match[0].trim();
+          if (this.serveoUrl !== detectedUrl) {
+            this.serveoUrl = detectedUrl;
+            this.onLog(`[NetworkBridge] Ponte SSH Primária Estável Ativa: ${this.serveoUrl}`);
+            this.saveLiveStatus();
+            this.publishStatusToGitHub();
+            this.onUrlChanged(this.getActiveUrl());
+          }
+        }
+      };
+
+      this.serveoProcess.stdout.on('data', handleServeoOutput);
+      this.serveoProcess.stderr.on('data', handleServeoOutput);
+
+      this.serveoProcess.on('close', () => {
+        this.serveoUrl = null;
+        if (!this.isStopped) {
+          setTimeout(() => this.startServeoBridge(), 5000);
+        }
+      });
+
+      this.serveoProcess.on('error', () => {});
+    } catch (_) {}
+  }
+
+  /**
+   * Canal 2: Subdomínio Fixo determinístico via Localtunnel (loca.lt)
    */
   startLocaltunnel() {
     if (this.isStopped) return;
@@ -134,7 +190,7 @@ export class NetworkBridge {
   }
 
   /**
-   * Canal 2: Ponte SSH Nativa do macOS (localhost.run) - Sem instalar nada
+   * Canal 3: Ponte SSH Nativa Redundante (localhost.run)
    */
   startSshBridge() {
     if (this.isStopped) return;
@@ -160,7 +216,7 @@ export class NetworkBridge {
           const detectedSshUrl = match[0].trim();
           if (this.sshBackupUrl !== detectedSshUrl) {
             this.sshBackupUrl = detectedSshUrl;
-            this.onLog(`[NetworkBridge] Ponte SSH Direta Ativa: ${this.sshBackupUrl}`);
+            this.onLog(`[NetworkBridge] Ponte SSH Redundante Ativa: ${this.sshBackupUrl}`);
             this.saveLiveStatus();
             this.publishStatusToGitHub();
             this.onUrlChanged(this.getActiveUrl());
@@ -172,6 +228,7 @@ export class NetworkBridge {
       this.sshProcess.stderr.on('data', handleSshOutput);
 
       this.sshProcess.on('close', () => {
+        this.sshBackupUrl = null;
         if (!this.isStopped) {
           setTimeout(() => this.startSshBridge(), 6000);
         }
@@ -182,13 +239,14 @@ export class NetworkBridge {
   }
 
   getActiveUrl() {
-    // Prioriza a ponte SSH direta (lhr.life) quando disponível pois não requer header de bypass em WebSockets nativos do navegador
-    return this.sshBackupUrl || this.primaryUrl || this.lanUrl || this.localUrl;
+    // Prioriza a ponte SSH estável (serveoUrl) e a ponte SSH redundante (sshBackupUrl)
+    return this.serveoUrl || this.sshBackupUrl || this.primaryUrl || this.lanUrl || this.localUrl;
   }
 
   getStatusPayload() {
     return {
       url: this.getActiveUrl(),
+      serveoUrl: this.serveoUrl,
       sshUrl: this.sshBackupUrl,
       ltUrl: this.primaryUrl,
       lanUrl: this.lanUrl,
