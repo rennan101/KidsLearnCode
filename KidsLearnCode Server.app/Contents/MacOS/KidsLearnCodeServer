@@ -1,0 +1,30 @@
+#!/bin/bash
+# =============================================================================
+# KidsLearnCode Server.app — Inicializador 1-Clique (Local & Remoto)
+# - Detecta dinamicamente o diretório no SSD Interno
+# - Blindagem 5: Inicia com caffeinate -dimsu para nunca suspender o Mac
+# - Se aberto em outro Mac sem a pasta server/, abre o Painel Remoto integrado
+# =============================================================================
+
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+MACOS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CONTENTS_DIR="$( cd "$MACOS_DIR/.." && pwd )"
+APP_BUNDLE_DIR="$( cd "$CONTENTS_DIR/.." && pwd )"
+PROJECT_DIR="$( cd "$APP_BUNDLE_DIR/.." && pwd )"
+
+if [ -f "$PROJECT_DIR/server/index.js" ]; then
+  # Estamos na máquina onde o servidor está instalado (SSD Interno)
+  if ! lsof -i :8080 >/dev/null 2>&1; then
+    cd "$PROJECT_DIR/server"
+    nohup /usr/bin/caffeinate -dimsu node "$PROJECT_DIR/server/index.js" >> "$PROJECT_DIR/server/server.log" 2>&1 &
+    sleep 2
+  fi
+  open "http://localhost:8080/admin"
+else
+  # Estamos em outro computador usando apenas o .app portátil como Controle Remoto
+  EMBEDDED_HTML="$CONTENTS_DIR/Resources/Painel-Servidor-KidsLearnCode.html"
+  if [ -f "$EMBEDDED_HTML" ]; then
+    open "$EMBEDDED_HTML"
+  fi
+fi

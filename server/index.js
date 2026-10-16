@@ -1,7 +1,9 @@
 /**
  * server/index.js
- * Servidor Dedicado KidsLearnCode - MMORPG + Auth + REST API + Admin GUI
- * Executa nativamente no Mac mini Intel (macOS Sequoia)
+ * Servidor Dedicado KidsLearnCode - MMORPG + Banco Embutido Nativo + Controle Remoto Total
+ * - Zero PostgreSQL (Banco Nativo Particionado com Gravação Atômica em server/data/)
+ * - Zero Supabase (Saves, Auth, Roupas, Ovos, Itens e Dragões 100% locais e ilimitados)
+ * - Zero Cloudflare / Zero DuckDNS (NetworkBridge Nativa com Auto-Descoberta)
  */
 
 import express from 'express';
@@ -12,31 +14,55 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 
 import { Database } from './db.js';
 import { Mailer } from './mailer.js';
+import { NetworkBridge } from './network-bridge.js';
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(__dirname, '..');
 
-const PORT = process.env.PORT || 8080;
+const PORT = Number(process.env.PORT || 8080);
 const JWT_SECRET = process.env.JWT_SECRET || 'kidslearn_super_secret_jwt_key_2026';
-const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
-const db = new Database({
-  DB_HOST: process.env.DB_HOST || '127.0.0.1',
-  DB_PORT: process.env.DB_PORT || 5432,
-  DB_NAME: process.env.DB_NAME || 'kidslearncode',
-  DB_USER: process.env.DB_USER || 'kidsadmin',
-  DB_PASSWORD: process.env.DB_PASSWORD || 'kidslearn_seguro_local'
+// Ring buffer de logs em memória para o Terminal ao Vivo do Painel Remoto
+const serverLogs = [];
+function addServerLog(msg, level = 'INFO') {
+  const entry = {
+    time: new Date().toISOString(),
+    level,
+    message: String(msg)
+  };
+  serverLogs.push(entry);
+  if (serverLogs.length > 200) serverLogs.shift();
+  console.log(`[${entry.time.slice(11, 19)}] [${level}] ${entry.message}`);
+}
+
+// Inicializa o Banco de Dados Próprio Embutido (Zero PostgreSQL)
+const db = new Database();
+addServerLog(`Banco de Dados Nativo inicializado (${db.state.profiles.length} contas, ${db.state.game_saves.length} saves).`, 'DB');
+
+// Estado do Motor do Jogo (Blindagem 1: Permite desligar/pausar o jogo mantendo o painel remoto vivo)
+let gameServerState = 'online'; // 'online' | 'paused'
+
+// Inicializa a Ponte de Rede Automática (Sem Cloudflare / Sem DuckDNS)
+const networkBridge = new NetworkBridge({
+  port: PORT,
+  subdomain: process.env.TUNNEL_SUBDOMAIN || 'kidslearncode-mmorpg',
+  onLog: (msg) => addServerLog(msg, 'NETWORK'),
+  onUrlChanged: (newUrl) => {
+    mailer.publicUrl = newUrl;
+  }
 });
 
 const mailer = new Mailer({
@@ -47,16 +73,23 @@ const mailer = new Mailer({
   SMTP_USER: process.env.SMTP_USER,
   SMTP_PASS: process.env.SMTP_PASS,
   SMTP_FROM: process.env.SMTP_FROM,
-  PUBLIC_URL
+  PUBLIC_URL: networkBridge.getActiveUrl()
 });
 
-// Middleware
-app.use(cors());
-app.use(express.json({ limit: '20mb' }));
-app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+// Middleware CORS amplo (suporta header Bypass-Tunnel-Reminder e acesso de qualquer arquivo .html ou .app)
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Bypass-Tunnel-Reminder', 'X-Admin-Key']
+}));
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
-// Servir arquivos estáticos do Admin GUI
+// Servir arquivos estáticos do Admin GUI e do Jogo
 app.use('/admin', express.static(path.join(__dirname, 'admin')));
+app.get('/live-server.json', (req, res) => {
+  res.json(networkBridge.getStatusPayload());
+});
 
 // Map de jogadores conectados via WebSocket
 const activePlayers = new Map();
@@ -81,11 +114,14 @@ function authenticateToken(req, res, next) {
 app.use(authenticateToken);
 
 // ==========================================
-// 1. ROTAS DE AUTENTICAÇÃO (Auth)
+// 1. ROTAS DE AUTENTICAÇÃO (Auth Nativa)
 // ==========================================
 
-// Cadastro de novo usuário
 app.post('/api/auth/signup', async (req, res) => {
+  if (gameServerState === 'paused') {
+    return res.status(503).json({ error: 'O servidor do jogo está em manutenção no momento. Tente novamente em instantes!' });
+  }
+
   const { email, password, nickname, isOver18, parentEmail } = req.body;
 
   if (!email || !password || password.length < 6) {
@@ -97,45 +133,42 @@ app.post('/api/auth/signup', async (req, res) => {
   const isMinor = isOver18 === false;
 
   try {
-    const existing = await db.query('SELECT id FROM auth_users WHERE LOWER(email) = $1', [cleanEmail]);
-    if (existing.rows.length > 0) {
+    const existing = db.getUserByEmail(cleanEmail);
+    if (existing) {
       return res.status(400).json({ error: 'Este e-mail já está cadastrado na Ilha Lua!' });
     }
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
     const confirmationToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
-    const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+    const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    // Inserção do usuário
-    const userRes = await db.query(
-      `INSERT INTO auth_users (email, password_hash, email_confirmed, confirmation_token, confirmation_token_expires_at, is_minor, parent_email)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, email_confirmed, role, created_at`,
-      [cleanEmail, passwordHash, !mailer.enabled, confirmationToken, tokenExpires, isMinor, parentEmail || null]
-    );
+    const { user: newUser, profile } = db.createUser({
+      email: cleanEmail,
+      passwordHash,
+      emailConfirmed: !mailer.enabled,
+      confirmationToken,
+      tokenExpires,
+      isMinor,
+      parentEmail: parentEmail || null,
+      nickname: cleanNickname,
+      role: 'player'
+    });
 
-    const newUser = userRes.rows[0];
+    addServerLog(`Novo jogador cadastrado: ${cleanNickname} (${cleanEmail})`, 'AUTH');
 
-    // Criação do perfil inicial
-    await db.query(
-      `INSERT INTO profiles (id, nickname, hero_id, level, xp, gold)
-       VALUES ($1, $2, 'char_wolf_hunter_m', 1, 0, 100)`,
-      [newUser.id, cleanNickname]
-    );
-
-    // Se SMTP estiver desativado, conta já nasce ativa
     if (!mailer.enabled) {
-      const token = jwt.sign({ id: newUser.id, email: newUser.email, role: newUser.role }, JWT_SECRET, { expiresIn: '7d' });
+      const token = jwt.sign({ id: newUser.id, email: newUser.email, role: newUser.role }, JWT_SECRET, { expiresIn: '30d' });
       return res.json({
         success: true,
-        user: newUser,
+        user: { id: newUser.id, email: newUser.email, role: newUser.role, nickname: profile.nickname },
+        profile,
         token,
         requiresConfirmation: false,
         message: 'Conta criada com sucesso!'
       });
     }
 
-    // Dispara e-mail de ativação via SMTP
     await mailer.sendConfirmationEmail({
       email: cleanEmail,
       token: confirmationToken,
@@ -146,50 +179,71 @@ app.post('/api/auth/signup', async (req, res) => {
 
     res.json({
       success: true,
-      user: newUser,
+      user: { id: newUser.id, email: newUser.email, role: newUser.role, nickname: profile.nickname },
       requiresConfirmation: true,
-      message: isMinor 
+      message: isMinor
         ? `Enviamos a autorização para o responsável em ${parentEmail}. Liberem o acesso clicando no link!`
         : `Enviamos um e-mail de confirmação para ${cleanEmail}. Confirme para entrar!`
     });
   } catch (err) {
-    console.error('[API Auth] Erro no cadastro:', err);
+    addServerLog(`Erro no cadastro: ${err.message}`, 'ERROR');
     res.status(500).json({ error: 'Erro interno no servidor ao cadastrar.' });
   }
 });
 
-// Login
 app.post('/api/auth/signin', async (req, res) => {
+  if (gameServerState === 'paused') {
+    return res.status(503).json({ error: 'O servidor do jogo está pausado para manutenção pelo Administrador.' });
+  }
+
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Informe e-mail e senha.' });
   }
 
-  const cleanEmail = email.toLowerCase().trim();
+  const cleanInput = email.toLowerCase().trim();
 
   try {
-    const userRes = await db.query('SELECT * FROM auth_users WHERE LOWER(email) = $1', [cleanEmail]);
-    if (userRes.rows.length === 0) {
+    // Permite login tanto pelo e-mail completo quanto pelo nickname (ex: "Rennan" ou "duda")
+    let user = db.getUserByEmail(cleanInput);
+    if (!user) {
+      const profByNick = db.state.profiles.find(p => p.nickname.toLowerCase() === cleanInput);
+      if (profByNick) {
+        user = db.getUserById(profByNick.id);
+      }
+    }
+
+    if (!user) {
       return res.status(400).json({ error: 'E-mail ou senha incorretos.' });
     }
 
-    const user = userRes.rows[0];
-    const match = await bcrypt.compare(password, user.password_hash);
+    let match = false;
+    if (user.password_hash && user.password_hash.startsWith('$2b$10$defaultPlaceholder')) {
+      // Se for conta migrada com hash placeholder, aceita a primeira senha digitada (>= 6 chars) e já grava o hash seguro!
+      if (password.length >= 6) {
+        const salt = await bcrypt.genSalt(10);
+        const newHash = await bcrypt.hash(password, salt);
+        db.updateUser(user.id, { password_hash: newHash });
+        match = true;
+      }
+    } else {
+      match = await bcrypt.compare(password, user.password_hash);
+    }
+
     if (!match) {
       return res.status(400).json({ error: 'E-mail ou senha incorretos.' });
     }
 
     if (!user.email_confirmed) {
       return res.status(403).json({
-        error: 'Este e-mail ainda não foi confirmado. Acesse sua caixa de entrada ou contate o administrador.'
+        error: 'Este e-mail ainda não foi confirmado. Acesse sua caixa de entrada ou ative pelo Painel do Servidor.'
       });
     }
 
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '30d' });
+    const profile = db.getProfile(user.id);
 
-    // Busca dados de perfil
-    const profRes = await db.query('SELECT * FROM profiles WHERE id = $1', [user.id]);
-    const profile = profRes.rows[0] || null;
+    addServerLog(`Login realizado: ${profile?.nickname || user.email}`, 'AUTH');
 
     res.json({
       success: true,
@@ -197,17 +251,17 @@ app.post('/api/auth/signin', async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        role: user.role
+        role: user.role,
+        nickname: profile?.nickname || 'Aventureiro'
       },
       profile
     });
   } catch (err) {
-    console.error('[API Auth] Erro no login:', err);
+    addServerLog(`Erro no login: ${err.message}`, 'ERROR');
     res.status(500).json({ error: 'Erro interno no servidor.' });
   }
 });
 
-// Confirmação de E-mail via link GET
 app.get('/api/auth/confirm-email', async (req, res) => {
   const { token } = req.query;
   if (!token) return res.status(400).send('Token inválido.');
@@ -230,19 +284,13 @@ app.get('/api/auth/confirm-email', async (req, res) => {
     }
 
     const user = userRes.rows[0];
-    await db.query(
-      'UPDATE auth_users SET email_confirmed = TRUE, confirmation_token = NULL WHERE id = $1',
-      [user.id]
-    );
+    db.updateUser(user.id, { email_confirmed: true, confirmation_token: null });
 
     res.send(`
       <body style="font-family: 'Nunito', sans-serif; text-align: center; padding: 40px; background: #f8f8f0; color: #794f27;">
         <div style="max-width: 500px; margin: 0 auto; background: #fdfbf7; border: 2px solid #19c8b9; border-radius: 20px; padding: 30px; box-shadow: 0 4px 0 #0f8e83;">
           <h2 style="color: #0f8e83;">Conta Confirmada com Sucesso!</h2>
           <p>Sua jornada na Ilha Lua está liberada. Você já pode retornar ao jogo e fazer login!</p>
-          <div style="margin-top: 24px;">
-            <a href="https://kids-learn-code.vercel.app" style="background: #19c8b9; color: white; padding: 12px 28px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 0 #0f8e83;">Ir para o Jogo</a>
-          </div>
         </div>
       </body>
     `);
@@ -251,12 +299,9 @@ app.get('/api/auth/confirm-email', async (req, res) => {
   }
 });
 
-// Página Web Interativa de Redefinição de Senha
 app.get('/api/auth/reset-password', async (req, res) => {
   const { token } = req.query;
-  if (!token) {
-    return res.status(400).send('Token de recuperação ausente.');
-  }
+  if (!token) return res.status(400).send('Token de recuperação ausente.');
 
   try {
     const userRes = await db.query(
@@ -270,9 +315,6 @@ app.get('/api/auth/reset-password', async (req, res) => {
           <div style="max-width: 500px; margin: 0 auto; background: #fdfbf7; border: 2px solid #ea580c; border-radius: 20px; padding: 30px; box-shadow: 0 4px 0 #9a3412;">
             <h2>Link expirado ou inválido</h2>
             <p>Este link de redefinição de senha já foi utilizado ou ultrapassou a validade de 1 hora.</p>
-            <div style="margin-top: 20px;">
-              <a href="https://kids-learn-code.vercel.app" style="background: #7a583e; color: white; padding: 10px 24px; border-radius: 50px; text-decoration: none; font-weight: bold;">Voltar ao Jogo</a>
-            </div>
           </div>
         </body>
       `);
@@ -297,7 +339,7 @@ app.get('/api/auth/reset-password', async (req, res) => {
           label { display: block; font-size: 14px; font-weight: 800; margin-bottom: 8px; color: #725d42; }
           input { width: 100%; padding: 14px 18px; border: 2px solid #c4b89e; border-radius: 50px; font-size: 15px; font-family: inherit; background: #ffffff; color: #794f27; outline: none; }
           input:focus { border-color: #19c8b9; }
-          .btn { width: 100%; margin-top: 24px; padding: 14px 20px; background: #19c8b9; color: white; border: none; border-radius: 50px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 0 #0f8e83; transition: transform 0.1s, box-shadow 0.1s; }
+          .btn { width: 100%; margin-top: 24px; padding: 14px 20px; background: #19c8b9; color: white; border: none; border-radius: 50px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 0 #0f8e83; }
           .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #0f8e83; }
           .alert { display: none; padding: 12px 16px; border-radius: 12px; margin-top: 16px; font-size: 14px; text-align: center; }
           .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
@@ -321,14 +363,12 @@ app.get('/api/auth/reset-password', async (req, res) => {
             <button class="btn" id="btn-submit" onclick="submitPassword()">Salvar Nova Senha</button>
           </div>
         </div>
-
         <script>
           async function submitPassword() {
             const pass = document.getElementById('newPass').value;
             const confirm = document.getElementById('confirmPass').value;
             const alertBox = document.getElementById('alert-box');
             const btn = document.getElementById('btn-submit');
-
             if (!pass || pass.length < 6) {
               alertBox.className = 'alert alert-error';
               alertBox.style.display = 'block';
@@ -341,10 +381,8 @@ app.get('/api/auth/reset-password', async (req, res) => {
               alertBox.innerText = 'As duas senhas não coincidem.';
               return;
             }
-
             btn.disabled = true;
             btn.innerText = 'Salvando...';
-
             try {
               const res = await fetch('/api/auth/update-password', {
                 method: 'POST',
@@ -356,7 +394,7 @@ app.get('/api/auth/reset-password', async (req, res) => {
                 alertBox.className = 'alert alert-success';
                 alertBox.style.display = 'block';
                 alertBox.innerText = data.message || 'Senha alterada com sucesso!';
-                document.getElementById('form-content').innerHTML = '<div style="text-align: center; margin-top: 24px;"><a href="https://kids-learn-code.vercel.app" class="btn" style="display: inline-block; text-decoration: none;">Ir para o Jogo e Entrar</a></div>';
+                document.getElementById('form-content').innerHTML = '';
               } else {
                 alertBox.className = 'alert alert-error';
                 alertBox.style.display = 'block';
@@ -381,56 +419,48 @@ app.get('/api/auth/reset-password', async (req, res) => {
   }
 });
 
-// Solicitar Redefinição de Senha
 app.post('/api/auth/forgot-password', async (req, res) => {
   const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Informe seu e-mail.' });
+  if (!email) return res.status(400).json({ error: 'Informe seu e-mail ou nickname.' });
 
-  const cleanEmail = email.toLowerCase().trim();
+  const cleanInput = email.toLowerCase().trim();
 
   try {
-    const userRes = await db.query('SELECT id, email FROM auth_users WHERE LOWER(email) = $1', [cleanEmail]);
-    if (userRes.rows.length === 0) {
-      // Retorna sucesso por segurança para evitar enumeração de emails
-      return res.json({ success: true, message: 'Se o e-mail existir, você receberá as instruções de recuperação!' });
+    let user = db.getUserByEmail(cleanInput);
+    if (!user) {
+      const profByNick = db.state.profiles.find(p => p.nickname.toLowerCase() === cleanInput);
+      if (profByNick) user = db.getUserById(profByNick.id);
     }
 
-    const user = userRes.rows[0];
+    if (!user) {
+      return res.json({ success: true, message: 'Se a conta existir, o link de recuperação foi gerado!' });
+    }
+
     const resetToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
-    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1h
+    const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
-    await db.query(
-      'UPDATE auth_users SET reset_token = $1, reset_token_expires_at = $2 WHERE id = $3',
-      [resetToken, expires, user.id]
-    );
+    db.updateUser(user.id, { reset_token: resetToken, reset_token_expires_at: expires });
 
-    const prof = await db.query('SELECT nickname FROM profiles WHERE id = $1', [user.id]);
-    const nickname = prof.rows[0]?.nickname || 'Aventureiro';
-
-    // Determina a URL base pública ativa (túnel atual ou DuckDNS)
-    const activePublicUrl = mailer.publicUrl || 'https://aerial-fee-dates-registration.trycloudflare.com';
+    const prof = db.getProfile(user.id);
+    const nickname = prof?.nickname || 'Aventureiro';
+    const activePublicUrl = networkBridge.getActiveUrl();
     const resetLink = `${activePublicUrl}/api/auth/reset-password?token=${resetToken}`;
 
-    const dispatchRes = await mailer.sendPasswordResetEmail({ email: cleanEmail, token: resetToken, nickname });
+    const dispatchRes = await mailer.sendPasswordResetEmail({ email: user.email, token: resetToken, nickname });
 
-    // Se o SMTP estiver desativado ou falhar no envio externo, retorna o link de recuperação diretamente no payload
-    const responsePayload = {
+    res.json({
       success: true,
       message: dispatchRes.simulated
         ? 'Link de recuperação gerado com sucesso!'
-        : 'Instruções de recuperação foram enviadas ao seu e-mail!',
+        : 'Instruções de recuperação enviadas!',
       simulated: !!dispatchRes.simulated,
       resetLink
-    };
-
-    res.json(responsePayload);
+    });
   } catch (err) {
-    console.error('[API Auth] Erro no forgot-password:', err);
     res.status(500).json({ error: 'Erro ao processar recuperação de senha.' });
   }
 });
 
-// Atualizar Senha (com usuário autenticado ou via token)
 app.post('/api/auth/update-password', async (req, res) => {
   const { newPassword, token } = req.body;
   if (!newPassword || newPassword.length < 6) {
@@ -439,8 +469,6 @@ app.post('/api/auth/update-password', async (req, res) => {
 
   try {
     let userId = req.user?.id;
-
-    // Se veio token de recuperação
     if (!userId && token) {
       const userRes = await db.query(
         'SELECT id FROM auth_users WHERE reset_token = $1 AND reset_token_expires_at > NOW()',
@@ -459,14 +487,15 @@ app.post('/api/auth/update-password', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(newPassword, salt);
 
-    await db.query(
-      'UPDATE auth_users SET password_hash = $1, reset_token = NULL, reset_token_expires_at = NULL, updated_at = NOW() WHERE id = $2',
-      [passwordHash, userId]
-    );
+    db.updateUser(userId, {
+      password_hash: passwordHash,
+      reset_token: null,
+      reset_token_expires_at: null
+    });
 
+    addServerLog(`Senha atualizada para usuário ID ${userId}`, 'AUTH');
     res.json({ success: true, message: 'Sua senha foi redefinida com sucesso!' });
   } catch (err) {
-    console.error('[API Auth] Erro ao atualizar senha:', err);
     res.status(500).json({ error: 'Erro interno ao redefinir a senha.' });
   }
 });
@@ -475,85 +504,50 @@ app.post('/api/auth/update-password', async (req, res) => {
 // 2. ROTAS DE DADOS DO JOGO (Profiles & Saves)
 // ==========================================
 
-// Obter / Salvar Perfil do Jogador
-app.get('/api/profiles/me', async (req, res) => {
+app.get('/api/profiles/me', (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Não autenticado' });
-
-  try {
-    const data = await db.query('SELECT * FROM profiles WHERE id = $1', [req.user.id]);
-    res.json(data.rows[0] || null);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  const profile = db.getProfile(req.user.id);
+  res.json(profile || null);
 });
 
-app.post('/api/profiles/sync', async (req, res) => {
+app.post('/api/profiles/sync', (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Não autenticado' });
   const { nickname, heroId, x, y, level, xp, gold } = req.body;
-
   try {
-    const result = await db.query(
-      `INSERT INTO profiles (id, nickname, hero_id, x, y, level, xp, gold, last_online)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
-       ON CONFLICT (id) DO UPDATE SET
-         nickname = COALESCE($2, profiles.nickname),
-         hero_id = COALESCE($3, profiles.hero_id),
-         x = COALESCE($4, profiles.x),
-         y = COALESCE($5, profiles.y),
-         level = COALESCE($6, profiles.level),
-         xp = COALESCE($7, profiles.xp),
-         gold = COALESCE($8, profiles.gold),
-         last_online = NOW()
-       RETURNING *`,
-      [req.user.id, nickname, heroId, x || 320, y || 320, level || 1, xp || 0, gold || 100]
-    );
-
-    res.json(result.rows[0]);
+    const updated = db.upsertProfile(req.user.id, { nickname, heroId, x, y, level, xp, gold });
+    res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Salvar / Carregar Game Save Unificado
-app.post('/api/saves', async (req, res) => {
+app.post('/api/saves', (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Não autenticado' });
   const { map, player, inventory, dragons, codingProgress, customAvatar, activeHero } = req.body;
 
   try {
-    await db.query(
-      `INSERT INTO game_saves (user_id, map_data, player_data, inventory_data, dragons_data, coding_progress, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW())
-       ON CONFLICT (user_id) DO UPDATE SET
-         map_data = EXCLUDED.map_data,
-         player_data = EXCLUDED.player_data,
-         inventory_data = EXCLUDED.inventory_data,
-         dragons_data = EXCLUDED.dragons_data,
-         coding_progress = EXCLUDED.coding_progress,
-         updated_at = NOW()`,
-      [
-        req.user.id,
-        map || {},
-        { ...(player || {}), customAvatar: customAvatar || player?.customAvatar || null, activeHero: activeHero || player?.activeHero || null },
-        inventory || {},
-        dragons || {},
-        codingProgress || {}
-      ]
-    );
-
+    db.upsertGameSave(req.user.id, {
+      map,
+      player,
+      inventory,
+      dragons,
+      codingProgress,
+      customAvatar,
+      activeHero
+    });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.get('/api/saves/me', async (req, res) => {
+app.get('/api/saves/me', (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Não autenticado' });
 
   try {
-    const result = await db.query('SELECT * FROM game_saves WHERE user_id = $1', [req.user.id]);
-    if (result.rows.length === 0) return res.json(null);
+    const row = db.getGameSave(req.user.id);
+    if (!row) return res.json(null);
 
-    const row = result.rows[0];
     const playerData = row.player_data || {};
     res.json({
       id: row.id,
@@ -571,53 +565,35 @@ app.get('/api/saves/me', async (req, res) => {
   }
 });
 
-// Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
-    server: 'KidsLearnCode Native Dedicated Mac mini',
+    gameState: gameServerState,
+    server: 'KidsLearnCode Native Dedicated Server (Zero-Postgres / Zero-Cloudflare)',
     playersOnline: activePlayers.size,
     uptimeSeconds: Math.floor((Date.now() - startTime) / 1000),
+    network: networkBridge.getStatusPayload(),
     timestamp: Date.now()
   });
 });
 
-// Mapa Global Compartilhado Mais Recente
-app.get('/api/world/global-map', async (req, res) => {
+app.get('/api/world/global-map', (req, res) => {
   try {
-    const result = await db.query(
-      `SELECT map_data, updated_at FROM game_saves 
-       WHERE map_data IS NOT NULL AND map_data::text != '{}' 
-       ORDER BY updated_at DESC LIMIT 1`
-    );
-
-    if (result.rows.length === 0) return res.json(null);
-
-    res.json({
-      map: result.rows[0].map_data,
-      updatedAt: new Date(result.rows[0].updated_at).getTime()
-    });
+    const globalMap = db.getGlobalMap();
+    res.json(globalMap);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Salvar Mapa Global Compartilhado
-app.post('/api/world/global-map', async (req, res) => {
+app.post('/api/world/global-map', (req, res) => {
   const { map } = req.body;
   if (!map) return res.status(400).json({ error: 'Dados do mapa ausentes' });
 
   const userId = req.user?.id || '00000000-0000-0000-0000-000000000001';
 
   try {
-    await db.query(
-      `INSERT INTO game_saves (user_id, map_data, updated_at)
-       VALUES ($1, $2, NOW())
-       ON CONFLICT (user_id) DO UPDATE SET
-         map_data = EXCLUDED.map_data,
-         updated_at = NOW()`,
-      [userId, map]
-    );
+    db.saveGlobalMap(map, userId);
 
     const broadcast = JSON.stringify({
       type: 'MAP_BROADCAST',
@@ -632,6 +608,7 @@ app.post('/api/world/global-map', async (req, res) => {
       }
     }
 
+    addServerLog(`Mapa Global atualizado por ${userId}`, 'WORLD');
     res.json({ success: true, message: 'Mapa global salvo com sucesso!' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -639,66 +616,235 @@ app.post('/api/world/global-map', async (req, res) => {
 });
 
 // ==========================================
-// 3. ROTAS DO PAINEL ADMINISTRATIVO (GUI)
+// 3. PAINEL DE CONTROLE REMOTO & DATABASE STUDIO
 // ==========================================
 
-app.get('/api/admin/stats', async (req, res) => {
+app.get('/api/admin/stats', (req, res) => {
+  const uptimeMinutes = Math.floor((Date.now() - startTime) / 60000);
+  const mem = process.memoryUsage();
+  const ramMB = Math.round(mem.rss / 1024 / 1024);
+
+  res.json({
+    success: true,
+    gameState: gameServerState,
+    playersOnline: activePlayers.size,
+    activePlayersList: Array.from(activePlayers.values()),
+    profilesCount: db.state.profiles.length,
+    savesCount: db.state.game_saves.length,
+    backupsCount: db.state.server_backups.length,
+    memoryUsage: `${ramMB} MB`,
+    uptime: `${uptimeMinutes} min`,
+    uptimeSeconds: Math.floor((Date.now() - startTime) / 1000),
+    network: networkBridge.getStatusPayload()
+  });
+});
+
+// Visão Completa do Banco de Dados (Contas, Roupas, Ovos, Itens, Dragões, Mapa e Backups)
+app.get('/api/admin/db/overview', (req, res) => {
   try {
-    const usersCountRes = await db.query('SELECT count(*) FROM profiles');
-    const uptimeMinutes = Math.floor((Date.now() - startTime) / 60000);
-    const mem = process.memoryUsage();
-    const ramMB = Math.round(mem.rss / 1024 / 1024);
+    const users = db.getAllUsersDetailed();
+    const mapInfo = db.getGlobalMap();
+    const layerCounts = {};
+    if (mapInfo?.map?.layers) {
+      for (const [k, v] of Object.entries(mapInfo.map.layers)) {
+        layerCounts[k] = v ? Object.keys(v).length : 0;
+      }
+    }
 
     res.json({
       success: true,
-      playersOnline: activePlayers.size,
-      profilesCount: parseInt(usersCountRes.rows[0]?.count || '0', 10),
-      memoryUsage: `${ramMB} MB`,
-      uptime: `${uptimeMinutes} min`
+      gameState: gameServerState,
+      network: networkBridge.getStatusPayload(),
+      users,
+      onlinePlayers: Array.from(activePlayers.values()),
+      backups: db.state.server_backups.slice(0, 30),
+      globalMapSummary: {
+        updatedAt: mapInfo?.updatedAt || null,
+        spawnPoint: mapInfo?.map?.spawnPoint || { x: 320, y: 320 },
+        layerCounts
+      }
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-app.get('/api/admin/users', async (req, res) => {
+// Editar Conta + Perfil + Save (Roupas, Ovos, Itens, Dragões, Ouro, XP, Senha)
+app.post('/api/admin/db/user-save', async (req, res) => {
+  const { userId, payload } = req.body;
+  if (!userId || !payload) {
+    return res.status(400).json({ error: 'userId e payload são obrigatórios.' });
+  }
+
   try {
-    const result = await db.query(
-      `SELECT p.id, p.nickname, p.hero_id, p.x, p.y,
-              COALESCE((s.coding_progress->>'playerXP')::int / 200 + 1, p.level) AS level,
-              COALESCE((s.coding_progress->>'playerGold')::int, p.gold) AS gold,
-              COALESCE((s.coding_progress->>'playerXP')::int, p.xp) AS xp,
-              p.last_online,
-              u.email, u.email_confirmed, u.is_minor, u.role
-       FROM profiles p
-       JOIN auth_users u ON u.id = p.id
-       LEFT JOIN game_saves s ON s.user_id = p.id
-       ORDER BY p.last_online DESC LIMIT 50`
-    );
-    res.json(result.rows);
+    const updatedUser = await db.adminUpdateUserAndSave(userId, payload);
+    addServerLog(`Dados do jogador "${updatedUser.nickname}" atualizados pelo Painel Admin.`, 'ADMIN');
+    res.json({
+      success: true,
+      message: `Dados de ${updatedUser.nickname} salvos no banco com sucesso!`,
+      user: updatedUser
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.get('/api/admin/saves', async (req, res) => {
+// Criar nova conta diretamente pelo Painel Admin
+app.post('/api/admin/db/create-user', async (req, res) => {
+  const { email, password, nickname, role, gold, xp } = req.body;
+  if (!email || !password || password.length < 6) {
+    return res.status(400).json({ error: 'Informe um e-mail válido e senha com no mínimo 6 caracteres.' });
+  }
+
   try {
-    const result = await db.query(
-      `SELECT s.id, s.user_id, s.updated_at, p.nickname
-       FROM game_saves s
-       LEFT JOIN profiles p ON p.id = s.user_id
-       ORDER BY s.updated_at DESC LIMIT 50`
-    );
-    res.json(result.rows);
+    if (db.getUserByEmail(email)) {
+      return res.status(400).json({ error: 'Este e-mail já existe no banco de dados.' });
+    }
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+    const created = db.createUser({
+      email,
+      passwordHash,
+      emailConfirmed: true,
+      nickname: nickname || 'Aventureiro',
+      role: role || 'player'
+    });
+
+    if (gold !== undefined || xp !== undefined) {
+      await db.adminUpdateUserAndSave(created.user.id, {
+        gold: Number(gold ?? 100),
+        xp: Number(xp ?? 0)
+      });
+    }
+
+    addServerLog(`Nova conta criada via Admin: ${nickname} (${email})`, 'ADMIN');
+    res.json({ success: true, message: 'Jogador criado com sucesso!', user: created.user });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// Excluir conta pelo Painel Admin
+app.delete('/api/admin/db/user/:id', (req, res) => {
+  const { id } = req.params;
+  try {
+    db.adminDeleteUser(id);
+    addServerLog(`Conta ID ${id} removida pelo Administrador.`, 'ADMIN');
+    res.json({ success: true, message: 'Conta removida do banco de dados.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Controle Remoto do Servidor (Blindagem 1: Ligar, Pausar/Desligar Jogo, Reiniciar)
+app.post('/api/admin/server/control', (req, res) => {
+  const { action } = req.body;
+
+  if (action === 'pause' || action === 'stop') {
+    gameServerState = 'paused';
+    // Desconecta os jogadores do jogo mantendo o servidor Admin vivo
+    const pauseMsg = JSON.stringify({
+      type: 'SERVER_MAINTENANCE',
+      message: 'O servidor entrou em modo de manutenção. Seu progresso foi salvo!'
+    });
+    for (const client of wss.clients) {
+      if (client.readyState === WebSocket.OPEN) {
+        try {
+          client.send(pauseMsg);
+          client.close();
+        } catch (_) {}
+      }
+    }
+    activePlayers.clear();
+    addServerLog('Motor do Jogo PAUSADO remotamente pelo Administrador (Painel continua online).', 'CONTROL');
+    return res.json({
+      success: true,
+      gameState: gameServerState,
+      message: 'Servidor do jogo desligado/pausado! O Painel de Controle continua ativo para quando quiser religar.'
+    });
+  }
+
+  if (action === 'start' || action === 'resume') {
+    gameServerState = 'online';
+    addServerLog('Motor do Jogo LIGADO remotamente pelo Administrador!', 'CONTROL');
+    return res.json({
+      success: true,
+      gameState: gameServerState,
+      message: 'Servidor do jogo ligado e aceitando conexões!'
+    });
+  }
+
+  if (action === 'restart') {
+    gameServerState = 'online';
+    db.createBackup('pre_restart');
+    networkBridge.stop();
+    setTimeout(() => networkBridge.start(), 800);
+    addServerLog('Servidor e Ponte de Rede reiniciados remotamente pelo Administrador.', 'CONTROL');
+    return res.json({
+      success: true,
+      gameState: gameServerState,
+      message: 'Servidor e conexões de rede reiniciados com sucesso!'
+    });
+  }
+
+  res.status(400).json({ error: 'Ação inválida. Use start, stop ou restart.' });
+});
+
+// Atualização Remota de Código via GitHub (Blindagem 6: Git Pull seguro sem perder o banco)
+app.post('/api/admin/server/git-pull', (req, res) => {
+  try {
+    addServerLog('Iniciando atualização remota de código (Git Pull)...', 'DEPLOY');
+    // 1. Faz backup de segurança antes de atualizar
+    const backupRes = db.createBackup('pre_git_update');
+
+    // 2. Executa git fetch e git reset preservando server/data/ (que está no .gitignore)
+    execSync('git fetch origin main', { cwd: projectRoot, timeout: 20000 });
+    const pullOutput = execSync('git reset --hard origin/main', {
+      cwd: projectRoot,
+      encoding: 'utf-8',
+      timeout: 20000
+    }).trim();
+
+    addServerLog(`Código atualizado com sucesso: ${pullOutput}`, 'DEPLOY');
+
+    res.json({
+      success: true,
+      message: 'Atualização remota aplicada com sucesso! Backup preventivo criado.',
+      gitOutput: pullOutput,
+      backupFilename: backupRes.filename
+    });
+  } catch (err) {
+    addServerLog(`Falha no Git Pull remoto: ${err.message}`, 'ERROR');
+    res.status(500).json({ error: 'Erro ao puxar atualização do GitHub: ' + err.message });
+  }
+});
+
+// Logs em Tempo Real
+app.get('/api/admin/logs', (req, res) => {
+  res.json({
+    success: true,
+    gameState: gameServerState,
+    network: networkBridge.getStatusPayload(),
+    logs: serverLogs.slice(-100)
+  });
+});
+
+// Rotas Legadas Admin
+app.get('/api/admin/users', (req, res) => {
+  res.json(db.getAllUsersDetailed());
+});
+
+app.get('/api/admin/saves', (req, res) => {
+  const rows = db.state.game_saves.map(s => {
+    const p = db.getProfile(s.user_id);
+    return { ...s, nickname: p?.nickname || 'Aventureiro' };
+  });
+  res.json(rows);
 });
 
 app.post('/api/admin/query', async (req, res) => {
   const { query } = req.body;
   if (!query) return res.status(400).json({ error: 'Query vazia' });
-
   try {
     const result = await db.query(query);
     res.json({ rows: result.rows, rowCount: result.rowCount });
@@ -707,188 +853,85 @@ app.post('/api/admin/query', async (req, res) => {
   }
 });
 
-app.post('/api/admin/confirm-user', async (req, res) => {
+app.post('/api/admin/confirm-user', (req, res) => {
   const { id } = req.body;
-  try {
-    await db.query('UPDATE auth_users SET email_confirmed = TRUE, confirmation_token = NULL WHERE id = $1', [id]);
-    res.json({ success: true, message: 'Conta ativada com sucesso!' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  db.updateUser(id, { email_confirmed: true, confirmation_token: null });
+  res.json({ success: true, message: 'Conta ativada com sucesso!' });
 });
 
-app.post('/api/admin/import-supabase', async (req, res) => {
+app.post('/api/admin/import-supabase', (req, res) => {
   try {
-    const sqlPath = path.join(__dirname, 'db/migrations/supabase_migration.sql');
-    if (!fs.existsSync(sqlPath)) {
-      return res.status(404).json({ error: 'Arquivo de migração não encontrado.' });
-    }
-    const sql = fs.readFileSync(sqlPath, 'utf-8');
-    await db.query(sql);
-    res.json({ success: true, message: 'Dados do Supabase reimportados com sucesso!' });
+    db.bootstrapFromMigrations();
+    res.json({ success: true, message: 'Dados do backup original reimportados com sucesso!' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // ==========================================
-// 3.1 SISTEMA DE BACKUPS AUTOMÁTICOS DO BANCO
+// 3.1 GESTÃO DE BACKUPS AUTOMÁTICOS E MANUAIS
 // ==========================================
 
-const BACKUP_DIR = path.join(__dirname, 'db', 'backups');
-if (!fs.existsSync(BACKUP_DIR)) {
-  fs.mkdirSync(BACKUP_DIR, { recursive: true });
-}
-
-async function performFullBackup(createdBy = 'auto') {
-  try {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `backup_kidslearn_${timestamp}.json`;
-    const filePath = path.join(BACKUP_DIR, filename);
-
-    // Exporta todas as tabelas essenciais para um snapshot JSON atômico
-    const users = await db.query('SELECT id, email, email_confirmed, role, is_minor, parent_email, created_at FROM auth_users');
-    const profiles = await db.query('SELECT * FROM profiles');
-    const saves = await db.query('SELECT * FROM game_saves');
-    const messages = await db.query('SELECT * FROM chat_messages ORDER BY created_at DESC LIMIT 200');
-
-    const backupPayload = {
-      version: '1.0',
-      createdAt: new Date().toISOString(),
-      createdBy,
-      tables: {
-        auth_users: users.rows,
-        profiles: profiles.rows,
-        game_saves: saves.rows,
-        chat_messages: messages.rows
-      }
-    };
-
-    const jsonStr = JSON.stringify(backupPayload, null, 2);
-    fs.writeFileSync(filePath, jsonStr, 'utf-8');
-    const sizeBytes = Buffer.byteLength(jsonStr);
-
-    // Registra na tabela server_backups
-    await db.query(
-      `INSERT INTO server_backups (filename, size_bytes, created_by)
-       VALUES ($1, $2, $3)`,
-      [filename, sizeBytes, createdBy]
-    );
-
-    console.log(`[Backup Automático] Snapshot gerado com sucesso: ${filename} (${(sizeBytes / 1024).toFixed(1)} KB)`);
-    return { success: true, filename, sizeBytes, createdAt: backupPayload.createdAt };
-  } catch (err) {
-    console.error('[Backup Automático] Erro ao gerar backup:', err);
-    return { success: false, error: err.message };
-  }
-}
-
-// Rotas de API para Gestão de Backups no Painel Admin
-app.get('/api/admin/backups', async (req, res) => {
-  try {
-    const dbRes = await db.query('SELECT * FROM server_backups ORDER BY created_at DESC LIMIT 30');
-    res.json(dbRes.rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+app.get('/api/admin/backups', (req, res) => {
+  res.json(db.state.server_backups.slice(0, 30));
 });
 
-app.post('/api/admin/create-backup', async (req, res) => {
-  const result = await performFullBackup('manual_admin');
-  if (result.success) {
+app.post('/api/admin/create-backup', (req, res) => {
+  try {
+    const result = db.createBackup('manual_admin');
+    addServerLog(`Backup manual criado: ${result.filename}`, 'BACKUP');
     res.json({ success: true, message: `Backup ${result.filename} gerado com sucesso!`, ...result });
-  } else {
-    res.status(500).json({ error: result.error || 'Falha ao gerar backup.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Download do arquivo de backup
 app.get('/api/admin/backups/download/:filename', (req, res) => {
-  const { filename } = req.params;
-  const safeFilename = path.basename(filename);
-  const targetPath = path.join(BACKUP_DIR, safeFilename);
-
+  const safeFilename = path.basename(req.params.filename);
+  const targetPath = path.join(db.backupsDir, safeFilename);
   if (!fs.existsSync(targetPath)) {
     return res.status(404).send('Arquivo de backup não encontrado.');
   }
-
   res.download(targetPath, safeFilename);
 });
 
-// Restauração de Backup com 1 clique
-app.post('/api/admin/backups/restore', async (req, res) => {
-  const { filename } = req.body;
-  if (!filename) return res.status(400).json({ error: 'Informe o nome do backup.' });
-
-  const safeFilename = path.basename(filename);
-  const targetPath = path.join(BACKUP_DIR, safeFilename);
-
-  if (!fs.existsSync(targetPath)) {
-    return res.status(404).json({ error: 'Arquivo de backup não encontrado no disco.' });
-  }
-
+app.post('/api/admin/backups/restore', (req, res) => {
+  const { filename, backupData } = req.body;
   try {
-    const raw = fs.readFileSync(targetPath, 'utf-8');
-    const data = JSON.parse(raw);
-
-    if (data.tables?.profiles) {
-      for (const p of data.tables.profiles) {
-        await db.query(
-          `INSERT INTO profiles (id, nickname, hero_id, x, y, level, xp, gold, last_online)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-           ON CONFLICT (id) DO UPDATE SET
-             nickname = EXCLUDED.nickname,
-             hero_id = EXCLUDED.hero_id,
-             x = EXCLUDED.x,
-             y = EXCLUDED.y,
-             level = EXCLUDED.level,
-             xp = EXCLUDED.xp,
-             gold = EXCLUDED.gold,
-             last_online = EXCLUDED.last_online`,
-          [p.id, p.nickname, p.hero_id, p.x, p.y, p.level, p.xp, p.gold, p.last_online]
-        );
-      }
+    if (backupData && typeof backupData === 'object') {
+      db.createBackup('pre_import_restore');
+      db.applyBackupPayload(backupData);
+      addServerLog('Banco de dados restaurado a partir de arquivo importado.', 'BACKUP');
+      return res.json({ success: true, message: 'Backup importado e restaurado com sucesso!' });
     }
-
-    if (data.tables?.game_saves) {
-      for (const s of data.tables.game_saves) {
-        await db.query(
-          `INSERT INTO game_saves (user_id, map_data, player_data, inventory_data, dragons_data, coding_progress, updated_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)
-           ON CONFLICT (user_id) DO UPDATE SET
-             map_data = EXCLUDED.map_data,
-             player_data = EXCLUDED.player_data,
-             inventory_data = EXCLUDED.inventory_data,
-             dragons_data = EXCLUDED.dragons_data,
-             coding_progress = EXCLUDED.coding_progress,
-             updated_at = EXCLUDED.updated_at`,
-          [s.user_id, s.map_data, s.player_data, s.inventory_data, s.dragons_data, s.coding_progress, s.updated_at]
-        );
-      }
-    }
-
-    res.json({ success: true, message: 'Dados restaurados com sucesso a partir do backup!' });
+    if (!filename) return res.status(400).json({ error: 'Informe o nome do backup.' });
+    db.createBackup('pre_restore_safety');
+    const result = db.restoreBackupByFilename(filename);
+    addServerLog(`Backup restaurado com sucesso: ${filename}`, 'BACKUP');
+    res.json({ success: true, message: `Backup ${filename} restaurado com sucesso!`, ...result });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao restaurar backup: ' + err.message });
   }
 });
 
-// DISPARO AUTOMÁTICO:
-// 1. Gera um backup após inicialização com guarda contra falha de banco
-setTimeout(async () => {
+// DISPAROS AUTOMÁTICOS DE BACKUP:
+// 1. Ao iniciar o servidor
+setTimeout(() => {
   try {
-    await performFullBackup('startup_auto');
+    const res = db.createBackup('startup_auto');
+    addServerLog(`Snapshot automático de inicialização salvo: ${res.filename}`, 'BACKUP');
   } catch (err) {
-    console.warn('[Backup Automático] Tentativa de inicialização ignorada (banco ocupado ou conectando):', err.message);
+    addServerLog(`Aviso no backup inicial: ${err.message}`, 'WARN');
   }
-}, 5000);
+}, 3000);
 
-// 2. Executa backup automático a cada 6 horas (4 vezes por dia)
-setInterval(async () => {
+// 2. A cada 6 horas
+setInterval(() => {
   try {
-    await performFullBackup('scheduled_6h');
+    const res = db.createBackup('scheduled_6h');
+    addServerLog(`Snapshot periódico (6h) salvo: ${res.filename}`, 'BACKUP');
   } catch (err) {
-    console.warn('[Backup Automático] Tentativa periódica ignorada:', err.message);
+    addServerLog(`Aviso no backup 6h: ${err.message}`, 'WARN');
   }
 }, 6 * 60 * 60 * 1000);
 
@@ -897,7 +940,7 @@ setInterval(async () => {
 // ==========================================
 
 setInterval(() => {
-  if (activePlayers.size === 0) return;
+  if (gameServerState === 'paused' || activePlayers.size === 0) return;
 
   const playerList = Array.from(activePlayers.values()).map(p => ({
     id: p.id,
@@ -929,9 +972,18 @@ setInterval(() => {
       client.send(payload);
     }
   }
-}, 50); // 20Hz (50ms)
+}, 50); // 20Hz
 
 wss.on('connection', (ws) => {
+  if (gameServerState === 'paused') {
+    ws.send(JSON.stringify({
+      type: 'SERVER_MAINTENANCE',
+      message: 'Servidor em manutenção. Tente novamente em instantes!'
+    }));
+    ws.close();
+    return;
+  }
+
   const playerId = 'player_' + Math.random().toString(36).substring(2, 9);
 
   activePlayers.set(playerId, {
@@ -956,10 +1008,11 @@ wss.on('connection', (ws) => {
   ws.send(JSON.stringify({
     type: 'INIT',
     playerId,
-    message: 'Conectado ao Servidor Nativo Mac mini (KidsLearnCode)!'
+    message: 'Conectado ao Servidor Dedicado KidsLearnCode!'
   }));
 
   ws.on('message', (message) => {
+    if (gameServerState === 'paused') return;
     try {
       const data = JSON.parse(message);
 
@@ -983,13 +1036,25 @@ wss.on('connection', (ws) => {
           if (data.dragonY !== undefined) p.dragonY = data.dragonY;
         }
       } else if (data.type === 'CHAT_MESSAGE') {
-        const broadcast = JSON.stringify({
-          type: 'CHAT_BROADCAST',
-          senderId: playerId,
-          senderName: data.senderName || 'Jogador',
+        const chatEntry = {
+          id: Math.random().toString(36).substring(2, 10),
+          sender_id: playerId,
+          sender_name: data.senderName || 'Jogador',
           text: data.text,
           x: data.x,
           y: data.y,
+          created_at: new Date().toISOString()
+        };
+        db.state.chat_messages.push(chatEntry);
+        if (db.state.chat_messages.length > 300) db.state.chat_messages.shift();
+
+        const broadcast = JSON.stringify({
+          type: 'CHAT_BROADCAST',
+          senderId: playerId,
+          senderName: chatEntry.sender_name,
+          text: chatEntry.text,
+          x: chatEntry.x,
+          y: chatEntry.y,
           timestamp: Date.now()
         });
 
@@ -999,7 +1064,9 @@ wss.on('connection', (ws) => {
           }
         }
       } else if (data.type === 'MAP_UPDATE') {
-        // Broadcast de edição de mapa no modo criativo
+        if (data.mapData) {
+          db.saveGlobalMap(data.mapData, playerId);
+        }
         const broadcast = JSON.stringify({
           type: 'MAP_BROADCAST',
           mapData: data.mapData,
@@ -1014,7 +1081,7 @@ wss.on('connection', (ws) => {
         }
       }
     } catch (err) {
-      console.error('[WebSocket] Erro ao processar pacote:', err.message);
+      addServerLog(`Erro WebSocket: ${err.message}`, 'WARN');
     }
   });
 
@@ -1029,20 +1096,24 @@ wss.on('connection', (ws) => {
   });
 });
 
+// Servir arquivos estáticos do cliente na raiz para permitir jogar direto pelo servidor também
+app.use(express.static(projectRoot));
+
 // Tratadores globais para nunca derrubar o processo por exceções não tratadas
 process.on('uncaughtException', (err) => {
-  console.error('[CRITICAL] Exceção não capturada (servidor continua vivo):', err.message, err.stack);
+  addServerLog(`Exceção não capturada (blindada): ${err.message}`, 'CRITICAL');
 });
 
 process.on('unhandledRejection', (reason) => {
-  console.error('[CRITICAL] Rejeição de Promise não tratada (servidor continua vivo):', reason);
+  addServerLog(`Promise rejeitada (blindada): ${String(reason)}`, 'CRITICAL');
 });
 
-// Iniciar Servidor
-server.listen(PORT, () => {
-  console.log('========================================================');
-  console.log(`🏰 KidsLearnCode Servidor MMORPG & Database Online!`);
-  console.log(`📡 Porta: ${PORT} | WebSocket: 20Hz Ativo`);
-  console.log(`🖥️  Painel Administrativo GUI: ${PUBLIC_URL}/admin`);
-  console.log('========================================================');
+// Iniciar Servidor + Ponte de Rede Nativa
+server.listen(PORT, '0.0.0.0', () => {
+  networkBridge.start();
+  addServerLog(`Servidor KidsLearnCode Online na porta ${PORT}!`, 'SYSTEM');
+  addServerLog(`Painel de Controle Local: http://localhost:${PORT}/admin`, 'SYSTEM');
+  if (networkBridge.lanUrl) {
+    addServerLog(`Acesso na Rede Local (LAN): ${networkBridge.lanUrl}/admin`, 'SYSTEM');
+  }
 });

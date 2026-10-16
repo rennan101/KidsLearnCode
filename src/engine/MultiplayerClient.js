@@ -217,9 +217,10 @@ export class MultiplayerClient {
         if (typeof window !== 'undefined' && window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
           targetUrl = 'ws://localhost:8080';
         } else {
-          const httpUrl = await getActiveServerUrl();
+          const httpUrl = await getActiveServerUrl(this.reconnectAttempts > 0);
+          const isHttps = httpUrl.startsWith('https://');
           const cleanHost = httpUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
-          targetUrl = `wss://${cleanHost}`;
+          targetUrl = `${isHttps ? 'wss' : 'ws'}://${cleanHost}`;
         }
       }
 

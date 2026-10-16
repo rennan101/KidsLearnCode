@@ -42,3 +42,10 @@ cloudflared.tgz
 
 # Exported Map Dumps (Raw Exports)
 world-map-*.json
+
+# Embedded Database Data, Backups & Live Runtime State (Safeguard 6)
+server/data/
+server/db/backups/
+server/active_tunnel.txt
+server/live-server.json
+

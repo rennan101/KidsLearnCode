@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KidsLearnCode - Central do Servidor & Banco de Dados</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Nunito:wght@500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-cream: #f8f8f0;
+      --bg-parchment: #fdfbf7;
+      --bg-card: #f7f3df;
+      --bg-mint-soft: #e6f9f6;
+      --text-brown: #794f27;
+      --text-muted: #725d42;
+      --text-light: #8a7b66;
+      --border-wood: #7a583e;
+      --border-soft: #c4b89e;
+      --shadow-wood: #5c3c26;
+      --accent-teal: #19c8b9;
+      --accent-teal-dark: #0f8e83;
+      --accent-orange: #ea580c;
+      --accent-orange-dark: #9a3412;
+      --accent-gold: #f59e0b;
+      --accent-gold-dark: #b45309;
+      --danger: #dc2626;
+      --danger-dark: #991b1b;
+      --mono-font: 'JetBrains Mono', monospace;
+      --body-font: 'Nunito', sans-serif;
+      --title-font: 'Cinzel', serif;
+      --animal-cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M5 3 L22 11 L15 14 L19 22 L15 24 L11 16 L6 20 Z' fill='%23fdfbf7' stroke='%23794f27' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E") 4 2, auto;
+      --animal-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='10' fill='%2319c8b9' stroke='%23794f27' stroke-width='2.2'/%3E%3Ccircle cx='14' cy='14' r='4' fill='%23fdfbf7'/%3E%3C/svg%3E") 14 14, pointer;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-cream);
+      background-image: radial-gradient(#e5dec9 1.2px, transparent 1.2px);
+      background-size: 24px 24px;
+      color: var(--text-brown);
+      font-family: var(--body-font);
+      padding: 20px;
+      min-height: 100vh;
+      cursor: var(--animal-cursor-default);
+    }
+
+    button, a, select, input[type="file"], .clickable {
+      cursor: var(--animal-cursor-pointer);
+    }
+
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .ui-icon {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2.2;
+      stroke: currentColor;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    .icon-sm { width: 16px; height: 16px; }
+    .icon-lg { width: 26px; height: 26px; }
+
+    /* Header Principal */
+    .header {
+      background: var(--bg-parchment);
+      border: 3px solid var(--border-wood);
+      border-radius: 24px;
+      padding: 20px 26px;
+      box-shadow: 0 6px 0 var(--shadow-wood);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand-emblem {
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      background: var(--bg-mint-soft);
+      border: 2.5px solid var(--accent-teal);
+      box-shadow: 0 4px 0 var(--accent-teal-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-teal-dark);
+    }
+
+    .header-title h1 {
+      font-family: var(--title-font);
+      font-size: 22px;
+      color: var(--text-brown);
+      letter-spacing: 0.3px;
+    }
+
+    .header-subtitle {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 3px;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 16px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 800;
+      background: var(--bg-mint-soft);
+      color: var(--accent-teal-dark);
+      border: 2px solid var(--accent-teal);
+      box-shadow: 0 3px 0 var(--accent-teal-dark);
+    }
+
+    .badge-status.paused {
+      background: #fef3c7;
+      color: var(--accent-gold-dark);
+      border-color: var(--accent-gold);
+      box-shadow: 0 3px 0 var(--accent-gold-dark);
+    }
+
+    .badge-status.offline {
+      background: #fee2e2;
+      color: var(--danger-dark);
+      border-color: var(--danger);
+      box-shadow: 0 3px 0 var(--danger-dark);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.85); }
+    }
+
+    /* Botões 3D Táteis Animal Island */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-family: var(--body-font);
+      font-weight: 800;
+      font-size: 14px;
+      border: 2px solid var(--border-wood);
+      background: var(--bg-card);
+      color: var(--text-brown);
+      box-shadow: 0 4px 0 var(--shadow-wood);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.12s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn:hover { filter: brightness(1.03); }
+    .btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--shadow-wood);
+    }
+
+    .btn-sm {
+      padding: 6px 14px;
+      font-size: 12.5px;
+    }
+
+    .btn-teal {
+      background: var(--accent-teal);
+      color: #fdfbf7;
+      border-color: var(--accent-teal-dark);
+      box-shadow: 0 4px 0 var(--accent-teal-dark);
+    }
+    .btn-teal:active { box-shadow: 0 1px 0 var(--accent-teal-dark); }
+
+    .btn-gold {
+      background: var(--accent-gold);
+      color: #fdfbf7;
+      border-color: var(--accent-gold-dark);
+      box-shadow: 0 4px 0 var(--accent-gold-dark);
+    }
+    .btn-gold:active { box-shadow: 0 1px 0 var(--accent-gold-dark); }
+
+    .btn-orange {
+      background: var(--accent-orange);
+      color: #fdfbf7;
+      border-color: var(--accent-orange-dark);
+      box-shadow: 0 4px 0 var(--accent-orange-dark);
+    }
+    .btn-orange:active { box-shadow: 0 1px 0 var(--accent-orange-dark); }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fdfbf7;
+      border-color: var(--danger-dark);
+      box-shadow: 0 4px 0 var(--danger-dark);
+    }
+    .btn-danger:active { box-shadow: 0 1px 0 var(--danger-dark); }
+
+    /* Barra de Controle Remoto Rápido */
+    .control-strip {
+      background: var(--bg-parchment);
+      border: 2.5px solid var(--border-wood);
+      border-radius: 22px;
+      padding: 16px 22px;
+      box-shadow: 0 5px 0 var(--shadow-wood);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .control-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .connection-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .input-pill {
+      padding: 9px 16px;
+      border-radius: 50px;
+      border: 2px solid var(--border-soft);
+      background: #ffffff;
+      color: var(--text-brown);
+      font-family: var(--body-font);
+      font-size: 13.5px;
+      font-weight: 700;
+      outline: none;
+    }
+    .input-pill:focus {
+      border-color: var(--accent-teal);
+    }
+
+    /* Cards de Métricas */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+    }
+
+    .metric-card {
+      background: var(--bg-parchment);
+      border: 2.5px solid var(--border-wood);
+      border-radius: 20px;
+      padding: 16px 20px;
+      box-shadow: 0 4px 0 var(--shadow-wood);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .metric-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--text-brown);
+      font-family: var(--mono-font);
+    }
+
+    .metric-sub {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-light);
+    }
+
+    /* Abas de Navegação */
+    .tabs-nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 22px;
+      border-radius: 50px;
+      border: 2.5px solid var(--border-wood);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-weight: 800;
+      font-size: 14px;
+      box-shadow: 0 4px 0 var(--shadow-wood);
+      transition: all 0.1s;
+    }
+
+    .tab-btn.active {
+      background: var(--accent-teal);
+      color: #fdfbf7;
+      border-color: var(--accent-teal-dark);
+      box-shadow: 0 4px 0 var(--accent-teal-dark);
+    }
+
+    .tab-pane {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .tab-pane.active {
+      display: flex;
+    }
+
+    /* Painéis de Conteúdo */
+    .panel {
+      background: var(--bg-parchment);
+      border: 2.5px solid var(--border-wood);
+      border-radius: 22px;
+      padding: 22px 24px;
+      box-shadow: 0 5px 0 var(--shadow-wood);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 2px dashed var(--border-soft);
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--title-font);
+      font-size: 18px;
+      color: var(--text-brown);
+    }
+
+    /* Tabelas */
+    .table-wrap {
+      overflow-x: auto;
+      border: 2px solid var(--border-soft);
+      border-radius: 16px;
+      background: #ffffff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13.5px;
+    }
+
+    th {
+      background: var(--bg-card);
+      color: var(--text-brown);
+      font-weight: 800;
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--border-soft);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #ece6d5;
+      color: var(--text-brown);
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fcfaf2; }
+
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 50px;
+      font-size: 11.5px;
+      font-weight: 800;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-soft);
+      color: var(--text-brown);
+    }
+
+    .pill-badge.mint {
+      background: var(--bg-mint-soft);
+      border-color: var(--accent-teal);
+      color: var(--accent-teal-dark);
+    }
+
+    .pill-badge.gold {
+      background: #fef3c7;
+      border-color: var(--accent-gold);
+      color: var(--accent-gold-dark);
+    }
+
+    /* Modal de Edição Completa do Jogador & Save */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(92, 60, 38, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: var(--bg-parchment);
+      border: 3px solid var(--border-wood);
+      border-radius: 24px;
+      box-shadow: 0 8px 0 var(--shadow-wood);
+      max-width: 960px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 18px 24px;
+      background: var(--bg-card);
+      border-bottom: 2px solid var(--border-soft);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-body {
+      padding: 22px 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      background: var(--bg-card);
+      border-top: 2px solid var(--border-soft);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--text-muted);
+    }
+
+    .code-area {
+      width: 100%;
+      min-height: 180px;
+      padding: 14px;
+      border-radius: 16px;
+      border: 2px solid var(--border-soft);
+      background: #fdfbf7;
+      color: var(--text-brown);
+      font-family: var(--mono-font);
+      font-size: 12.5px;
+      line-height: 1.45;
+      resize: vertical;
+      outline: none;
+    }
+    .code-area:focus { border-color: var(--accent-teal); }
+
+    /* Log Console */
+    .log-box {
+      background: #f3efe2;
+      border: 2px solid var(--border-soft);
+      border-radius: 16px;
+      padding: 16px;
+      font-family: var(--mono-font);
+      font-size: 12.5px;
+      max-height: 400px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .log-line {
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: var(--bg-parchment);
+      border-left: 4px solid var(--accent-teal);
+    }
+    .log-line.WARN, .log-line.CONTROL { border-left-color: var(--accent-gold); }
+    .log-line.ERROR, .log-line.CRITICAL { border-left-color: var(--danger); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--bg-parchment);
+      border: 3px solid var(--border-wood);
+      border-radius: 50px;
+      padding: 12px 24px;
+      box-shadow: 0 5px 0 var(--shadow-wood);
+      font-weight: 800;
+      color: var(--text-brown);
+      display: none;
+      align-items: center;
+      gap: 10px;
+      z-index: 2000;
+    }
+    .toast.show { display: inline-flex; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Cabeçalho Animal Island UI -->
+    <header class="header">
+      <div class="header-left">
+        <div class="brand-emblem">
+          <svg class="ui-icon icon-lg" viewBox="0 0 24 24">
+            <rect x="2" y="3" width="20" height="7" rx="2"></rect>
+            <rect x="2" y="14" width="20" height="7" rx="2"></rect>
+            <circle cx="6" cy="6.5" r="1"></circle>
+            <circle cx="6" cy="17.5" r="1"></circle>
+          </svg>
+        </div>
+        <div class="header-title">
+          <h1>KidsLearnCode — Servidor & Banco de Dados</h1>
+          <div class="header-subtitle">
+            <span>Motor 100% Independente (Zero PostgreSQL / Zero Supabase / Zero Cloudflare)</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <div id="status-badge" class="badge-status">
+          <span class="status-dot"></span>
+          <span id="status-text">CONECTANDO AO SERVIDOR...</span>
+        </div>
+        <a id="btn-open-game" href="/" target="_blank" class="btn btn-teal">
+          <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span>Abrir Jogo</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Barra de Controle Remoto (Liga/Desliga/Git Pull/Conexão) -->
+    <section class="control-strip">
+      <div class="control-actions">
+        <button class="btn btn-teal" onclick="controlServer('start')">
+          <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span>Ligar Servidor do Jogo</span>
+        </button>
+
+        <button class="btn btn-gold" onclick="controlServer('pause')">
+          <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+            <rect x="6" y="4" width="4" height="16"></rect>
+            <rect x="14" y="4" width="4" height="16"></rect>
+          </svg>
+          <span>Pausar / Manutenção</span>
+        </button>
+
+        <button class="btn" onclick="controlServer('restart')">
+          <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          <span>Reiniciar Rede</span>
+        </button>
+
+        <button class="btn btn-orange" onclick="triggerGitPull()">
+          <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Atualizar Código (Git Pull)</span>
+        </button>
+
+        <button class="btn" onclick="createManualBackup()">
+          <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>Backup Agora</span>
+        </button>
+      </div>
+
+      <div class="connection-bar">
+        <input type="text" id="server-url-input" class="input-pill" style="width: 270px;" placeholder="Auto-descoberta de Servidor...">
+        <button class="btn btn-sm" onclick="connectCustomUrl()">Conectar</button>
+        <button class="btn btn-sm" onclick="autoDiscoverServer(true)">Auto-Detectar</button>
+      </div>
+    </section>
+
+    <!-- Cards de Métricas em Tempo Real -->
+    <section class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>Jogadores Online Agora</span>
+          <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="metric-value" id="metric-online">0</div>
+        <div class="metric-sub" id="metric-online-sub">Sincronização 20Hz ativa</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>Contas & Saves no Banco</span>
+          <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          </svg>
+        </div>
+        <div class="metric-value" id="metric-users">0</div>
+        <div class="metric-sub">Armazenamento atômico em disco</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>Backups Automáticos</span>
+          <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+        </div>
+        <div class="metric-value" id="metric-backups">0</div>
+        <div class="metric-sub">Boot + 6 em 6h + Pré-Update</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>Memória RAM & Uptime</span>
+          <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+        </div>
+        <div class="metric-value" id="metric-ram">-- MB</div>
+        <div class="metric-sub" id="metric-uptime">Tempo ativo: --</div>
+      </div>
+    </section>
+
+    <!-- Abas -->
+    <nav class="tabs-nav">
+      <button class="tab-btn active" onclick="switchTab('tab-db', this)">
+        <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+          <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+        </svg>
+        <span>Banco de Dados (Jogadores, Roupas, Ovos, Dragões)</span>
+      </button>
+
+      <button class="tab-btn" onclick="switchTab('tab-backups', this)">
+        <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+        </svg>
+        <span>Backups Automáticos & Restauração</span>
+      </button>
+
+      <button class="tab-btn" onclick="switchTab('tab-network', this)">
+        <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <span>Conexões & Jogadores ao Vivo</span>
+      </button>
+
+      <button class="tab-btn" onclick="switchTab('tab-logs', this)">
+        <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+          <polyline points="4 17 10 11 4 5"></polyline>
+          <line x1="12" y1="19" x2="20" y2="19"></line>
+        </svg>
+        <span>Logs em Tempo Real & Console</span>
+      </button>
+    </nav>
+
+    <!-- ABA 1: EXPLORADOR E EDITOR DO BANCO DE DADOS -->
+    <div id="tab-db" class="tab-pane active">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg class="ui-icon" viewBox="0 0 24 24">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+            </svg>
+            <span>Jogadores Salvos no Banco de Dados Nativo</span>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <input type="text" id="user-search" class="input-pill" placeholder="Buscar por nome ou e-mail..." oninput="renderUsersTable()">
+            <button class="btn btn-teal btn-sm" onclick="openNewUserModal()">
+              <svg class="ui-icon icon-sm" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Nova Conta</span>
+            </button>
+            <button class="btn btn-sm" onclick="refreshAll()">Atualizar Dados</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Jogador (Nickname)</th>
+                <th>E-mail / Login</th>
+                <th>Cargo</th>
+                <th>Nível / XP / Ouro</th>
+                <th>Roupas (Avatar)</th>
+                <th>Mochila (Itens & Ovos)</th>
+                <th>Dragões</th>
+                <th>Posição</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              <tr><td colspan="9" style="text-align: center; padding: 24px;">Carregando banco de dados...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA 2: BACKUPS AUTOMÁTICOS E RESTAURAÇÃO -->
+    <div id="tab-backups" class="tab-pane">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg class="ui-icon" viewBox="0 0 24 24">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <span>Snapshots Automáticos do Banco de Dados (server/data/backups)</span>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-teal btn-sm" onclick="createManualBackup()">Gerar Novo Backup Agora</button>
+            <label class="btn btn-sm">
+              <span>Importar Arquivo de Backup (.json)</span>
+              <input type="file" accept=".json" style="display: none;" onchange="importBackupFile(event)">
+            </label>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Arquivo de Snapshot</th>
+                <th>Origem</th>
+                <th>Tamanho</th>
+                <th>Data e Hora</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="backups-tbody">
+              <tr><td colspan="5" style="text-align: center; padding: 24px;">Carregando lista de backups...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA 3: REDE E JOGADORES ONLINE -->
+    <div id="tab-network" class="tab-pane">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg class="ui-icon" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+            </svg>
+            <span>Endereços Automáticos de Conexão (Zero Configuração Manual)</span>
+          </div>
+        </div>
+
+        <div class="form-grid" id="network-cards">
+          <div class="metric-card">
+            <div class="metric-header"><span>Link Público Principal (Internet)</span></div>
+            <div style="font-family: var(--mono-font); font-size: 13px; font-weight: 700; word-break: break-all;" id="net-public-url">--</div>
+            <div style="margin-top: 8px;">
+              <button class="btn btn-sm" onclick="copyText('net-public-url')">Copiar Endereço</button>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header"><span>Rede Local Wi-Fi / Cabo (LAN 0ms)</span></div>
+            <div style="font-family: var(--mono-font); font-size: 13px; font-weight: 700; word-break: break-all;" id="net-lan-url">--</div>
+            <div style="margin-top: 8px;">
+              <button class="btn btn-sm" onclick="copyText('net-lan-url')">Copiar IP LAN</button>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header"><span>Acesso Local (Mesmo Mac)</span></div>
+            <div style="font-family: var(--mono-font); font-size: 13px; font-weight: 700;" id="net-local-url">http://localhost:8080</div>
+            <div style="margin-top: 8px;">
+              <button class="btn btn-sm" onclick="copyText('net-local-url')">Copiar Localhost</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg class="ui-icon" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9"></circle>
+              <polyline points="12 7 12 12 15 15"></polyline>
+            </svg>
+            <span>Jogadores Conectados Agora no Mundo (WebSocket 20Hz)</span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID de Sessão</th>
+                <th>Nome no Crachá</th>
+                <th>Avatar / Roupas</th>
+                <th>Dragão Ativo / Modo</th>
+                <th>Coordenadas (X, Y)</th>
+              </tr>
+            </thead>
+            <tbody id="online-players-tbody">
+              <tr><td colspan="5" style="text-align: center; padding: 20px;">Nenhum jogador conectado neste instante.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA 4: LOGS EM TEMPO REAL -->
+    <div id="tab-logs" class="tab-pane">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg class="ui-icon" viewBox="0 0 24 24">
+              <polyline points="4 17 10 11 4 5"></polyline>
+              <line x1="12" y1="19" x2="20" y2="19"></line>
+            </svg>
+            <span>Eventos e Logs do Servidor em Tempo Real</span>
+          </div>
+          <button class="btn btn-sm" onclick="refreshLogs()">Atualizar Logs</button>
+        </div>
+        <div id="server-logs-box" class="log-box">
+          <div>Aguardando logs do servidor...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: INSPECIONAR E EDITAR JOGADOR COMPLETO (ROUPAS, OVOS, ITENS, DRAGÕES, CONTA) -->
+  <div id="user-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="panel-title">
+          <svg class="ui-icon" viewBox="0 0 24 24">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+          <span id="modal-user-title">Gerenciar Jogador</span>
+        </div>
+        <button class="btn btn-sm" onclick="closeUserModal()">Fechar</button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="edit-user-id">
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nome do Personagem / Nickname</label>
+            <input type="text" id="edit-nickname" class="input-pill">
+          </div>
+          <div class="form-group">
+            <label>E-mail de Login</label>
+            <input type="email" id="edit-email" class="input-pill">
+          </div>
+          <div class="form-group">
+            <label>Cargo no Jogo</label>
+            <select id="edit-role" class="input-pill">
+              <option value="player">Jogador (player)</option>
+              <option value="admin">Administrador (admin)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Definir Nova Senha (Opcional)</label>
+            <input type="password" id="edit-password" class="input-pill" placeholder="Deixe em branco para manter">
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Ouro (Moedas)</label>
+            <input type="number" id="edit-gold" class="input-pill">
+          </div>
+          <div class="form-group">
+            <label>Experiência (XP Total)</label>
+            <input type="number" id="edit-xp" class="input-pill">
+          </div>
+          <div class="form-group">
+            <label>Posição X no Mapa</label>
+            <input type="number" id="edit-x" class="input-pill">
+          </div>
+          <div class="form-group">
+            <label>Posição Y no Mapa</label>
+            <input type="number" id="edit-y" class="input-pill">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Roupas & Customização do Avatar (customAvatar JSON)</label>
+          <textarea id="edit-avatar-json" class="code-area" style="min-height: 110px;"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Mochila: Itens, Ferramentas e Ovos (inventory_data JSON)</label>
+          <textarea id="edit-inventory-json" class="code-area" style="min-height: 130px;"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Dragões Adotados e Modo de Voo (dragons_data JSON)</label>
+          <textarea id="edit-dragons-json" class="code-area" style="min-height: 130px;"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-danger btn-sm" onclick="deleteCurrentUser()">Excluir Conta</button>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn" onclick="closeUserModal()">Cancelar</button>
+          <button class="btn btn-teal" onclick="saveUserChanges()">Salvar Todas as Alterações no Banco</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CRIAR NOVA CONTA -->
+  <div id="new-user-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <div class="panel-title"><span>Criar Nova Conta de Jogador</span></div>
+        <button class="btn btn-sm" onclick="closeNewUserModal()">Fechar</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nome do Personagem (Nickname)</label>
+          <input type="text" id="new-nickname" class="input-pill" placeholder="Ex: Lucas">
+        </div>
+        <div class="form-group">
+          <label>E-mail de Acesso</label>
+          <input type="email" id="new-email" class="input-pill" placeholder="Ex: lucas@email.com">
+        </div>
+        <div class="form-group">
+          <label>Senha Inicial (mínimo 6 caracteres)</label>
+          <input type="password" id="new-password" class="input-pill" placeholder="Digite a senha">
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Ouro Inicial</label>
+            <input type="number" id="new-gold" class="input-pill" value="500">
+          </div>
+          <div class="form-group">
+            <label>Cargo</label>
+            <select id="new-role" class="input-pill">
+              <option value="player">Jogador</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: flex-end;">
+        <button class="btn" onclick="closeNewUserModal()">Cancelar</button>
+        <button class="btn btn-teal" onclick="createNewUser()">Criar Jogador no Banco</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    let API_BASE = '';
+    let cachedUsers = [];
+    let cachedOverview = null;
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
+    }
+
+    function getHeaders() {
+      return {
+        'Content-Type': 'application/json',
+        'Bypass-Tunnel-Reminder': 'true'
+      };
+    }
+
+    async function probeEndpoint(url, timeoutMs = 2200) {
+      if (!url) return false;
+      const clean = url.replace(/\/$/, '');
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+      try {
+        const res = await fetch(`${clean}/health?t=${Date.now()}`, {
+          headers: { 'Bypass-Tunnel-Reminder': 'true' },
+          signal: ctrl.signal,
+          cache: 'no-store'
+        });
+        clearTimeout(timer);
+        if (res.ok) {
+          const data = await res.json();
+          return data && data.status === 'ok';
+        }
+      } catch (_) {
+        clearTimeout(timer);
+      }
+      return false;
+    }
+
+    async function autoDiscoverServer(manualTrigger = false) {
+      const input = document.getElementById('server-url-input');
+      const candidates = [];
+
+      // 1. Se aberto via HTTP/HTTPS direto do servidor
+      if (window.location.protocol.startsWith('http')) {
+        candidates.push(window.location.origin);
+      }
+
+      // 2. Localhost (caso aberto no próprio Mac mini via .app ou .html)
+      candidates.push('http://localhost:8080');
+
+      // 3. URL salva anteriormente pelo usuário
+      const saved = localStorage.getItem('klc_admin_server_url');
+      if (saved) candidates.push(saved);
+
+      // 4. Registro instantâneo GitHub (branch server-status)
+      try {
+        const ghRes = await fetch(`https://raw.githubusercontent.com/rennan101/KidsLearnCode/server-status/live-server.json?t=${Date.now()}`, {
+          cache: 'no-store'
+        });
+        if (ghRes.ok) {
+          const info = await ghRes.json();
+          if (info.lanUrl) candidates.push(info.lanUrl);
+          if (info.sshUrl) candidates.push(info.sshUrl);
+          if (info.url) candidates.push(info.url);
+          if (info.ltUrl) candidates.push(info.ltUrl);
+        }
+      } catch (_) {}
+
+      // 5. Subdomínio fixo nativo
+      candidates.push('https://kidslearncode-mmorpg.loca.lt');
+
+      for (const candidate of candidates) {
+        if (await probeEndpoint(candidate)) {
+          API_BASE = candidate.replace(/\/$/, '');
+          input.value = API_BASE;
+          localStorage.setItem('klc_admin_server_url', API_BASE);
+          document.getElementById('btn-open-game').href = API_BASE;
+          if (manualTrigger) showToast(`Conectado automaticamente a ${API_BASE}`);
+          await refreshAll();
+          return;
+        }
+      }
+
+      updateStatusBadge('offline');
+      if (manualTrigger) showToast('Servidor não respondeu. Verifique se está aberto no Mac mini.');
+    }
+
+    async function connectCustomUrl() {
+      const val = document.getElementById('server-url-input').value.trim().replace(/\/$/, '');
+      if (!val) return;
+      if (await probeEndpoint(val, 3500)) {
+        API_BASE = val;
+        localStorage.setItem('klc_admin_server_url', API_BASE);
+        document.getElementById('btn-open-game').href = API_BASE;
+        showToast(`Conectado a ${API_BASE}`);
+        await refreshAll();
+      } else {
+        showToast('Não foi possível conectar a este endereço.');
+      }
+    }
+
+    function updateStatusBadge(state) {
+      const badge = document.getElementById('status-badge');
+      const text = document.getElementById('status-text');
+      badge.className = 'badge-status';
+      if (state === 'online') {
+        text.textContent = 'SERVIDOR DO JOGO ONLINE';
+      } else if (state === 'paused') {
+        badge.classList.add('paused');
+        text.textContent = 'JOGO EM MANUTENÇÃO (PAUSADO)';
+      } else {
+        badge.classList.add('offline');
+        text.textContent = 'SERVIDOR DESCONECTADO';
+      }
+    }
+
+    async function refreshAll() {
+      if (!API_BASE) return;
+      try {
+        const [statsRes, overviewRes, logsRes] = await Promise.all([
+          fetch(`${API_BASE}/api/admin/stats?t=${Date.now()}`, { headers: getHeaders() }),
+          fetch(`${API_BASE}/api/admin/db/overview?t=${Date.now()}`, { headers: getHeaders() }),
+          fetch(`${API_BASE}/api/admin/logs?t=${Date.now()}`, { headers: getHeaders() })
+        ]);
+
+        if (statsRes.ok) {
+          const stats = await statsRes.json();
+          updateStatusBadge(stats.gameState || 'online');
+          document.getElementById('metric-online').textContent = stats.playersOnline ?? 0;
+          document.getElementById('metric-users').textContent = stats.profilesCount ?? 0;
+          document.getElementById('metric-backups').textContent = stats.backupsCount ?? 0;
+          document.getElementById('metric-ram').textContent = stats.memoryUsage || '-- MB';
+          document.getElementById('metric-uptime').textContent = `Tempo ativo: ${stats.uptime || '0 min'}`;
+        }
+
+        if (overviewRes.ok) {
+          const overview = await overviewRes.json();
+          cachedOverview = overview;
+          cachedUsers = overview.users || [];
+          renderUsersTable();
+          renderBackupsTable(overview.backups || []);
+          renderNetworkAndOnline(overview.network || {}, overview.onlinePlayers || []);
+        }
+
+        if (logsRes.ok) {
+          const logsData = await logsRes.json();
+          renderLogs(logsData.logs || []);
+        }
+      } catch (err) {
+        updateStatusBadge('offline');
+      }
+    }
+
+    function renderUsersTable() {
+      const tbody = document.getElementById('users-tbody');
+      const query = (document.getElementById('user-search').value || '').toLowerCase().trim();
+
+      const filtered = cachedUsers.filter(u =>
+        u.nickname.toLowerCase().includes(query) ||
+        u.email.toLowerCase().includes(query)
+      );
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 24px;">Nenhum jogador encontrado.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(u => {
+        const avatar = u.save?.customAvatar;
+        const avatarLabel = avatar
+          ? `<span class="pill-badge mint">Custom (${avatar.name || u.nickname})</span>`
+          : `<span class="pill-badge">${u.hero_id}</span>`;
+
+        const itemsCount = u.save?.inventory_data?.items?.length || 0;
+        const eggsCount = u.save?.inventory_data?.eggs?.length || 0;
+        const dragonsCount = u.save?.dragons_data?.party?.length || 0;
+
+        return `
+          <tr>
+            <td><strong>${escapeHtml(u.nickname)}</strong></td>
+            <td style="font-family: var(--mono-font); font-size: 12.5px;">${escapeHtml(u.email)}</td>
+            <td><span class="pill-badge ${u.role === 'admin' ? 'gold' : ''}">${u.role}</span></td>
+            <td>Nv. <strong>${u.level}</strong> (${u.xp} XP) • <strong>${u.gold}</strong> Ouro</td>
+            <td>${avatarLabel}</td>
+            <td>${itemsCount} itens • <strong>${eggsCount} ovos</strong></td>
+            <td><strong>${dragonsCount}</strong> dragões</td>
+            <td style="font-family: var(--mono-font); font-size: 12px;">(${Math.round(u.x)}, ${Math.round(u.y)})</td>
+            <td>
+              <button class="btn btn-teal btn-sm" onclick="openUserModal('${u.id}')">Inspecionar / Editar</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderBackupsTable(backups) {
+      const tbody = document.getElementById('backups-tbody');
+      if (!backups || backups.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 24px;">Nenhum backup registrado ainda.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = backups.map(b => {
+        const kb = ((b.size_bytes || 0) / 1024).toFixed(1);
+        const dt = new Date(b.created_at).toLocaleString('pt-BR');
+        return `
+          <tr>
+            <td style="font-family: var(--mono-font); font-size: 12.5px;"><strong>${escapeHtml(b.filename)}</strong></td>
+            <td><span class="pill-badge mint">${escapeHtml(b.created_by || 'auto')}</span></td>
+            <td style="font-family: var(--mono-font);">${kb} KB</td>
+            <td>${dt}</td>
+            <td style="display: flex; gap: 8px;">
+              <a class="btn btn-sm" href="${API_BASE}/api/admin/backups/download/${encodeURIComponent(b.filename)}" target="_blank">Baixar (.json)</a>
+              <button class="btn btn-gold btn-sm" onclick="restoreBackup('${escapeHtml(b.filename)}')">Restaurar</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderNetworkAndOnline(net, onlinePlayers) {
+      document.getElementById('net-public-url').textContent = net.url || 'Iniciando ponte...';
+      document.getElementById('net-lan-url').textContent = net.lanUrl || 'http://localhost:8080';
+      document.getElementById('net-local-url').textContent = net.localUrl || 'http://localhost:8080';
+
+      const tbody = document.getElementById('online-players-tbody');
+      if (!onlinePlayers || onlinePlayers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Nenhum jogador conectado neste instante.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = onlinePlayers.map(p => `
+        <tr>
+          <td style="font-family: var(--mono-font); font-size: 12px;">${escapeHtml(p.id)}</td>
+          <td><strong>${escapeHtml(p.name || 'Aventureiro')}</strong></td>
+          <td><span class="pill-badge mint">${p.avatarConfig ? 'Roupas Customizadas' : escapeHtml(p.heroId)}</span></td>
+          <td>${escapeHtml(p.activeDragonId || 'Nenhum')} (${escapeHtml(p.dragonMode || 'none')})</td>
+          <td style="font-family: var(--mono-font);">X: ${Math.round(p.x)}, Y: ${Math.round(p.y)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderLogs(logs) {
+      const box = document.getElementById('server-logs-box');
+      if (!logs || logs.length === 0) return;
+      box.innerHTML = logs.slice().reverse().map(l => `
+        <div class="log-line ${escapeHtml(l.level)}">
+          <strong>[${l.time.slice(11, 19)}] [${escapeHtml(l.level)}]</strong> ${escapeHtml(l.message)}
+        </div>
+      `).join('');
+    }
+
+    async function refreshLogs() {
+      await refreshAll();
+      showToast('Logs atualizados!');
+    }
+
+    async function controlServer(action) {
+      if (!API_BASE) return showToast('Conecte ao servidor primeiro.');
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/server/control`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ action })
+        });
+        const data = await res.json();
+        showToast(data.message || 'Comando enviado ao servidor!');
+        await refreshAll();
+      } catch (err) {
+        showToast('Erro ao enviar comando: ' + err.message);
+      }
+    }
+
+    async function triggerGitPull() {
+      if (!API_BASE) return showToast('Conecte ao servidor primeiro.');
+      showToast('Puxando atualizações do GitHub e gerando backup...');
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/server/git-pull`, {
+          method: 'POST',
+          headers: getHeaders()
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast(data.message);
+          await refreshAll();
+        } else {
+          showToast(data.error || 'Erro ao atualizar.');
+        }
+      } catch (err) {
+        showToast('Falha na atualização remota: ' + err.message);
+      }
+    }
+
+    async function createManualBackup() {
+      if (!API_BASE) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/create-backup`, {
+          method: 'POST',
+          headers: getHeaders()
+        });
+        const data = await res.json();
+        showToast(data.message || 'Backup criado com sucesso!');
+        await refreshAll();
+      } catch (err) {
+        showToast('Erro ao criar backup.');
+      }
+    }
+
+    async function restoreBackup(filename) {
+      if (!confirm(`Deseja restaurar o banco de dados para o snapshot "${filename}"? Um backup de segurança atual será salvo automaticamente antes.`)) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/backups/restore`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ filename })
+        });
+        const data = await res.json();
+        showToast(data.message || 'Backup restaurado!');
+        await refreshAll();
+      } catch (err) {
+        showToast('Erro ao restaurar backup.');
+      }
+    }
+
+    function importBackupFile(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          const res = await fetch(`${API_BASE}/api/admin/backups/restore`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ backupData: parsed })
+          });
+          const data = await res.json();
+          showToast(data.message || 'Backup importado e restaurado!');
+          await refreshAll();
+        } catch (err) {
+          showToast('Arquivo JSON inválido.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function openUserModal(userId) {
+      const u = cachedUsers.find(item => item.id === userId);
+      if (!u) return;
+
+      document.getElementById('edit-user-id').value = u.id;
+      document.getElementById('modal-user-title').textContent = `Gerenciar Jogador: ${u.nickname}`;
+      document.getElementById('edit-nickname').value = u.nickname || '';
+      document.getElementById('edit-email').value = u.email || '';
+      document.getElementById('edit-role').value = u.role || 'player';
+      document.getElementById('edit-password').value = '';
+      document.getElementById('edit-gold').value = u.gold ?? 100;
+      document.getElementById('edit-xp').value = u.xp ?? 0;
+      document.getElementById('edit-x').value = Math.round(u.x ?? 320);
+      document.getElementById('edit-y').value = Math.round(u.y ?? 320);
+
+      document.getElementById('edit-avatar-json').value = JSON.stringify(u.save?.customAvatar || null, null, 2);
+      document.getElementById('edit-inventory-json').value = JSON.stringify(u.save?.inventory_data || { items: [], tools: [], eggs: [] }, null, 2);
+      document.getElementById('edit-dragons-json').value = JSON.stringify(u.save?.dragons_data || { party: [], formation: [] }, null, 2);
+
+      document.getElementById('user-modal').classList.add('open');
+    }
+
+    function closeUserModal() {
+      document.getElementById('user-modal').classList.remove('open');
+    }
+
+    async function saveUserChanges() {
+      const userId = document.getElementById('edit-user-id').value;
+      if (!userId) return;
+
+      let customAvatar, inventory_data, dragons_data;
+      try {
+        customAvatar = JSON.parse(document.getElementById('edit-avatar-json').value);
+        inventory_data = JSON.parse(document.getElementById('edit-inventory-json').value);
+        dragons_data = JSON.parse(document.getElementById('edit-dragons-json').value);
+      } catch (err) {
+        return showToast('Erro de sintaxe em um dos campos JSON. Verifique as chaves e aspas.');
+      }
+
+      const payload = {
+        nickname: document.getElementById('edit-nickname').value.trim(),
+        email: document.getElementById('edit-email').value.trim(),
+        role: document.getElementById('edit-role').value,
+        newPassword: document.getElementById('edit-password').value,
+        gold: Number(document.getElementById('edit-gold').value),
+        xp: Number(document.getElementById('edit-xp').value),
+        x: Number(document.getElementById('edit-x').value),
+        y: Number(document.getElementById('edit-y').value),
+        customAvatar,
+        inventory_data,
+        dragons_data
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/db/user-save`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ userId, payload })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast(data.message);
+          closeUserModal();
+          await refreshAll();
+        } else {
+          showToast(data.error || 'Erro ao salvar alterações.');
+        }
+      } catch (err) {
+        showToast('Erro de conexão ao salvar.');
+      }
+    }
+
+    async function deleteCurrentUser() {
+      const userId = document.getElementById('edit-user-id').value;
+      const nick = document.getElementById('edit-nickname').value;
+      if (!confirm(`Tem certeza que deseja excluir a conta de "${nick}"?`)) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/db/user/${encodeURIComponent(userId)}`, {
+          method: 'DELETE',
+          headers: getHeaders()
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast('Conta excluída com sucesso.');
+          closeUserModal();
+          await refreshAll();
+        }
+      } catch (err) {
+        showToast('Erro ao excluir conta.');
+      }
+    }
+
+    function openNewUserModal() {
+      document.getElementById('new-user-modal').classList.add('open');
+    }
+
+    function closeNewUserModal() {
+      document.getElementById('new-user-modal').classList.remove('open');
+    }
+
+    async function createNewUser() {
+      const nickname = document.getElementById('new-nickname').value.trim();
+      const email = document.getElementById('new-email').value.trim();
+      const password = document.getElementById('new-password').value;
+      const gold = Number(document.getElementById('new-gold').value || 100);
+      const role = document.getElementById('new-role').value;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/db/create-user`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ nickname, email, password, gold, role })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast(data.message);
+          closeNewUserModal();
+          await refreshAll();
+        } else {
+          showToast(data.error || 'Erro ao criar conta.');
+        }
+      } catch (err) {
+        showToast('Falha ao criar conta.');
+      }
+    }
+
+    function switchTab(tabId, btnEl) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btnEl.classList.add('active');
+    }
+
+    function copyText(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard?.writeText(text);
+      showToast(`Copiado: ${text}`);
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Inicializa auto-descoberta e polling a cada 4 segundos
+    autoDiscoverServer(false);
+    setInterval(refreshAll, 4000);
+  </script>
+</body>
+</html>

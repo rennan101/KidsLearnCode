@@ -1,75 +1,107 @@
 /**
- * Supabase Configuration & Dynamic Discovery - KidsLearnCode Dedicated Server
- * - Resolve dinamicamente a URL ativa do servidor Mac mini via DNS TXT (DuckDNS)
- * - Compatível com navegadores sem bundler (ESM nativo)
+ * Server Configuration & Instant Zero-DNS Discovery - KidsLearnCode Dedicated Server
+ * - Zero Cloudflare / Zero DuckDNS / Zero Supabase Cloud
+ * - Resolve automaticamente o endereço do servidor via GitHub Live Status (0s de cache)
+ *   ou subdomínio determinístico nativo (kidslearncode-mmorpg.loca.lt)
  */
 
 export const SUPABASE_CONFIG = {
-  url: (typeof process !== 'undefined' && (process.env?.VITE_SUPABASE_URL || process.env?.SUPABASE_URL))
-    || (typeof window !== 'undefined' && (window.__ENV__?.VITE_SUPABASE_URL || window.__ENV__?.SUPABASE_URL))
-    || 'https://early-lives-demanding-calculations.trycloudflare.com',
-
-  anonKey: (typeof process !== 'undefined' && (process.env?.VITE_SUPABASE_ANON_KEY || process.env?.SUPABASE_ANON_KEY))
-    || (typeof window !== 'undefined' && (window.__ENV__?.VITE_SUPABASE_ANON_KEY || window.__ENV__?.SUPABASE_ANON_KEY))
-    || 'kidslearncode_macmini_dedicated_token_2026'
+  url: 'https://kidslearncode-mmorpg.loca.lt',
+  anonKey: 'kidslearncode_native_dedicated_token_2026'
 };
 
-let cachedTunnelUrl = null;
+let cachedServerUrl = null;
 let lastResolvedTime = 0;
-const CACHE_TTL_MS = 30 * 1000; // 30 segundos de cache
+const CACHE_TTL_MS = 25 * 1000; // 25 segundos
 
 /**
- * Resolve a URL ativa do servidor Mac mini dinamicamente:
- * 1. Se estiver rodando localmente (localhost / 127.0.0.1), usa http://localhost:8080
- * 2. Em produção (Vercel ou outro dispositivo), consulta o registro TXT de kidslearncode.duckdns.org
- *    usando DNS-over-HTTPS (Google DoH ou Cloudflare DoH) com CORS liberado.
+ * Testa se um endpoint de servidor está respondendo /health rapidamente
+ */
+async function probeServerHealth(baseUrl, timeoutMs = 2500) {
+  if (!baseUrl) return false;
+  const clean = baseUrl.replace(/\/$/, '');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${clean}/health?t=${Date.now()}`, {
+      headers: { 'Bypass-Tunnel-Reminder': 'true' },
+      signal: controller.signal,
+      cache: 'no-store'
+    });
+    clearTimeout(timer);
+    if (res.ok) {
+      const data = await res.json();
+      return data && data.status === 'ok';
+    }
+  } catch (_) {
+    clearTimeout(timer);
+  }
+  return false;
+}
+
+/**
+ * Resolve a URL ativa do servidor dedicado dinamicamente:
+ * 1. Override manual salvo no navegador (se configurado)
+ * 2. Localhost (http://localhost:8080) quando rodando no próprio Mac
+ * 3. Registro instantâneo live-server.json na branch 'server-status' do GitHub (Zero DNS / Zero Cache)
+ * 4. Subdomínio fixo nativo https://kidslearncode-mmorpg.loca.lt
  */
 export async function getActiveServerUrl(forceRefresh = false) {
-  // 1. Se em ambiente local do desenvolvedor ou no próprio Mac mini
-  if (typeof window !== 'undefined' && window.location) {
-    const host = window.location.hostname;
-    if (host === 'localhost' || host === '127.0.0.1') {
-      return 'http://localhost:8080';
+  if (typeof window !== 'undefined') {
+    const customOverride = localStorage.getItem('kidslearn_custom_server_url');
+    if (customOverride && customOverride.startsWith('http')) {
+      return customOverride.replace(/\/$/, '');
+    }
+
+    if (window.location) {
+      const host = window.location.hostname;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        return 'http://localhost:8080';
+      }
+      // Se o jogo foi aberto diretamente pelo link ou IP LAN do servidor
+      if (window.location.port === '8080' || host.endsWith('.loca.lt') || host.endsWith('.lhr.life')) {
+        return window.location.origin;
+      }
     }
   }
 
-  // 2. Se temos cache em memória válido
   const now = Date.now();
-  if (!forceRefresh && cachedTunnelUrl && (now - lastResolvedTime < CACHE_TTL_MS)) {
-    return cachedTunnelUrl;
+  if (!forceRefresh && cachedServerUrl && (now - lastResolvedTime < CACHE_TTL_MS)) {
+    return cachedServerUrl;
   }
 
-  // 3. Consulta DoH (Google e Cloudflare como fallback)
-  const dohEndpoints = [
-    { url: 'https://dns.google/resolve?name=kidslearncode.duckdns.org&type=TXT', isGoogle: true },
-    { url: 'https://cloudflare-dns.com/dns-query?name=kidslearncode.duckdns.org&type=TXT', isGoogle: false }
-  ];
-
-  for (const endpoint of dohEndpoints) {
-    try {
-      const headers = endpoint.isGoogle ? {} : { 'Accept': 'application/dns-json' };
-      const res = await fetch(endpoint.url, { headers, cache: 'no-store' });
-      if (res.ok) {
-        const json = await res.json();
-        const answer = json?.Answer?.find(a => a.type === 16);
-        if (answer && answer.data) {
-          let resolved = answer.data.replace(/^"+|"+$/g, '').trim();
-          if (resolved.startsWith('http://') || resolved.startsWith('https://')) {
-            cachedTunnelUrl = resolved;
-            lastResolvedTime = now;
-            SUPABASE_CONFIG.url = resolved;
-            return resolved;
-          }
+  // 1. Consulta o Registro Instantâneo no GitHub (branch server-status, 0s de cache)
+  try {
+    const statusUrl = `https://raw.githubusercontent.com/rennan101/KidsLearnCode/server-status/live-server.json?t=${now}`;
+    const res = await fetch(statusUrl, { cache: 'no-store' });
+    if (res.ok) {
+      const info = await res.json();
+      const candidates = [info.sshUrl, info.url, info.ltUrl, info.lanUrl].filter(Boolean);
+      for (const candidate of candidates) {
+        const clean = candidate.replace(/\/$/, '');
+        if (await probeServerHealth(clean, 2500)) {
+          cachedServerUrl = clean;
+          lastResolvedTime = now;
+          SUPABASE_CONFIG.url = clean;
+          return clean;
         }
       }
-    } catch (_) {
-      // Tenta próximo provedor DoH
+      if (info.url) {
+        const fallbackClean = info.url.replace(/\/$/, '');
+        cachedServerUrl = fallbackClean;
+        lastResolvedTime = now;
+        SUPABASE_CONFIG.url = fallbackClean;
+        return fallbackClean;
+      }
     }
-  }
+  } catch (_) {}
 
-  // 4. Fallback caso DNS esteja temporariamente indisponível
-  if (cachedTunnelUrl) return cachedTunnelUrl;
-  return SUPABASE_CONFIG.url;
+  // 2. Fallback para o Subdomínio Fixo Nativo
+  const deterministicUrl = 'https://kidslearncode-mmorpg.loca.lt';
+  cachedServerUrl = deterministicUrl;
+  lastResolvedTime = now;
+  SUPABASE_CONFIG.url = deterministicUrl;
+  return deterministicUrl;
 }
 
 export default SUPABASE_CONFIG;
