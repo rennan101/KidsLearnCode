@@ -177,13 +177,13 @@ export class Database {
       const profile = this.state.profiles.find(p => p.id === user.id);
       const cleanNick = (profile?.nickname || '').toLowerCase().trim();
 
-      // Restaura os e-mails @gmail.com originais dos jogadores
+      // Restaura os e-mails originais dos jogadores
       if (cleanNick === 'rennan' && (user.email.endsWith('@kidslearncode.local') || user.email === 'rennan@gmail.com')) {
         user.email = 'rennancr93@gmail.com';
         user.role = 'admin';
         changed = true;
-      } else if (cleanNick === 'duda' && (user.email.endsWith('@kidslearncode.local') || user.email === 'eduardasa@proton.me')) {
-        user.email = 'eduardasa@gmail.com';
+      } else if (cleanNick === 'duda' && (user.email.endsWith('@kidslearncode.local') || user.email === 'eduardasa@gmail.com' || user.email === 'duda@gmail.com')) {
+        user.email = 'eduardasa@proton.me';
         user.role = 'admin';
         changed = true;
       } else if (user.email && user.email.endsWith('@kidslearncode.local')) {
@@ -298,7 +298,7 @@ export class Database {
         let email = p.email;
         if (!email) {
           if (cleanNick === 'rennan') email = 'rennancr93@gmail.com';
-          else if (cleanNick === 'duda') email = 'eduardasa@gmail.com';
+          else if (cleanNick === 'duda') email = 'eduardasa@proton.me';
           else email = `${cleanNick || 'player'}@gmail.com`;
         }
 
