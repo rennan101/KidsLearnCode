@@ -3507,32 +3507,62 @@ class RPGApplication {
       if (formContainer) formContainer.style.display = 'flex';
     });
 
+    const resetStatusBox = document.getElementById('auth-reset-status-box');
+    const labelSubmitReset = document.getElementById('label-submit-reset');
+
     submitResetBtn?.addEventListener('click', async () => {
+      soundFX?.playPop(1.1);
       const email = resetEmailInput?.value.trim() || '';
       if (!email || !email.includes('@') || !email.includes('.')) {
+        if (resetStatusBox) {
+          resetStatusBox.style.display = 'block';
+          resetStatusBox.style.background = '#fee2e2';
+          resetStatusBox.style.color = '#991b1b';
+          resetStatusBox.style.border = '1px solid #f87171';
+          resetStatusBox.innerText = 'Por favor, informe um e-mail válido.';
+        }
         this.showToast('Por favor, informe um e-mail válido para a recuperação.');
         return;
       }
+
       submitResetBtn.disabled = true;
+      submitResetBtn.style.opacity = '0.7';
+      submitResetBtn.style.pointerEvents = 'none';
+      if (labelSubmitReset) labelSubmitReset.innerText = 'Enviando e-mail...';
+      if (resetStatusBox) {
+        resetStatusBox.style.display = 'block';
+        resetStatusBox.style.background = '#e0f2fe';
+        resetStatusBox.style.color = '#0369a1';
+        resetStatusBox.style.border = '1px solid #38bdf8';
+        resetStatusBox.innerText = 'Conectando ao servidor e enviando e-mail de recuperação...';
+      }
+
       const res = await this.supabaseClient.resetPassword(email);
+
       submitResetBtn.disabled = false;
+      submitResetBtn.style.opacity = '1';
+      submitResetBtn.style.pointerEvents = 'auto';
+      if (labelSubmitReset) labelSubmitReset.innerText = 'Enviar Link';
+
       if (res.success) {
-        if (res.resetLink) {
-          // Se o link foi gerado diretamente pelo servidor, abre imediatamente a tela de nova senha
-          const token = new URL(res.resetLink).searchParams.get('token');
-          if (token && newPasswordContainer) {
-            this.showToast('Link de recuperação validado! Digite sua nova senha abaixo.', 6000);
-            if (resetContainer) resetContainer.style.display = 'none';
-            newPasswordContainer.style.display = 'flex';
-            this.supabaseClient._activeResetToken = token;
-            newPasswordInput?.focus();
-            return;
-          }
+        soundFX?.playPop(1.3);
+        if (resetStatusBox) {
+          resetStatusBox.style.display = 'block';
+          resetStatusBox.style.background = '#e6f9f6';
+          resetStatusBox.style.color = '#0f8e83';
+          resetStatusBox.style.border = '1px solid #19c8b9';
+          resetStatusBox.innerHTML = `<strong>E-mail enviado!</strong><br>Verifique a caixa de entrada de <strong>${email}</strong> e clique no link recebido.`;
         }
-        this.showToast(res.message, 6000);
-        if (resetContainer) resetContainer.style.display = 'none';
-        if (formContainer) formContainer.style.display = 'flex';
+        this.showToast(res.message || 'Instruções enviadas para seu e-mail!', 7000);
       } else {
+        soundFX?.playPop(0.7);
+        if (resetStatusBox) {
+          resetStatusBox.style.display = 'block';
+          resetStatusBox.style.background = '#fee2e2';
+          resetStatusBox.style.color = '#991b1b';
+          resetStatusBox.style.border = '1px solid #f87171';
+          resetStatusBox.innerText = res.error || 'Erro ao enviar o link de recuperação.';
+        }
         this.showToast(res.error || 'Erro ao enviar o link de recuperação.');
       }
     });

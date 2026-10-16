@@ -316,8 +316,32 @@ app.get('/api/auth/confirm-email', async (req, res) => {
 });
 
 app.get('/api/auth/reset-password', async (req, res) => {
-  const { token } = req.query;
-  if (!token) return res.status(400).send('Token de recuperação ausente.');
+  const token = req.query.token || req.query.t || '';
+  if (!token) {
+    return res.status(400).send(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <title>Token Ausente - KidsLearnCode</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+        <style>
+          body { font-family: 'Nunito', sans-serif; background: #f8f8f0; color: #794f27; padding: 40px 16px; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+          .card { max-width: 480px; width: 100%; background: #fdfbf7; border: 2px solid #ea580c; border-radius: 24px; padding: 32px 28px; box-shadow: 0 6px 0 #9a3412; text-align: center; }
+          h2 { margin-top: 0; color: #ea580c; font-size: 22px; }
+          p { color: #725d42; font-size: 15px; line-height: 1.6; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h2>Token de Recuperação Ausente</h2>
+          <p>O link acessado não possui o código de segurança para redefinir sua senha. Certifique-se de clicar diretamente no botão azul do e-mail recebido.</p>
+        </div>
+      </body>
+      </html>
+    `);
+  }
 
   try {
     const userRes = await db.query(
@@ -327,12 +351,27 @@ app.get('/api/auth/reset-password', async (req, res) => {
 
     if (userRes.rows.length === 0) {
       return res.send(`
-        <body style="font-family: 'Nunito', sans-serif; text-align: center; padding: 40px; background: #f8f8f0; color: #794f27;">
-          <div style="max-width: 500px; margin: 0 auto; background: #fdfbf7; border: 2px solid #ea580c; border-radius: 20px; padding: 30px; box-shadow: 0 4px 0 #9a3412;">
-            <h2>Link expirado ou inválido</h2>
-            <p>Este link de redefinição de senha já foi utilizado ou ultrapassou a validade de 1 hora.</p>
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8">
+          <title>Link Expirado - KidsLearnCode</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+          <style>
+            body { font-family: 'Nunito', sans-serif; background: #f8f8f0; color: #794f27; padding: 40px 16px; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+            .card { max-width: 480px; width: 100%; background: #fdfbf7; border: 2px solid #ea580c; border-radius: 24px; padding: 32px 28px; box-shadow: 0 6px 0 #9a3412; text-align: center; }
+            h2 { margin-top: 0; color: #ea580c; font-size: 22px; }
+            p { color: #725d42; font-size: 15px; line-height: 1.6; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h2>Link expirado ou já utilizado</h2>
+            <p>Este link de redefinição de senha já foi utilizado ou ultrapassou a validade de 30 minutos. Solicite um novo link pela tela de login do jogo.</p>
           </div>
         </body>
+        </html>
       `);
     }
 
@@ -457,8 +496,13 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
       const prof = db.getProfile(user.id);
       const nickname = prof?.nickname || 'Aventureiro';
-
-      const dispatchRes = await mailer.sendPasswordResetEmail({ email: user.email, token: resetToken, nickname });
+      const activePublicUrl = networkBridge.getActiveUrl();
+      const dispatchRes = await mailer.sendPasswordResetEmail({
+        email: user.email,
+        token: resetToken,
+        nickname,
+        publicUrl: activePublicUrl
+      });
       addServerLog(`Link de recuperação de senha solicitado para ${user.email} (${dispatchRes.success ? 'E-mail enviado' : 'Aviso: ' + dispatchRes.error})`, 'AUTH');
     }
 
@@ -467,7 +511,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       message: 'Instruções para redefinir sua senha foram enviadas para o seu e-mail!'
     });
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao processar recuperação de senha.' });
+    addServerLog(`Falha em forgot-password: ${err.message}`, 'ERROR');
+    res.status(500).json({ error: 'Erro ao processar recuperação de senha: ' + err.message });
   }
 });
 

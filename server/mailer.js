@@ -70,8 +70,9 @@ export class Mailer {
     return this._dispatchEmail(targetEmail, subject, html, confirmationLink);
   }
 
-  async sendPasswordResetEmail({ email, token, nickname = 'Aventureiro' }) {
-    const resetLink = `${this.publicUrl}/api/auth/reset-password?token=${token}`;
+  async sendPasswordResetEmail({ email, token, nickname = 'Aventureiro', publicUrl = null }) {
+    const rootUrl = publicUrl || this.publicUrl || 'http://localhost:8080';
+    const resetLink = `${rootUrl.replace(/\/$/, '')}/api/auth/reset-password?token=${encodeURIComponent(token)}`;
     const subject = `[Ilha Lua] Recuperação de Senha`;
 
     const html = `
