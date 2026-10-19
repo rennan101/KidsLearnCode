@@ -4200,10 +4200,10 @@ class RPGApplication {
             const camX = isFinite(this.camera.x) ? this.camera.x : 0;
             const camY = isFinite(this.camera.y) ? this.camera.y : 0;
 
-            // 1. Solid layer root tiles within viewport (2 blocks padding)
+            // 1. Solid layer root tiles within viewport (4 blocks padding for multi-tile trees/houses)
             const solidLayer = this.tileMap.layers.solid;
             if (solidLayer && solidLayer.size > 0) {
-              const padding = 2;
+              const padding = 4;
               const startCol = Math.floor(camX / this.tileMap.tileSize) - padding;
               const endCol = Math.ceil((camX + camW / camZ) / this.tileMap.tileSize) + padding;
               const startRow = Math.floor(camY / this.tileMap.tileSize) - padding;
@@ -4213,16 +4213,16 @@ class RPGApplication {
                 for (let x = startCol; x <= endCol; x++) {
                   const cell = solidLayer.get(this.tileMap.getKey(x, y));
                   if (!cell || cell.isRoot === false) continue;
-                  const baseY = this.tileMap.getCellBaseY(cell, x, y, this.assetLoader);
+                  const baseY = this.tileMap.getCellBaseY(cell, x, y, this.assetLoader) + 1;
                   pushYSort('tile', cell, x, y, null, null, null, baseY);
                 }
               }
             }
 
-            // 1b. Tall Grass tiles from Decor layer (Y-sorted dynamically against player and NPCs)
+            // 1b. Tall Grass, Trees & Houses from Decor layer (Y-sorted dynamically against player, NPCs & terrain)
             const decorLayer = this.tileMap.layers.decor;
             if (decorLayer && decorLayer.size > 0 && this.tallGrassSystem) {
-              const padding = 2;
+              const padding = 4;
               const startCol = Math.floor(camX / this.tileMap.tileSize) - padding;
               const endCol = Math.ceil((camX + camW / camZ) / this.tileMap.tileSize) + padding;
               const startRow = Math.floor(camY / this.tileMap.tileSize) - padding;
@@ -4232,9 +4232,13 @@ class RPGApplication {
                 for (let x = startCol; x <= endCol; x++) {
                   const cell = decorLayer.get(this.tileMap.getKey(x, y));
                   if (!cell || cell.isRoot === false) continue;
-                  if (this.tallGrassSystem.isTallGrassTile(cell.tileId)) {
-                    // Base anchor at bottom of grass clump
-                    const baseY = (y + 1) * this.tileMap.tileSize;
+                  const lower = (cell.tileId || '').toLowerCase();
+                  if (
+                    this.tallGrassSystem.isTallGrassTile(cell.tileId) ||
+                    lower.startsWith('tree-') ||
+                    lower.startsWith('house-')
+                  ) {
+                    const baseY = this.tileMap.getCellBaseY(cell, x, y, this.assetLoader);
                     pushYSort('tile', cell, x, y, null, null, null, baseY);
                   }
                 }

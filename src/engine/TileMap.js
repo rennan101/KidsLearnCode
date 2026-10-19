@@ -1888,27 +1888,59 @@ export class TileMap {
     }
   }
 
+  isFlatSurfaceTile(tileId, tileMeta = null) {
+    if (!tileId || typeof tileId !== 'string') return false;
+    const id = tileId.toLowerCase();
+    if (id === 'tall-grass' || id === 'tallgrass') return false;
+    const meta = tileMeta || this.assetLoader?.getTileMetadata?.(tileId);
+    if (meta?.isTerrain || meta?.isFloor || meta?.category === 'Terrain' || meta?.category === 'Terrenos') return true;
+    return (
+      id.startsWith('grass-') ||
+      id.startsWith('high-grass-') ||
+      id.startsWith('dirt-') ||
+      id.startsWith('soil-') ||
+      id.startsWith('sand-') ||
+      id.startsWith('stone-path-') ||
+      id.startsWith('cobble-') ||
+      id === '001-9'
+    );
+  }
+
   // Get calculated base Y (feet/depth sort origin) for a tile cell
   getCellBaseY(cell, x, y, assetLoader) {
-    const tileMeta = assetLoader.getTileMetadata(cell.tileId);
-    if (!tileMeta) return (y + 1) * this.tileSize;
+    const tileMeta = assetLoader ? assetLoader.getTileMetadata(cell.tileId) : null;
+    const destY = y * this.tileSize;
+    if (!tileMeta) return destY + this.tileSize;
+
+    const idLower = (cell.tileId || '').toLowerCase();
+    const hasStack = Array.isArray(cell.stack) && cell.stack.length > 0;
+
+    // Flat ground/terrain tiles must always render underneath 3D objects (trees, rocks, houses, bushes)
+    if (!hasStack && this.isFlatSurfaceTile(cell.tileId, tileMeta)) {
+      return -1000000 + destY + this.tileSize;
+    }
 
     const rotation = cell.rotation || 0;
     const isRotated90or270 = (rotation === 90 || rotation === 270);
     const baseGridW = tileMeta.gridW || 1;
     const baseGridH = tileMeta.gridH || 1;
     const occGridH = isRotated90or270 ? baseGridW : baseGridH;
-    const destY = y * this.tileSize;
     const occH = occGridH * this.tileSize;
+    const depthOffset = typeof cell.depthOffset === 'number' ? cell.depthOffset : 0;
 
-    // 1. Derive from collider bottom if collider exists (e.g. tree trunks, house base)
-    const col = cell.collider || tileMeta.collider;
-    if (col && col.enabled && col.y !== undefined && col.h !== undefined) {
-      return destY + col.y + col.h;
+    // Trees (2x3) must use their full bottom footprint + priority offset so they always render in front of tiles under them
+    if (idLower.startsWith('tree-')) {
+      return destY + occH + 4 + depthOffset;
     }
 
-    // 2. Default to bottom edge of tile footprint
-    return destY + occH;
+    // Derive from collider bottom if collider exists (e.g. house base, rocks)
+    const col = cell.collider || tileMeta.collider;
+    if (col && col.enabled && col.y !== undefined && col.h !== undefined) {
+      return destY + Math.max(occH, col.y + col.h) + depthOffset;
+    }
+
+    // Default to bottom edge of tile footprint
+    return destY + occH + depthOffset;
   }
 
   renderLayer(ctx, layerName, assetLoader, camera, isEditor = false, showColliders = true, renderContext = {}) {
@@ -1921,8 +1953,8 @@ export class TileMap {
     const camW = (camera && typeof camera.viewportWidth === 'number' && isFinite(camera.viewportWidth) && camera.viewportWidth > 0) ? camera.viewportWidth : 800;
     const camH = (camera && typeof camera.viewportHeight === 'number' && isFinite(camera.viewportHeight) && camera.viewportHeight > 0) ? camera.viewportHeight : 600;
 
-    // Viewport bounds culling (strict 2 blocks margin around visible camera)
-    const padding = 2;
+    // Viewport bounds culling (4 blocks margin to include 2x3 trees and 4x4 houses)
+    const padding = 4;
     const startCol = Math.floor(camX / this.tileSize) - padding;
     const endCol = Math.ceil((camX + camW / camZ) / this.tileSize) + padding;
     const startRow = Math.floor(camY / this.tileSize) - padding;
@@ -2058,18 +2090,30 @@ export class TileMap {
       return;
     }
 
+    const sortedCells = [];
     for (let y = startRow; y <= endRow; y++) {
       for (let x = startCol; x <= endCol; x++) {
         const cell = layer.get(this.getKey(x, y));
         if (!cell || cell.isRoot === false) continue;
         if (layerName === 'decor' && renderContext?.ySortGrass && cell.tileId) {
           const lower = cell.tileId.toLowerCase();
-          if (lower === 'tall-grass' || lower === 'tallgrass') {
-            continue; // Drawn via Y-Sort depth pipeline
+          if (lower === 'tall-grass' || lower === 'tallgrass' || lower.startsWith('tree-') || lower.startsWith('house-')) {
+            continue; // Drawn via unified 3D Y-Sort depth pipeline
           }
         }
-        this.drawTileCell(ctx, cell, x, y, assetLoader, isEditor, showColliders);
+        sortedCells.push({
+          cell,
+          x,
+          y,
+          baseY: this.getCellBaseY(cell, x, y, assetLoader)
+        });
       }
+    }
+
+    sortedCells.sort((a, b) => a.baseY - b.baseY);
+    for (let i = 0; i < sortedCells.length; i++) {
+      const item = sortedCells[i];
+      this.drawTileCell(ctx, item.cell, item.x, item.y, assetLoader, isEditor, showColliders);
     }
   }
 

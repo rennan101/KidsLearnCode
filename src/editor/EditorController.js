@@ -741,7 +741,7 @@ export class EditorController {
       if (meta) {
         const isFluidGround = meta.layer === 'ground' || meta.id === 'water-wind-waker' || meta.id === 'water-animated' || meta.id === 'magma-animated' || meta.isMagma || meta.category === 'Water' || meta.category === 'Terrenos';
         const isChar = meta.category === 'Characters' || meta.isCharacter || meta.layer === 'characters' || (this.selectedTileId && (this.selectedTileId.startsWith('npc_') || this.selectedTileId.startsWith('char_') || this.selectedTileId.startsWith('hero_')));
-        const targetLayer = (meta.isInvisibleAsset || meta.layer === 'colliders') ? 'colliders' : (isFluidGround ? 'ground' : (isChar ? 'characters' : (meta.layer || this.activeLayer || 'decor')));
+        const targetLayer = (meta.isInvisibleAsset || meta.layer === 'colliders') ? 'colliders' : (isFluidGround ? 'ground' : (isChar ? 'characters' : (this.activeLayer || meta.layer || 'decor')));
         const isDragon = meta.isDragon || (this.selectedTileId && this.selectedTileId.startsWith('dragon_'));
         const extraProps = isDragon ? { level: Math.max(1, Math.min(100, parseInt(this.dragonPlacementLevel, 10) || 1)) } : null;
 
@@ -763,7 +763,7 @@ export class EditorController {
       const meta = this.assetLoader.getTileMetadata(this.selectedTileId);
       const isFluidGround = meta?.layer === 'ground' || meta?.id === 'water-wind-waker' || meta?.id === 'water-animated' || meta?.id === 'magma-animated' || meta?.isMagma || meta?.category === 'Water' || meta?.category === 'Terrenos';
       const isChar = meta?.category === 'Characters' || meta?.isCharacter || meta?.layer === 'characters' || (this.selectedTileId && (this.selectedTileId.startsWith('npc_') || this.selectedTileId.startsWith('char_') || this.selectedTileId.startsWith('hero_')));
-      const targetLayer = (meta?.isInvisibleAsset || meta?.layer === 'colliders') ? 'colliders' : (isFluidGround ? 'ground' : (isChar ? 'characters' : (meta?.layer || this.activeLayer || 'decor')));
+      const targetLayer = (meta?.isInvisibleAsset || meta?.layer === 'colliders') ? 'colliders' : (isFluidGround ? 'ground' : (isChar ? 'characters' : (this.activeLayer || meta?.layer || 'decor')));
       this.floodFill(tileX, tileY, targetLayer, this.selectedTileId);
       this.onMapChange();
     } else if (this.activeTool === 'select') {
