@@ -3029,7 +3029,7 @@ class RPGApplication {
       originTx: tx,
       originTy: ty,
       layerName,
-      cellData: { ...cellData },
+      cellData: { tileId: popped.tileId, ...(cellData || {}) },
       tileMeta: meta,
       wasStacked: popped.isStacked
     };
@@ -3104,6 +3104,8 @@ class RPGApplication {
     this.playModeInteraction.hoverTx = null;
     this.playModeInteraction.hoverTy = null;
     this.playModeInteraction.isDragging = false;
+    this.playModeInteraction.offsetX = null;
+    this.playModeInteraction.offsetY = null;
     this.canvas.style.cursor = 'var(--animal-cursor-default), default';
   }
 
@@ -3173,6 +3175,8 @@ class RPGApplication {
     this.playModeInteraction.hoverTx = null;
     this.playModeInteraction.hoverTy = null;
     this.playModeInteraction.isDragging = false;
+    this.playModeInteraction.offsetX = null;
+    this.playModeInteraction.offsetY = null;
     this.canvas.style.cursor = 'var(--animal-cursor-default), default';
   }
 
@@ -3212,12 +3216,19 @@ class RPGApplication {
         isMoveObject = true;
       } else if (this.playModeInteraction.activeMode === 'place_inventory') {
         meta = this.playModeInteraction.placingItem?.tileMeta;
+        cellData = { tileId: this.playModeInteraction.placingItem?.tileId };
       }
 
-      const gridW = meta?.gridW || 1;
-      const gridH = meta?.gridH || 1;
+      const targetTileId = cellData?.tileId || meta?.id;
+      const resolvedMeta = (targetTileId ? this.assetLoader?.getTileMetadata(targetTileId) : null) || meta;
+      const scaleMultiplier = resolvedMeta?.scale || meta?.scale || cellData?.scale || 1.0;
+
+      const gridW = resolvedMeta?.gridW || meta?.gridW || 1;
+      const gridH = resolvedMeta?.gridH || meta?.gridH || 1;
       const rawW = gridW * tileSize;
       const rawH = gridH * tileSize;
+      const drawW = rawW * scaleMultiplier;
+      const drawH = rawH * scaleMultiplier;
 
       // 2a. Caixa de destaque de origem (onde o objeto estava no mapa, igual ao Modo Editor)
       if (isMoveObject && this.playModeInteraction.heldObject) {
@@ -3248,20 +3259,31 @@ class RPGApplication {
       ctx.strokeRect(hx, hy, rawW, rawH);
       ctx.restore();
 
-      // 3. Resolução robusta de imagem e metadados (idêntico ao EditorController)
-      const targetTileId = cellData?.tileId || meta?.id;
-      const resolvedMeta = (targetTileId ? this.assetLoader?.getTileMetadata(targetTileId) : null) || meta;
+      // 3. Resolução robusta de imagem e metadados com múltiplos caminhos
       let img = null;
       if (resolvedMeta?.isAnimated && Array.isArray(resolvedMeta.frames) && resolvedMeta.frames.length > 0) {
         const frameIdx = (this.tileMap?.waterAnimFrame !== undefined) ? this.tileMap.waterAnimFrame : 0;
-        img = this.assetLoader?.getImage(resolvedMeta.frames[frameIdx % resolvedMeta.frames.length]) || this.assetLoader?.getImage(resolvedMeta.frames[0]);
+        const framePath = resolvedMeta.frames[frameIdx % resolvedMeta.frames.length] || resolvedMeta.frames[0];
+        img = this.assetLoader?.getImage(framePath) ||
+              this.assetLoader?.getImage('assets/' + framePath) ||
+              this.assetLoader?.getImage(framePath.replace(/^assets\//, ''));
       }
-      if (!img && resolvedMeta?.src) img = this.assetLoader?.getImage(resolvedMeta.src);
-      if (!img && meta?.src) img = this.assetLoader?.getImage(meta.src);
-      if (!img && targetTileId) img = this.assetLoader?.getImage(targetTileId);
-      if (!img && cellData?.src) img = this.assetLoader?.getImage(cellData.src);
-      if (!img && resolvedMeta?.icon) img = this.assetLoader?.getImage(resolvedMeta.icon);
-      if (!img && meta?.icon) img = this.assetLoader?.getImage(meta.icon);
+
+      const pathsToTry = [
+        resolvedMeta?.src,
+        meta?.src,
+        cellData?.src,
+        targetTileId,
+        resolvedMeta?.icon,
+        meta?.icon
+      ].filter(Boolean);
+
+      for (const p of pathsToTry) {
+        if (img) break;
+        img = this.assetLoader?.getImage(p) ||
+              this.assetLoader?.getImage('assets/' + p) ||
+              this.assetLoader?.getImage(p.replace(/^assets\//, ''));
+      }
 
       const rot = cellData?.rotation || 0;
       const isFlipped = !!cellData?.flipX;
@@ -3273,9 +3295,9 @@ class RPGApplication {
 
         if (drawShadow) {
           ctx.save();
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.30)';
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
           ctx.beginPath();
-          ctx.ellipse(drawX + rawW / 2, drawY + rawH + 3, rawW * 0.38, 7, 0, 0, Math.PI * 2);
+          ctx.ellipse(drawX + drawW / 2, drawY + drawH + 3, drawW * 0.38, 7, 0, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }
@@ -3283,13 +3305,13 @@ class RPGApplication {
         let drawn = false;
         if (img) {
           ctx.save();
-          if (rot !== 0 || isFlipped) {
+          if (rot !== 0 || scaleMultiplier !== 1.0 || isFlipped) {
             ctx.translate(drawX + rawW / 2, drawY + rawH / 2);
             if (rot !== 0) ctx.rotate((rot * Math.PI) / 180);
             if (isFlipped) ctx.scale(-1, 1);
-            ctx.drawImage(img, -rawW / 2, -rawH / 2, rawW, rawH);
+            ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
           } else {
-            ctx.drawImage(img, drawX, drawY, rawW, rawH);
+            ctx.drawImage(img, drawX, drawY, drawW, drawH);
           }
           ctx.restore();
           drawn = true;
@@ -3303,6 +3325,7 @@ class RPGApplication {
               rotation: rot,
               flipX: isFlipped,
               isRoot: true,
+              scale: scaleMultiplier,
               ...(cellData || {})
             };
             ctx.save();
@@ -3321,21 +3344,21 @@ class RPGApplication {
           ctx.lineWidth = 2.5;
           if (typeof ctx.roundRect === 'function') {
             ctx.beginPath();
-            ctx.roundRect(drawX + 2, drawY + 2, rawW - 4, rawH - 4, 12);
+            ctx.roundRect(drawX + 2, drawY + 2, drawW - 4, drawH - 4, 12);
             ctx.fill();
             ctx.stroke();
           } else {
-            ctx.fillRect(drawX + 2, drawY + 2, rawW - 4, rawH - 4);
-            ctx.strokeRect(drawX + 2, drawY + 2, rawW - 4, rawH - 4);
+            ctx.fillRect(drawX + 2, drawY + 2, drawW - 4, drawH - 4);
+            ctx.strokeRect(drawX + 2, drawY + 2, drawW - 4, drawH - 4);
           }
           ctx.strokeStyle = isValid ? '#0f8e83' : '#b91c1c';
           ctx.lineWidth = 2;
-          ctx.strokeRect(drawX + 12, drawY + 12, rawW - 24, rawH - 24);
+          ctx.strokeRect(drawX + 12, drawY + 12, Math.max(8, drawW - 24), Math.max(8, drawH - 24));
           ctx.beginPath();
           ctx.moveTo(drawX + 12, drawY + 12);
-          ctx.lineTo(drawX + rawW - 12, drawY + rawH - 12);
-          ctx.moveTo(drawX + rawW - 12, drawY + 12);
-          ctx.lineTo(drawX + 12, drawY + rawH - 12);
+          ctx.lineTo(drawX + drawW - 12, drawY + drawH - 12);
+          ctx.moveTo(drawX + drawW - 12, drawY + 12);
+          ctx.lineTo(drawX + 12, drawY + drawH - 12);
           ctx.stroke();
           ctx.restore();
         }
@@ -3343,19 +3366,26 @@ class RPGApplication {
         ctx.restore();
       };
 
-      // 4. GHOST NO DESTINO NA GRADE (Exatamente igual ao Modo Editor!)
-      // Permite que o jogador sempre veja exatamente onde a peça vai encaixar na grade
-      drawObjectSprite(hx, hy, 0.70, false);
+      // 4. GHOST NO DESTINO NA GRADE (Animal Island UI Preview)
+      // Mostra a silhueta translúcida exata de onde o item vai ser colocado na grade
+      drawObjectSprite(hx, hy, 0.45, false);
 
       // 5. OBJETO ATRELADO DIRETAMENTE À MÃOZINHA (Cursor Grip)
-      // Enquanto estiver arrastando com o botão do mouse pressionado, renderiza o sprite acompanhando o cursor do mouse
-      const isDraggingActive = !!this.playModeInteraction.isDragging;
+      // O item fica 100% visível e colado ao cursor desde o instante exato do clique
       const hasWorldMouse = typeof this.playModeInteraction.worldX === 'number' && !isNaN(this.playModeInteraction.worldX);
 
-      if (isDraggingActive && hasWorldMouse) {
-        const cursorX = this.playModeInteraction.worldX - (rawW / 2);
-        const cursorY = this.playModeInteraction.worldY - (rawH / 2) - 8;
-        drawObjectSprite(cursorX, cursorY, 0.92, true);
+      if (hasWorldMouse) {
+        let cursorX = hx;
+        let cursorY = hy;
+        if (typeof this.playModeInteraction.offsetX === 'number' && !isNaN(this.playModeInteraction.offsetX)) {
+          cursorX = this.playModeInteraction.worldX - this.playModeInteraction.offsetX;
+          cursorY = this.playModeInteraction.worldY - this.playModeInteraction.offsetY;
+        } else {
+          cursorX = this.playModeInteraction.worldX - (drawW / 2);
+          cursorY = this.playModeInteraction.worldY - (drawH / 2);
+        }
+        // Renderiza o objeto sólido atrelado à mãozinha com sombra tátil
+        drawObjectSprite(cursorX, cursorY, 1.0, true);
       }
 
       // 6. Floating Banner Badge "Mover para [X, Y]" (Animal Island UI, idêntico ao Editor)
