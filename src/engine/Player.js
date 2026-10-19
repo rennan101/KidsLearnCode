@@ -272,7 +272,11 @@ export class Player {
 
       this.speed = this.baseSpeed * speedMult;
     } else {
-      this.speed = this.baseSpeed;
+      let speed = this.baseSpeed;
+      if (this.tallGrassSystem && typeof this.tallGrassSystem.getSpeedMultiplier === 'function') {
+        speed *= this.tallGrassSystem.getSpeedMultiplier();
+      }
+      this.speed = speed;
     }
 
     // Limpa direções que não estão mais pressionadas

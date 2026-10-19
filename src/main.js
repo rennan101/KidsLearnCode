@@ -23,7 +23,9 @@ import { FirstTimeOnboarding } from './ui/FirstTimeOnboarding.js';
 import { DEFAULT_AVATAR_CONFIG } from './engine/animation/AvatarConfig.js';
 import { NPCManager } from './engine/NPCManager.js';
 import { PerformanceController } from './engine/PerformanceController.js';
-
+import { TallGrassSystem } from './engine/TallGrassSystem.js';
+import { CloudShadowsOverlay } from './engine/CloudShadowsOverlay.js';
+import { VFXSettingsController } from './engine/VFXSettingsController.js';
 
 class RPGApplication {
   constructor() {
@@ -76,6 +78,10 @@ class RPGApplication {
     this.npcManager = new NPCManager(this.tileMap, this.assetLoader);
     this.player = new Player(320, 320);
     this.player.dragonManager = this.dragonManager;
+    this.tallGrassSystem = new TallGrassSystem(this.tileMap);
+    this.player.tallGrassSystem = this.tallGrassSystem;
+    this.cloudShadowsOverlay = new CloudShadowsOverlay();
+    this.vfxSettingsController = new VFXSettingsController(this);
     this.camera = new Camera();
     this.minimap = new Minimap(this.tileMap, this.assetLoader, this.player, this.camera);
 
@@ -181,6 +187,7 @@ class RPGApplication {
       safeCall(this.setupDrawerResizing, 'setupDrawerResizing');
       safeCall(this.setupColliderPanel, 'setupColliderPanel');
       safeCall(this.setupPlayCameraZoomPanel, 'setupPlayCameraZoomPanel');
+      safeCall(this.setupVFXSettingsModal, 'setupVFXSettingsModal');
       safeCall(this.setupWaterSettingsModal, 'setupWaterSettingsModal');
       safeCall(this.setupTileInspector, 'setupTileInspector');
       safeCall(this.setupLayerManager, 'setupLayerManager');
@@ -1050,6 +1057,12 @@ class RPGApplication {
     // Initialize camera settings from tileMap state
     this.updatePlayCameraZoomUI(this.tileMap.playCameraZoom || 1.0);
     applyTiltShift(this.tileMap.tiltShiftBlur !== undefined ? this.tileMap.tiltShiftBlur : 5);
+  }
+
+  setupVFXSettingsModal() {
+    if (this.vfxSettingsController) {
+      this.vfxSettingsController.bindUI();
+    }
   }
 
   setupWaterSettingsModal() {
@@ -2589,6 +2602,7 @@ class RPGApplication {
     // Só devem aparecer no modo de edição para administradores autorizados
     const adminButtons = [
       'btn-toggle-colliders',
+      'btn-vfx-settings',
       'btn-water-settings',
       'btn-save-json',
       'btn-load-json',
@@ -4086,6 +4100,16 @@ class RPGApplication {
         this.npcManager.update(deltaTime, this.player, this.multiplayerClient, this.dayNightSystem, this.tileMap);
       }
 
+      // Update Tall Grass interaction & particle dynamics
+      if (this.tallGrassSystem) {
+        this.tallGrassSystem.update(deltaTime, this.player);
+      }
+
+      // Update atmospheric cloud shadows UV scrolling
+      if (this.cloudShadowsOverlay) {
+        this.cloudShadowsOverlay.update(deltaTime);
+      }
+
       const statusPos = document.getElementById('status-pos');
       if (statusPos) {
         statusPos.innerText = `X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`;
@@ -4192,6 +4216,28 @@ class RPGApplication {
                   if (!cell || cell.isRoot === false) continue;
                   const baseY = this.tileMap.getCellBaseY(cell, x, y, this.assetLoader);
                   pushYSort('tile', cell, x, y, null, null, null, baseY);
+                }
+              }
+            }
+
+            // 1b. Tall Grass tiles from Decor layer (Y-sorted dynamically against player and NPCs)
+            const decorLayer = this.tileMap.layers.decor;
+            if (decorLayer && decorLayer.size > 0 && this.tallGrassSystem) {
+              const padding = 2;
+              const startCol = Math.floor(camX / this.tileMap.tileSize) - padding;
+              const endCol = Math.ceil((camX + camW / camZ) / this.tileMap.tileSize) + padding;
+              const startRow = Math.floor(camY / this.tileMap.tileSize) - padding;
+              const endRow = Math.ceil((camY + camH / camZ) / this.tileMap.tileSize) + padding;
+
+              for (let y = startRow; y <= endRow; y++) {
+                for (let x = startCol; x <= endCol; x++) {
+                  const cell = decorLayer.get(this.tileMap.getKey(x, y));
+                  if (!cell || cell.isRoot === false) continue;
+                  if (this.tallGrassSystem.isTallGrassTile(cell.tileId)) {
+                    // Base anchor at bottom of grass clump
+                    const baseY = (y + 1) * this.tileMap.tileSize;
+                    pushYSort('tile', cell, x, y, null, null, null, baseY);
+                  }
                 }
               }
             }
@@ -4305,7 +4351,8 @@ class RPGApplication {
                 multiplayerClient: this.multiplayerClient, 
                 dayNightSystem: this.dayNightSystem,
                 performanceController: this.performanceController,
-                mode: this.mode 
+                mode: this.mode,
+                ySortGrass: Boolean(this.tallGrassSystem)
               };
               this.tileMap.renderLayer(this.ctx, layerName, this.assetLoader, this.camera, isEditor, showColliders, renderCtx);
             } catch (layerErr) {
@@ -4465,6 +4512,25 @@ class RPGApplication {
           this.editorController.renderEditorOverlay(this.ctx);
         } catch (editorOverlayErr) {
           console.error('Error rendering editor overlay:', editorOverlayErr);
+        }
+      }
+
+      // Render Tall Grass Submersion Upper Tufts (covers player/NPC legs when walking through grass)
+      if (this.tallGrassSystem && this.mode === 'play') {
+        try {
+          this.tallGrassSystem.renderSubmersionOverlay(this.ctx, this.player, this.assetLoader);
+          this.tallGrassSystem.renderParticles(this.ctx);
+        } catch (tallGrassErr) {
+          console.error('Error rendering tall grass submersion overlay:', tallGrassErr);
+        }
+      }
+
+      // Render Atmospheric Cloud Shadows Overlay in world space (above world, below UI)
+      if (this.cloudShadowsOverlay) {
+        try {
+          this.cloudShadowsOverlay.render(this.ctx, this.camera);
+        } catch (cloudErr) {
+          console.error('Error rendering cloud shadows overlay:', cloudErr);
         }
       }
     } catch (renderErr) {

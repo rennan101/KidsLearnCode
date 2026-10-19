@@ -2031,6 +2031,12 @@ export class TileMap {
       for (let x = startCol; x <= endCol; x++) {
         const cell = layer.get(this.getKey(x, y));
         if (!cell || cell.isRoot === false) continue;
+        if (layerName === 'decor' && renderContext?.ySortGrass && cell.tileId) {
+          const lower = cell.tileId.toLowerCase();
+          if (lower === 'tall-grass' || lower.startsWith('high-grass-') || lower.startsWith('tallgrass')) {
+            continue; // Drawn via Y-Sort depth pipeline
+          }
+        }
         this.drawTileCell(ctx, cell, x, y, assetLoader, isEditor, showColliders);
       }
     }

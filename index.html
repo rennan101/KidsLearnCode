@@ -116,6 +116,13 @@
           </svg>
         </button>
 
+        <!-- Configure Atmospheric VFX (Tall Grass & Cloud Shadows) -->
+        <button id="btn-vfx-settings" class="action-btn" title="Efeitos Visuais (VFX: Nuvens & Grama Alta)" style="display: none;">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+          </svg>
+        </button>
+
         <!-- Configure Water Waves & Biome Style -->
         <button id="btn-water-settings" class="action-btn" title="Configurar Estilo e Ondas de Água" style="display: none;">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1418,6 +1425,98 @@
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
           <span>Guardar na Mochila</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Atmospheric VFX Settings Modal (Animal Island UI) -->
+  <div class="crafting-modal" id="modal-vfx-settings" style="display: none; z-index: 99999;">
+    <div class="crafting-card ac-pocket-card" style="width: 440px; max-width: 95vw; background: #fdfbf7; border: 3px solid #c4b89e; border-radius: 24px; box-shadow: 0 16px 36px rgba(121, 79, 39, 0.28); overflow: hidden;">
+      <!-- Modal Header -->
+      <div class="crafting-header ac-header-mint" style="background: linear-gradient(135deg, #19c8b9 0%, #0f8e83 100%); color: #ffffff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0b6b63;">
+        <div class="crafting-title" style="display: flex; align-items: center; gap: 8px; font-family: var(--animal-font-title, 'Cinzel', serif); font-size: 1.15rem; font-weight: 800;">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+          </svg>
+          <span>Efeitos Visuais (VFX)</span>
+        </div>
+        <button id="btn-close-vfx-settings" class="modal-close-btn" title="Fechar" style="background: rgba(255,255,255,0.22); border: 2px solid #ffffff; border-radius: 50px; color: #ffffff; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="crafting-body" style="padding: 20px; display: flex; flex-direction: column; gap: 14px; color: #794f27;">
+        
+        <!-- Cloud Shadows Section -->
+        <div style="background: #f7f3df; border: 2px solid #e2d9c0; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="font-weight: 800; font-size: 0.9rem; color: #7a583e; display: flex; align-items: center; gap: 6px;">
+            <svg class="ui-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+            </svg>
+            <span>Sombras de Nuvens em Movimento</span>
+          </div>
+
+          <!-- Cloud Speed -->
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700;">
+              <span>Velocidade das Nuvens</span>
+              <span id="label-vfx-cloud-speed" style="color: #0f8e83; font-weight: 800;">22 px/s</span>
+            </div>
+            <input type="range" id="slider-vfx-cloud-speed" min="0" max="80" step="2" value="22" style="accent-color: #19c8b9; cursor: pointer;">
+          </div>
+
+          <!-- Cloud Opacity -->
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700;">
+              <span>Opacidade da Sombra</span>
+              <span id="label-vfx-cloud-opacity" style="color: #0f8e83; font-weight: 800;">22%</span>
+            </div>
+            <input type="range" id="slider-vfx-cloud-opacity" min="0" max="50" step="2" value="22" style="accent-color: #19c8b9; cursor: pointer;">
+          </div>
+        </div>
+
+        <!-- Tall Grass Section -->
+        <div style="background: #f7f3df; border: 2px solid #e2d9c0; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="font-weight: 800; font-size: 0.9rem; color: #7a583e; display: flex; align-items: center; gap: 6px;">
+            <svg class="ui-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 20h10M10 20c0-6 4-10 4-16M14 20c0-4-3-8-6-11"></path>
+            </svg>
+            <span>Grama Alta Interativa (Tall Grass)</span>
+          </div>
+
+          <!-- Grass Sway Intensity -->
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700;">
+              <span>Intensidade do Balanço (Sway)</span>
+              <span id="label-vfx-grass-sway" style="color: #0f8e83; font-weight: 800;">100%</span>
+            </div>
+            <input type="range" id="slider-vfx-grass-sway" min="0" max="200" step="10" value="100" style="accent-color: #19c8b9; cursor: pointer;">
+          </div>
+
+          <!-- Friction/Speed Reduction -->
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700;">
+              <span>Resistência ao Andar (Fricção)</span>
+              <span id="label-vfx-grass-friction" style="color: #0f8e83; font-weight: 800;">20%</span>
+            </div>
+            <input type="range" id="slider-vfx-grass-friction" min="0" max="50" step="5" value="20" style="accent-color: #19c8b9; cursor: pointer;">
+          </div>
+
+          <!-- Leaves Particle Toggle -->
+          <label style="display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; font-weight: 700; cursor: pointer;">
+            <span>Efeito de Folhas se Soltando</span>
+            <input type="checkbox" id="toggle-vfx-grass-particles" checked style="width: 18px; height: 18px; accent-color: #19c8b9; cursor: pointer;">
+          </label>
+        </div>
+
+        <!-- Save Button -->
+        <button type="button" id="btn-save-vfx-settings" class="btn-equip-tool" style="width: 100%; border-radius: 50px; font-weight: 800; padding: 12px 0; font-size: 0.95rem; margin-top: 4px; background: linear-gradient(135deg, #19c8b9 0%, #0f8e83 100%); color: #ffffff; border: 2px solid #0b6b63; box-shadow: 0 4px 0 0 #0b6b63; cursor: pointer;">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Salvar & Aplicar Efeitos</span>
         </button>
       </div>
     </div>
