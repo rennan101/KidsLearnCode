@@ -30,7 +30,8 @@ export class Database {
       profiles: [],
       game_saves: [],
       chat_messages: [],
-      server_backups: []
+      server_backups: [],
+      deleted_user_ids: []
     };
 
     this.globalMap = {
@@ -64,7 +65,8 @@ export class Database {
             profiles: Array.isArray(parsed.profiles) ? parsed.profiles : [],
             game_saves: Array.isArray(parsed.game_saves) ? parsed.game_saves : [],
             chat_messages: Array.isArray(parsed.chat_messages) ? parsed.chat_messages : [],
-            server_backups: Array.isArray(parsed.server_backups) ? parsed.server_backups : []
+            server_backups: Array.isArray(parsed.server_backups) ? parsed.server_backups : [],
+            deleted_user_ids: Array.isArray(parsed.deleted_user_ids) ? parsed.deleted_user_ids : []
           };
           loadedUsers = true;
         }
@@ -72,6 +74,9 @@ export class Database {
         console.error('[EmbeddedDB] Erro ao ler users_and_saves.json, acionando Auto-Recovery:', err.message);
         loadedUsers = this.tryAutoRecovery();
       }
+    } else {
+      // Se o arquivo principal não existir mas houver backups em server/data/backups/, recupera do backup mais recente
+      loadedUsers = this.tryAutoRecovery();
     }
 
     // 2. Carrega global_world_map.json
@@ -89,17 +94,20 @@ export class Database {
       }
     }
 
-    // 3. Se for a primeira execução (ou banco vazio), importa automaticamente de supabase_backup.json
+    // 3. Se ainda estiver vazio e não houver backups, importa de supabase_backup.json
     if (!loadedUsers || this.state.profiles.length === 0) {
       this.bootstrapFromMigrations();
     }
 
-    // 4. Se o mapa global ainda estiver vazio, carrega de defaultWorldMap.json
+    // 4. Reconcilia automaticamente contas presentes nos snapshots de backup (impede perda de contas recém-criadas)
+    this.reconcileWithBackups();
+
+    // 5. Se o mapa global ainda estiver vazio, carrega de defaultWorldMap.json
     if (!loadedMap && (!this.globalMap.map_data || Object.keys(this.globalMap.map_data).length === 0)) {
       this.bootstrapDefaultMap();
     }
 
-    // 5. Normaliza e repara e-mails (@gmail.com) e roupas (customAvatar) caso estivessem nulos na migração
+    // 6. Normaliza e repara e-mails (@gmail.com) e roupas (customAvatar) caso estivessem nulos na migração
     this.normalizeAndHealData();
 
     // Sincroniza lista de arquivos físicos de backup existentes na pasta
@@ -221,11 +229,12 @@ export class Database {
   }
 
   /**
-   * Blindagem 3: Gravação Atômica (Write-Then-Rename com fsync)
-   * Impede corrupção de arquivo mesmo em caso de queda brusca de energia
+   * Blindagem 3: Gravação Atômica Concorrente Segura (Write-Then-Rename com fsync e sufixo único)
+   * Impede corrupção ou colisão de arquivo mesmo com múltiplos processos ou queda brusca de energia
    */
   atomicWriteJSON(filePath, dataObj) {
-    const tmpPath = `${filePath}.tmp`;
+    const uniqueSuffix = `${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2, 7)}`;
+    const tmpPath = `${filePath}.${uniqueSuffix}.tmp`;
     const jsonString = JSON.stringify(dataObj, null, 2);
     const fd = fs.openSync(tmpPath, 'w');
     try {
@@ -276,6 +285,65 @@ export class Database {
     return false;
   }
 
+  /**
+   * Reconcilia todas as contas salvas em snapshots de backup no disco (server/data/backups/)
+   * Garante que nenhuma conta criada seja perdida caso um processo antigo tenha regredido o estado.
+   */
+  reconcileWithBackups() {
+    try {
+      if (!fs.existsSync(this.backupsDir)) return;
+      const deletedSet = new Set(this.state.deleted_user_ids || []);
+      const files = fs.readdirSync(this.backupsDir)
+        .filter(f => f.endsWith('.json'))
+        .sort(); // Do mais antigo ao mais recente
+
+      let restoredCount = 0;
+
+      for (const file of files) {
+        try {
+          const fullPath = path.join(this.backupsDir, file);
+          const parsed = JSON.parse(fs.readFileSync(fullPath, 'utf-8'));
+          const bUsers = parsed?.tables?.auth_users || [];
+          const bProfiles = parsed?.tables?.profiles || [];
+          const bSaves = parsed?.tables?.game_saves || [];
+
+          for (const u of bUsers) {
+            if (!u || !u.id || deletedSet.has(u.id)) continue;
+            const existsById = this.state.auth_users.find(curr => curr.id === u.id);
+            const existsByEmail = u.email && this.state.auth_users.find(curr => curr.email.toLowerCase() === u.email.toLowerCase());
+            if (!existsById && !existsByEmail) {
+              this.state.auth_users.push(u);
+              restoredCount++;
+            }
+          }
+
+          for (const p of bProfiles) {
+            if (!p || !p.id || deletedSet.has(p.id)) continue;
+            if (!this.state.profiles.find(curr => curr.id === p.id)) {
+              this.state.profiles.push(p);
+            }
+          }
+
+          for (const s of bSaves) {
+            if (!s || !s.user_id || deletedSet.has(s.user_id)) continue;
+            if (!this.state.game_saves.find(curr => curr.user_id === s.user_id)) {
+              const cleanSave = { ...s };
+              delete cleanSave.map_data;
+              this.state.game_saves.push(cleanSave);
+            }
+          }
+        } catch (_) {}
+      }
+
+      if (restoredCount > 0) {
+        this.saveState();
+        console.log(`[EmbeddedDB] Reconciliação de segurança concluiu: ${restoredCount} conta(s) recuperada(s) dos backups.`);
+      }
+    } catch (err) {
+      console.warn('[EmbeddedDB] Aviso na reconciliação de backups:', err.message);
+    }
+  }
+
   bootstrapFromMigrations() {
     const backupJsonPath = path.join(__dirname, 'db', 'migrations', 'supabase_backup.json');
     if (!fs.existsSync(backupJsonPath)) {
@@ -285,7 +353,7 @@ export class Database {
     }
 
     try {
-      console.log('[EmbeddedDB] Importando dados históricos de supabase_backup.json...');
+      console.log('[EmbeddedDB] Importando dados históricos de supabase_backup.json (modo merge seguro)...');
       const raw = fs.readFileSync(backupJsonPath, 'utf-8');
       const data = JSON.parse(raw);
       const defaultPassHash = bcrypt.hashSync('123456', 10);
@@ -325,18 +393,20 @@ export class Database {
         const gold = saveForUser?.coding_progress?.playerGold ?? p.gold ?? 100;
         const level = Math.max(1, Math.floor(xp / 200) + 1);
 
-        this.state.profiles.push({
-          id: p.id,
-          nickname: p.nickname || 'Aventureiro',
-          hero_id: saveForUser?.player_data?.heroId || p.hero_id || 'custom_avatar',
-          x: saveForUser?.player_data?.x ?? p.x ?? 320,
-          y: saveForUser?.player_data?.y ?? p.y ?? 320,
-          level,
-          xp,
-          gold,
-          last_online: p.last_online || new Date().toISOString(),
-          created_at: p.created_at || new Date().toISOString()
-        });
+        if (!this.state.profiles.find(existingProf => existingProf.id === p.id)) {
+          this.state.profiles.push({
+            id: p.id,
+            nickname: p.nickname || 'Aventureiro',
+            hero_id: saveForUser?.player_data?.heroId || p.hero_id || 'custom_avatar',
+            x: saveForUser?.player_data?.x ?? p.x ?? 320,
+            y: saveForUser?.player_data?.y ?? p.y ?? 320,
+            level,
+            xp,
+            gold,
+            last_online: p.last_online || new Date().toISOString(),
+            created_at: p.created_at || new Date().toISOString()
+          });
+        }
       }
 
       let newestMap = null;
@@ -349,24 +419,26 @@ export class Database {
           newestMapTime = savedTime;
         }
 
-        const prof = this.state.profiles.find(p => p.id === s.user_id);
-        const pData = s.player_data || { x: 320, y: 320, scale: 1, heroId: 'custom_avatar' };
-        if (!pData.customAvatar || typeof pData.customAvatar !== 'object') {
-          pData.customAvatar = this.createDefaultCustomAvatar(prof?.nickname || 'Aventureiro');
-        }
+        if (!this.state.game_saves.find(existingSave => existingSave.user_id === s.user_id)) {
+          const prof = this.state.profiles.find(p => p.id === s.user_id);
+          const pData = s.player_data || { x: 320, y: 320, scale: 1, heroId: 'custom_avatar' };
+          if (!pData.customAvatar || typeof pData.customAvatar !== 'object') {
+            pData.customAvatar = this.createDefaultCustomAvatar(prof?.nickname || 'Aventureiro');
+          }
 
-        this.state.game_saves.push({
-          id: s.id || crypto.randomUUID(),
-          user_id: s.user_id,
-          player_data: pData,
-          inventory_data: s.inventory_data || { items: [], tools: [], eggs: [], equippedToolId: null },
-          dragons_data: s.dragons_data || { party: [], formation: [], activeDragonId: null, mode: 'none' },
-          coding_progress: s.coding_progress || { playerXP: 0, playerGold: 100, completedLessons: [], unlockedAssets: [], unlockedRecipes: [] },
-          updated_at: s.updated_at || new Date().toISOString()
-        });
+          this.state.game_saves.push({
+            id: s.id || crypto.randomUUID(),
+            user_id: s.user_id,
+            player_data: pData,
+            inventory_data: s.inventory_data || { items: [], tools: [], eggs: [], equippedToolId: null },
+            dragons_data: s.dragons_data || { party: [], formation: [], activeDragonId: null, mode: 'none' },
+            coding_progress: s.coding_progress || { playerXP: 0, playerGold: 100, completedLessons: [], unlockedAssets: [], unlockedRecipes: [] },
+            updated_at: s.updated_at || new Date().toISOString()
+          });
+        }
       }
 
-      if (newestMap) {
+      if (newestMap && (!this.globalMap.map_data || Object.keys(this.globalMap.map_data).length === 0)) {
         this.globalMap = {
           map_data: newestMap,
           updated_at: new Date(newestMapTime || Date.now()).toISOString(),
@@ -511,7 +583,14 @@ export class Database {
     this.state.auth_users.push(newUser);
     this.state.profiles.push(newProfile);
     this.state.game_saves.push(newSave);
+    if (Array.isArray(this.state.deleted_user_ids)) {
+      this.state.deleted_user_ids = this.state.deleted_user_ids.filter(uid => uid !== id);
+    }
     this.saveState();
+
+    try {
+      this.createBackup('account_created');
+    } catch (_) {}
 
     return { user: newUser, profile: newProfile, save: newSave };
   }
@@ -795,6 +874,12 @@ export class Database {
     this.state.auth_users = this.state.auth_users.filter(u => u.id !== userId);
     this.state.profiles = this.state.profiles.filter(p => p.id !== userId);
     this.state.game_saves = this.state.game_saves.filter(s => s.user_id !== userId);
+    if (!Array.isArray(this.state.deleted_user_ids)) {
+      this.state.deleted_user_ids = [];
+    }
+    if (!this.state.deleted_user_ids.includes(userId)) {
+      this.state.deleted_user_ids.push(userId);
+    }
     this.saveState();
     return true;
   }

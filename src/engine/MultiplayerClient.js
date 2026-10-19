@@ -197,6 +197,7 @@ export class MultiplayerClient {
     const targetY = p.y;
     const defaultDragonX = (p.dragonX !== null && p.dragonX !== undefined) ? p.dragonX : (targetX - 28);
     const defaultDragonY = (p.dragonY !== null && p.dragonY !== undefined) ? p.dragonY : (targetY - 14);
+    const now = performance.now();
 
     if (!existing) {
       existing = {
@@ -205,10 +206,13 @@ export class MultiplayerClient {
         y: targetY,
         prevX: targetX,
         prevY: targetY,
+        packetOriginX: targetX,
+        packetOriginY: targetY,
         targetX,
         targetY,
         vx: p.vx || 0,
         vy: p.vy || 0,
+        lastPacketTime: now,
         animTimer: 0,
         dragonAnimTimer: 0,
         dragonX: defaultDragonX,
@@ -240,8 +244,12 @@ export class MultiplayerClient {
         existing.targetY = targetY;
       }
 
-      existing.vx = p.vx !== undefined ? p.vx : (targetX - existing.prevX) / 0.066;
-      existing.vy = p.vy !== undefined ? p.vy : (targetY - existing.prevY) / 0.066;
+      const dtRecv = Math.max(0.016, (now - (existing.lastPacketTime || now - 33)) / 1000);
+      existing.packetOriginX = targetX;
+      existing.packetOriginY = targetY;
+      existing.lastPacketTime = now;
+      existing.vx = p.vx !== undefined ? p.vx : (targetX - existing.prevX) / dtRecv;
+      existing.vy = p.vy !== undefined ? p.vy : (targetY - existing.prevY) / dtRecv;
       existing.dragonTargetX = defaultDragonX;
       existing.dragonTargetY = defaultDragonY;
       if (existing.dragonX === undefined) {
@@ -327,6 +335,10 @@ export class MultiplayerClient {
           }
           if (data.type === 'INIT') {
             this.playerId = data.playerId;
+          } else if (data.type === 'PLAYER_MOVED') {
+            if (data.player) {
+              this.handleRemotePlayerUpdate(data.player);
+            }
           } else if (data.type === 'WORLD_TICK') {
             this.handleWorldTick(data.players);
           } else if (data.type === 'CHAT_BROADCAST') {
@@ -460,12 +472,14 @@ export class MultiplayerClient {
     const timeSinceLastSend = now - this.lastBroadcastTime;
     const shouldSendPeriodicIdle = (now - this.lastSentState.idleHeartbeatTime) > 30000;
 
-    // Intervalo adaptativo: 33ms em WebSockets dedicados, 66ms no Supabase Realtime
-    const targetInterval = (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) ? 33 : this.broadcastIntervalMs;
+    // Intervalo de alta fluidez: 25ms (40Hz) em WebSockets dedicados, 50ms em fallback
+    const targetInterval = (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) ? 25 : this.broadcastIntervalMs;
 
-    // Disparo imediato se forçado, houve mudança crítica OU se atingiu o intervalo de movimento regular
+    // Disparo imediato se forçado, se houve mudança de movimento/direção/estado OU se atingiu o intervalo de movimento regular
     const shouldSend = force ||
-      (isCriticalStateChange && timeSinceLastSend >= 15) ||
+      isMovingChanged ||
+      directionChanged ||
+      (isCriticalStateChange && timeSinceLastSend >= 8) ||
       (timeSinceLastSend >= targetInterval && (hasMoved || player.isMoving)) ||
       shouldSendPeriodicIdle;
 
@@ -576,16 +590,30 @@ export class MultiplayerClient {
 
   update(deltaTime, dialogueSystem) {
     const dt = Math.min(deltaTime / 1000, 0.1);
+    const now = performance.now();
 
-    // 1. Update real remote players Velocity LERP (Anti-Teletransporte)
+    // 1. Update real remote players Velocity Dead-Reckoning + Responsive LERP (Zero Lag)
     for (const [, rp] of this.remotePlayers) {
       rp.animTimer = (rp.animTimer || 0) + dt;
       rp.dragonAnimTimer = (rp.dragonAnimTimer || 0) + dt;
 
-      const lerpSpeed = rp.isSprinting ? 22 : 18;
+      // Extrapolação suave por vetor de velocidade enquanto o jogador remoto caminha entre pacotes
+      const ageMs = now - (rp.lastPacketTime || now);
+      if (rp.isMoving && ageMs < 160 && (rp.vx || rp.vy)) {
+        const nextTargetX = rp.targetX + rp.vx * dt * 0.85;
+        const nextTargetY = rp.targetY + rp.vy * dt * 0.85;
+        const originX = rp.packetOriginX !== undefined ? rp.packetOriginX : rp.targetX;
+        const originY = rp.packetOriginY !== undefined ? rp.packetOriginY : rp.targetY;
+        if (Math.hypot(nextTargetX - originX, nextTargetY - originY) <= 24) {
+          rp.targetX = nextTargetX;
+          rp.targetY = nextTargetY;
+        }
+      }
+
+      const lerpSpeed = rp.isSprinting ? 26 : 22;
       const step = Math.min(1.0, lerpSpeed * dt);
 
-      // Aproximação contínua e suave em direção ao alvo
+      // Aproximação contínua e responsiva em direção ao alvo
       rp.x += (rp.targetX - rp.x) * step;
       rp.y += (rp.targetY - rp.y) * step;
 
@@ -595,8 +623,8 @@ export class MultiplayerClient {
           rp.dragonX = rp.x;
           rp.dragonY = rp.y;
         } else {
-          rp.dragonX = (rp.dragonX || rp.x) + (rp.dragonTargetX - (rp.dragonX || rp.x)) * Math.min(1.0, 14 * dt);
-          rp.dragonY = (rp.dragonY || rp.y) + (rp.dragonTargetY - (rp.dragonY || rp.y)) * Math.min(1.0, 14 * dt);
+          rp.dragonX = (rp.dragonX || rp.x) + (rp.dragonTargetX - (rp.dragonX || rp.x)) * Math.min(1.0, 18 * dt);
+          rp.dragonY = (rp.dragonY || rp.y) + (rp.dragonTargetY - (rp.dragonY || rp.y)) * Math.min(1.0, 18 * dt);
         }
       }
     }

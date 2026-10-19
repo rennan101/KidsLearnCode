@@ -1004,8 +1004,47 @@ app.post('/api/admin/backups/restore', (req, res) => {
   }
 });
 
-// DISPAROS AUTOMÁTICOS DE BACKUP:
-// 1. Ao iniciar o servidor
+// ==========================================
+// 3.2 AUTO-SAVE DE 10 SEGUNDOS & BACKUPS A CADA 6 HORAS
+// ==========================================
+
+// 1. Sincronização automática de tudo no banco a cada 10 segundos (10000ms)
+setInterval(() => {
+  try {
+    let updatedAny = false;
+    for (const p of activePlayers.values()) {
+      const targetUserId = p.userId;
+      if (targetUserId && !String(targetUserId).startsWith('guest_')) {
+        const prof = db.getProfile(targetUserId);
+        if (prof) {
+          prof.x = Math.round(p.x);
+          prof.y = Math.round(p.y);
+          prof.last_online = new Date().toISOString();
+          updatedAny = true;
+        }
+        const save = db.state.game_saves.find(s => s.user_id === targetUserId);
+        if (save && save.player_data) {
+          save.player_data.x = Math.round(p.x);
+          save.player_data.y = Math.round(p.y);
+          if (p.avatarConfig && typeof p.avatarConfig === 'object') {
+            save.player_data.customAvatar = p.avatarConfig;
+          }
+          save.updated_at = new Date().toISOString();
+          updatedAny = true;
+        }
+      }
+    }
+    // Persiste o estado completo no SSD a cada 10s
+    db.saveState();
+    if (updatedAny) {
+      db.saveGlobalMapToDisk();
+    }
+  } catch (err) {
+    addServerLog(`Aviso no auto-save de 10s: ${err.message}`, 'WARN');
+  }
+}, 10000);
+
+// 2. Snapshot inicial ao subir o servidor
 setTimeout(() => {
   try {
     const res = db.createBackup('startup_auto');
@@ -1015,7 +1054,21 @@ setTimeout(() => {
   }
 }, 3000);
 
-// 2. A cada 6 horas
+// 3. Backup completo de tudo a cada 6 horas (verificação persistente contra reinicializações)
+const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+function checkAndRunSixHourBackup() {
+  try {
+    const latestScheduled = db.state.server_backups.find(b => b.created_by === 'scheduled_6h');
+    const lastTime = latestScheduled ? new Date(latestScheduled.created_at).getTime() : 0;
+    if (!lastTime || (Date.now() - lastTime) >= SIX_HOURS_MS) {
+      const res = db.createBackup('scheduled_6h');
+      addServerLog(`Backup completo periódico (6h) salvo: ${res.filename}`, 'BACKUP');
+    }
+  } catch (err) {
+    addServerLog(`Aviso no backup 6h: ${err.message}`, 'WARN');
+  }
+}
+setInterval(checkAndRunSixHourBackup, 10 * 60 * 1000);
 setInterval(() => {
   try {
     const res = db.createBackup('scheduled_6h');
@@ -1023,10 +1076,10 @@ setInterval(() => {
   } catch (err) {
     addServerLog(`Aviso no backup 6h: ${err.message}`, 'WARN');
   }
-}, 6 * 60 * 60 * 1000);
+}, SIX_HOURS_MS);
 
 // ==========================================
-// 4. REALTIME MMORPG WEBSOCKET ENGINE (20Hz)
+// 4. REALTIME MMORPG WEBSOCKET ENGINE (30Hz + Immediate Relay)
 // ==========================================
 
 // Heartbeat Ping/Pong a cada 15s para limpar conexões zumbis (half-open sockets em túneis/Wi-Fi)
@@ -1103,7 +1156,7 @@ setInterval(() => {
       client.send(payload);
     }
   }
-}, 50); // 20Hz
+}, 33); // 30Hz (33ms)
 
 wss.on('connection', (ws) => {
   if (gameServerState === 'paused') {
@@ -1212,6 +1265,39 @@ wss.on('connection', (ws) => {
           if (data.dragonX !== undefined) p.dragonX = data.dragonX;
           if (data.dragonY !== undefined) p.dragonY = data.dragonY;
           p.updatedAt = Date.now();
+
+          // Relay imediato de movimento para os outros jogadores (Zero espera pelo próximo tick)
+          const immediateMovePayload = JSON.stringify({
+            type: 'PLAYER_MOVED',
+            player: {
+              id: p.id,
+              userId: p.userId || null,
+              clientSessionId: p.clientSessionId || null,
+              name: p.name,
+              heroId: p.heroId,
+              x: Math.round(p.x),
+              y: Math.round(p.y),
+              vx: p.vx || 0,
+              vy: p.vy || 0,
+              direction: p.direction,
+              isMoving: p.isMoving,
+              isSprinting: p.isSprinting,
+              isMounted: p.isMounted,
+              activeDragonId: p.activeDragonId,
+              avatarConfig: p.avatarConfig || null,
+              scale: p.scale || 1.0,
+              dragonMode: p.dragonMode || 'none',
+              flightAltitude: p.flightAltitude || 0,
+              dragonX: p.dragonX !== undefined ? p.dragonX : null,
+              dragonY: p.dragonY !== undefined ? p.dragonY : null
+            }
+          });
+
+          for (const client of wss.clients) {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+              client.send(immediateMovePayload);
+            }
+          }
 
           // Persiste automaticamente roupas/customização no banco sempre que o jogador alterar o avatar
           if (data.avatarConfig && typeof data.avatarConfig === 'object') {

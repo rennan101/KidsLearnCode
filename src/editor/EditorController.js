@@ -627,6 +627,31 @@ export class EditorController {
     }
   }
 
+  removeExistingCharacterInstances(tileId) {
+    if (!tileId || typeof tileId !== 'string') return;
+    const lower = tileId.toLowerCase();
+    const isUniqueChar =
+      lower.startsWith('npc_') ||
+      lower.startsWith('npc-') ||
+      lower.startsWith('hero_') ||
+      lower.startsWith('hero-') ||
+      !!MASTER_NPC_CONFIGS[tileId];
+
+    if (!isUniqueChar) return;
+
+    const layersToClean = ['characters', 'solid', 'decor'];
+    for (const lName of layersToClean) {
+      const layer = this.tileMap.layers[lName];
+      if (!layer) continue;
+      for (const [k, c] of layer.entries()) {
+        const cid = (typeof c === 'object' && c !== null) ? c.tileId : c;
+        if (cid === tileId) {
+          layer.delete(k);
+        }
+      }
+    }
+  }
+
   handleMouseUp() {
     if (this.isDraggingTile && this.dragTileData) {
       const { isPlayer, layerName, tileId, sourceTileX, sourceTileY, currentTileX, currentTileY, cell, meta } = this.dragTileData;
@@ -643,9 +668,26 @@ export class EditorController {
           }
           this.onMapChange();
         } else {
-          // Delete tile from source position
+          const lower = (tileId || '').toLowerCase();
+          const isChar =
+            layerName === 'characters' ||
+            meta?.isCharacter ||
+            meta?.category === 'Characters' ||
+            lower.startsWith('npc_') ||
+            lower.startsWith('char_') ||
+            lower.startsWith('hero_') ||
+            !!MASTER_NPC_CONFIGS[tileId];
+
+          // Delete tile from source position (and all character layers if it's an NPC/Character)
           this.tileMap.deleteTile(sourceTileX, sourceTileY, layerName, this.assetLoader);
-          // Place tile at new destination position with all metadata and properties preserved
+          if (isChar) {
+            this.tileMap.layers.characters?.delete(this.tileMap.getKey(sourceTileX, sourceTileY));
+            this.tileMap.layers.solid?.delete(this.tileMap.getKey(sourceTileX, sourceTileY));
+            this.tileMap.layers.decor?.delete(this.tileMap.getKey(sourceTileX, sourceTileY));
+            this.removeExistingCharacterInstances(tileId);
+          }
+
+          const destLayer = isChar ? 'characters' : layerName;
           const rot = cell.rotation || 0;
           const flip = !!cell.flipX;
           const colorOverride = cell.colorOverride || null;
@@ -653,9 +695,9 @@ export class EditorController {
           const extraProps = cell.extraProps || null;
 
           if (meta && ((meta.gridW && meta.gridW > 1) || (meta.gridH && meta.gridH > 1))) {
-            this.tileMap.placeMultiTile(layerName, currentTileX, currentTileY, meta, rot, flip, colorOverride, col, extraProps);
+            this.tileMap.placeMultiTile(destLayer, currentTileX, currentTileY, meta, rot, flip, colorOverride, col, extraProps);
           } else {
-            this.tileMap.setTile(layerName, currentTileX, currentTileY, tileId, true, currentTileX, currentTileY, rot, flip, colorOverride, col, extraProps);
+            this.tileMap.setTile(destLayer, currentTileX, currentTileY, tileId, true, currentTileX, currentTileY, rot, flip, colorOverride, col, extraProps);
           }
           this.onMapChange();
           this.inspectTileAt(currentTileX, currentTileY);
@@ -703,8 +745,9 @@ export class EditorController {
         const isDragon = meta.isDragon || (this.selectedTileId && this.selectedTileId.startsWith('dragon_'));
         const extraProps = isDragon ? { level: Math.max(1, Math.min(100, parseInt(this.dragonPlacementLevel, 10) || 1)) } : null;
 
-        // Se estiver inserindo um personagem, limpa duplicatas em outras camadas na mesma célula
+        // Se estiver inserindo um personagem/NPC, remove instâncias duplicadas anteriores e limpa outras camadas na célula
         if (isChar) {
+          this.removeExistingCharacterInstances(this.selectedTileId);
           this.tileMap.layers.solid?.delete(this.tileMap.getKey(tileX, tileY));
           this.tileMap.layers.decor?.delete(this.tileMap.getKey(tileX, tileY));
         }

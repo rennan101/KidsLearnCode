@@ -297,8 +297,8 @@ class RPGApplication {
     // Sincroniza visibilidade de controles admin e modo
     this.updateAdminAndModeUI();
 
-    // Periodic background auto-save (every 4 seconds) non-blocking via IndexedDB + deduplicated Cloud Save
-    setInterval(() => this.saveGameToStorage(false), 4000);
+    // Periodic background auto-save (every 10 seconds) non-blocking via IndexedDB + Cloud DB Sync
+    setInterval(() => this.saveGameToStorage(true), 10000);
 
     // Auto-save on page unload/close/hide
     window.addEventListener('beforeunload', () => this.saveGameToStorage(true));
@@ -1659,6 +1659,7 @@ class RPGApplication {
     const btnToggleColliders = document.getElementById('btn-toggle-colliders');
 
     btnPlay.addEventListener('click', () => {
+      const wasEditing = this.mode === 'edit';
       this.mode = 'play';
       this.player.resetKeys();
       this.editorController.resetKeys();
@@ -1687,12 +1688,12 @@ class RPGApplication {
       this.camera.follow(this.player.x + 32, this.player.y + 32, 1.0);
       this.updateAdminAndModeUI();
 
-      // Sync active wandering NPCs and Heroes in Play Mode
+      // Sync active wandering NPCs and Heroes in Play Mode (force snap to updated anchors when exiting Edit Mode)
       if (this.npcManager) {
-        this.npcManager.syncFromTileMap(this.tileMap);
+        this.npcManager.syncFromTileMap(this.tileMap, wasEditing);
       }
 
-      this.saveGameToStorage(true);
+      this.saveGameToStorage(true, wasEditing);
     });
 
     btnEdit.addEventListener('click', () => {
@@ -2216,7 +2217,10 @@ class RPGApplication {
 
   triggerAutoSave(broadcastNow = true) {
     if (this.npcManager) {
-      this.npcManager.syncFromTileMap(this.tileMap);
+      this.npcManager.syncFromTileMap(this.tileMap, this.mode === 'edit');
+    }
+    if (broadcastNow || this.mode === 'edit') {
+      this.hasUnsavedMapChanges = true;
     }
     this.updateSaveIndicator('saving');
     clearTimeout(this.saveTimeout);
@@ -2271,7 +2275,8 @@ class RPGApplication {
       }
 
       // Propaga o mapa global atualizado via Realtime quando houver alteração
-      if (broadcastMap && this.supabaseClient) {
+      if ((broadcastMap || this.hasUnsavedMapChanges) && this.supabaseClient) {
+        this.hasUnsavedMapChanges = false;
         this.supabaseClient.broadcastMapUpdate(mapData);
         this.supabaseClient.saveGlobalWorldMap(mapData);
       }
@@ -2282,11 +2287,11 @@ class RPGApplication {
         const timeSinceLastCloudSave = Date.now() - (this.lastCloudSaveTime || 0);
         if (instant || timeSinceLastCloudSave >= 1500) {
           this.lastCloudSaveTime = Date.now();
-          this.supabaseClient.saveCloudGame(payload);
+          this.supabaseClient.saveCloudGame(payload, instant);
         } else {
           this.cloudSaveDebounceTimer = setTimeout(() => {
             this.lastCloudSaveTime = Date.now();
-            this.supabaseClient?.saveCloudGame(payload);
+            this.supabaseClient?.saveCloudGame(payload, false);
           }, 1500 - timeSinceLastCloudSave);
         }
       }

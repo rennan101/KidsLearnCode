@@ -88,7 +88,7 @@ export class NPCManager {
    * Sincroniza e descobre todos os NPCs e Heróis posicionados nas camadas do TileMap.
    * Cria instâncias vivas de NPCEntity respeitando suas posições âncora originais e ativando sua IA no mundo vivo.
    */
-  syncFromTileMap(tileMap = this.tileMap) {
+  syncFromTileMap(tileMap = this.tileMap, forceSnapToAnchor = false) {
     if (!tileMap || !tileMap.layers) return;
     this.tileMap = tileMap;
 
@@ -100,12 +100,14 @@ export class NPCManager {
     const discoveredKeys = new Set();
     const discoveredTileIds = new Set();
     const layersToCheck = ['characters', 'solid', 'decor'];
+    const tileSize = tileMap.tileSize || 64;
 
     for (const layerName of layersToCheck) {
       const layer = tileMap.layers[layerName];
       if (!layer) continue;
 
       for (const [key, cell] of layer.entries()) {
+        if (cell && cell.isRoot === false) continue;
         const tileId = (typeof cell === 'object' && cell !== null) ? cell.tileId : (typeof cell === 'string' ? cell : null);
         if (!tileId || typeof tileId !== 'string') continue;
 
@@ -124,8 +126,8 @@ export class NPCManager {
 
         if (isChar) {
           const [tx, ty] = key.split(',').map(Number);
-          const worldCenterX = tx * (tileMap.tileSize || 64) + 32;
-          const worldCenterY = ty * (tileMap.tileSize || 64) + 32;
+          const worldCenterX = tx * tileSize + 32;
+          const worldCenterY = ty * tileSize + 32;
 
           // Ignora se estiver na água
           if (tileMap.isWaterAt && tileMap.isWaterAt(worldCenterX, worldCenterY, this.assetLoader)) {
@@ -133,12 +135,10 @@ export class NPCManager {
             continue;
           }
 
-          // Se for NPC Mestre/Herói com identidade única e já foi descoberto em outra camada, remove a duplicata residual
+          // Se for NPC Mestre/Herói com identidade única e já foi descoberto, remove duplicata residual
           const isMasterNpc = lower.startsWith('npc_') || !!MASTER_NPC_CONFIGS[tileId];
           if (isMasterNpc && discoveredTileIds.has(tileId)) {
-            if (layerName !== 'characters') {
-              layer.delete(key); // Limpa resíduo duplicado em solid ou decor
-            }
+            layer.delete(key);
             continue;
           }
 
@@ -146,32 +146,34 @@ export class NPCManager {
           discoveredKeys.add(entityKey);
           discoveredTileIds.add(tileId);
 
-          if (!this.entities.has(entityKey)) {
-            // Verifica se já existe por ID antes de criar
-            let existingEntity = null;
-            for (const ent of this.entities.values()) {
-              if (ent.id === tileId) {
-                existingEntity = ent;
-                break;
-              }
-            }
+          const newAnchorX = tx * tileSize;
+          const newAnchorY = ty * tileSize;
 
-            if (existingEntity) {
-              // Reutiliza entidade existente preservando sua posição atual de caminhada
-              this.entities.set(entityKey, existingEntity);
-            } else {
-              const npcData = getNPCData(tileId);
-              const entity = new NPCEntity(tileId, tx, ty, npcData);
-              this.entities.set(entityKey, entity);
+          if (this.entities.has(entityKey)) {
+            const existingEntity = this.entities.get(entityKey);
+            const anchorMoved = existingEntity.anchorX !== newAnchorX || existingEntity.anchorY !== newAnchorY;
+            if (anchorMoved || forceSnapToAnchor) {
+              existingEntity.anchorX = newAnchorX;
+              existingEntity.anchorY = newAnchorY;
+              existingEntity.x = newAnchorX;
+              existingEntity.y = newAnchorY;
+              existingEntity.targetX = newAnchorX;
+              existingEntity.targetY = newAnchorY;
+              existingEntity.state = 'idle';
+              existingEntity.stateTimer = 0.2 + Math.random() * 0.4;
             }
+          } else {
+            const npcData = getNPCData(tileId);
+            const entity = new NPCEntity(tileId, tx, ty, npcData);
+            this.entities.set(entityKey, entity);
           }
         }
       }
     }
 
-    // Remove entidades que foram apagadas do mapa pelo editor
-    for (const [entityKey, ent] of this.entities.entries()) {
-      if (!discoveredKeys.has(entityKey) && !discoveredTileIds.has(ent.id)) {
+    // Remove entidades que foram apagadas ou movidas de célula pelo editor
+    for (const [entityKey] of this.entities.entries()) {
+      if (!discoveredKeys.has(entityKey)) {
         this.entities.delete(entityKey);
       }
     }
