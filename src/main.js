@@ -1592,19 +1592,24 @@ class RPGApplication {
       if (this.mode === 'edit') {
         this.editorController.handleMouseUp();
       } else if (this.mode === 'play') {
-        if (this.playModeInteraction.activeMode && this.playModeInteraction.isDragging) {
-          // No Modo Play, funciona igual ao Modo Editor:
-          // Ao soltar o mouse após arrastar, confirma o posicionamento se o local for válido
-          if (this.playModeInteraction.hasDragged) {
+        if (this.playModeInteraction.activeMode) {
+          if (this.playModeInteraction.activeMode === 'move_object') {
+            // Drag and Drop direto: ao soltar o botão do mouse, descola da seta e fixa na nova posição se válida
             if (this.playModeInteraction.isValidPlacement) {
               this.confirmPlayModePlacement();
             } else {
-              // Soltou em local inválido ou fora do alcance: cancela e devolve para onde estava
               this.cancelPlayModeInteraction();
             }
-          } else {
-            // Se o usuário clicou e soltou sem arrastar (micro-clique), mantém segurado no cursor para modo click-and-place
-            this.playModeInteraction.isDragging = false;
+          } else if (this.playModeInteraction.isDragging) {
+            if (this.playModeInteraction.hasDragged) {
+              if (this.playModeInteraction.isValidPlacement) {
+                this.confirmPlayModePlacement();
+              } else {
+                this.cancelPlayModeInteraction();
+              }
+            } else {
+              this.playModeInteraction.isDragging = false;
+            }
           }
         }
       }
@@ -2693,7 +2698,7 @@ class RPGApplication {
       return false;
     }
 
-    // Árvores, Troncos e Cepos
+    // Árvores, Troncos e Cepos (árvores e rochas permanecem fixas)
     if (
       id.includes('tree') || id.includes('trunk') || id.includes('stump') ||
       id.includes('arvore') || id.includes('tronco') || id.includes('pine') ||
@@ -2702,15 +2707,21 @@ class RPGApplication {
       return false;
     }
 
-    // Plantas, Flores, Cogumelos e Arbustos
-    if (
-      id.includes('plant') || id.includes('flower') || id.includes('flor') ||
-      id.includes('planta') || id.includes('bush') || id.includes('arbusto') ||
-      id.includes('shrub') || id.includes('mushroom') || id.includes('cogumelo') ||
-      id.includes('wheat') || id.includes('crop') || id.includes('herb') ||
-      id.includes('foliage') || id.includes('leaf') || id.includes('cactus')
-    ) {
-      return false;
+    // Plantas grandes, Arbustos e Culturas fixas (Flores e Cogumelos agora são permitidos!)
+    const isFlowerOrMushroom = (
+      id.includes('flower') || id.includes('flor') ||
+      id.includes('mushroom') || id.includes('cogumelo') ||
+      id.includes('rose') || id.includes('tulip')
+    );
+
+    if (!isFlowerOrMushroom) {
+      if (
+        id.includes('plant') || id.includes('planta') || id.includes('bush') || id.includes('arbusto') ||
+        id.includes('shrub') || id.includes('wheat') || id.includes('crop') || id.includes('herb') ||
+        id.includes('foliage') || id.includes('leaf') || id.includes('cactus')
+      ) {
+        return false;
+      }
     }
 
     // Casas, Construções, Paredes, Telhados, Cercas, Portões, Pontes e Estruturas
@@ -2740,16 +2751,20 @@ class RPGApplication {
     if (meta) {
       if (
         meta.isInvisibleAsset || meta.isTerrain || meta.isWall ||
-        meta.isTree || meta.isRock || meta.isBuilding || meta.isFloor || meta.isVegetation
+        meta.isTree || meta.isRock || meta.isBuilding || meta.isFloor
       ) {
+        return false;
+      }
+      if (meta.isVegetation && !isFlowerOrMushroom) {
         return false;
       }
       if (meta.isMovable === false) return false;
       if (meta.isMovable === true || meta.isItem || meta.isDraggable) return true;
     }
 
-    // 2. ITENS QUE SÃO POSSÍVEIS DE ARRASTAR (Itens, Baús, Caixas, Ovos, Ninhos, Barris, Mobília Solta):
+    // 2. ITENS QUE SÃO POSSÍVEIS DE ARRASTAR (Flores, Cogumelos, Itens, Baús, Caixas, Ovos, Ninhos, Barris, Mobília Solta):
     const isExplicitMovable = (
+      isFlowerOrMushroom ||
       id.includes('chest') ||
       id.includes('crate') ||
       id.includes('box') ||
@@ -2929,7 +2944,10 @@ class RPGApplication {
     const decorCell = this.tileMap.layers?.decor?.get(key);
     if (decorCell && decorCell.tileId) {
       const decorMeta = this.assetLoader?.getTileMetadata(decorCell.tileId);
-      if (!this.isTileIdMovable(decorCell.tileId, decorMeta)) {
+      // Se tiver colisor ativo ou for obstáculo sólido fixo (ex: cerca, parede, pedra), bloqueia
+      const hasActiveCollider = decorCell.collider?.enabled || decorMeta?.collider?.enabled;
+      const isTerrainDecor = decorMeta?.isTerrain || decorMeta?.isFloor || decorCell.tileId.startsWith('dirt-') || decorCell.tileId.startsWith('grass-');
+      if (hasActiveCollider || (!isTerrainDecor && !this.isTileIdMovable(decorCell.tileId, decorMeta))) {
         return false;
       }
     }
