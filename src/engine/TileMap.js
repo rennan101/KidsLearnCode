@@ -1784,14 +1784,28 @@ export class TileMap {
 
     // Tibia-Style Render for Stacked Objects
     if (Array.isArray(cell.stack) && cell.stack.length > 0) {
+      const baseIdLower = (cell.tileId || '').toLowerCase();
+      const isBaseFlatSurface = (
+        tileMeta?.isTerrain ||
+        tileMeta?.isFloor ||
+        baseIdLower.startsWith('grass-') ||
+        baseIdLower.startsWith('high-grass-') ||
+        baseIdLower === 'tall-grass' ||
+        baseIdLower.startsWith('dirt-') ||
+        baseIdLower.startsWith('soil-') ||
+        baseIdLower.startsWith('sand-') ||
+        baseIdLower.startsWith('stone-path-') ||
+        baseIdLower.startsWith('cobble-')
+      );
+
       for (let sIdx = 0; sIdx < cell.stack.length; sIdx++) {
         const stackItem = cell.stack[sIdx];
         if (!stackItem || !stackItem.tileId) continue;
-        const stackMeta = assetLoader.getTileMetadata(stackItem.tileId);
-        if (!stackMeta) continue;
+        const stackMeta = assetLoader.getTileMetadata(stackItem.tileId) || { id: stackItem.tileId, gridW: 1, gridH: 1 };
 
-        // Cada item empilhado sobe visualmente 16px no eixo Y
-        const stackOffsetY = -16 * (sIdx + 1);
+        // Se o tile base for apenas piso/grama, o primeiro objeto fica apoiado no chão (offset 0)
+        const effectiveStackStep = isBaseFlatSurface ? sIdx : (sIdx + 1);
+        const stackOffsetY = -16 * effectiveStackStep;
         const sRot = stackItem.rotation || 0;
         const sRot90or270 = (sRot === 90 || sRot === 270);
         const sBaseGridW = stackMeta.gridW || 1;
@@ -1811,6 +1825,9 @@ export class TileMap {
           sImg = assetLoader.getImage(stackMeta.frames[0]);
         } else if (stackMeta.src) {
           sImg = assetLoader.getImage(stackMeta.src);
+        }
+        if (!sImg && stackItem.tileId) {
+          sImg = assetLoader.getImage(stackItem.tileId);
         }
 
         if (sImg) {

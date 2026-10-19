@@ -3432,7 +3432,6 @@ export class DragonManager {
 
       ctx.restore();
     }
-    ctx.restore();
 
     // 8. Flight Altitude Indicator (Animal Island UI 3D Pill) when flying high
     if (isMounted && this.canActiveDragonFly() && alt > 8) {

@@ -2839,6 +2839,24 @@ class RPGApplication {
     }
   }
 
+  isTerrainSurfaceTile(tileId, tileMeta = null) {
+    if (!tileId || typeof tileId !== 'string') return false;
+    const id = tileId.toLowerCase();
+    const meta = tileMeta || this.assetLoader?.getTileMetadata(tileId);
+    if (meta?.isTerrain || meta?.isFloor) return true;
+    return (
+      id.startsWith('grass-') ||
+      id.startsWith('high-grass-') ||
+      id === 'tall-grass' ||
+      id.startsWith('dirt-') ||
+      id.startsWith('soil-') ||
+      id.startsWith('sand-') ||
+      id.startsWith('stone-path-') ||
+      id.startsWith('cobble-') ||
+      id.startsWith('flower-grass-')
+    );
+  }
+
   findMovableObjectAt(worldX, worldY) {
     const tx = Math.floor(worldX / this.tileMap.tileSize);
     const ty = Math.floor(worldY / this.tileMap.tileSize);
@@ -2851,19 +2869,9 @@ class RPGApplication {
       if (!layer) continue;
       const cell = layer.get(key);
       if (cell && cell.tileId) {
-        const meta = this.assetLoader?.getTileMetadata(cell.tileId);
-
-        // Valida se o item é permitido para arrasto (rejeita pedras, árvores, plantas, casas, pisos)
-        if (!this.isTileIdMovable(cell.tileId, meta)) {
-          continue;
-        }
-
-        // Se houver itens empilhados, obtém o item do topo (Estilo Tibia - LIFO)
+        // Verifica primeiro o item do topo da pilha (permite pegar flores/objetos sobre grama/terreno)
         const topStacked = this.tileMap.getTopStackedTile(layerName, tx, ty, this.assetLoader);
-        if (topStacked) {
-          if (!this.isTileIdMovable(topStacked.tileId, topStacked.meta)) {
-            continue;
-          }
+        if (topStacked && this.isTileIdMovable(topStacked.tileId, topStacked.meta)) {
           return {
             tx,
             ty,
@@ -2876,7 +2884,10 @@ class RPGApplication {
           };
         }
 
-        return { tx, ty, layerName, cell, meta, isStacked: false, stackIndex: 0, totalStack: 1 };
+        const meta = this.assetLoader?.getTileMetadata(cell.tileId);
+        if (this.isTileIdMovable(cell.tileId, meta)) {
+          return { tx, ty, layerName, cell, meta, isStacked: false, stackIndex: 0, totalStack: 1 };
+        }
       }
     }
     return null;
@@ -2935,8 +2946,9 @@ class RPGApplication {
     const solidCell = this.tileMap.layers?.solid?.get(key);
     if (solidCell && solidCell.tileId) {
       const solidMeta = this.assetLoader?.getTileMetadata(solidCell.tileId);
-      // Se houver algo não-arrastável naquele tile (ex: pedra, árvore, parede, casa), o tile é VERMELHO (bloqueado)
-      if (!this.isTileIdMovable(solidCell.tileId, solidMeta)) {
+      const isTerrainSolid = this.isTerrainSurfaceTile(solidCell.tileId, solidMeta);
+      // Se houver algo não-arrastável e que não seja piso/grama naquele tile (ex: pedra, árvore, parede, casa), bloqueia
+      if (!isTerrainSolid && !this.isTileIdMovable(solidCell.tileId, solidMeta)) {
         return false;
       }
     }
@@ -2946,7 +2958,7 @@ class RPGApplication {
       const decorMeta = this.assetLoader?.getTileMetadata(decorCell.tileId);
       // Se tiver colisor ativo ou for obstáculo sólido fixo (ex: cerca, parede, pedra), bloqueia
       const hasActiveCollider = decorCell.collider?.enabled || decorMeta?.collider?.enabled;
-      const isTerrainDecor = decorMeta?.isTerrain || decorMeta?.isFloor || decorCell.tileId.startsWith('dirt-') || decorCell.tileId.startsWith('grass-');
+      const isTerrainDecor = this.isTerrainSurfaceTile(decorCell.tileId, decorMeta);
       if (hasActiveCollider || (!isTerrainDecor && !this.isTileIdMovable(decorCell.tileId, decorMeta))) {
         return false;
       }
@@ -3121,10 +3133,13 @@ class RPGApplication {
 
     if (this.playModeInteraction.activeMode === 'move_object' && this.playModeInteraction.heldObject) {
       const { originTx, originTy, layerName, cellData } = this.playModeInteraction.heldObject;
+      const targetKey = this.tileMap.getKey(targetTx, targetTy);
+      const hasSolidAtTarget = this.tileMap.layers?.solid?.has(targetKey);
+      const targetLayer = (layerName === 'decor' && hasSolidAtTarget) ? 'solid' : layerName;
       
-      // Empilha no destino
+      // Empilha no destino garantindo que fique visível acima de terrenos na camada solid
       this.tileMap.pushStackTile(
-        layerName,
+        targetLayer,
         targetTx,
         targetTy,
         cellData.tileId,
@@ -3138,7 +3153,7 @@ class RPGApplication {
       this.unlockObject(originTx, originTy);
       this.player.spawnCraftPoof();
       soundFX.playPop(1.1);
-      const stackTotal = this.tileMap.getStackCount(layerName, targetTx, targetTy);
+      const stackTotal = this.tileMap.getStackCount(targetLayer, targetTx, targetTy);
       if (stackTotal > 1) {
         this.showToast(`Objeto empilhado com sucesso (Camada ${stackTotal})!`);
       } else {
@@ -4416,10 +4431,13 @@ class RPGApplication {
 
       // Render Dragon Overhead Overlays (Badges, HP Bars, Emotes, Particles, Damage Numbers)
       if (this.dragonManager && this.mode === 'play') {
+        this.ctx.save();
         try {
           this.dragonManager.renderOverlay(this.ctx, this.assetLoader, this.player);
         } catch (dragonErr) {
           console.error('Error rendering dragon overlay:', dragonErr);
+        } finally {
+          this.ctx.restore();
         }
       }
 
