@@ -8,7 +8,7 @@ import { ModularAvatarRenderer } from './animation/ModularAvatarRenderer.js';
 import { MASTER_NPC_CONFIGS } from './animation/NPCAppearanceGenerator.js';
 import { DEFAULT_AVATAR_CONFIG } from './animation/AvatarConfig.js';
 import { DRAGON_CATALOG, MOUNT_SOCKET_OFFSETS } from './DragonManager.js';
-import { getActiveServerUrl } from '../config/supabase.js';
+import { getActiveServerUrl, invalidateServerUrlCache } from '../config/supabase.js';
 
 export class MultiplayerClient {
   constructor(serverUrl = null) {
@@ -16,11 +16,17 @@ export class MultiplayerClient {
     this.ws = null;
     this.isConnected = false;
     this.playerId = null;
+    this.clientSessionId = this._getOrCreateClientSessionId();
     this.remotePlayers = new Map();
     this.avatarRenderer = new ModularAvatarRenderer();
     this.reconnectAttempts = 0;
     this.reconnectTimer = null;
     this.isDestroyed = false;
+
+    this.onMapUpdated = null;
+    this.onMapUpdatedCallback = null;
+    this.onCustomEvent = null;
+    this.onPlayerDisconnect = null;
 
     // Simulated offline bots list (empty by default - only real players and editor-placed entities exist)
     this.simulatedBots = [];
@@ -137,9 +143,26 @@ export class MultiplayerClient {
     };
   }
 
+  _getOrCreateClientSessionId() {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        let sid = sessionStorage.getItem('kidslearn_ws_session_id');
+        if (!sid) {
+          sid = 'ws_sess_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now().toString(36);
+          sessionStorage.setItem('kidslearn_ws_session_id', sid);
+        }
+        return sid;
+      }
+    } catch (_) {}
+    return 'ws_sess_' + Math.random().toString(36).substring(2, 11);
+  }
+
   attachSupabase(supabaseClient) {
     if (!supabaseClient) return;
     this.supabaseClient = supabaseClient;
+    if (typeof this.supabaseClient.attachMultiplayer === 'function') {
+      this.supabaseClient.attachMultiplayer(this);
+    }
 
     this.supabaseClient.setupRealtimeChannel(
       (remotePlayer) => {
@@ -159,7 +182,15 @@ export class MultiplayerClient {
   }
 
   handleRemotePlayerUpdate(p) {
-    if (!p || p.id === this.supabaseClient?.user?.id || p.id === this.playerId) return;
+    if (
+      !p ||
+      p.id === this.supabaseClient?.user?.id ||
+      p.id === this.playerId ||
+      (p.userId && this.supabaseClient?.user?.id && p.userId === this.supabaseClient.user.id) ||
+      (p.clientSessionId && p.clientSessionId === this.clientSessionId)
+    ) {
+      return;
+    }
 
     let existing = this.remotePlayers.get(p.id);
     const targetX = p.x;
@@ -232,30 +263,68 @@ export class MultiplayerClient {
     }
   }
 
-  async connect() {
+  _cleanupSocket() {
+    if (!this.ws) return;
+    const oldWs = this.ws;
+    this.ws = null;
+    try {
+      oldWs.onopen = null;
+      oldWs.onmessage = null;
+      oldWs.onclose = null;
+      oldWs.onerror = null;
+      if (oldWs.readyState === WebSocket.OPEN || oldWs.readyState === WebSocket.CONNECTING) {
+        oldWs.close();
+      }
+    } catch (_) {}
+  }
+
+  async connect(forceReconnect = false) {
     if (this.isDestroyed) return;
+
+    if (!forceReconnect && this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+      return;
+    }
+
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
+    this._cleanupSocket();
 
     try {
       let targetUrl = this.serverUrl;
       if (!targetUrl) {
-        const httpUrl = await getActiveServerUrl(this.reconnectAttempts > 0);
+        if (forceReconnect) {
+          invalidateServerUrlCache();
+        }
+        const httpUrl = await getActiveServerUrl(forceReconnect || this.reconnectAttempts > 0);
         const isHttps = httpUrl.startsWith('https://');
         const cleanHost = httpUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
         targetUrl = `${isHttps ? 'wss' : 'ws'}://${cleanHost}`;
       }
 
       this.currentConnectedUrl = targetUrl;
-      this.ws = new WebSocket(targetUrl);
+      const socket = new WebSocket(targetUrl);
+      this.ws = socket;
 
-      this.ws.onopen = () => {
+      socket.onopen = () => {
+        if (this.ws !== socket) return;
         this.isConnected = true;
         this.reconnectAttempts = 0;
         console.log('[MultiplayerClient] Conectado ao servidor:', targetUrl);
       };
 
-      this.ws.onmessage = (event) => {
+      socket.onmessage = (event) => {
+        if (this.ws !== socket) return;
         try {
           const data = JSON.parse(event.data);
+          if (data.type === 'PING') {
+            if (socket.readyState === WebSocket.OPEN) {
+              socket.send(JSON.stringify({ type: 'PONG', timestamp: Date.now() }));
+            }
+            return;
+          }
           if (data.type === 'INIT') {
             this.playerId = data.playerId;
           } else if (data.type === 'WORLD_TICK') {
@@ -265,23 +334,50 @@ export class MultiplayerClient {
               this.onChatReceived(data);
             }
           } else if (data.type === 'MAP_BROADCAST') {
-            if (this.onMapUpdatedCallback) {
-              this.onMapUpdatedCallback(data.mapData);
+            const myUserId = this.supabaseClient?.user?.id || null;
+            const isSelf =
+              (data.senderId && (data.senderId === this.playerId || (myUserId && data.senderId === myUserId))) ||
+              (data.clientSessionId && data.clientSessionId === this.clientSessionId);
+
+            if (!isSelf) {
+              const normalizedPayload = {
+                map: data.map || data.mapData,
+                mapData: data.mapData || data.map,
+                updatedBy: data.updatedBy || data.senderName || 'Outro aventureiro',
+                senderId: data.senderId || null,
+                timestamp: data.timestamp || Date.now()
+              };
+              if (this.onMapUpdated) {
+                this.onMapUpdated(normalizedPayload);
+              }
+              if (this.onMapUpdatedCallback) {
+                this.onMapUpdatedCallback(normalizedPayload.map);
+              }
+            }
+          } else if (data.type === 'CUSTOM_EVENT') {
+            if (this.onCustomEvent && data.payload) {
+              this.onCustomEvent(data.payload);
             }
           } else if (data.type === 'PLAYER_DISCONNECT') {
             this.remotePlayers.delete(data.playerId);
+            if (this.onPlayerDisconnect) {
+              this.onPlayerDisconnect(data.playerId);
+            }
           }
         } catch (err) {
           console.error('Error handling websocket message:', err);
         }
       };
 
-      this.ws.onclose = () => {
+      socket.onclose = () => {
+        if (this.ws !== socket) return;
         this.isConnected = false;
+        this.ws = null;
         this.scheduleReconnect();
       };
 
-      this.ws.onerror = () => {
+      socket.onerror = () => {
+        if (this.ws !== socket) return;
         this.isConnected = false;
       };
     } catch {
@@ -298,9 +394,10 @@ export class MultiplayerClient {
     this.reconnectTimer = setTimeout(async () => {
       this.reconnectTimer = null;
       if (!this.serverUrl) {
+        invalidateServerUrlCache();
         await getActiveServerUrl(true);
       }
-      this.connect();
+      this.connect(true);
     }, delay);
   }
 
@@ -310,21 +407,29 @@ export class MultiplayerClient {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
-    if (this.ws) {
-      try {
-        this.ws.close();
-      } catch (_) {}
-      this.ws = null;
-    }
+    this._cleanupSocket();
     this.isConnected = false;
   }
 
   handleWorldTick(playerList) {
     if (!Array.isArray(playerList)) return;
 
+    const activeIds = new Set();
     for (const p of playerList) {
-      if (p.id === this.playerId) continue; // Skip local player
+      if (!p || !p.id) continue;
+      activeIds.add(p.id);
+      if (p.id === this.playerId) continue;
       this.handleRemotePlayerUpdate(p);
+    }
+
+    // Reconciliação de estado: remove imediatamente avatares fantasmas ausentes no tick
+    for (const existingId of this.remotePlayers.keys()) {
+      if (!activeIds.has(existingId)) {
+        this.remotePlayers.delete(existingId);
+        if (this.onPlayerDisconnect) {
+          this.onPlayerDisconnect(existingId);
+        }
+      }
     }
   }
 
@@ -402,6 +507,7 @@ export class MultiplayerClient {
       this.ws.send(JSON.stringify({
         type: 'PLAYER_UPDATE',
         userId: this.supabaseClient?.user?.id || null,
+        clientSessionId: this.clientSessionId,
         x: currentX,
         y: currentY,
         vx,
@@ -440,6 +546,31 @@ export class MultiplayerClient {
 
     if (this.supabaseClient) {
       this.supabaseClient.broadcastChatMessage(text, player, senderName);
+    }
+  }
+
+  sendCustomEvent(payload) {
+    if (!payload) return;
+    if (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({
+        type: 'CUSTOM_EVENT',
+        senderId: this.playerId,
+        clientSessionId: this.clientSessionId,
+        payload
+      }));
+    }
+  }
+
+  sendMapUpdate(mapData, updatedBy = 'Aventureiro') {
+    if (!mapData) return;
+    if (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({
+        type: 'MAP_UPDATE',
+        mapData,
+        updatedBy,
+        senderId: this.playerId,
+        clientSessionId: this.clientSessionId
+      }));
     }
   }
 

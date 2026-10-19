@@ -73,6 +73,7 @@ export class Mailer {
   async sendPasswordResetEmail({ email, token, nickname = 'Aventureiro', publicUrl = null }) {
     const rootUrl = publicUrl || this.publicUrl || 'http://localhost:8080';
     const resetLink = `${rootUrl.replace(/\/$/, '')}/api/auth/reset-password?token=${encodeURIComponent(token)}`;
+    const subject = `[Ilha Lua] Recuperação de Senha - KidsLearnCode`;
     const text = `Ola, ${nickname}!\n\nRecebemos um pedido para redefinir a senha da sua conta na Ilha Lua.\nPara cadastrar uma nova senha, acesse o link abaixo (valido por 1 hora):\n\n${resetLink}\n\nSe voce nao solicitou isso, desconsidere este e-mail.`;
 
     const html = `

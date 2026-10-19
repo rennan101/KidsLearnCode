@@ -27,10 +27,10 @@ if [ ! -f "./cloudflared" ] || [ ! -s "./cloudflared" ] || grep -q "Not Found" "
   echo "✅ Cloudflared pronto!"
 fi
 
-# 2. Verificar dependências do servidor Node.js
-if [ ! -d "server/node_modules" ]; then
+# 2. Verificar dependências do servidor Node.js (checa express explicitamente)
+if [ ! -d "server/node_modules/express" ]; then
   echo "📦 Instalando dependências do servidor (express, pg, ws, etc)..."
-  npm --prefix server install
+  npm --prefix server install --no-audit --no-fund
 fi
 
 # 3. Garantir que o Node.js está rodando na porta 8080

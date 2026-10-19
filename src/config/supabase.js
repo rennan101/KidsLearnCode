@@ -1,9 +1,8 @@
 /**
- * Server Configuration & Instant Zero-DNS Discovery - KidsLearnCode Dedicated Server
- * - Zero Cloudflare / Zero DuckDNS / Zero Supabase Cloud
+ * Server Configuration & Instant Multi-Channel Discovery - KidsLearnCode Dedicated Server
  * - Funciona 100% tanto em localhost quanto no Vercel (https://kids-learn-code.vercel.app)
  * - Nunca faz chamadas http:// em páginas https:// (elimina bloqueio Mixed Content do Safari)
- * - Descoberta instantânea em paralelo via GitHub Contents API (0s de cache CDN)
+ * - Descoberta instantânea em paralelo via GitHub Contents API + DNS-over-HTTPS (0s de cache CDN)
  */
 
 export const SUPABASE_CONFIG = {
@@ -14,11 +13,18 @@ export const SUPABASE_CONFIG = {
 let cachedServerUrl = null;
 let lastResolvedTime = 0;
 let inFlightDiscoveryPromise = null;
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos (só renova antes se forceRefresh=true)
+const CACHE_TTL_MS = 30 * 1000; // 30 segundos (evita ficar preso em túnel antigo caso caia)
+
+/**
+ * Invalida imediatamente o cache da URL do servidor (chamado em quedas de WebSocket ou erros de rede)
+ */
+export function invalidateServerUrlCache() {
+  cachedServerUrl = null;
+  lastResolvedTime = 0;
+}
 
 /**
  * Testa se um endpoint de servidor está respondendo /health rapidamente.
- * Não envia headers customizados em .serveousercontent.com ou .lhr.life para evitar preflight CORS OPTIONS.
  */
 async function probeServerHealth(baseUrl, timeoutMs = 2400) {
   if (!baseUrl) return false;
@@ -50,6 +56,33 @@ async function probeServerHealth(baseUrl, timeoutMs = 2400) {
     clearTimeout(timer);
   }
   return false;
+}
+
+/**
+ * Consulta o registro DNS TXT de kidslearncode.duckdns.org via Cloudflare DoH (0s de cache)
+ */
+async function fetchDuckDnsTunnelUrl() {
+  try {
+    const res = await fetch(
+      `https://cloudflare-dns.com/dns-query?name=kidslearncode.duckdns.org&type=TXT&t=${Date.now()}`,
+      {
+        headers: { Accept: 'application/dns-json' },
+        cache: 'no-store'
+      }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data?.Answer)) {
+        for (const ans of data.Answer) {
+          const cleanTxt = String(ans.data || '').replace(/^"+|"+$/g, '').trim();
+          if (cleanTxt.startsWith('https://')) {
+            return cleanTxt;
+          }
+        }
+      }
+    }
+  } catch (_) {}
+  return null;
 }
 
 /**
@@ -96,6 +129,7 @@ async function resolveServerUrlInternal() {
     }
     if (
       window.location.port === '8080' ||
+      host.endsWith('.trycloudflare.com') ||
       host.endsWith('.serveousercontent.com') ||
       host.endsWith('.lhr.life') ||
       host.endsWith('.loca.lt')
@@ -126,41 +160,50 @@ async function resolveServerUrlInternal() {
     return 'http://localhost:8080';
   }
 
-  // Consulta o Registro Instantâneo no GitHub (branch server-status)
-  const info = await fetchLiveServerRegistry(now);
-  if (info) {
-    const rawCandidates = [info.serveoUrl, info.sshUrl, info.url, info.ltUrl]
-      .filter(Boolean)
-      .map(u => u.replace(/\/$/, ''))
-      .filter(u => !isHttpsPage || u.startsWith('https://'));
+  // Consulta o Registro Instantâneo no GitHub (branch server-status) e o DNS TXT (DuckDNS) em paralelo
+  const [info, duckTxtUrl] = await Promise.all([
+    fetchLiveServerRegistry(now),
+    fetchDuckDnsTunnelUrl()
+  ]);
 
-    const uniqueCandidates = Array.from(new Set(rawCandidates));
+  const rawCandidates = [
+    info?.cfUrl,
+    duckTxtUrl,
+    info?.serveoUrl,
+    info?.sshUrl,
+    info?.url,
+    info?.ltUrl
+  ]
+    .filter(Boolean)
+    .map(u => u.replace(/\/$/, ''))
+    .filter(u => !isHttpsPage || u.startsWith('https://'));
 
-    if (uniqueCandidates.length > 0) {
-      // Testa os túneis candidatos em paralelo: o primeiro que responder /health vence imediatamente!
-      try {
-        const winner = await Promise.any(
-          uniqueCandidates.map(async (candidate) => {
-            const ok = await probeServerHealth(candidate, 2500);
-            if (!ok) throw new Error('unhealthy');
-            return candidate;
-          })
-        );
-        if (winner) {
-          cachedServerUrl = winner;
-          lastResolvedTime = Date.now();
-          SUPABASE_CONFIG.url = winner;
-          return winner;
-        }
-      } catch (_) {}
+  const uniqueCandidates = Array.from(new Set(rawCandidates));
 
-      // Se o probe falhou por latência momentânea, usa o endereço primário publicado
-      const primaryClean = uniqueCandidates[0];
-      cachedServerUrl = primaryClean;
-      lastResolvedTime = Date.now();
-      SUPABASE_CONFIG.url = primaryClean;
-      return primaryClean;
-    }
+  if (uniqueCandidates.length > 0) {
+    // Testa os túneis candidatos em paralelo: o primeiro que responder /health vence imediatamente!
+    try {
+      const winner = await Promise.any(
+        uniqueCandidates.map(async (candidate) => {
+          const ok = await probeServerHealth(candidate, 2800);
+          if (!ok) throw new Error('unhealthy');
+          return candidate;
+        })
+      );
+      if (winner) {
+        cachedServerUrl = winner;
+        lastResolvedTime = Date.now();
+        SUPABASE_CONFIG.url = winner;
+        return winner;
+      }
+    } catch (_) {}
+
+    // Se o probe falhou por latência momentânea, usa o endereço primário publicado
+    const primaryClean = uniqueCandidates[0];
+    cachedServerUrl = primaryClean;
+    lastResolvedTime = Date.now();
+    SUPABASE_CONFIG.url = primaryClean;
+    return primaryClean;
   }
 
   const fallbackUrl = cachedServerUrl || 'https://kidslearncode-mmorpg.loca.lt';

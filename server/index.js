@@ -104,7 +104,28 @@ app.get('/live-server.json', (req, res) => {
 
 // Map de jogadores conectados via WebSocket
 const activePlayers = new Map();
+const playerSockets = new Map();
 const startTime = Date.now();
+
+function removeAndBroadcastDisconnect(targetPlayerId) {
+  if (!targetPlayerId) return;
+  activePlayers.delete(targetPlayerId);
+  const existingWs = playerSockets.get(targetPlayerId);
+  if (existingWs) {
+    playerSockets.delete(targetPlayerId);
+    try {
+      existingWs.isReplaced = true;
+      existingWs.terminate();
+    } catch (_) {}
+  }
+
+  const disconnectMsg = JSON.stringify({ type: 'PLAYER_DISCONNECT', playerId: targetPlayerId });
+  for (const client of wss.clients) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(disconnectMsg);
+    }
+  }
+}
 
 // Middleware de Autenticação JWT
 function authenticateToken(req, res, next) {
@@ -650,18 +671,23 @@ app.get('/api/world/global-map', (req, res) => {
 });
 
 app.post('/api/world/global-map', (req, res) => {
-  const { map } = req.body;
+  const { map, senderId, clientSessionId, updatedBy } = req.body;
   if (!map) return res.status(400).json({ error: 'Dados do mapa ausentes' });
 
-  const userId = req.user?.id || '00000000-0000-0000-0000-000000000001';
+  const userId = req.user?.id || senderId || '00000000-0000-0000-0000-000000000001';
+  const profile = req.user?.id ? db.getProfile(req.user.id) : null;
+  const authorName = updatedBy || profile?.nickname || 'Administrador';
 
   try {
     db.saveGlobalMap(map, userId);
 
     const broadcast = JSON.stringify({
       type: 'MAP_BROADCAST',
+      map,
       mapData: map,
-      senderId: userId,
+      senderId: senderId || userId,
+      clientSessionId: clientSessionId || null,
+      updatedBy: authorName,
       timestamp: Date.now()
     });
 
@@ -671,7 +697,7 @@ app.post('/api/world/global-map', (req, res) => {
       }
     }
 
-    addServerLog(`Mapa Global atualizado por ${userId}`, 'WORLD');
+    addServerLog(`Mapa Global atualizado por ${authorName} (${userId})`, 'WORLD');
     res.json({ success: true, message: 'Mapa global salvo com sucesso!' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -819,6 +845,7 @@ app.post('/api/admin/server/control', (req, res) => {
       }
     }
     activePlayers.clear();
+    playerSockets.clear();
     addServerLog('Motor do Jogo PAUSADO remotamente pelo Administrador (Painel continua online).', 'CONTROL');
     return res.json({
       success: true,
@@ -1002,15 +1029,56 @@ setInterval(() => {
 // 4. REALTIME MMORPG WEBSOCKET ENGINE (20Hz)
 // ==========================================
 
+// Heartbeat Ping/Pong a cada 15s para limpar conexões zumbis (half-open sockets em túneis/Wi-Fi)
+setInterval(() => {
+  const now = Date.now();
+  for (const client of wss.clients) {
+    if (client.isAlive === false) {
+      const deadId = client.playerId;
+      try {
+        client.terminate();
+      } catch (_) {}
+      if (deadId) {
+        removeAndBroadcastDisconnect(deadId);
+      }
+      continue;
+    }
+
+    // Timeout adicional por inatividade de pacotes (> 45s sem nenhuma mensagem ou pong)
+    if (client.lastSeenAt && (now - client.lastSeenAt) > 45000) {
+      const staleId = client.playerId;
+      try {
+        client.terminate();
+      } catch (_) {}
+      if (staleId) {
+        removeAndBroadcastDisconnect(staleId);
+      }
+      continue;
+    }
+
+    client.isAlive = false;
+    try {
+      if (client.readyState === WebSocket.OPEN) {
+        client.ping();
+        client.send(JSON.stringify({ type: 'PING', timestamp: now }));
+      }
+    } catch (_) {}
+  }
+}, 15000);
+
 setInterval(() => {
   if (gameServerState === 'paused' || activePlayers.size === 0) return;
 
   const playerList = Array.from(activePlayers.values()).map(p => ({
     id: p.id,
+    userId: p.userId || null,
+    clientSessionId: p.clientSessionId || null,
     name: p.name,
     heroId: p.heroId,
     x: Math.round(p.x),
     y: Math.round(p.y),
+    vx: p.vx || 0,
+    vy: p.vy || 0,
     direction: p.direction,
     isMoving: p.isMoving,
     isSprinting: p.isSprinting,
@@ -1048,13 +1116,27 @@ wss.on('connection', (ws) => {
   }
 
   const playerId = 'player_' + Math.random().toString(36).substring(2, 9);
+  ws.playerId = playerId;
+  ws.isAlive = true;
+  ws.lastSeenAt = Date.now();
+
+  ws.on('pong', () => {
+    ws.isAlive = true;
+    ws.lastSeenAt = Date.now();
+  });
+
+  playerSockets.set(playerId, ws);
 
   activePlayers.set(playerId, {
     id: playerId,
+    userId: null,
+    clientSessionId: null,
     name: 'Aventureiro',
     heroId: 'char_wolf_hunter_m',
     x: 320,
     y: 320,
+    vx: 0,
+    vy: 0,
     direction: 'south',
     isMoving: false,
     isSprinting: false,
@@ -1065,7 +1147,8 @@ wss.on('connection', (ws) => {
     dragonMode: 'none',
     flightAltitude: 0,
     dragonX: null,
-    dragonY: null
+    dragonY: null,
+    updatedAt: Date.now()
   });
 
   ws.send(JSON.stringify({
@@ -1075,15 +1158,44 @@ wss.on('connection', (ws) => {
   }));
 
   ws.on('message', (message) => {
+    ws.isAlive = true;
+    ws.lastSeenAt = Date.now();
     if (gameServerState === 'paused') return;
     try {
       const data = JSON.parse(message);
 
+      if (data.type === 'PONG') {
+        return;
+      }
+
       if (data.type === 'PLAYER_UPDATE') {
         const p = activePlayers.get(playerId);
         if (p) {
+          const incomingUserId = data.userId || p.userId || null;
+          const incomingSessionId = data.clientSessionId || p.clientSessionId || null;
+
+          // Deduplicação de sessão: remove imediatamente conexões órfãs anteriores do mesmo jogador/aba
+          if (incomingUserId || incomingSessionId) {
+            for (const [otherId, otherPlayer] of activePlayers.entries()) {
+              if (otherId === playerId) continue;
+              const sameAuthenticatedUser =
+                incomingUserId &&
+                !String(incomingUserId).startsWith('guest_') &&
+                otherPlayer.userId === incomingUserId;
+              const sameBrowserTabSession =
+                incomingSessionId &&
+                otherPlayer.clientSessionId === incomingSessionId;
+
+              if (sameAuthenticatedUser || sameBrowserTabSession) {
+                removeAndBroadcastDisconnect(otherId);
+              }
+            }
+          }
+
           p.x = data.x ?? p.x;
           p.y = data.y ?? p.y;
+          p.vx = data.vx ?? 0;
+          p.vy = data.vy ?? 0;
           p.direction = data.direction ?? p.direction;
           p.isMoving = !!data.isMoving;
           p.isSprinting = !!data.isSprinting;
@@ -1092,12 +1204,14 @@ wss.on('connection', (ws) => {
           p.name = data.name || p.name;
           p.activeDragonId = data.activeDragonId || p.activeDragonId;
           if (data.userId) p.userId = data.userId;
+          if (data.clientSessionId) p.clientSessionId = data.clientSessionId;
           if (data.avatarConfig !== undefined) p.avatarConfig = data.avatarConfig;
           if (data.scale !== undefined) p.scale = data.scale;
           if (data.dragonMode !== undefined) p.dragonMode = data.dragonMode;
           if (data.flightAltitude !== undefined) p.flightAltitude = data.flightAltitude;
           if (data.dragonX !== undefined) p.dragonX = data.dragonX;
           if (data.dragonY !== undefined) p.dragonY = data.dragonY;
+          p.updatedAt = Date.now();
 
           // Persiste automaticamente roupas/customização no banco sempre que o jogador alterar o avatar
           if (data.avatarConfig && typeof data.avatarConfig === 'object') {
@@ -1156,19 +1270,39 @@ wss.on('connection', (ws) => {
             client.send(broadcast);
           }
         }
-      } else if (data.type === 'MAP_UPDATE') {
-        if (data.mapData) {
-          db.saveGlobalMap(data.mapData, playerId);
-        }
+      } else if (data.type === 'CUSTOM_EVENT') {
         const broadcast = JSON.stringify({
-          type: 'MAP_BROADCAST',
-          mapData: data.mapData,
+          type: 'CUSTOM_EVENT',
           senderId: playerId,
+          clientSessionId: data.clientSessionId || null,
+          payload: data.payload,
           timestamp: Date.now()
         });
 
         for (const client of wss.clients) {
-          if (client.readyState === WebSocket.OPEN) {
+          if (client !== ws && client.readyState === WebSocket.OPEN) {
+            client.send(broadcast);
+          }
+        }
+      } else if (data.type === 'MAP_UPDATE') {
+        const mapPayload = data.mapData || data.map;
+        if (mapPayload) {
+          db.saveGlobalMap(mapPayload, playerId);
+        }
+        const senderPlayer = activePlayers.get(playerId);
+        const authorName = data.updatedBy || senderPlayer?.name || 'Outro aventureiro';
+        const broadcast = JSON.stringify({
+          type: 'MAP_BROADCAST',
+          map: mapPayload,
+          mapData: mapPayload,
+          senderId: playerId,
+          clientSessionId: data.clientSessionId || senderPlayer?.clientSessionId || null,
+          updatedBy: authorName,
+          timestamp: Date.now()
+        });
+
+        for (const client of wss.clients) {
+          if (client !== ws && client.readyState === WebSocket.OPEN) {
             client.send(broadcast);
           }
         }
@@ -1179,6 +1313,8 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
+    playerSockets.delete(playerId);
+    if (ws.isReplaced) return;
     activePlayers.delete(playerId);
     const disconnectMsg = JSON.stringify({ type: 'PLAYER_DISCONNECT', playerId });
     for (const client of wss.clients) {

@@ -22,8 +22,13 @@ export class SupabaseClient {
     this.onRemotePlayerUpdateCallback = null;
     this.onChatMessageCallback = null;
     this.onMapUpdatedCallback = null;
+    this.multiplayerClient = null;
     this.onlineUsersCount = 1;
     this.hasDetectedRemotePeers = false;
+  }
+
+  attachMultiplayer(multiplayerClient) {
+    this.multiplayerClient = multiplayerClient;
   }
 
   async getServerUrl(forceRefresh = false) {
@@ -375,9 +380,12 @@ export class SupabaseClient {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) || !id.startsWith('guest_');
   }
 
-  async saveGlobalWorldMap(mapData) {
+  async saveGlobalWorldMap(mapData, updatedBy = null) {
     if (!mapData) return { success: false, reason: 'offline_or_invalid_map' };
     const authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('kidslearn_auth_token')) || '';
+    const senderId = this.multiplayerClient?.playerId || this.user?.id || null;
+    const clientSessionId = this.multiplayerClient?.clientSessionId || null;
+    const senderName = updatedBy || this.profile?.nickname || this.user?.nickname || 'Aventureiro';
 
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
@@ -385,7 +393,12 @@ export class SupabaseClient {
         const res = await fetch(`${baseUrl}/api/world/global-map`, {
           method: 'POST',
           headers: this.getDefaultHeaders(authToken),
-          body: JSON.stringify({ map: mapData })
+          body: JSON.stringify({
+            map: mapData,
+            senderId,
+            clientSessionId,
+            updatedBy: senderName
+          })
         });
         if (res.ok) return { success: true };
         if (res.status < 500) break;
@@ -496,7 +509,19 @@ export class SupabaseClient {
 
   broadcastPlayerPosition() {}
   broadcastChatMessage() {}
-  broadcastMapUpdate() {}
+
+  broadcastMapUpdate(mapData, updatedBy = null) {
+    if (this.multiplayerClient && typeof this.multiplayerClient.sendMapUpdate === 'function') {
+      const senderName = updatedBy || this.profile?.nickname || this.user?.nickname || 'Aventureiro';
+      this.multiplayerClient.sendMapUpdate(mapData, senderName);
+    }
+  }
+
+  broadcastCustomEvent(payload) {
+    if (this.multiplayerClient && typeof this.multiplayerClient.sendCustomEvent === 'function') {
+      this.multiplayerClient.sendCustomEvent(payload);
+    }
+  }
 
   onAuthChange(callback) {
     this.listeners.push(callback);

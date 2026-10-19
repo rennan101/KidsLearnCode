@@ -1756,6 +1756,8 @@
           if (meta && meta.content) {
             const info = JSON.parse(atob(meta.content.replace(/\s/g, '')));
             if (info.lanUrl) candidates.push(info.lanUrl);
+            if (info.cfUrl) candidates.push(info.cfUrl);
+            if (info.serveoUrl) candidates.push(info.serveoUrl);
             if (info.sshUrl) candidates.push(info.sshUrl);
             if (info.url) candidates.push(info.url);
             if (info.ltUrl) candidates.push(info.ltUrl);

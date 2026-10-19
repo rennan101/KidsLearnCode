@@ -201,9 +201,10 @@ class RPGApplication {
       if (this.multiplayerClient) {
         this.multiplayerClient.attachSupabase(this.supabaseClient);
         this.multiplayerClient.onMapUpdated = (payload) => {
-          if (payload && payload.map) {
-            console.log('[Multiplayer] Recebido mapa atualizado em tempo real por:', payload.updatedBy);
-            this.tileMap.fromJSON(payload.map);
+          const mapObj = payload?.map || payload?.mapData || payload;
+          if (mapObj && mapObj.layers) {
+            console.log('[Multiplayer] Recebido mapa atualizado em tempo real por:', payload?.updatedBy);
+            this.tileMap.fromJSON(mapObj);
             this.minimap.tileMap = this.tileMap;
             this.editorController.tileMap = this.tileMap;
             if (this.npcManager) {
@@ -212,12 +213,36 @@ class RPGApplication {
             // Atualiza o IndexedDB local com a versão mais recente recebida em tempo real
             this.storageManager.loadGame().then(saved => {
               if (saved) {
-                saved.map = payload.map;
-                saved.savedAt = payload.timestamp || Date.now();
+                saved.map = mapObj;
+                saved.savedAt = payload?.timestamp || Date.now();
                 this.storageManager.saveGame(saved);
               }
             }).catch(e => console.warn('Falha ao armazenar atualização de mapa recebida:', e));
-            this.showToast(`Mapa atualizado online por ${payload.updatedBy || 'outro jogador'}!`, 4000);
+            this.showToast(`Mapa atualizado online por ${payload?.updatedBy || 'outro jogador'}!`, 4000);
+          }
+        };
+
+        this.multiplayerClient.onCustomEvent = (evt) => {
+          if (!evt) return;
+          if (!this.remoteLockedObjects) this.remoteLockedObjects = new Map();
+          if (evt.type === 'object_lock' && evt.tx !== undefined && evt.ty !== undefined) {
+            const key = `${evt.tx},${evt.ty}`;
+            this.remoteLockedObjects.set(key, {
+              playerId: evt.playerId || 'remote_player',
+              timestamp: Date.now()
+            });
+          } else if (evt.type === 'object_unlock' && evt.tx !== undefined && evt.ty !== undefined) {
+            const key = `${evt.tx},${evt.ty}`;
+            this.remoteLockedObjects.delete(key);
+          }
+        };
+
+        this.multiplayerClient.onPlayerDisconnect = (disconnectedPlayerId) => {
+          if (!this.remoteLockedObjects || !disconnectedPlayerId) return;
+          for (const [k, entry] of this.remoteLockedObjects.entries()) {
+            if (entry.playerId === disconnectedPlayerId) {
+              this.remoteLockedObjects.delete(k);
+            }
           }
         };
       }
@@ -2759,8 +2784,11 @@ class RPGApplication {
     const myId = this.multiplayerClient?.playerId || 'local_player';
     this.remoteLockedObjects.set(key, { playerId: myId, timestamp: Date.now() });
 
-    if (this.supabaseClient && typeof this.supabaseClient.broadcastCustomEvent === 'function') {
-      this.supabaseClient.broadcastCustomEvent({ type: 'object_lock', tx, ty, playerId: myId });
+    const payload = { type: 'object_lock', tx, ty, playerId: myId };
+    if (this.multiplayerClient && typeof this.multiplayerClient.sendCustomEvent === 'function') {
+      this.multiplayerClient.sendCustomEvent(payload);
+    } else if (this.supabaseClient && typeof this.supabaseClient.broadcastCustomEvent === 'function') {
+      this.supabaseClient.broadcastCustomEvent(payload);
     }
   }
 
@@ -2770,8 +2798,11 @@ class RPGApplication {
     this.remoteLockedObjects.delete(key);
 
     const myId = this.multiplayerClient?.playerId || 'local_player';
-    if (this.supabaseClient && typeof this.supabaseClient.broadcastCustomEvent === 'function') {
-      this.supabaseClient.broadcastCustomEvent({ type: 'object_unlock', tx, ty, playerId: myId });
+    const payload = { type: 'object_unlock', tx, ty, playerId: myId };
+    if (this.multiplayerClient && typeof this.multiplayerClient.sendCustomEvent === 'function') {
+      this.multiplayerClient.sendCustomEvent(payload);
+    } else if (this.supabaseClient && typeof this.supabaseClient.broadcastCustomEvent === 'function') {
+      this.supabaseClient.broadcastCustomEvent(payload);
     }
   }
 
@@ -6746,7 +6777,7 @@ class RPGApplication {
         this.isNetworkDisconnected = false;
         if (overlay) overlay.style.display = 'none';
         if (this.multiplayerClient) {
-          this.multiplayerClient.connect();
+          this.multiplayerClient.connect(true);
         }
         this.showToast('Conexão restaurada com sucesso! Bem-vindo de volta!');
       } else {
