@@ -150,7 +150,25 @@ export class TutorialManager {
     });
   }
 
-  startTutorial() {
+  hideTutorial() {
+    if (this.tutorialOverlay) {
+      this.tutorialOverlay.style.display = 'none';
+    }
+    const arrow = document.getElementById('tutorial-guide-arrow');
+    if (arrow) arrow.style.display = 'none';
+  }
+
+  startTutorial(forceRestart = false) {
+    if (forceRestart) {
+      this.isCompleted = false;
+      this.currentStep = 0;
+      this.movementKeysPressed = { w: false, a: false, s: false, d: false };
+      localStorage.removeItem('kidslearncode_tutorial_completed');
+      localStorage.removeItem('kidslearncode_coding_tour_done');
+      ['w', 'a', 's', 'd'].forEach(k => {
+        document.getElementById(`tut-key-${k}`)?.classList.remove('pressed');
+      });
+    }
     if (this.isCompleted) return;
     this.currentStep = 1;
     this.showStep1Movement();
@@ -158,17 +176,23 @@ export class TutorialManager {
 
   showStep1Movement() {
     if (!this.tutorialOverlay) return;
+    this.tutorialOverlay.style.opacity = '1';
     this.tutorialOverlay.style.display = 'block';
 
     const card = document.getElementById('tutorial-card');
     const text = document.getElementById('tutorial-text');
     const counter = document.getElementById('tutorial-step-counter');
     const keysVisualizer = document.getElementById('tutorial-movement-keys');
+    const arrow = document.getElementById('tutorial-guide-arrow');
 
     if (card) card.style.display = 'flex';
     if (counter) counter.innerText = 'Passo 1 de 4';
     if (text) text.innerText = 'Use as teclas [W] [A] [S] [D] ou as Setas do teclado para caminhar pela Ilha!';
-    if (keysVisualizer) keysVisualizer.style.display = 'flex';
+    if (keysVisualizer) {
+      keysVisualizer.style.opacity = '1';
+      keysVisualizer.style.display = 'flex';
+    }
+    if (arrow) arrow.style.display = 'none';
   }
 
   checkMovementStepCompletion() {

@@ -30,13 +30,15 @@ while true; do
     sleep 3
   fi
 
-  # 2. Checa se há atualizações na branch main do GitHub (apenas se não houver edições locais pendentes)
+  # 2. Checa se há atualizações na branch main do GitHub (apenas se origin/main estiver à frente de HEAD e não houver edições locais pendentes)
   git fetch origin main --quiet 2>/dev/null
   LOCAL=$(git rev-parse HEAD 2>/dev/null)
   REMOTE=$(git rev-parse origin/main 2>/dev/null)
+  BEHIND=$(git rev-list --count HEAD..origin/main 2>/dev/null || echo "0")
+  AHEAD=$(git rev-list --count origin/main..HEAD 2>/dev/null || echo "0")
   DIRTY=$(git status --porcelain 2>/dev/null)
 
-  if [ "$LOCAL" != "$REMOTE" ] && [ -n "$REMOTE" ] && [ -z "$DIRTY" ]; then
+  if [ "$BEHIND" -gt 0 ] && [ "$AHEAD" -eq 0 ] && [ -n "$REMOTE" ] && [ -z "$DIRTY" ]; then
     echo "Nova atualização detectada no GitHub! Aplicando sem afetar server/data/..."
     git reset --hard origin/main
 

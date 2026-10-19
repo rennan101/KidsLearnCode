@@ -573,7 +573,15 @@ export class Database {
     const newSave = {
       id: crypto.randomUUID(),
       user_id: id,
-      player_data: { x: 320, y: 320, scale: 1.0, heroId: 'custom_avatar', customAvatar: defaultAvatar, activeHero: 'custom_avatar' },
+      player_data: {
+        x: 320,
+        y: 320,
+        scale: 1.0,
+        heroId: 'custom_avatar',
+        customAvatar: defaultAvatar,
+        activeHero: 'custom_avatar',
+        onboardingCompleted: false
+      },
       inventory_data: { items: [], tools: [], eggs: [], equippedToolId: null },
       dragons_data: { party: [], formation: [], activeDragonId: null, mode: 'none' },
       coding_progress: { playerXP: 0, playerGold: 100, completedLessons: [], unlockedAssets: [], unlockedRecipes: [] },
@@ -662,13 +670,17 @@ export class Database {
       || this.createDefaultCustomAvatar(profile?.nickname || 'Aventureiro');
 
     const resolvedActiveHero = activeHero || player?.activeHero || player?.heroId || save?.player_data?.activeHero || 'custom_avatar';
+    const resolvedOnboardingCompleted = (player?.onboardingCompleted !== undefined)
+      ? Boolean(player.onboardingCompleted)
+      : (save?.player_data?.onboardingCompleted !== undefined ? Boolean(save.player_data.onboardingCompleted) : true);
 
     const mergedPlayerData = {
       ...(save?.player_data || { x: 320, y: 320, scale: 1.0 }),
       ...(player || {}),
       customAvatar: resolvedCustomAvatar,
       activeHero: resolvedActiveHero,
-      heroId: resolvedActiveHero
+      heroId: resolvedActiveHero,
+      onboardingCompleted: resolvedOnboardingCompleted
     };
 
     if (!save) {

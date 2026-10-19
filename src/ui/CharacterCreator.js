@@ -53,6 +53,7 @@ export class CharacterCreator {
     this.lastFrameTime = performance.now();
     this.animationFrameId = null;
     this.isOpen = false;
+    this.isOnboarding = false;
     this.onSaveCallback = options.onSave || null;
     this.onCloseCallback = options.onClose || null;
 
@@ -72,14 +73,16 @@ export class CharacterCreator {
   /**
    * Abre o criador de personagem em tela cheia com a configuração inicial.
    * @param {Object} initialConfig - Configuração prévia do avatar ou null
+   * @param {Object} options - Opções adicionais (ex: { isOnboarding: true })
    */
-  open(initialConfig = null) {
+  open(initialConfig = null, options = {}) {
     if (initialConfig) {
       this.currentConfig = { ...DEFAULT_AVATAR_CONFIG, ...initialConfig };
     } else {
       this.currentConfig = createDefaultAvatarConfig();
     }
 
+    this.isOnboarding = Boolean(options.isOnboarding);
     this.isOpen = true;
     this.renderModal();
     this.startPreviewLoop();
@@ -87,6 +90,7 @@ export class CharacterCreator {
 
   close() {
     this.isOpen = false;
+    this.isOnboarding = false;
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
@@ -158,7 +162,7 @@ export class CharacterCreator {
               <p class="cc-subtitle">Personalize seu avatar de corpo inteiro com animações automáticas por recorte 2D</p>
             </div>
           </div>
-          <button class="cc-close-btn" id="cc-btn-close" title="Fechar">
+          <button class="cc-close-btn" id="cc-btn-close" title="Fechar" style="${this.isOnboarding ? 'display: none;' : ''}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ui-icon icon-sm">
               <line x1="18" y1="6" x2="6" y2="18"/>
               <line x1="6" y1="6" x2="18" y2="18"/>
@@ -301,9 +305,10 @@ export class CharacterCreator {
     overlay.querySelector('#cc-btn-save')?.addEventListener('click', () => {
       const finalName = nameInput ? nameInput.value.trim() : this.currentConfig.name;
       this.currentConfig.name = finalName || 'Aventureiro';
+      const wasOnboarding = this.isOnboarding;
 
       if (typeof this.onSaveCallback === 'function') {
-        this.onSaveCallback({ ...this.currentConfig });
+        this.onSaveCallback({ ...this.currentConfig }, wasOnboarding);
       }
       this.close();
     });

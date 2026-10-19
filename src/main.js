@@ -19,6 +19,7 @@ import { ScratchBlockEngine } from './engine/ScratchBlockEngine.js';
 import { TutorialManager } from './engine/TutorialManager.js';
 import { soundFX } from './engine/SoundFX.js';
 import { CharacterCreator } from './ui/CharacterCreator.js';
+import { FirstTimeOnboarding } from './ui/FirstTimeOnboarding.js';
 import { DEFAULT_AVATAR_CONFIG } from './engine/animation/AvatarConfig.js';
 import { NPCManager } from './engine/NPCManager.js';
 import { PerformanceController } from './engine/PerformanceController.js';
@@ -51,7 +52,13 @@ class RPGApplication {
     }
     this.tutorialManager = new TutorialManager(this);
     this.characterCreator = new CharacterCreator({
-      onSave: (config) => this.handleCustomAvatarSave(config)
+      onSave: (config, wasOnboarding) => this.handleCustomAvatarSave(config, wasOnboarding)
+    });
+    this.firstTimeOnboarding = new FirstTimeOnboarding({
+      onNameConfirmed: (chosenName) => {
+        const baseConfig = this.player?.customAvatarConfig || DEFAULT_AVATAR_CONFIG;
+        this.openCharacterCreator({ ...baseConfig, name: chosenName }, { isOnboarding: true });
+      }
     });
 
     if (this.scratchEngine) {
@@ -280,8 +287,10 @@ class RPGApplication {
 
     // Exibe a tela de login / criação de conta como primeira coisa se não autenticado
     const authModal = document.getElementById('auth-modal');
-    if (authModal && (!this.supabaseClient?.user || this.supabaseClient.user.isGuest)) {
+    const isAuthenticated = Boolean(this.supabaseClient?.user && !this.supabaseClient.user.isGuest);
+    if (authModal && !isAuthenticated) {
       authModal.style.display = 'flex';
+      this.tutorialManager?.hideTutorial?.();
     }
 
     // Sync player collider and position with loaded data
@@ -331,11 +340,9 @@ class RPGApplication {
     this.lastTime = performance.now();
     requestAnimationFrame((t) => this.gameLoop(t));
 
-    // Start Interactive Kid-Friendly Tutorial
-    try {
-      this.tutorialManager?.startTutorial();
-    } catch (tutErr) {
-      console.warn('TutorialManager start error:', tutErr);
+    // Se já estiver autenticado na abertura, verifica se deve exibir o onboarding de 1ª vez ou o tutorial
+    if (isAuthenticated) {
+      this.checkAndRunOnboardingOrTutorial(false);
     }
 
     // Garante que a tela de carregamento seja fechada
@@ -2239,7 +2246,8 @@ class RPGApplication {
           x: Math.round(this.player.x),
           y: Math.round(this.player.y),
           scale: this.player.scale || 1.0,
-          heroId: this.player.heroId || 'char_wolf_hunter_m'
+          heroId: this.player.heroId || 'char_wolf_hunter_m',
+          onboardingCompleted: this.player.onboardingCompleted ?? true
         },
         inventory: {
           items: this.inventorySystem.getItems(),
@@ -2426,6 +2434,11 @@ class RPGApplication {
           }
           if (data.player.scale) {
             this.player.setScale(data.player.scale);
+          }
+          if (data.player.onboardingCompleted !== undefined) {
+            this.player.onboardingCompleted = Boolean(data.player.onboardingCompleted);
+          } else {
+            this.player.onboardingCompleted = true;
           }
           let localStoredAvatar = null;
           try {
@@ -3391,12 +3404,47 @@ class RPGApplication {
     const nicknameInput = document.getElementById('auth-nickname');
     const emailInput = document.getElementById('auth-email');
     const passwordInput = document.getElementById('auth-password');
+    const togglePasswordBtn = document.getElementById('btn-toggle-auth-password');
+    const iconEyeOpenPass = document.getElementById('icon-eye-open-password');
+    const iconEyeOffPass = document.getElementById('icon-eye-off-password');
+    const confirmPasswordContainer = document.getElementById('auth-confirm-password-container');
+    const confirmPasswordInput = document.getElementById('auth-confirm-password');
+    const toggleConfirmPasswordBtn = document.getElementById('btn-toggle-auth-confirm-password');
+    const iconEyeOpenConfirm = document.getElementById('icon-eye-open-confirm');
+    const iconEyeOffConfirm = document.getElementById('icon-eye-off-confirm');
     const ageContainer = document.getElementById('auth-age-verification-container');
     const over18Checkbox = document.getElementById('auth-over-18');
     const parentEmailContainer = document.getElementById('auth-parent-email-container');
     const parentEmailInput = document.getElementById('auth-parent-email');
     const submitBtn = document.getElementById('btn-submit-auth');
     const signoutBtn = document.getElementById('btn-signout-auth');
+
+    const resetPasswordVisibility = () => {
+      if (passwordInput) passwordInput.type = 'password';
+      if (iconEyeOpenPass) iconEyeOpenPass.style.display = 'block';
+      if (iconEyeOffPass) iconEyeOffPass.style.display = 'none';
+      if (confirmPasswordInput) confirmPasswordInput.type = 'password';
+      if (iconEyeOpenConfirm) iconEyeOpenConfirm.style.display = 'block';
+      if (iconEyeOffConfirm) iconEyeOffConfirm.style.display = 'none';
+    };
+
+    togglePasswordBtn?.addEventListener('click', () => {
+      if (!passwordInput) return;
+      const isHidden = passwordInput.type === 'password';
+      passwordInput.type = isHidden ? 'text' : 'password';
+      if (iconEyeOpenPass) iconEyeOpenPass.style.display = isHidden ? 'none' : 'block';
+      if (iconEyeOffPass) iconEyeOffPass.style.display = isHidden ? 'block' : 'none';
+      passwordInput.focus();
+    });
+
+    toggleConfirmPasswordBtn?.addEventListener('click', () => {
+      if (!confirmPasswordInput) return;
+      const isHidden = confirmPasswordInput.type === 'password';
+      confirmPasswordInput.type = isHidden ? 'text' : 'password';
+      if (iconEyeOpenConfirm) iconEyeOpenConfirm.style.display = isHidden ? 'none' : 'block';
+      if (iconEyeOffConfirm) iconEyeOffConfirm.style.display = isHidden ? 'block' : 'none';
+      confirmPasswordInput.focus();
+    });
 
     // Forgot Password & Reset Views
     const forgotBtn = document.getElementById('btn-forgot-password');
@@ -3455,6 +3503,8 @@ class RPGApplication {
         tabLogin?.click();
       }
       if (passwordInput) passwordInput.value = '';
+      if (confirmPasswordInput) confirmPasswordInput.value = '';
+      resetPasswordVisibility();
       if (modal) modal.style.display = 'flex';
       refreshAuthUI();
     };
@@ -3482,17 +3532,10 @@ class RPGApplication {
         refreshAuthUI();
         await this.loadGameFromStorage();
         if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-          this.showToast(`Passaporte ativado com sucesso! Bem-vindo(a) à Ilha Lua, ${user.user_metadata?.nickname || user.email}!`, 5000);
-          
-          // Se o usuário ainda não possui um avatar personalizado configurado, abre o Character Creator de corpo inteiro
-          if (!this.player.customAvatarConfig && !localStorage.getItem('kidslearn_custom_avatar')) {
-            const nickname = user.user_metadata?.nickname || 'Aventureiro';
-            setTimeout(() => {
-              this.openCharacterCreator({ ...DEFAULT_AVATAR_CONFIG, name: nickname });
-            }, 600);
-          }
+          this.checkAndRunOnboardingOrTutorial(Boolean(this._justSignedUp));
         }
       } else {
+        this.tutorialManager?.hideTutorial?.();
         refreshAuthUI();
         this.openAuthModal('login');
       }
@@ -3634,6 +3677,8 @@ class RPGApplication {
       tabLogin.classList.add('active');
       tabSignup.classList.remove('active');
       if (nicknameInput) nicknameInput.style.display = 'none';
+      if (confirmPasswordContainer) confirmPasswordContainer.style.display = 'none';
+      if (confirmPasswordInput) confirmPasswordInput.value = '';
       if (ageContainer) ageContainer.style.display = 'none';
       const forgotExtra = document.getElementById('auth-login-extras');
       if (forgotExtra) forgotExtra.style.display = 'flex';
@@ -3644,7 +3689,9 @@ class RPGApplication {
       mode = 'signup';
       tabSignup.classList.add('active');
       tabLogin.classList.remove('active');
-      if (nicknameInput) nicknameInput.style.display = 'block';
+      // O nome do personagem será perguntado na 1ª tela dedicada ao entrar no jogo
+      if (nicknameInput) nicknameInput.style.display = 'none';
+      if (confirmPasswordContainer) confirmPasswordContainer.style.display = 'flex';
       if (ageContainer) ageContainer.style.display = 'flex';
       const forgotExtra = document.getElementById('auth-login-extras');
       if (forgotExtra) forgotExtra.style.display = 'none';
@@ -3657,7 +3704,8 @@ class RPGApplication {
     submitBtn?.addEventListener('click', async () => {
       const email = emailInput.value.trim();
       const password = passwordInput.value.trim();
-      const nickname = nicknameInput ? nicknameInput.value.trim() : 'Aventureiro';
+      const confirmPass = confirmPasswordInput ? confirmPasswordInput.value.trim() : '';
+      const nickname = (nicknameInput && nicknameInput.value.trim()) ? nicknameInput.value.trim() : 'Aventureiro';
 
       if (!email || !password) {
         this.showToast('Preencha e-mail e senha.');
@@ -3666,6 +3714,16 @@ class RPGApplication {
 
       let extraData = {};
       if (mode === 'signup') {
+        if (password.length < 6) {
+          this.showToast('A senha deve ter no mínimo 6 caracteres.');
+          return;
+        }
+        if (password !== confirmPass) {
+          this.showToast('As senhas digitadas não coincidem. Repita a mesma senha para confirmar.');
+          if (confirmPasswordInput) confirmPasswordInput.focus();
+          return;
+        }
+
         const isOver18 = over18Checkbox ? over18Checkbox.checked : false;
         let parentEmail = '';
         if (!isOver18) {
@@ -3684,8 +3742,10 @@ class RPGApplication {
 
       let res;
       if (mode === 'signup') {
+        this._justSignedUp = true;
         res = await this.supabaseClient.signUp(email, password, nickname, extraData);
       } else {
+        this._justSignedUp = false;
         res = await this.supabaseClient.signIn(email, password);
       }
 
@@ -3709,12 +3769,14 @@ class RPGApplication {
           this.showToast(res.message, 6000);
           refreshAuthUI();
         } else {
-          this.showToast(`Bem-vindo(a), ${res.user.user_metadata?.nickname || res.user.email}!`);
           refreshAuthUI();
           await this.loadGameFromStorage();
           modal.style.display = 'none';
+          this.checkAndRunOnboardingOrTutorial(Boolean(this._justSignedUp));
+          this._justSignedUp = false;
         }
       } else {
+        this._justSignedUp = false;
         this.showToast(res.error || 'Falha ao autenticar.');
       }
     });
@@ -5440,10 +5502,32 @@ class RPGApplication {
       return this.player?.heroData?.name || 'Aventureiro';
     };
 
-    this.handleCustomAvatarSave = (config) => {
+    this.handleCustomAvatarSave = (config, wasOnboarding = false) => {
+      const cleanName = (config.name && config.name.trim()) ? config.name.trim() : 'Aventureiro';
+      config.name = cleanName;
+
       this.player.setCustomAvatar(config);
+      this.player.onboardingCompleted = true;
+
+      const userId = this.supabaseClient?.user?.id;
+      if (userId) {
+        localStorage.setItem(`kidslearn_onboarding_done_${userId}`, 'true');
+      }
       localStorage.setItem('kidslearn_custom_avatar', JSON.stringify(config));
       localStorage.setItem('kidslearn_active_hero', 'custom_avatar');
+
+      if (this.supabaseClient && !this.supabaseClient.user?.isGuest) {
+        if (this.supabaseClient.user) this.supabaseClient.user.nickname = cleanName;
+        if (this.supabaseClient.profile) this.supabaseClient.profile.nickname = cleanName;
+        this.supabaseClient.syncUserProfile?.({
+          nickname: cleanName,
+          heroId: 'custom_avatar',
+          x: Math.round(this.player.x),
+          y: Math.round(this.player.y)
+        });
+        this.refreshAuthUI?.();
+      }
+
       this.updateHeroHeaderBadge();
       this.saveGameToStorage(true);
       this.player.spawnCraftPoof();
@@ -5469,13 +5553,47 @@ class RPGApplication {
         );
       }
 
-      this.showToast(`Seu personagem ${config.name || 'Aventureiro'} foi atualizado!`);
+      if (wasOnboarding) {
+        this.showToast(`Bem-vindo(a) à Ilha Lua, ${cleanName}! Siga as instruções para começar sua aventura!`, 5000);
+        try {
+          this.tutorialManager?.startTutorial(true);
+        } catch (tutErr) {
+          console.warn('TutorialManager start error after onboarding:', tutErr);
+        }
+      } else {
+        this.showToast(`Seu personagem ${cleanName} foi atualizado!`);
+      }
     };
 
-    this.openCharacterCreator = (config = null) => {
+    this.openCharacterCreator = (config = null, options = {}) => {
       if (!this.characterCreator) return;
       const initial = config || this.player.customAvatarConfig || DEFAULT_AVATAR_CONFIG;
-      this.characterCreator.open(initial);
+      this.characterCreator.open(initial, options);
+    };
+
+    this.checkAndRunOnboardingOrTutorial = (forceNewAccount = false) => {
+      const user = this.supabaseClient?.user;
+      if (!user || user.isGuest) {
+        this.tutorialManager?.hideTutorial?.();
+        return;
+      }
+
+      const userId = user.id || '';
+      const localDone = userId ? localStorage.getItem(`kidslearn_onboarding_done_${userId}`) === 'true' : false;
+      const needsOnboarding = forceNewAccount || (this.player?.onboardingCompleted === false && !localDone);
+
+      if (needsOnboarding) {
+        this.player.onboardingCompleted = false;
+        this.tutorialManager?.hideTutorial?.();
+        const initialNick = user.nickname || user.user_metadata?.nickname || '';
+        this.firstTimeOnboarding?.open(initialNick);
+      } else {
+        try {
+          this.tutorialManager?.startTutorial(false);
+        } catch (tutErr) {
+          console.warn('TutorialManager start error:', tutErr);
+        }
+      }
     };
 
     profileBtn?.addEventListener('click', () => {
