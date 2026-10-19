@@ -7,7 +7,7 @@
 import { ModularAvatarRenderer } from './animation/ModularAvatarRenderer.js';
 import { MASTER_NPC_CONFIGS } from './animation/NPCAppearanceGenerator.js';
 import { DEFAULT_AVATAR_CONFIG } from './animation/AvatarConfig.js';
-import { DRAGON_CATALOG } from './DragonManager.js';
+import { DRAGON_CATALOG, MOUNT_SOCKET_OFFSETS } from './DragonManager.js';
 import { getActiveServerUrl } from '../config/supabase.js';
 
 export class MultiplayerClient {
@@ -64,12 +64,22 @@ export class MultiplayerClient {
 
     // 1. Dragon Storm (Volt)
     const stormSideFrames = [];
+    const stormSideBackFrames = [];
+    const stormSideFrontFrames = [];
     const stormSouthFrames = [];
     const stormNorthFrames = [];
     for (let i = 1; i <= 8; i++) {
       const side = new Image();
       side.src = `assets/Dragon/dragon_fly_storm/flying/dragon_flying_frame_${i}.svg`;
       stormSideFrames.push(side);
+
+      const sideBack = new Image();
+      sideBack.src = `assets/Dragon/dragon_fly_storm/flying_side_layers/back_${i}.svg`;
+      stormSideBackFrames.push(sideBack);
+
+      const sideFront = new Image();
+      sideFront.src = `assets/Dragon/dragon_fly_storm/flying_side_layers/front_${i}.svg`;
+      stormSideFrontFrames.push(sideFront);
 
       const south = new Image();
       south.src = `assets/Dragon/dragon_fly_storm/flying_south_front/dragon_flying_south_frame_${i}.svg`;
@@ -83,18 +93,30 @@ export class MultiplayerClient {
     this.dragonSpriteFrames['dragon_fly_storm'] = {
       flying: stormSideFrames,
       flying_side: stormSideFrames,
+      flying_side_back: stormSideBackFrames,
+      flying_side_front: stormSideFrontFrames,
       flying_south: stormSouthFrames,
       flying_north: stormNorthFrames
     };
 
     // 2. Dragon Zephyr
     const zephyrSideFrames = [];
+    const zephyrSideBackFrames = [];
+    const zephyrSideFrontFrames = [];
     const zephyrSouthFrames = [];
     const zephyrNorthFrames = [];
     for (let i = 1; i <= 8; i++) {
       const side = new Image();
       side.src = `assets/Dragon/dragon_fly_zephyr/flying/zephyr_flying_right_frame_${i}.svg`;
       zephyrSideFrames.push(side);
+
+      const sideBack = new Image();
+      sideBack.src = `assets/Dragon/dragon_fly_zephyr/flying_side_layers/back_${i}.svg`;
+      zephyrSideBackFrames.push(sideBack);
+
+      const sideFront = new Image();
+      sideFront.src = `assets/Dragon/dragon_fly_zephyr/flying_side_layers/front_${i}.svg`;
+      zephyrSideFrontFrames.push(sideFront);
 
       const south = new Image();
       south.src = `assets/Dragon/dragon_fly_zephyr/flying_south_front/zephyr_flying_south_frame_${i}.svg`;
@@ -108,6 +130,8 @@ export class MultiplayerClient {
     this.dragonSpriteFrames['dragon_fly_zephyr'] = {
       flying: zephyrSideFrames,
       flying_side: zephyrSideFrames,
+      flying_side_back: zephyrSideBackFrames,
+      flying_side_front: zephyrSideFrontFrames,
       flying_south: zephyrSouthFrames,
       flying_north: zephyrNorthFrames
     };
@@ -498,7 +522,7 @@ export class MultiplayerClient {
     }
   }
 
-  render(ctx, assetLoader, camera = null) {
+  render(ctx, assetLoader, camera = null, mountedFilter = 'all') {
     const remoteList = Array.from(this.remotePlayers.values());
     const listToRender = (remoteList.length > 0 || this.isConnected || this.supabaseClient)
       ? remoteList
@@ -508,6 +532,10 @@ export class MultiplayerClient {
     const padding = 2 * tileSize;
 
     for (const p of listToRender) {
+      if (!p) continue;
+      if (mountedFilter === 'mounted' && !p.isMounted) continue;
+      if (mountedFilter === 'ground' && p.isMounted) continue;
+
       if (camera && typeof camera.x === 'number' && typeof camera.y === 'number') {
         const zoom = camera.zoom || 1.0;
         const viewW = camera.viewportWidth / zoom;
@@ -634,6 +662,151 @@ export class MultiplayerClient {
     ctx.restore();
   }
 
+  // Renderiza o Cavaleiro Remoto encaixado exatamente no socket da sela do dragão
+  renderRemoteRider(ctx, player, assetLoader, centerX, centerY, dir = 'south', scaleMultiplier = 0.88) {
+    const s = (player.scale || 1.0) * scaleMultiplier;
+    const heroId = player.heroId || 'char_wolf_hunter_m';
+    const avatarConfig = player.avatarConfig || MASTER_NPC_CONFIGS[heroId] || DEFAULT_AVATAR_CONFIG;
+
+    if (this.avatarRenderer) {
+      const avatarScale = 0.315 * s;
+      const targetX = centerX;
+      const targetY = centerY + (20 * s) - (265 * avatarScale);
+
+      this.avatarRenderer.render(
+        ctx,
+        targetX,
+        targetY,
+        dir,
+        'riding',
+        player.animTimer || performance.now() / 1000,
+        avatarConfig,
+        avatarScale
+      );
+      return;
+    }
+
+    const rowMap = { south: 0, east: 1, north: 2, west: 3 };
+    const row = rowMap[dir] ?? 0;
+    const frameUrl = `assets/characters/char_wolf_hunter_m/frames/wolf_hunter_r${row}_c0.png`;
+    const sprite = assetLoader?.getImage(frameUrl);
+    if (sprite) {
+      const renderW = 64 * s;
+      const renderH = 64 * s;
+      ctx.drawImage(sprite, Math.round(centerX - renderW / 2), Math.round(centerY - renderH / 2), renderW, renderH);
+    }
+  }
+
+  // Renderização Unificada do Par Dragão + Cavaleiro Remoto com camadas por direção (South, North, East/West)
+  renderRemoteMountedUnified(ctx, player, dragonId, drawX, drawY, dir, alt, animTimer, assetLoader, isReflection = false) {
+    const isWest = dir === 'west';
+    const isFrontOrBack = dir === 'north' || dir === 'south';
+    const bounce = Math.sin((animTimer || 0) * (alt > 10 ? 8 : 4)) * (alt > 10 ? 6 : 4);
+    const dgDrawY = Math.round(drawY + bounce - alt);
+
+    // 1. Sombra Unificada no Chão
+    if (!isReflection) {
+      ctx.save();
+      const shadowScaleX = 22 + (alt * 0.14);
+      const shadowScaleY = 9 + (alt * 0.06);
+      const shadowAlpha = Math.max(0.12, 0.38 - (alt / 120) * 0.20);
+      ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+      ctx.beginPath();
+      ctx.ellipse(drawX + 32, drawY + 54, shadowScaleX, shadowScaleY, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    const dragonCenterX = drawX + 32;
+    const dragonCenterY = dgDrawY + 28;
+
+    const socketOffsets = (MOUNT_SOCKET_OFFSETS?.[dragonId] || MOUNT_SOCKET_OFFSETS?.default)?.[dir] || { x: 0, y: -2, scale: 0.88 };
+    const riderCenterX = dragonCenterX + (socketOffsets.x || 0);
+    const riderCenterY = dragonCenterY + (socketOffsets.y || 0);
+    const riderScale = socketOffsets.scale || 0.88;
+
+    // 2. Animação de Frames SVG com Camadas Corretas por Direção
+    const spriteSet = this.dragonSpriteFrames?.[dragonId] || this.dragonManager?.dragonSpriteFrames?.[dragonId];
+    if (spriteSet) {
+      let frames = spriteSet.flying_side || spriteSet.flying;
+      if (dir === 'north' && spriteSet.flying_north?.length) {
+        frames = spriteSet.flying_north;
+      } else if (dir === 'south' && spriteSet.flying_south?.length) {
+        frames = spriteSet.flying_south;
+      }
+
+      if (frames && frames.length > 0) {
+        const frameIdx = Math.floor(((animTimer || 0) * 10) % frames.length);
+        const frameImg = frames[frameIdx];
+
+        if (frameImg && frameImg.complete && frameImg.naturalWidth > 0) {
+          const spriteSize = isFrontOrBack ? 104 : 118;
+          const halfSize = spriteSize / 2;
+
+          if (dir === 'south') {
+            // South (de frente): Cavaleiro atrás, Dragão na frente
+            this.renderRemoteRider(ctx, player, assetLoader, riderCenterX, riderCenterY, 'south', riderScale);
+
+            ctx.save();
+            ctx.translate(dragonCenterX, dragonCenterY);
+            ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
+            ctx.restore();
+          } else if (dir === 'north') {
+            // North (de costas): Dragão atrás, Cavaleiro na frente
+            ctx.save();
+            ctx.translate(dragonCenterX, dragonCenterY);
+            ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
+            ctx.restore();
+
+            this.renderRemoteRider(ctx, player, assetLoader, riderCenterX, riderCenterY, 'north', riderScale);
+          } else {
+            // East / West (Perfil Lateral 2.5D Sandwich): Asa Traseira -> Cavaleiro -> Asa/Cabeça Dianteira
+            const backFrames = spriteSet.flying_side_back;
+            const frontFrames = spriteSet.flying_side_front;
+            const backImg = (backFrames && backFrames[frameIdx]?.complete && backFrames[frameIdx].naturalWidth > 0) ? backFrames[frameIdx] : null;
+            const frontImg = (frontFrames && frontFrames[frameIdx]?.complete && frontFrames[frameIdx].naturalWidth > 0) ? frontFrames[frameIdx] : null;
+
+            if (backImg && frontImg) {
+              ctx.save();
+              ctx.translate(dragonCenterX, dragonCenterY);
+              if (isWest) ctx.scale(-1, 1);
+              ctx.drawImage(backImg, -halfSize, -halfSize, spriteSize, spriteSize);
+              ctx.restore();
+
+              this.renderRemoteRider(ctx, player, assetLoader, riderCenterX, riderCenterY, dir, riderScale);
+
+              ctx.save();
+              ctx.translate(dragonCenterX, dragonCenterY);
+              if (isWest) ctx.scale(-1, 1);
+              ctx.drawImage(frontImg, -halfSize, -halfSize, spriteSize, spriteSize);
+              ctx.restore();
+            } else {
+              ctx.save();
+              ctx.translate(dragonCenterX, dragonCenterY);
+              if (isWest) ctx.scale(-1, 1);
+              ctx.drawImage(frameImg, -halfSize, -halfSize, spriteSize, spriteSize);
+              ctx.restore();
+
+              this.renderRemoteRider(ctx, player, assetLoader, riderCenterX, riderCenterY, dir, riderScale);
+            }
+          }
+          return;
+        }
+      }
+    }
+
+    // 3. Fallback Vetorial / Catálogo com Ordenação por Direção
+    if (dir === 'south') {
+      // South (de frente): Cavaleiro atrás, Dragão na frente
+      this.renderRemoteRider(ctx, player, assetLoader, riderCenterX, riderCenterY, 'south', riderScale);
+      this.renderRemoteDragonVisual(ctx, dragonId, drawX, drawY, dir, alt, animTimer, true, assetLoader, true);
+    } else {
+      // North / East / West: Dragão atrás, Cavaleiro na frente
+      this.renderRemoteDragonVisual(ctx, dragonId, drawX, drawY, dir, alt, animTimer, true, assetLoader, true);
+      this.renderRemoteRider(ctx, player, assetLoader, riderCenterX, riderCenterY, dir, riderScale);
+    }
+  }
+
   renderRemotePlayer(ctx, player, assetLoader, isReflection = false) {
     ctx.save();
     const s = player.scale || 1.0;
@@ -653,50 +826,49 @@ export class MultiplayerClient {
       this.renderRemoteDragonVisual(ctx, activeDragonId, dgX, dgY, dir, 0, animTimer, false, assetLoader, isReflection);
     }
 
-    // 1. Sombra circular nos pés do jogador (omitida em reflexos ou quando montado alto)
-    if (!isReflection && (!isMounted || alt <= 5)) {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-      ctx.beginPath();
-      ctx.ellipse(drawX + 32 * s, drawY + 60 * s, 16 * s, 6 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // 1b. Se estiver montado, renderiza o Dragão sob o avatar
     if (isMounted && activeDragonId) {
-      this.renderRemoteDragonVisual(ctx, activeDragonId, drawX, drawY, dir, alt, animTimer, true, assetLoader, isReflection);
-    }
-
-    // 2. Modular Cutout Avatar Engine (Renderiza o avatar fiel do jogador ou herói)
-    const avatarConfig = player.avatarConfig || MASTER_NPC_CONFIGS[heroId] || DEFAULT_AVATAR_CONFIG;
-    if (this.avatarRenderer) {
-      let animState = 'idle';
-      if (isMounted) animState = 'riding';
-      else if (player.isSprinting && player.isMoving) animState = 'run';
-      else if (player.isMoving) animState = 'walk';
-
-      const avatarScale = 0.33 * s;
-      const targetX = drawX + (32 * s);
-      const targetY = drawY + (60 * s) - (265 * avatarScale) - (isMounted ? alt : 0);
-
-      this.avatarRenderer.render(
-        ctx,
-        targetX,
-        targetY,
-        dir,
-        animState,
-        player.animTimer || performance.now() / 1000,
-        avatarConfig,
-        avatarScale
-      );
+      // 1. Renderização Unificada Dragão + Cavaleiro com ordem de camadas fiel à direção (South = Dragão na frente do Cavaleiro)
+      this.renderRemoteMountedUnified(ctx, player, activeDragonId, drawX, drawY, dir, alt, animTimer, assetLoader, isReflection);
     } else {
-      // Fallback simples
-      const rowMap = { south: 0, east: 1, north: 2, west: 3 };
-      const row = rowMap[dir] ?? 0;
-      let col = player.isMoving ? 2 : 0;
-      const frameUrl = `assets/characters/char_wolf_hunter_m/frames/wolf_hunter_r${row}_c${col}.png`;
-      const sprite = assetLoader?.getImage(frameUrl);
-      if (sprite) {
-        ctx.drawImage(sprite, drawX, drawY, 64 * s, 64 * s);
+      // 1. Sombra circular nos pés do jogador (quando a pé)
+      if (!isReflection) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+        ctx.beginPath();
+        ctx.ellipse(drawX + 32 * s, drawY + 60 * s, 16 * s, 6 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 2. Modular Cutout Avatar Engine (Renderiza o avatar fiel do jogador ou herói a pé)
+      const avatarConfig = player.avatarConfig || MASTER_NPC_CONFIGS[heroId] || DEFAULT_AVATAR_CONFIG;
+      if (this.avatarRenderer) {
+        let animState = 'idle';
+        if (player.isSprinting && player.isMoving) animState = 'run';
+        else if (player.isMoving) animState = 'walk';
+
+        const avatarScale = 0.33 * s;
+        const targetX = drawX + (32 * s);
+        const targetY = drawY + (60 * s) - (265 * avatarScale);
+
+        this.avatarRenderer.render(
+          ctx,
+          targetX,
+          targetY,
+          dir,
+          animState,
+          player.animTimer || performance.now() / 1000,
+          avatarConfig,
+          avatarScale
+        );
+      } else {
+        // Fallback simples
+        const rowMap = { south: 0, east: 1, north: 2, west: 3 };
+        const row = rowMap[dir] ?? 0;
+        let col = player.isMoving ? 2 : 0;
+        const frameUrl = `assets/characters/char_wolf_hunter_m/frames/wolf_hunter_r${row}_c${col}.png`;
+        const sprite = assetLoader?.getImage(frameUrl);
+        if (sprite) {
+          ctx.drawImage(sprite, drawX, drawY, 64 * s, 64 * s);
+        }
       }
     }
 

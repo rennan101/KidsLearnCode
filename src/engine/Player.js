@@ -218,7 +218,7 @@ export class Player {
     };
   }
 
-  update(deltaTime, tileMap, assetLoader, npcManager = null) {
+  update(deltaTime, tileMap, assetLoader, npcManager = null, multiplayerClient = null) {
     const dt = Math.min(deltaTime / 1000, 0.1);
     this.animTimer += dt;
 
@@ -317,7 +317,7 @@ export class Player {
       const nextY = this.y + moveDistY;
 
       // Movimento 4-way direto com teste de colisão
-      if (!this.checkCollision(nextX, nextY, tileMap, assetLoader, npcManager)) {
+      if (!this.checkCollision(nextX, nextY, tileMap, assetLoader, npcManager, multiplayerClient)) {
         this.x = nextX;
         this.y = nextY;
       }
@@ -326,7 +326,7 @@ export class Player {
     }
   }
 
-  checkCollision(testPlayerX, testPlayerY, tileMap, assetLoader, npcManager = null) {
+  checkCollision(testPlayerX, testPlayerY, tileMap, assetLoader, npcManager = null, multiplayerClient = null) {
     if (!tileMap || !assetLoader) return false;
 
     const activeDragon = this.dragonManager?.getActiveDragon();
@@ -367,6 +367,48 @@ export class Player {
             continue; // Afastando-se do NPC: permitido!
           }
           return true; // Bloqueia avanço contra o NPC
+        }
+      }
+    }
+
+    // Prevenção de colisão física contra outros Jogadores Remotos e Bots (quando ambos estão na mesma faixa de altitude ou no chão)
+    if (multiplayerClient && flightAlt < 30) {
+      const curFeet = this.getFeetBox(this.x, this.y);
+      const remoteList = (multiplayerClient.remotePlayers && multiplayerClient.remotePlayers.size > 0)
+        ? Array.from(multiplayerClient.remotePlayers.values())
+        : (multiplayerClient.simulatedBots || []);
+
+      for (const rp of remoteList) {
+        if (!rp || rp.x === undefined || rp.y === undefined) continue;
+        const rpAlt = rp.isMounted ? (rp.flightAltitude || 0) : 0;
+        // Se o outro jogador estiver voando alto (>= 30), é possível passar por baixo dele
+        if (rpAlt >= 30) continue;
+
+        const rpScale = rp.scale || 1.0;
+        const rpColW = 28 * rpScale;
+        const rpColH = 16 * rpScale;
+        const rpFeet = {
+          x: rp.x + 32 - (rpColW / 2),
+          y: rp.y + 64 - rpColH,
+          w: rpColW,
+          h: rpColH
+        };
+
+        const isOverlapping = (
+          feet.x < rpFeet.x + rpFeet.w &&
+          feet.x + feet.w > rpFeet.x &&
+          feet.y < rpFeet.y + rpFeet.h &&
+          feet.y + feet.h > rpFeet.y
+        );
+
+        if (isOverlapping) {
+          // Permite se afastar caso já estejam sobrepostos no spawn ou por LERP
+          const curDist = Math.hypot(curFeet.x - rpFeet.x, curFeet.y - rpFeet.y);
+          const newDist = Math.hypot(feet.x - rpFeet.x, feet.y - rpFeet.y);
+          if (newDist >= curDist) {
+            continue;
+          }
+          return true;
         }
       }
     }

@@ -3887,8 +3887,8 @@ class RPGApplication {
         this.player.speed = (this.player.isSprinting ? this.player.sprintSpeed : this.player.baseSpeed) * (activeDragon.mountSpeedMultiplier || 1.6);
       }
 
-      // Move player with collision checking against tile colliders & live wandering NPCs (4-way)
-      this.player.update(deltaTime, this.tileMap, this.assetLoader, this.npcManager);
+      // Move player with collision checking against tile colliders, live wandering NPCs & remote players (4-way)
+      this.player.update(deltaTime, this.tileMap, this.assetLoader, this.npcManager, this.multiplayerClient);
 
       // Update Dragon Manager (Pet Follow AI, Combat, Particles, Defeat to Egg)
       if (this.dragonManager) {
@@ -4082,6 +4082,19 @@ class RPGApplication {
               }
             }
 
+            // 2e. Remote Players on the ground (Y-sorted against local player, NPCs, trees and houses)
+            if (!isEditor && this.multiplayerClient) {
+              const remoteList = Array.from(this.multiplayerClient.remotePlayers.values());
+              const listToSort = (remoteList.length > 0 || this.multiplayerClient.isConnected || this.multiplayerClient.supabaseClient)
+                ? remoteList
+                : (this.multiplayerClient.simulatedBots || []);
+              for (const rp of listToSort) {
+                if (!rp || rp.isMounted) continue;
+                const baseY = (rp.y || 0) + 64 * (rp.scale || 1.0);
+                pushYSort('remote_player', null, 0, 0, rp, null, null, baseY);
+              }
+            }
+
             // 3. Player entity (Geralt) Y-Sort Base Position (Feet center)
             const playerFeet = this.player.getFeetBox();
             const playerBaseY = playerFeet.y + playerFeet.h;
@@ -4104,6 +4117,8 @@ class RPGApplication {
                     this.player.render(this.ctx, this.assetLoader, showColliders);
                     playerRendered = true;
                   }
+                } else if (item.type === 'remote_player') {
+                  this.multiplayerClient.renderRemotePlayer(this.ctx, item.npc, this.assetLoader);
                 } else if (item.type === 'npc') {
                   this.npcManager.renderNPCEntity(this.ctx, item.npc, false, this.player, this.blocklySystem);
                 } else if (item.type === 'wild_dragon') {
@@ -4190,10 +4205,10 @@ class RPGApplication {
         }
       }
 
-      // Render Remote Players (Multiplayer)
+      // Render Mounted Remote Players (Multiplayer) above overhead layers, or all if solid Y-Sort wasn't used
       if (this.multiplayerClient && this.mode === 'play') {
         try {
-          this.multiplayerClient.render(this.ctx, this.assetLoader, this.camera);
+          this.multiplayerClient.render(this.ctx, this.assetLoader, this.camera, (hasSolidAndCharacters && isSolidBeforeCharacters) ? 'mounted' : 'all');
         } catch (mpErr) {
           console.error('Error rendering multiplayer entities:', mpErr);
         }
