@@ -1709,8 +1709,26 @@ export class TileMap {
         const drawW = rawW * scaleMultiplier;
         const drawH = rawH * scaleMultiplier;
         const isFlipped = !!cell.flipX;
+        const foliageTf = (!isReflection && this.tallGrassSystem)
+          ? this.tallGrassSystem.getFoliageTransform(cell.tileId, x, y)
+          : null;
 
-        if (rotation !== 0 || scaleMultiplier !== 1.0 || isFlipped) {
+        if (foliageTf) {
+          ctx.save();
+          // Anchor at the bottom-center (roots/trunk base) so the top canopy/leaves sway while base stays planted
+          ctx.translate(destX + occW / 2, destY + occH);
+          ctx.transform(1, 0, foliageTf.shearX, foliageTf.scaleY, 0, 0);
+          if (rotation !== 0) {
+            ctx.translate(0, -occH / 2);
+            ctx.rotate((rotation * Math.PI) / 180);
+            ctx.translate(0, occH / 2);
+          }
+          if (isFlipped) {
+            ctx.scale(-1, 1);
+          }
+          ctx.drawImage(img, -drawW / 2, -drawH, drawW, drawH);
+          ctx.restore();
+        } else if (rotation !== 0 || scaleMultiplier !== 1.0 || isFlipped) {
           ctx.save();
           // Translate to center of occupied bounding box
           ctx.translate(destX + occW / 2, destY + occH / 2);
@@ -1842,8 +1860,21 @@ export class TileMap {
           const sDrawW = sRawW * sScale;
           const sDrawH = sRawH * sScale;
           const sFlipped = !!stackItem.flipX;
+          const sFoliageTf = (!isReflection && this.tallGrassSystem)
+            ? this.tallGrassSystem.getFoliageTransform(stackItem.tileId, x, y)
+            : null;
 
-          if (sRot !== 0 || sScale !== 1.0 || sFlipped) {
+          if (sFoliageTf) {
+            ctx.translate(sDestX + sOccW / 2, sDestY + sOccH);
+            ctx.transform(1, 0, sFoliageTf.shearX, sFoliageTf.scaleY, 0, 0);
+            if (sRot !== 0) {
+              ctx.translate(0, -sOccH / 2);
+              ctx.rotate((sRot * Math.PI) / 180);
+              ctx.translate(0, sOccH / 2);
+            }
+            if (sFlipped) ctx.scale(-1, 1);
+            ctx.drawImage(sImg, -sDrawW / 2, -sDrawH, sDrawW, sDrawH);
+          } else if (sRot !== 0 || sScale !== 1.0 || sFlipped) {
             ctx.translate(sDestX + sOccW / 2, sDestY + sOccH / 2);
             if (sRot !== 0) ctx.rotate((sRot * Math.PI) / 180);
             if (sFlipped) ctx.scale(-1, 1);
@@ -2033,7 +2064,7 @@ export class TileMap {
         if (!cell || cell.isRoot === false) continue;
         if (layerName === 'decor' && renderContext?.ySortGrass && cell.tileId) {
           const lower = cell.tileId.toLowerCase();
-          if (lower === 'tall-grass' || lower.startsWith('high-grass-') || lower.startsWith('tallgrass')) {
+          if (lower === 'tall-grass' || lower === 'tallgrass') {
             continue; // Drawn via Y-Sort depth pipeline
           }
         }

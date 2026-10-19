@@ -6,7 +6,8 @@ export class VFXSettingsController {
     this.gameApp = gameApp;
 
     this.config = {
-      cloudSpeed: 22,
+      cloudPattern: 'varied',
+      cloudSpeed: 12,
       cloudOpacity: 0.22,
       grassSway: 1.0,
       grassParticles: true,
@@ -20,7 +21,11 @@ export class VFXSettingsController {
     try {
       const saved = localStorage.getItem('animal_island_vfx_settings');
       if (saved) {
-        this.config = { ...this.config, ...JSON.parse(saved) };
+        const parsed = JSON.parse(saved);
+        this.config = { ...this.config, ...parsed };
+        if (typeof this.config.cloudSpeed === 'number' && this.config.cloudSpeed > 40) {
+          this.config.cloudSpeed = 12;
+        }
       }
     } catch (e) {
       console.warn('Failed to load VFX settings from localStorage:', e);
@@ -38,6 +43,7 @@ export class VFXSettingsController {
 
   applyToSystems() {
     if (this.gameApp.cloudShadowsOverlay) {
+      this.gameApp.cloudShadowsOverlay.setPatternType(this.config.cloudPattern || 'varied');
       this.gameApp.cloudShadowsOverlay.speed = this.config.cloudSpeed;
       this.gameApp.cloudShadowsOverlay.opacity = this.config.cloudOpacity;
     }
@@ -54,6 +60,7 @@ export class VFXSettingsController {
     const btnClose = document.getElementById('btn-close-vfx-settings');
     const btnSave = document.getElementById('btn-save-vfx-settings');
 
+    const patternBtns = document.querySelectorAll('.vfx-cloud-pattern-btn');
     const sliderCloudSpeed = document.getElementById('slider-vfx-cloud-speed');
     const sliderCloudOpacity = document.getElementById('slider-vfx-cloud-opacity');
     const sliderGrassSway = document.getElementById('slider-vfx-grass-sway');
@@ -65,7 +72,18 @@ export class VFXSettingsController {
     const labelGrassSway = document.getElementById('label-vfx-grass-sway');
     const labelGrassFriction = document.getElementById('label-vfx-grass-friction');
 
+    const updatePatternBtnStyles = () => {
+      patternBtns.forEach((btn) => {
+        const isActive = btn.dataset.pattern === (this.config.cloudPattern || 'varied');
+        btn.classList.toggle('active', isActive);
+        btn.style.background = isActive ? '#e6f9f6' : '#fdfbf7';
+        btn.style.borderColor = isActive ? '#19c8b9' : '#c4b89e';
+        btn.style.color = isActive ? '#0f8e83' : '#794f27';
+      });
+    };
+
     const updateControlsUI = () => {
+      updatePatternBtnStyles();
       if (sliderCloudSpeed) sliderCloudSpeed.value = this.config.cloudSpeed;
       if (sliderCloudOpacity) sliderCloudOpacity.value = Math.round(this.config.cloudOpacity * 100);
       if (sliderGrassSway) sliderGrassSway.value = Math.round(this.config.grassSway * 100);
@@ -77,6 +95,14 @@ export class VFXSettingsController {
       if (labelGrassSway) labelGrassSway.textContent = `${Math.round(this.config.grassSway * 100)}%`;
       if (labelGrassFriction) labelGrassFriction.textContent = `${Math.round(this.config.grassFriction * 100)}%`;
     };
+
+    patternBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.config.cloudPattern = btn.dataset.pattern || 'varied';
+        updatePatternBtnStyles();
+        this.applyToSystems();
+      });
+    });
 
     if (btnOpen && modal) {
       btnOpen.addEventListener('click', () => {

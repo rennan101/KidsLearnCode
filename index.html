@@ -1458,13 +1458,24 @@
             <span>Sombras de Nuvens em Movimento</span>
           </div>
 
+          <!-- Cloud Pattern Selector -->
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <span style="font-size: 0.78rem; font-weight: 700;">Padrão de Formação das Nuvens</span>
+            <div id="vfx-cloud-pattern-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
+              <button type="button" class="vfx-cloud-pattern-btn active" data-pattern="varied" style="background: #e6f9f6; border: 2px solid #19c8b9; border-radius: 50px; padding: 5px 10px; font-family: 'Nunito', sans-serif; font-size: 0.75rem; font-weight: 800; color: #0f8e83; cursor: pointer;">Variado Natural</button>
+              <button type="button" class="vfx-cloud-pattern-btn" data-pattern="cumulus" style="background: #fdfbf7; border: 2px solid #c4b89e; border-radius: 50px; padding: 5px 10px; font-family: 'Nunito', sans-serif; font-size: 0.75rem; font-weight: 800; color: #794f27; cursor: pointer;">Cúmulos de Verão</button>
+              <button type="button" class="vfx-cloud-pattern-btn" data-pattern="cirrus" style="background: #fdfbf7; border: 2px solid #c4b89e; border-radius: 50px; padding: 5px 10px; font-family: 'Nunito', sans-serif; font-size: 0.75rem; font-weight: 800; color: #794f27; cursor: pointer;">Brisa Alongada</button>
+              <button type="button" class="vfx-cloud-pattern-btn" data-pattern="dappled" style="background: #fdfbf7; border: 2px solid #c4b89e; border-radius: 50px; padding: 5px 10px; font-family: 'Nunito', sans-serif; font-size: 0.75rem; font-weight: 800; color: #794f27; cursor: pointer;">Nuvens Esparsas</button>
+            </div>
+          </div>
+
           <!-- Cloud Speed -->
           <div style="display: flex; flex-direction: column; gap: 4px;">
             <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700;">
               <span>Velocidade das Nuvens</span>
-              <span id="label-vfx-cloud-speed" style="color: #0f8e83; font-weight: 800;">22 px/s</span>
+              <span id="label-vfx-cloud-speed" style="color: #0f8e83; font-weight: 800;">12 px/s</span>
             </div>
-            <input type="range" id="slider-vfx-cloud-speed" min="0" max="80" step="2" value="22" style="accent-color: #19c8b9; cursor: pointer;">
+            <input type="range" id="slider-vfx-cloud-speed" min="0" max="40" step="1" value="12" style="accent-color: #19c8b9; cursor: pointer;">
           </div>
 
           <!-- Cloud Opacity -->
@@ -1477,19 +1488,19 @@
           </div>
         </div>
 
-        <!-- Tall Grass Section -->
+        <!-- Tall Grass & Wind Foliage Section -->
         <div style="background: #f7f3df; border: 2px solid #e2d9c0; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
           <div style="font-weight: 800; font-size: 0.9rem; color: #7a583e; display: flex; align-items: center; gap: 6px;">
             <svg class="ui-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M7 20h10M10 20c0-6 4-10 4-16M14 20c0-4-3-8-6-11"></path>
             </svg>
-            <span>Grama Alta Interativa (Tall Grass)</span>
+            <span>Vento &amp; Vegetação (Árvores, Arbustos e Grama)</span>
           </div>
 
-          <!-- Grass Sway Intensity -->
+          <!-- Grass & Tree Wind Sway Intensity -->
           <div style="display: flex; flex-direction: column; gap: 4px;">
             <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700;">
-              <span>Intensidade do Balanço (Sway)</span>
+              <span>Intensidade do Vento &amp; Balanço</span>
               <span id="label-vfx-grass-sway" style="color: #0f8e83; font-weight: 800;">100%</span>
             </div>
             <input type="range" id="slider-vfx-grass-sway" min="0" max="200" step="10" value="100" style="accent-color: #19c8b9; cursor: pointer;">

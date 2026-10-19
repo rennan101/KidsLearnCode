@@ -79,6 +79,7 @@ class RPGApplication {
     this.player = new Player(320, 320);
     this.player.dragonManager = this.dragonManager;
     this.tallGrassSystem = new TallGrassSystem(this.tileMap);
+    this.tileMap.tallGrassSystem = this.tallGrassSystem;
     this.player.tallGrassSystem = this.tallGrassSystem;
     this.cloudShadowsOverlay = new CloudShadowsOverlay();
     this.vfxSettingsController = new VFXSettingsController(this);
@@ -4100,16 +4101,6 @@ class RPGApplication {
         this.npcManager.update(deltaTime, this.player, this.multiplayerClient, this.dayNightSystem, this.tileMap);
       }
 
-      // Update Tall Grass interaction & particle dynamics
-      if (this.tallGrassSystem) {
-        this.tallGrassSystem.update(deltaTime, this.player);
-      }
-
-      // Update atmospheric cloud shadows UV scrolling
-      if (this.cloudShadowsOverlay) {
-        this.cloudShadowsOverlay.update(deltaTime);
-      }
-
       const statusPos = document.getElementById('status-pos');
       if (statusPos) {
         statusPos.innerText = `X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`;
@@ -4122,6 +4113,14 @@ class RPGApplication {
         const centerWorld = this.camera.screenToWorld(this.canvas.width / 2, this.canvas.height / 2);
         statusPos.innerText = `Cam: X: ${Math.round(centerWorld.x)}, Y: ${Math.round(centerWorld.y)}`;
       }
+    }
+
+    // Update Tall Grass wind/step dynamics & Cloud Shadows UV scrolling in both Play and Edit modes
+    if (this.tallGrassSystem) {
+      this.tallGrassSystem.update(deltaTime, this.mode === 'play' ? this.player : null);
+    }
+    if (this.cloudShadowsOverlay) {
+      this.cloudShadowsOverlay.update(deltaTime);
     }
 
     // Render pass
